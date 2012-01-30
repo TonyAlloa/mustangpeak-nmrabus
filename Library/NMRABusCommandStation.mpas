@@ -1,9 +1,9 @@
-unit NMRABus;
+unit NMRABusCommandStation;
 
 uses
   CAN_Data;
-  
-{$I Options.inc}
+
+
 
 // Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
 const
@@ -160,14 +160,19 @@ function UniqueNodeIDTestPass: Boolean;
 var
   Packet: TCAN_Packet;
 begin
-  CAN_Layer_Buffer.Transmitting := True;
-  CAN_Layer_Buffer.ReceivedRID := False;
-  // Transmitting and the RIDTimeCounter are reset in the Tx Complete Interrupt
-  while CAN_Layer_Buffer.Transmitting do
-    Delay_us(100);
+  Result := False;
+  if CAN_Data_GetBufferCANLayer <> nil then
+  begin
+    CAN_DATA_CANLayerTransmitting(True);
+    // Transmitting and the RIDTimeCounter are reset in the Tx Complete Interrupt
+    while CAN_Data_GetBufferCANLayer^.Transmitting do
+      Delay_us(100);
       
-  while NMRABus.RIDTimeCounter < RID_TIME_COUNT_MAX do
-    Result := not CAN_Layer_Buffer.ReceivedRID
+    while NMRABus.RIDTimeCounter < RID_TIME_COUNT_MAX do
+    begin
+
+    end;
+  end
 end;
 
 procedure NMRABus_Connect;
@@ -176,23 +181,23 @@ var
 begin
   NMRABus.State := NMRABus.State and not BS_PERMITED;                           // Not permitted until we successfully get through this log in series
   CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_CID0), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-  CAN_Data_ListAddCANLayer(@Packet);                                            // Load the high priority transmitter buffer
+  CAN_Data_ListAddCANLayer(@Packet);                                           // Load the high priority transmitter
   if UniqueNodeIDTestPass then                                                  // Wait 50ms+ for RID to be received
   begin
     CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_CID1), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-    CAN_Data_ListAddCANLayer(@Packet);                                          // Load the high priority transmitter buffer
+    CAN_Data_ListAddCANLayer(@Packet);                                          // Load the high priority transmitter
     if UniqueNodeIDTestPass then                                                // Wait 50ms+ for RID to be received
     begin
       CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_CID2), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-      CAN_Data_ListAddCANLayer(@Packet);                                        // Load the high priority transmitter buffer
+      CAN_Data_ListAddCANLayer(@Packet);                                        // Load the high priority transmitter
       if UniqueNodeIDTestPass then                                              // Wait 50ms+ for RID to be received
       begin
         CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_CID3), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-        CAN_Data_ListAddCANLayer(@Packet);                                      // Load the high priority transmitter buffer
+        CAN_Data_ListAddCANLayer(@Packet);                                      // Load the high priority transmitter
         if UniqueNodeIDTestPass then                                            // Wait 50ms+ for RID to be received
         begin
           CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_RID), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-          CAN_Data_ListAddCANLayer(@Packet);                                    // Load the high priority transmitter buffer
+          CAN_Data_ListAddCANLayer(@Packet);                                    // Load the high priority transmitter
           if UniqueNodeIDTestPass then                                          // Wait 50ms+ for RID to be received
             NMRABus.State := NMRABus.State or BS_PERMITED;
         end

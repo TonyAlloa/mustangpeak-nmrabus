@@ -2,8 +2,19 @@ unit MCP2515;
 
 uses
   CAN_Data;
+  
+{$I Options.inc}
 
 const
+  CAN_TX_PRIORITY_0 = 0;     // Lowest Transmit Priority
+  CAN_TX_PRIORITY_1 = 1;
+  CAN_TX_PRIORITY_2 = 2;
+  CAN_TX_PRIORITY_3 = 3;    // Highest Transmit Priority
+  
+  CAN_TX_0 = 0;                 // Transmitter Buffer 0
+  CAN_TX_1 = 1;                 // Transmitter Buffer 1
+  CAN_TX_2 = 2;                 // Transmitter Buffer 2
+  
   TXB0CTRL_MCP2515 = $30;
   TXB1CTRL_MCP2515 = $40;
   TXB2CTRL_MCP2515 = $50;
@@ -139,7 +150,7 @@ procedure MCP2515_CANWriteRegister(iRegister, Value: Byte);
 function MCP2515_CANReadRegister(iRegister: Byte): Byte;
 procedure MCP2515_CANModifyBit(iRegister, BitIndex: Byte; IsOne: Boolean);
 procedure MCP2515_CANReadRXBuffer(Buffer: Byte; var ID: DWord; var DataCount: Byte; var DataBytes: TCANData; var IsExtended: Boolean);
-procedure MCP2515_CANWriteTXBuffer(Buffer: Byte; ID: DWord; DataCount: Byte; var DataBytes: TCANData; IsExtended: Boolean);
+procedure MCP2515_CANWriteTXBuffer(Buffer: Byte; ID: DWord; DataCount: Byte; var DataBytes: TCANData; IsExtended: Boolean; Priority: Byte);
   
 implementation
 
@@ -151,19 +162,23 @@ begin
   Result := SPI1BUF;       // Force the SPIRBF flag to clear
   nop;
   SPI1BUF := DataByte;   // This will set the SPITBF flag until the byte is written into the output latch to be sent.
+  {$IFNDEF SIMULATE_SPI}
   while SPIRBF_bit = 0 do;
+  {$ENDIF}
   Result := SPI1BUF;
 end;
 
 function SPI_Read_MP(Dummy: Byte): Byte;
 begin
-  Result := SPI1_Read(Dummy); Exit;
+//  Result := SPI1_Read(Dummy); Exit;
 
   // We have waited for the SPI to empty before returning so the buffer is empty on entry
   Result := SPI1BUF;       // Force the SPIRBF flag to clear
   nop;
   SPI1BUF := Dummy;   // This will set the SPITBF flag until the byte is written into the output latch to be sent.
+  {$IFNDEF SIMULATE_SPI}
   while SPIRBF_bit = 0 do;
+  {$ENDIF}
   Result := SPI1BUF;
 end;
 
@@ -241,14 +256,16 @@ begin
   CanSpi_CS_MCP2515 := 1;     // This will also clear the corresponding interrupt flag....
 end;
 
-procedure MCP2515_CANWriteTXBuffer(Buffer: Byte; ID: DWord; DataCount: Byte; var DataBytes: TCANData; IsExtended: Boolean);
+procedure MCP2515_CANWriteTXBuffer(Buffer: Byte; ID: DWord; DataCount: Byte; var DataBytes: TCANData; IsExtended: Boolean; Priority: Byte);
 //
 // Fast reads the Receive Registers.  Currently limited by the SPI_Read function that takes
 // 1us-2us dead times due to delays (need to try to write SPI routines again...)
 //
+//   Priorty = 0..3 with 3 being highest priority, see CAN_TX_PRIORITY_x constants
+//
 var
   i: Integer;
-  Address: Byte;
+  Address, Ctrl: Byte;
 begin
   CanSpi_CS_MCP2515 := 0; nop;
 
@@ -291,7 +308,7 @@ begin
 
   CanSpi_CS_MCP2515 := 1;
   
-  MCP2515_CANModifyBit(Address, TXREQ_MCP2515, True);   // Set the Transmit Request Bit
+  SPI_Write_MP(Priority or $08);  // Set Priority and Set Transmit Request Bit (TxREQ)
 end;
 
 end.

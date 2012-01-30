@@ -1,5 +1,7 @@
 unit CAN_Data;
 
+{$I Options.inc}
+
 const
   MAX_CAN_LIST_LENGTH = 6;
   MAX_CAN_DATA_BYTES = 8;
@@ -8,14 +10,14 @@ type
   TCANData = array[8] of Byte;
   
   TCAN_Packet = record
-    ID: DWord;            // Standard or Extended ID
-    Count: Byte;          // Number of Bytes in Packet
-    Bytes: TCANData;      // Packet Information
-    ExtendedID: Boolean;  //
+    ID: DWord;                                                                  // Standard or Extended ID
+    Count: Byte;                                                                // Number of Bytes in Packet
+    Bytes: TCANData;                                                            // Packet Information
+    ExtendedID: Boolean;                                                        //
   end;
   PCAN_Packet = ^TCAN_Packet;
   
-  TCAN_List = record
+  TCAN_List = record                                                            // Message Layer list of Packets
     List: array[0..MAX_CAN_LIST_LENGTH-1] of TCAN_Packet;
     Count: Byte;
     Head: Byte;
@@ -23,20 +25,29 @@ type
   end;
   PCAN_List = ^TCAN_List;
   
+  TCAN_Layer_Buffer = record                                                    // CAN Layer Packets, since this layer is well defined as a high priority "question"/"response" type interchange only one level of buffing is used
+    Packet: TCAN_Packet;
+    Full,
+    Transmitting,
+    ReceivedRID: Boolean;
+  end;
+  PCAN_Layer_Buffer = ^TCAN_Layer_Buffer;
+  
 var
   CAN_Tx_List: TCAN_List;
   CAN_Rx_List: TCAN_List;
+  CAN_Layer_Buffer: TCAN_Layer_Buffer;
   
 // Initializes the unit
 procedure CAN_Data_Initialize;
 // Helper to load the passed packet reference with the passed data
 procedure CAN_Data_LoadPacket(Packet: PCAN_Packet; ID: DWord; DataCount: Byte; Byte7, Byte6, Byte5, Byte4, Byte3, Byte2, Byte1, Byte0: Byte; IsExtended: Boolean);
 // Queue the passed packet into the buffer.  The passed packet is copied and can be freed when function returns.  If Queue is full returns False
-function CAN_Data_List(List: PCAN_List; Packet: PCAN_Packet): Boolean;
-// Tests if the Tx Queue is Full
-function CAN_Data_List_Full(List: PCAN_List): Boolean;
+function CAN_Data_ListAddMessageLayer(List: PCAN_List; Packet: PCAN_Packet): Boolean;
 // Receives the next received packet.  Returns False if there are none in the Queue
-function CAN_Data_NextPacket(List: PCAN_List; var Packet: TCAN_Packet): Boolean;
+function CAN_Data_NextPacketMessageLayer(List: PCAN_List; var Packet: TCAN_Packet): Boolean;
+// Queue the passed packet into the buffer.  The passed packet is copied and can be freed when function returns.
+function CAN_Data_ListAddCANLayer(Packet: PCAN_Packet): Boolean;
 
 implementation
 
@@ -60,6 +71,8 @@ procedure CAN_Data_Initialize;
 begin
   InitializeQueue(@CAN_Rx_List);
   InitializeQueue(@CAN_Tx_List);
+  CAN_Layer_Buffer.Full := False;
+  CAN_Layer_Buffer.Transmitting := False;
 end;
 
 procedure CAN_Data_LoadPacket(Packet: PCAN_Packet; ID: DWord; DataCount: Byte; Byte7, Byte6, Byte5, Byte4, Byte3, Byte2, Byte1, Byte0: Byte; IsExtended: Boolean);
@@ -91,7 +104,7 @@ begin
   Inc(Queue^.Count);                           // Update the count
 end;
 
-function CAN_Data_List(List: PCAN_List; Packet: PCAN_Packet): Boolean;
+function CAN_Data_ListAddMessageLayer(List: PCAN_List; Packet: PCAN_Packet): Boolean;
 begin
   if not CAN_Data_List_Full(List) then
   begin
@@ -101,7 +114,7 @@ begin
     Result := False
 end;
 
-function CAN_Data_NextPacket(List: PCAN_List; var Packet: TCAN_Packet): Boolean;
+function CAN_Data_NextPacketMessageLayer(List: PCAN_List; var Packet: TCAN_Packet): Boolean;
 begin
   if List^.Count > 0 then
   begin
@@ -113,6 +126,31 @@ begin
     Result := True;
   end else
     Result := False
+end;
+
+function CAN_Data_ListAddCANLayer(Packet: PCAN_Packet): Boolean;
+begin
+  if not CAN_Layer_Buffer.Full then
+  begin
+    CAN_Layer_Buffer.Packet := Packet^;
+    CAN_Layer_Buffer.Full := True;
+    CAN_Layer_Buffer.Transmitting := True;
+    Result := True
+  end else
+    Result := False
+end;
+
+function CAN_Data_GetBufferCANLayer: PCAN_Layer_Buffer;
+begin
+  if CAN_Layer_Buffer.Full then
+    Result := @CAN_Layer_Buffer
+  else
+    Result := nil
+end;
+
+procedure CAN_DATA_CANLayerTransmitting(IsTransmitting: Boolean);
+begin
+  CAN_Layer_Buffer.Transmitting := IsTransmitting;
 end;
 
 

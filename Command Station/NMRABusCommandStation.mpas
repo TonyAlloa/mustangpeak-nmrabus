@@ -26,24 +26,14 @@ program NMRABusCommandStation;
      - Turn on LEDs on PORTB.
  *}
  
-{$DEFINE DCCTIMER_DISABLE}
- 
 uses
-  NMRABus, MCP2515, CAN_Data;
+  NMRABus, MCP2515, CAN_Data, MCU_Setup;
   
-const ID_1st : longint = 12111;
-const ID_2nd : longint = 3;
+{$I Options.inc}
 
 const
   CAN_INTERRUPT_PIN = 4;
 
-
-const
-  CAN_SWJ        = 1;             // Set up for 125Khz Baud Rate with a 16Mhz Crystal
-  CAN_BRP        = 3+1;             // All in terms of number of Tq actual value in register will be BRP-1
-  CAN_PROP_SEG   = 2+1;             // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
-  CAN_PHASESEG_1 = 5+1;             // All in terms of number of Tq actual value in register will be CAN_PHASESEG_1-1
-  CAN_PHASESEG_2 = 5+1;             // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
 
 var
   CanSpi_CS_MCP2515                : sbit at LATF0_bit;
@@ -56,9 +46,7 @@ var CanSpi_CS            : sbit at  LATF0_bit;
     CanSpi_Rst_Direction : sbit at TRISF1_bit;
 // End CANSPI module connections
 
-var
-  PinChangeState: Word;
-  
+{$IFDEF UART_ENABLE}
 procedure PrintMCP2515Registers(StartReg, Count: Byte);
 var
   i: Integer;
@@ -77,19 +65,90 @@ begin
     UART1_Write_Text(s_Temp2);
   end;
 end;
+{$ENDIF}
 
-procedure LoadCAN_BufferFromList(ClearInterruptFlag: Boolean);
+procedure CheckForPendingCANLayerPacket;
+var
+  TxControl: Byte;
+begin
+  if CAN_Layer_Buffer.Transmitting then
+  begin
+    TXControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
+    if TXControl.TXREQ_MCP2515 = 0 then
+    begin
+      MCP2515_CANWriteTXBuffer(CAN_TX_1, CAN_Layer_Buffer.Packet.ID, CAN_Layer_Buffer.Packet.Count, CAN_Layer_Buffer.Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer
+      MCP2515_CANModifyBit(CANINTE_MCP2515, TX1IF_MCP2515, False);              // Clear Transmitter Interrupt Flag, Buffer is no longer empty
+      CAN_Layer_Buffer.Transmitting := False;                                   // Release the loop waiting for the transmission in NMRABus.mpas
+      NMRABus.RIDTimeCounter := 0;                                              // Start timing out the spec time to wait to see if the Alais ID is a duplicate
+    end
+  end;
+end;
+
+procedure CheckForPendingMessageLayerPacket;
+var
+  TxControl: Byte;
+  Packet: TCAN_Packet;
+begin
+  // This is the only place to tell when a message was actually put on the CANbus.  If the TX flag is set then the message was placed on the bus
+  // and the TX buffer can be loaded with a new message
+
+  // This assumes that the transmitter is not pending a transmission.  Due to the load Tx timer this needs to be carefully dealt with
+  // The Tx timer currently will clear the TxF Flag so if the timer slips in "just before" this interrupt, that is signaling an empty transmitter,
+  // the Tx timer will load the Tx buffer and clear the flag.  That means this will be called but the flag will be cleared and this branch will
+  // not be called and we are safe from overwriting the Tx buffer in the MCP2515 with what was just loaded in the Tx Timer.
+  if CAN_Data_NextPacketMessageLayer(@CAN_Tx_List, Packet) then                 // Is there a Message Level Packet in the list ready to be transmitted?
+  begin
+    TxControl := MCP2515_CANReadRegister(TXB0CTRL_MCP2515);
+    if TxControl.TXREQ_MCP2515 = 0 then                                         // CAN Controller Buffer is not currently pending a transmission
+    begin
+      MCP2515_CANWriteTXBuffer(CAN_TX_0, Packet.ID, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
+      MCP2515_CANModifyBit(CANINTE_MCP2515, TX0IF_MCP2515, False)                                           // Clear Transmitter Interrupt Flag, Buffer is no longer empty
+    end
+  end;
+end;
+
+procedure PacketReceivedOnMessageLayer;
 var
   Packet: TCAN_Packet;
-//
-//  This must only be called from the CAN interrupt (Pin Change) or the CAN Timer interrupt
-//  so that the SPI does not have reentrant problems.
-//
 begin
-  if CAN_Data_NextPacket(@CAN_Tx_List, Packet) then
-    MCP2515_CANWriteTXBuffer(0, Packet.ID, Packet.Count, Packet.Bytes, True);
-  if ClearInterruptFlag then
-    MCP2515_CANModifyBit(CANINTE_MCP2515, TX0IF_MCP2515, False);    // Clear Transmitter Interrupt Flag, Buffer is no longer empty
+  MCP2515_CANReadRXBuffer(0, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);  // Flags AutoReset
+  CAN_Data_ListAddMessageLayer(@CAN_Rx_List, @Packet);                                   // Queue the Packet into the circular recieve list
+end;
+
+procedure PacketReceivedOnCANLayer;
+var
+  Packet: TCAN_Packet;
+  Decode: DWord;
+begin
+  MCP2515_CANReadRXBuffer(1, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
+  begin
+    Decode := Packet.ID shr 12;                                                 // Strip off the lower 12 bits (Alias ID)
+    if Decode and $7000 <> 0 then                                               // Is it a Check ID (CID) message?
+    begin
+      case Decode of
+        $7000: begin
+               end;
+        $6000: begin
+               end;
+        $5000: begin
+               end;
+        $4000: begin
+               end;
+    end else
+    begin
+      case Decode of
+
+    if Packet.ID and $00000000 <> 0 then
+    begin
+      NMRABus.RIDTimeCounter := RID_TIME_COUNT_MAX;                             // Stop the clock waiting for the CAN Layer message response
+      CAN_Layer_Buffer.ReceivedRID := True;
+    end;
+  end;
+end;
+
+procedure HandleMCP2515Error;
+begin
+  MCP2515_CANModifyBit(CANINTE_MCP2515, ERRIF_MCP2515, False);       // Clear Error Interrupt Flag
 end;
 
 procedure INTERRUPT_SPI_Transmitted(); iv IVT_ADDR_SPI1INTERRUPT;
@@ -106,32 +165,30 @@ begin
 end;
 
 procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
-// Called once every
+// Called once every 1m
 begin
   T2IF_bit := 0;  // Clear the Flag
   NMRABus_GlobalTimer;
  // PORTD := not PORTD
 end;
 
-procedure INTERRUPT_CAN_Timer(); iv IVT_ADDR_T3INTERRUPT;
-var
-  TxControl: Byte;
+procedure INTERRUPT_CAN_TX_Timer(); iv IVT_ADDR_T3INTERRUPT;
 begin
   T3IF_bit := 0;  // Clear the Flag
   
   LATD1_bit := 1;
-  // We are safe in reading the CAN here as we have the same priority as the Pin Change.
-  // The other will not get interrupted in the middle of the routine so the SPI calls
-  // are safe.
-  TxControl := MCP2515_CANReadRegister(TXB0CTRL_MCP2515);
-  if TxControl.TXREQ_MCP2515 = 0 then                      // CAN Controller Buffer is not currently pending a transmission
-    LoadCAN_BufferFromList(False);
+  // We are safe in reading the CAN here as we have the same priority as the Pin Change. The CN not get interrupted in the middle of this routine so the SPI calls are safe.
+  // It is possible that the Interrupt Flag is set and TxReq is low if this timer is called just before pin change notification interrupt is called.  If so it is
+  // necessary to clear the interrupt flag since we have already handled loading the Tx register and the pin change notification interrupt does not check for TxReq to be
+  // zero before loading the transmitter
+  CheckForPendingCANLayerPacket;
+  CheckForPendingMessageLayerPacket;
+  
   LATD1_bit := 0
 end;
 
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;
 var
-  Packet: TCAN_Packet;
   Flags: Byte;
 begin
   CNIF_bit := 0;     // Clear Flag
@@ -140,31 +197,23 @@ begin
   while (PORTF.CAN_INTERRUPT_PIN = 0) do                                        // ALWAYS check for the interrupt pin to be low as it won't go high until all are cleared
   begin
     Flags := MCP2515_CANReadRegister(CANINTF_MCP2515);
-    if (Flags and CANINTF_RX_FLAGS_MASK) <> 0 then
-    begin
-      if Flags.RX0IF_MCP2515 = 1 then                                                         // Receiver 0 full
-      begin
-        MCP2515_CANReadRXBuffer(0, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID)  // Flags AutoReset
-      end else                                                                                // Receiver 1 full
-      begin
-        MCP2515_CANReadRXBuffer(1, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID); // Flags AutoReset
-      end;
-      CAN_Data_List(@CAN_Rx_List, @Packet);                                                 // Queue the Packet into the circular recieve list
-    end else
-    if (Flags and CANINTF_TX_FLAGS_MASK) <> 0 then                              // See if any of the Transimitter Interrupt Flags are set
-    begin
-      if Flags.TX0IF_MCP2515 = 1 then                                           // Transmitter 0 empty, only using buffer 0
-        LoadCAN_BufferFromList(True);
-    end else
-    if (Flags and CANINTF_ERROR_FLAG_MASK) <> 0 then
-      MCP2515_CANModifyBit(CANINTE_MCP2515, ERRIF_MCP2515, False);       // Clear Error Interrupt Flag
+    
+    if Flags.RX0IF_MCP2515 = 1 then                                           // Receiver 0 full
+      PacketReceivedOnMessageLayer;
+    if Flags.TX0IF_MCP2515 = 1 then                                           // Transmitter 0 empty, this means a Message Layer normal priority message was transmitted
+      CheckForPendingMessageLayerPacket;                                      // If another Message Layer Packet is in the circular list load it into the CAN transmit buffer
+      
+    if Flags.RX1IF_MCP2515 = 1 then                                           // Receiver 1 full
+      PacketReceivedOnCANLayer;
+    if Flags.TX1IF_MCP2515 = 1 then                                           // Transmitter 1 empty, this is means CAN Layer high priority message was transmitted
+      CheckForPendingCANLayerPacket;
+    
+    if Flags.ERRIF_MCP2515 = 1 then
+      HandleMCP2515Error;
   end;
   PinChangeState := PORTF;
   LATD0_bit := 0;
 end;
-
-
-
 
 // *******************
 // MAIN LOOP
@@ -175,103 +224,28 @@ var
   Tx_ID, Rx_ID : dword;                                   // can rx and tx ID
   i: Integer;
 begin
-  ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
-
-  PORTB := 0;                                           // clear PORTB
-  TRISB := 0;                                           // set PORTB as output
-  PORTD := 0;                                           // set PORTD as output
-  TRISD := 0;
-
-  PinChangeState := 0;
 
   CAN_Data_Initialize;
   NMRABus_Initialize;
   MCP2515_Initialize;
-                    
-// Initialize UART
-  UART1_Init(115200);                       // Initialize UART module a
-  Delay_ms(100);                            // Wait for UART module to stabilize
-
-  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate
-                          // locations. This is used to free the pins for other module, namely the SPI.
-
-  // Make sure on startup of the SPI I don't get into reentrant problems with the interrupts
-  // i.e. enabling the interrupts before we are done calling initilization SPI commands for the
-  // slaves.
-  SPI1_Init();   // Initialize SPI1 module
-  CANSPIInitialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _CANSPI_CONFIG_SAMPLE_THRICE and _CANSPI_CONFIG_PHSEG2_PRG_ON and _CANSPI_CONFIG_XTD_MSG and _CANSPI_CONFIG_VALID_XTD_MSG);   // Initialize external CANSPI module
-
-  CANSPISetOperationMode(_CANSPI_MODE_CONFIG, 0xFF);                            // set CONFIGURATION mode
-  CANSPISetMask(_CANSPI_MASK_B1, LongInt($FFFFFFFF), _CANSPI_CONFIG_XTD_MSG);   // set all mask1 bits to ones
-  CANSPISetMask(_CANSPI_MASK_B2, LongInt($FFFFFFFF), _CANSPI_CONFIG_XTD_MSG);   // set all mask2 bits to ones
-  CANSPISetFilter(_CANSPI_FILTER_B2_F4, ID_2nd, _CANSPI_CONFIG_XTD_MSG);        // set id of filter B2_F4 to 2nd node ID
-  CANSPISetOperationMode(_CANSPI_MODE_NORMAL,0xFF);                             // set NORMAL mode
-  MCP2515_CANModifyBit(CANINTE_MCP2515, RX0IE_MCP2515, True);
-  MCP2515_CANModifyBit(CANINTE_MCP2515, RX1IE_MCP2515, True);           // Receive RX is Full Interrupts
-  MCP2515_CANModifyBit(CANINTE_MCP2515, TX0IE_MCP2515, True);           // Transmit Buffer Empty Interrupt, only using Buffer 0
-
-  SPIEN_bit := 0;    // Disable SPI
-  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
-  SPI1CON := SPI1CON or $0003 or $0010;  // Setup for 5 Mhz (with the CAN plug in boards)     $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
-  SPI1IF_bit := 0;   // Clear the Flag
-  SPI1IE_bit := 1;   // Enable SPI 1 Interrupts
-  SPI1IP_0_bit := 1; // Interrupt Priority of the SPI is 1 (001)
-  SPI1IP_1_bit := 0;
-  SPI1IP_2_bit := 0;
-  SPIEN_bit := 1;    // Enable the SPI
-
-  T1IP_0_bit := 1;   // Timer 1 Interrupt Priority = 7
-  T1IP_1_bit := 1;
-  T1IP_2_bit := 1;
-  T1IF_bit := 0;             // Clear T1IF
-  T1IE_bit := 1;             // Enable Timer1 interrupts
-  PR1 := 1120;               // 56us timer with a 80Mhz clock
-  {$IFNDEF DCCTIMER_DISABLE}TON_T1CON_bit := 1;{$ENDIF} // Turn on
-
-  T2IF_bit := 0;     // Clear the Interrupt flag
-  T2IP_0_bit := 1;   // Timer 2 Interrupt Priority = 1
-  T2IP_1_bit := 0;
-  T2IP_2_bit := 0;
-  T2IE_bit := 1;     // Enable the Interrupt
-  TON_T2CON_bit := 1; // Turn on
-  
-  T3IF_bit := 0;     // Clear the Interrupt flag
-  T3IP_0_bit := 0;   // Timer 2 Interrupt Priority = 6 must be EQUAL to the Pin Change Notifier (SPI CAN)
-  T3IP_1_bit := 1;
-  T3IP_2_bit := 1;
-  T3IE_bit := 1;     // Enable the Interrupt
-  PR3 := 5000;       // Every 150us try to load a CAN message
-  TON_T3CON_bit := 1; // Turn on
-  
-  CNIF_bit := 0;     // Clear Flag
-  CNIP_0_bit := 0;   // Interrupt Priority = 6 (next below DCC)
-  CNIP_1_bit := 1;
-  CNIP_2_bit := 1;
-  CN17IE_bit := 1;   // RF4 (CN17) set for interrupt
-  CNIE_bit := 1;     // Enable the Interrupt for Pin Change
-  
-  // DO I NEED TO CLEAR ERROR FLAG, ETC IN SPI DEVICES BEFORE STARTING THE TIMERS/PIN CHANGE NOTFIERS
-  // AS WE MAY HAVE BUFFER OVERFLOW ISSUES BETWEEN THE TIME WE INITIALIZED THE SPI DEVICES AND WE
-  // START TO SERVICE THEM WITH THE INTERRUPTS..........
-  
-  PinChangeState := PORTF;
+  MCU_Setup_Initialize;
   
 // Set initial data to be sent
   CAN_Data_LoadPacket(@Packet, ID_1st, 1, 0, 0, 0, 0, 0, 0, 0, 9, True);
-  CAN_Data_List(@CAN_Tx_List, @Packet);                                       // send initial message
+  CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);                          // send initial message
   
-//  NMRABus_Connect;
+  NMRABus_Connect;
   while (TRUE) do
     begin
-//      if not NMRABus_Connected then
+      if not NMRABus_Connected then
       begin
-  //      RecreateAliasID;
-  //      NMRABus_Connect;
+        RecreateAliasID;
+        NMRABus_Connect;
       end;
       
-   //   if NMRABus_Connected then
+      if NMRABus_Connected then
       begin
-        if CAN_Data_NextPacket(@CAN_Rx_List, Packet) then
+        if CAN_Data_NextPacketMessageLayer(@CAN_Rx_List, Packet) then
         begin
           if Packet.ID = ID_2nd then                                              // Message was received (interrupt) if it is ours then ...
           begin
@@ -279,7 +253,7 @@ begin
             Inc(Packet.Bytes[0]);
             CAN_Data_LoadPacket(@Packet, ID_1st, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
             Delay_ms(10);
-            CAN_Data_List(@CAN_Tx_List, @Packet);
+            CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
           end
         end
       end

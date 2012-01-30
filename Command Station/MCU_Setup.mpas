@@ -1,0 +1,111 @@
+unit MCU_Setup;
+
+uses
+  MCP2515;
+  
+{$I Options.inc}
+
+const
+  CAN_SWJ        = 1;               // Set up for 125Khz Baud Rate with a 16Mhz Crystal
+  CAN_BRP        = 3+1;             // All in terms of number of Tq actual value in register will be BRP-1
+  CAN_PROP_SEG   = 2+1;             // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
+  CAN_PHASESEG_1 = 5+1;             // All in terms of number of Tq actual value in register will be CAN_PHASESEG_1-1
+  CAN_PHASESEG_2 = 5+1;             // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
+
+
+  ID_1st : longint = 12111;
+  ID_2nd : longint = 3;
+
+procedure MCU_Setup_Initialize;
+
+var
+  PinChangeState: Word;
+
+implementation
+
+procedure MCU_Setup_Initialize;
+begin
+  ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
+
+  PORTB := 0;                                           // clear PORTB
+  TRISB := 0;                                           // set PORTB as output
+  PORTD := 0;                                           // set PORTD as output
+  TRISD := 0;
+  
+  PinChangeState := 0;
+  
+  {$IFDEF UART_ENABLE}
+  // Initialize UART
+  UART1_Init(115200);                       // Initialize UART module a
+  Delay_ms(100);                            // Wait for UART module to stabilize
+
+  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
+  {$ENDIF}
+  
+  SPI1_Init();   // Initialize SPI1 module
+  SPIEN_bit := 0;    // Disable SPI
+  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
+  SPI1CON := SPI1CON or $0003 or $0010;  // Setup for 5 Mhz (with the CAN plug in boards)     $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
+  SPI1IF_bit := 0;   // Clear the Flag
+  SPI1IE_bit := 1;   // Enable SPI 1 Interrupts
+  SPI1IP_0_bit := 1; // Interrupt Priority of the SPI is 1 (001)
+  SPI1IP_1_bit := 0;
+  SPI1IP_2_bit := 0;
+  SPIEN_bit := 1;    // Enable the SPI
+
+  // Make sure on startup of the SPI I don't get into reentrant problems with the interrupts
+  // i.e. enabling the interrupts before we are done calling initilization SPI commands for the
+  // slaves.
+  CANSPIInitialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _CANSPI_CONFIG_SAMPLE_THRICE and _CANSPI_CONFIG_PHSEG2_PRG_ON and _CANSPI_CONFIG_XTD_MSG and _CANSPI_CONFIG_VALID_XTD_MSG);   // Initialize external CANSPI module
+
+  CANSPISetOperationMode(_CANSPI_MODE_CONFIG, 0xFF);                            // set CONFIGURATION mode
+  CANSPISetMask(_CANSPI_MASK_B1, LongInt($FFFFFFFF), _CANSPI_CONFIG_XTD_MSG);   // set all mask1 bits to ones
+  CANSPISetMask(_CANSPI_MASK_B2, LongInt($FFFFFFFF), _CANSPI_CONFIG_XTD_MSG);   // set all mask2 bits to ones
+  CANSPISetFilter(_CANSPI_FILTER_B2_F4, ID_2nd, _CANSPI_CONFIG_XTD_MSG);        // set id of filter B2_F4 to 2nd node ID
+  CANSPISetOperationMode(_CANSPI_MODE_NORMAL,0xFF);                             // set NORMAL mode
+  MCP2515_CANModifyBit(CANINTE_MCP2515, RX0IE_MCP2515, True);
+  MCP2515_CANModifyBit(CANINTE_MCP2515, RX1IE_MCP2515, True);           // Receive RX is Full Interrupts
+  MCP2515_CANModifyBit(CANINTE_MCP2515, TX0IE_MCP2515, True);           // Transmit Buffer Empty Interrupt, only using Buffer 0
+
+  T1IP_0_bit := 1;   // Timer 1 Interrupt Priority = 7
+  T1IP_1_bit := 1;
+  T1IP_2_bit := 1;
+  T1IF_bit := 0;             // Clear T1IF
+  T1IE_bit := 1;             // Enable Timer1 interrupts
+  PR1 := 1120;               // 56us timer with a 80Mhz clock
+  {$IFNDEF DCCTIMER_DISABLE}TON_T1CON_bit := 1;{$ENDIF} // Turn on
+
+  T2IF_bit := 0;            // Clear the Interrupt flag
+  T2IP_0_bit := 1;          // Timer 2 Interrupt Priority = 1
+  T2IP_1_bit := 0;
+  T2IP_2_bit := 0;
+  TCKPS_0_T2CON_bit := 1;   // Prescaler of 256
+  TCKPS_1_T2CON_bit := 1;   // Prescaler of 256
+  PR2 := 312;               // Clock ticks every Fosc/4*256 = 3.2us.   3.2us*312.5 = 1ms interrupts
+  T2IE_bit := 1;            // Enable the Interrupt
+  TON_T2CON_bit := 1;       // Turn on
+
+  T3IF_bit := 0;      // Clear the Interrupt flag
+  T3IP_0_bit := 0;    // Timer 2 Interrupt Priority = 6 must be EQUAL to the Pin Change Notifier (SPI CAN)
+  T3IP_1_bit := 1;
+  T3IP_2_bit := 1;
+  T3IE_bit := 1;      // Enable the Interrupt
+  PR3 := 5000;        // Every 150us try to load a CAN message
+  TON_T3CON_bit := 1; // Turn on
+
+  CNIF_bit := 0;      // Clear Flag
+  CNIP_0_bit := 0;    // Interrupt Priority = 6 (next below DCC)
+  CNIP_1_bit := 1;
+  CNIP_2_bit := 1;
+  CN17IE_bit := 1;    // RF4 (CN17) set for interrupt
+  CNIE_bit := 1;      // Enable the Interrupt for Pin Change
+
+  // DO I NEED TO CLEAR ERROR FLAG, ETC IN SPI DEVICES BEFORE STARTING THE TIMERS/PIN CHANGE NOTFIERS
+  // AS WE MAY HAVE BUFFER OVERFLOW ISSUES BETWEEN THE TIME WE INITIALIZED THE SPI DEVICES AND WE
+  // START TO SERVICE THEM WITH THE INTERRUPTS..........
+
+  PinChangeState := PORTF;
+
+end;
+
+end.
