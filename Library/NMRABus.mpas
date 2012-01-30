@@ -160,6 +160,7 @@ function UniqueNodeIDTestPass: Boolean;
 var
   Packet: TCAN_Packet;
 begin
+  Result := False;
   CAN_Layer_Buffer.Transmitting := True;
   CAN_Layer_Buffer.ReceivedRID := False;
   // Transmitting and the RIDTimeCounter are reset in the Tx Complete Interrupt

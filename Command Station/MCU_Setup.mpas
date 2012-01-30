@@ -66,6 +66,7 @@ begin
   MCP2515_CANModifyBit(CANINTE_MCP2515, RX0IE_MCP2515, True);
   MCP2515_CANModifyBit(CANINTE_MCP2515, RX1IE_MCP2515, True);           // Receive RX is Full Interrupts
   MCP2515_CANModifyBit(CANINTE_MCP2515, TX0IE_MCP2515, True);           // Transmit Buffer Empty Interrupt, only using Buffer 0
+  MCP2515_CANModifyBit(CANINTE_MCP2515, TX1IE_MCP2515, True);           // Transmit Buffer Empty Interrupt, only using Buffer 0
 
   T1IP_0_bit := 1;   // Timer 1 Interrupt Priority = 7
   T1IP_1_bit := 1;
@@ -79,9 +80,7 @@ begin
   T2IP_0_bit := 1;          // Timer 2 Interrupt Priority = 1
   T2IP_1_bit := 0;
   T2IP_2_bit := 0;
-  TCKPS_0_T2CON_bit := 1;   // Prescaler of 256
-  TCKPS_1_T2CON_bit := 1;   // Prescaler of 256
-  PR2 := 312;               // Clock ticks every Fosc/4*256 = 3.2us.   3.2us*312.5 = 1ms interrupts
+  PR2 := 20000;             // Clock ticks every 50ns * 20000 = 1ms interrupts
   T2IE_bit := 1;            // Enable the Interrupt
   TON_T2CON_bit := 1;       // Turn on
 

@@ -22,9 +22,9 @@ program NMRABusCommandStation;
      SW:              mikroPascal PRO for dsPIC30/33 and PIC24
                       http://www.mikroe.com/eng/products/view/230/mikropascal-pro-for-dspic30-33-and-pic24/
  * NOTES:
-     - Consult the CAN standard about CAN bus termination resistance.
-     - Turn on LEDs on PORTB.
  *}
+ 
+ DOES NOT RECOVER FROM NODE 2 BEING OFF....
  
 uses
   NMRABus, MCP2515, CAN_Data, MCU_Setup;
@@ -67,24 +67,27 @@ begin
 end;
 {$ENDIF}
 
-procedure CheckForPendingCANLayerPacket;
+procedure CheckForPendingCANLayerPacket(ClearInterruptFlag: Boolean);
 var
   TxControl: Byte;
 begin
+  if ClearInterruptFlag then
+    MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
+    
   if CAN_Layer_Buffer.Transmitting then
   begin
+    LATD0_bit := not LATD0_bit;
     TXControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
     if TXControl.TXREQ_MCP2515 = 0 then
     begin
       MCP2515_CANWriteTXBuffer(CAN_TX_1, CAN_Layer_Buffer.Packet.ID, CAN_Layer_Buffer.Packet.Count, CAN_Layer_Buffer.Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer
-      MCP2515_CANModifyBit(CANINTE_MCP2515, TX1IF_MCP2515, False);              // Clear Transmitter Interrupt Flag, Buffer is no longer empty
       CAN_Layer_Buffer.Transmitting := False;                                   // Release the loop waiting for the transmission in NMRABus.mpas
       NMRABus.RIDTimeCounter := 0;                                              // Start timing out the spec time to wait to see if the Alais ID is a duplicate
     end
   end;
 end;
 
-procedure CheckForPendingMessageLayerPacket;
+procedure CheckForPendingMessageLayerPacket(ClearInterruptFlag: Boolean);
 var
   TxControl: Byte;
   Packet: TCAN_Packet;
@@ -96,14 +99,14 @@ begin
   // The Tx timer currently will clear the TxF Flag so if the timer slips in "just before" this interrupt, that is signaling an empty transmitter,
   // the Tx timer will load the Tx buffer and clear the flag.  That means this will be called but the flag will be cleared and this branch will
   // not be called and we are safe from overwriting the Tx buffer in the MCP2515 with what was just loaded in the Tx Timer.
+  if ClearInterruptFlag then
+    MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
+    
   if CAN_Data_NextPacketMessageLayer(@CAN_Tx_List, Packet) then                 // Is there a Message Level Packet in the list ready to be transmitted?
   begin
     TxControl := MCP2515_CANReadRegister(TXB0CTRL_MCP2515);
     if TxControl.TXREQ_MCP2515 = 0 then                                         // CAN Controller Buffer is not currently pending a transmission
-    begin
       MCP2515_CANWriteTXBuffer(CAN_TX_0, Packet.ID, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
-      MCP2515_CANModifyBit(CANINTE_MCP2515, TX0IF_MCP2515, False)                                           // Clear Transmitter Interrupt Flag, Buffer is no longer empty
-    end
   end;
 end;
 
@@ -111,8 +114,8 @@ procedure PacketReceivedOnMessageLayer;
 var
   Packet: TCAN_Packet;
 begin
-  MCP2515_CANReadRXBuffer(0, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);  // Flags AutoReset
-  CAN_Data_ListAddMessageLayer(@CAN_Rx_List, @Packet);                                   // Queue the Packet into the circular recieve list
+  MCP2515_CANReadRXBuffer(CAN_TX_0, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);  // Flags AutoReset
+  CAN_Data_ListAddMessageLayer(@CAN_Rx_List, @Packet);                                          // Queue the Packet into the circular recieve list
 end;
 
 procedure PacketReceivedOnCANLayer;
@@ -120,7 +123,7 @@ var
   Packet: TCAN_Packet;
   Decode: DWord;
 begin
-  MCP2515_CANReadRXBuffer(1, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
+  MCP2515_CANReadRXBuffer(CAN_TX_1, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
   begin
     Decode := Packet.ID shr 12;                                                 // Strip off the lower 12 bits (Alias ID)
     if Decode and $7000 <> 0 then                                               // Is it a Check ID (CID) message?
@@ -159,6 +162,11 @@ begin
   MCP2515_CANModifyBit(CANINTE_MCP2515, ERRIF_MCP2515, False);       // Clear Error Interrupt Flag
 end;
 
+
+// *****************************************************************************
+//  INTERRUPTS
+// *****************************************************************************
+
 procedure INTERRUPT_SPI_Transmitted(); iv IVT_ADDR_SPI1INTERRUPT;
 begin
   SPI1IF_bit := 0;   // Clear the Flag
@@ -168,31 +176,32 @@ end;
 procedure INTERRUPT_DCC_Timer(); iv IVT_ADDR_T1INTERRUPT;
 begin
   T1IF_bit := 0;  // Clear the Flag
-  Delay_us(35);
-//  PORTD := not PORTD
+  Delay_us(20);
 end;
 
 procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 1m
 begin
   T2IF_bit := 0;  // Clear the Flag
+  
+  LATD1_bit := not LATD1_bit;
+  
   NMRABus_GlobalTimer;
- // PORTD := not PORTD
 end;
 
 procedure INTERRUPT_CAN_TX_Timer(); iv IVT_ADDR_T3INTERRUPT;
 begin
   T3IF_bit := 0;  // Clear the Flag
   
-  LATD1_bit := 1;
+ // LATD0_bit := 1;
   // We are safe in reading the CAN here as we have the same priority as the Pin Change. The CN not get interrupted in the middle of this routine so the SPI calls are safe.
   // It is possible that the Interrupt Flag is set and TxReq is low if this timer is called just before pin change notification interrupt is called.  If so it is
   // necessary to clear the interrupt flag since we have already handled loading the Tx register and the pin change notification interrupt does not check for TxReq to be
   // zero before loading the transmitter
-  CheckForPendingCANLayerPacket;
-  CheckForPendingMessageLayerPacket;
+  CheckForPendingCANLayerPacket(False);
+  CheckForPendingMessageLayerPacket(False);
   
-  LATD1_bit := 0
+ // LATD0_bit := 0
 end;
 
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;
@@ -200,8 +209,9 @@ var
   Flags: Byte;
 begin
   CNIF_bit := 0;     // Clear Flag
+
+ // UART1_Write_Text('CN Int');
   
-  LATD0_bit := 1;
   while (PORTF.CAN_INTERRUPT_PIN = 0) do                                        // ALWAYS check for the interrupt pin to be low as it won't go high until all are cleared
   begin
     Flags := MCP2515_CANReadRegister(CANINTF_MCP2515);
@@ -209,18 +219,17 @@ begin
     if Flags.RX0IF_MCP2515 = 1 then                                           // Receiver 0 full
       PacketReceivedOnMessageLayer;
     if Flags.TX0IF_MCP2515 = 1 then                                           // Transmitter 0 empty, this means a Message Layer normal priority message was transmitted
-      CheckForPendingMessageLayerPacket;                                      // If another Message Layer Packet is in the circular list load it into the CAN transmit buffer
+      CheckForPendingMessageLayerPacket(True);                                // If another Message Layer Packet is in the circular list load it into the CAN transmit buffer
       
     if Flags.RX1IF_MCP2515 = 1 then                                           // Receiver 1 full
       PacketReceivedOnCANLayer;
     if Flags.TX1IF_MCP2515 = 1 then                                           // Transmitter 1 empty, this is means CAN Layer high priority message was transmitted
-      CheckForPendingCANLayerPacket;
+      CheckForPendingCANLayerPacket(True);
     
     if Flags.ERRIF_MCP2515 = 1 then
       HandleMCP2515Error;
   end;
   PinChangeState := PORTF;
-  LATD0_bit := 0;
 end;
 
 // *******************
@@ -237,11 +246,6 @@ begin
   NMRABus_Initialize;
   MCP2515_Initialize;
   MCU_Setup_Initialize;
-  
-// Set initial data to be sent
-  CAN_Data_LoadPacket(@Packet, ID_1st, 1, 0, 0, 0, 0, 0, 0, 0, 9, True);
-  CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);                          // send initial message
-  
   NMRABus_Connect;
   while (TRUE) do
     begin
