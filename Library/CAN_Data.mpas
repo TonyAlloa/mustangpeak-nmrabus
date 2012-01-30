@@ -148,10 +148,5 @@ begin
     Result := nil
 end;
 
-procedure CAN_DATA_CANLayerTransmitting(IsTransmitting: Boolean);
-begin
-  CAN_Layer_Buffer.Transmitting := IsTransmitting;
-end;
-
 
 end.

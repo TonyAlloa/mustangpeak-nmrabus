@@ -126,22 +126,30 @@ begin
     if Decode and $7000 <> 0 then                                               // Is it a Check ID (CID) message?
     begin
       case Decode of
-        $7000: begin
+        $7000: begin         // Check ID (CID) Frame - “Most” Significant 12 Bits of 48 Bit Node ID
                end;
-        $6000: begin
+        $6000: begin         // Check ID (CID) Frame - 3rd 12 Bits of 48 Bit Node ID
                end;
-        $5000: begin
+        $5000: begin         // Check ID (CID) Frame - 2nd 12 Bits of 48 Bit Node ID
                end;
-        $4000: begin
+        $4000: begin         // Check ID (CID) Frame - “Least” Significant 12 Bits of 48 Bit Node ID
                end;
+      end
     end else
     begin
       case Decode of
-
-    if Packet.ID and $00000000 <> 0 then
-    begin
-      NMRABus.RIDTimeCounter := RID_TIME_COUNT_MAX;                             // Stop the clock waiting for the CAN Layer message response
-      CAN_Layer_Buffer.ReceivedRID := True;
+        $0700: begin          // Reserve ID Frame (RID)
+                 // Someone is using the Alias ID we want to use
+                 NMRABus.RIDTimeCounter := RID_TIME_COUNT_MAX;                             // Stop the clock waiting for the CAN Layer message response
+                 CAN_Layer_Buffer.ReceivedRID := True;
+               end;
+        $0701: begin          // Alias Map Definition (AMD) Frame
+               end;
+        $0702: begin          // Alias Mapping Enquiry (AME) Frame
+               end;
+        $0703: begin          // Alias Map Reset (AMR) Frame
+               end;
+      end;
     end;
   end;
 end;
