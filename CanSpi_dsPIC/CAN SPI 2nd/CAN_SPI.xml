@@ -1,0 +1,13 @@
+<CAN_SPI>
+	<Attributes>
+		<Url>http://www.mikroe.com/eng/products/view/129/canspi-board/</Url>
+		<Image>CAN SPI.jpg</Image>
+		<File></File>
+	</Attributes>
+	<Events>
+		<OnLeftClick>OpenUrl</OnLeftClick>
+		<OnRightClick></OnRightClick>
+		<OnDblClick>OpenUrl</OnDblClick>
+		<OnMouseOver>PreviewImage</OnMouseOver>
+	</Events>
+</CAN_SPI>

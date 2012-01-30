@@ -1,0 +1,67 @@
+[DEVICE]
+Name=P30F4013
+Clock=80000000
+[MEMORY_MODEL]
+Value=0
+[BUILD_TYPE]
+Value=0
+[ACTIVE_TAB]
+Value=Can_Spi_1st.mpas
+[USE_EEPROM]
+Value=0
+[EEPROM_DEFINITION]
+Value=
+[USE_HEAP]
+Value=0
+[HEAP_SIZE]
+Value=2000
+[FILES]
+Count=1
+File0=Can_Spi_1st.mpas
+[BINARIES]
+Count=0
+[IMAGES]
+Count=1
+File0=..\CAN SPI.jpg
+ActiveImageIndex=0
+[OPENED_FILES]
+Count=2
+File0=Can_Spi_1st.mpas
+File1=..\..\Command Station\NMRABusCommandStation.mpas
+[EEPROM]
+Count=0
+[ACTIVE_COMMENTS_FILES]
+Count=1
+File0=CAN_SPI.xml
+[OTHER_FILES]
+Count=0
+[SEARCH_PATH]
+Count=9
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\CanSpi_dsPIC\CAN SPI 1st\
+Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Can Spi\CAN SPI 1st\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Examples\Extra Boards\Can Spi\CAN SPI 1st\
+Path5=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Examples\Extra Boards\Can Spi\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Can Spi\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\CanSpi_dsPIC\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Library\
+[HEADER_PATH]
+Count=0
+[HEADERS]
+Count=0
+[PLDS]
+Count=0
+[Useses]
+Count=5
+File0=CAN_SPI
+File1=SPI
+File2=UART
+File3=Conversions
+File4=String
+[EXPANDED NODES]
+Node1=Sources
+Node2=Image Files
+Node3=Active Comments Files
+Node4=Output Files
+Count=4

@@ -1,0 +1,129 @@
+{*
+ * Project name:
+     Can_Spi_1st (CAN Network demonstration with mikroE's CAN-SPI module)
+ * Copyright:
+     (c) MikroElektronika, 2009.
+ * Revision History:
+     20091106:
+       - initial release;
+ * Description:
+     This project is a simple demonstration of using CAN-SPI module; with minor
+     adjustments, it should work with any other MCU that has a SPI module.
+     This code demonstrates how to use CANSPI library functions and procedures.
+     It is used together with the Can_Spi_2nd example (on second MCU), and it can
+     be used to test the connection of MCU to the CAN network.
+     This node initiates the communication with the Can_2nd node by sending some
+     data to its address. The 2nd node responds by sending back the data incre-
+     mented by 1. This (1st) node then does the same and sends incremented data
+     back to 2nd node, etc.
+ * Test configuration:
+     MCU:             dsPIC30F4013
+                      http://ww1.microchip.com/downloads/en/DeviceDoc/70138F.pdf
+     Dev.Board:       EasydsPIC6
+                      http://www.mikroe.com/eng/products/view/434/easydspic6-development-system/
+     Oscillator:      XT-PLL8, 10.000MHz
+     Ext. Modules:    mikroE ac:CAN_SPI module on PORTF
+                      SmartADAPT Extra Development Board.
+                      http://www.mikroe.com/eng/products/view/157/smartadapt/
+     SW:              mikroPascal PRO for dsPIC30/33 and PIC24
+                      http://www.mikroe.com/eng/products/view/230/mikropascal-pro-for-dspic30-33-and-pic24/
+ * NOTES:
+     - Consult the CAN standard about CAN bus termination resistance.
+     - Turn on LEDs on PORTB.
+ *}
+
+program Can_Spi_1st;
+
+const ID_1st : longint = 12111;
+const ID_2nd : longint = 3;
+
+
+const
+  CAN_SWJ        = 1;             // Set up for 125Khz Baud Rate with a 16Mhz Crystal
+  CAN_BRP        = 3;
+  CAN_PROP_SEG   = 3;
+  CAN_PHASESEG_1 = 3;
+  CAN_PHASESEG_2 = 4;
+  
+var
+   s_DataLen: array[3] of char;
+
+var Can_Init_Flags, Can_Send_Flags, Can_Rcv_Flags : word;   // can flags
+    Rx_Data_Len : word;                                     // received data length in bytes
+    RxTx_Data   : array[8] of byte;                         // can rx/tx data buffer
+    Msg_Rcvd : byte;                                        // reception flag
+    Tx_ID, Rx_ID : dword;                                   // can rx and tx ID
+
+// CANSPI module connections
+var CanSpi_CS            : sbit at  LATF0_bit;
+    CanSpi_CS_Direction  : sbit at TRISF0_bit;
+    CanSpi_Rst           : sbit at LATF1_bit;
+    CanSpi_Rst_Direction : sbit at TRISF1_bit;
+// End CANSPI module connections
+
+begin
+
+  ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
+
+  PORTB := 0;                                           // clear PORTB
+  TRISB := 0;                                           // set PORTB as output
+
+  Can_Init_Flags := 0;                                  //
+  Can_Send_Flags := 0;                                  // clear flags
+  Can_Rcv_Flags  := 0;                                  //
+
+  Can_Send_Flags := _CANSPI_TX_PRIORITY_0 and           // form value to be used
+                    _CANSPI_TX_XTD_FRAME and            // with CANSPIWrite
+                    _CANSPI_TX_NO_RTR_FRAME;
+
+  Can_Init_Flags := _CANSPI_CONFIG_SAMPLE_THRICE and    // form value to be used
+                    _CANSPI_CONFIG_PHSEG2_PRG_ON and    // with CANSPIInit
+                    _CANSPI_CONFIG_XTD_MSG and
+                    _CANSPI_CONFIG_DBL_BUFFER_ON and
+                    _CANSPI_CONFIG_VALID_XTD_MSG;
+
+// Initialize UART
+  UART1_Init(115200);                       // Initialize UART module a
+  Delay_ms(100);                            // Wait for UART module to stabilize
+
+  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate
+                          // locations. This is used to free the pins for other module, namely the SPI.
+                          
+// Initialize SPI1 module
+  SPI1_Init();
+  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
+  SPI1CON := SPI1CON or $0003 or $0010;  // Setup for 5 Mhz (with the CAN plug in boards)
+
+  CANSPIInitialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, CAN_INIT_FLAGS);   // Initialize external CANSPI module
+  CANSPISetOperationMode(_CANSPI_MODE_CONFIG,0xFF);                     // set CONFIGURATION mode
+  CANSPISetMask(_CANSPI_MASK_B1,-1,_CANSPI_CONFIG_XTD_MSG);             // set all mask1 bits to ones
+  CANSPISetMask(_CANSPI_MASK_B2,-1,_CANSPI_CONFIG_XTD_MSG);             // set all mask2 bits to ones
+  CANSPISetFilter(_CANSPI_FILTER_B2_F4,ID_2nd,_CANSPI_CONFIG_XTD_MSG);  // set id of filter B2_F4 to 2nd node ID
+
+  CANSPISetOperationMode(_CANSPI_MODE_NORMAL,0xFF);                     // set NORMAL mode
+
+// Set initial data to be sent
+  RxTx_Data[0] := 9;
+
+  CANSPIWrite(ID_1st, RxTx_Data, 1, Can_Send_Flags);                            // send initial message
+
+  while (TRUE) do
+    begin                                                                       // endless loop
+      Msg_Rcvd := CANSPIRead(Rx_ID , RxTx_Data , Rx_Data_Len, Can_Rcv_Flags);   // receive message
+      if ((Rx_ID = ID_2nd) and Msg_Rcvd) then                                   // if message received check id
+        begin
+          RB10_bit := 1;
+          UART_Write_Text('Recieved Data');
+          UART_Write_Text('Length: ');
+          ByteToStr(Rx_Data_Len, s_DataLen);
+          UART_Write_Text(s_DataLen);
+          UART_Write(13);
+          UART_Write(10);
+          RB10_bit := 0;
+          PORTB := RxTx_Data[0];                                                // id correct, output data at PORTD
+          Inc(RxTx_Data[0]);                                                    // increment received data
+          Delay_ms(10);
+          CANSPIWrite(ID_1st, RxTx_Data, 1, Can_Send_Flags);                    // send incremented data back
+        end;
+    end;
+end.
