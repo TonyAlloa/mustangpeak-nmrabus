@@ -3,8 +3,18 @@ unit CAN_Data;
 {$I Options.inc}
 
 const
+  LF = Char($0D) + Char($0A);
+  
+  
   MAX_CAN_LIST_LENGTH = 6;
   MAX_CAN_DATA_BYTES = 8;
+  
+const
+  CAN_LAYER_STATE_TRANSMIT_PENDING    = $0001;
+  CAN_LAYER_STATE_TRANSMITTED         = $0002;
+  CAN_LAYER_STATE_SUCCESS             = $0004;
+  CAN_LAYER_STATE_ERROR               = $0008;
+  CAN_LAYER_STATE_INITIAL_LOAD = CAN_LAYER_STATE_TRANSMIT_PENDING or CAN_LAYER_STATE_SUCCESS;
 
 type
   TCANData = array[8] of Byte;
@@ -24,12 +34,10 @@ type
     Tail: Byte;
   end;
   PCAN_List = ^TCAN_List;
-  
+ 
   TCAN_Layer_Buffer = record                                                    // CAN Layer Packets, since this layer is well defined as a high priority "question"/"response" type interchange only one level of buffing is used
     Packet: TCAN_Packet;
-    Full,
-    Transmitting,
-    ReceivedRID: Boolean;
+    State: Word;                                                                // See the TCAN_LAYER_STATE_xxx constants
   end;
   PCAN_Layer_Buffer = ^TCAN_Layer_Buffer;
   
@@ -71,8 +79,7 @@ procedure CAN_Data_Initialize;
 begin
   InitializeQueue(@CAN_Rx_List);
   InitializeQueue(@CAN_Tx_List);
-  CAN_Layer_Buffer.Full := False;
-  CAN_Layer_Buffer.Transmitting := False;
+  CAN_Layer_Buffer.State := 0;
 end;
 
 procedure CAN_Data_LoadPacket(Packet: PCAN_Packet; ID: DWord; DataCount: Byte; Byte7, Byte6, Byte5, Byte4, Byte3, Byte2, Byte1, Byte0: Byte; IsExtended: Boolean);
@@ -130,22 +137,13 @@ end;
 
 function CAN_Data_ListAddCANLayer(Packet: PCAN_Packet): Boolean;
 begin
-  if not CAN_Layer_Buffer.Full then
+  if CAN_Layer_Buffer.State and CAN_LAYER_STATE_TRANSMIT_PENDING = 0 then
   begin
     CAN_Layer_Buffer.Packet := Packet^;
-    CAN_Layer_Buffer.Full := True;
-    CAN_Layer_Buffer.Transmitting := True;
+    CAN_Layer_Buffer.State := CAN_LAYER_STATE_INITIAL_LOAD;  // Assume Success
     Result := True
   end else
     Result := False
-end;
-
-function CAN_Data_GetBufferCANLayer: PCAN_Layer_Buffer;
-begin
-  if CAN_Layer_Buffer.Full then
-    Result := @CAN_Layer_Buffer
-  else
-    Result := nil
 end;
 
 

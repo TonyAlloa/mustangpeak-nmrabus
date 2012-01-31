@@ -61,6 +61,10 @@ var
   NMRABus: TNMRABus;
   
   
+  
+    sx: string[32];
+  
+  
   procedure NMRABus_Connect;
   function NMRABus_Connected: Boolean;
   procedure NMRABus_Disconnect;
@@ -153,57 +157,36 @@ end;
 
 procedure NMRABus_GlobalTimer;
 begin
-  Inc(NMRABus.RIDTimeCounter)
+  Inc(NMRABus.RIDTimeCounter);
 end;
 
-function UniqueNodeIDTestPass: Boolean;
+function UniqueNodeIDTestPass(MessageType: Word): Boolean;
 var
   Packet: TCAN_Packet;
 begin
   Result := False;
-  CAN_Layer_Buffer.Transmitting := True;
-  CAN_Layer_Buffer.ReceivedRID := False;
-  // Transmitting and the RIDTimeCounter are reset in the Tx Complete Interrupt
-  while CAN_Layer_Buffer.Transmitting do
-    Delay_us(100);
-      
-  while NMRABus.RIDTimeCounter < RID_TIME_COUNT_MAX do
-    Result := not CAN_Layer_Buffer.ReceivedRID
+  CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(MessageType), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
+  CAN_Data_ListAddCANLayer(@Packet);                                            // Load the high priority transmitter buffer
+  while CAN_Layer_Buffer.State and CAN_LAYER_STATE_TRANSMIT_PENDING <> 0 do;    // Wait for the Bus Timer to load and transmit the packet on the CAN Bus
+  while NMRABus.RIDTimeCounter < RID_TIME_COUNT_MAX do;                         // The message has hit the CAN Bus now wait and see if anyone objects to our Alias ID
+  if CAN_Layer_Buffer.State and CAN_LAYER_STATE_ERROR = 0 then
+    Result := CAN_Layer_Buffer.State and CAN_LAYER_STATE_SUCCESS <> 0
 end;
 
 procedure NMRABus_Connect;
-var
-  Packet: TCAN_Packet;
 begin
   NMRABus.State := NMRABus.State and not BS_PERMITED;                           // Not permitted until we successfully get through this log in series
-  CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_CID0), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-  CAN_Data_ListAddCANLayer(@Packet);                                            // Load the high priority transmitter buffer
-  if UniqueNodeIDTestPass then                                                  // Wait 50ms+ for RID to be received
-  begin
-    CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_CID1), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-    CAN_Data_ListAddCANLayer(@Packet);                                          // Load the high priority transmitter buffer
-    if UniqueNodeIDTestPass then                                                // Wait 50ms+ for RID to be received
-    begin
-      CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_CID2), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-      CAN_Data_ListAddCANLayer(@Packet);                                        // Load the high priority transmitter buffer
-      if UniqueNodeIDTestPass then                                              // Wait 50ms+ for RID to be received
-      begin
-        CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_CID3), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-        CAN_Data_ListAddCANLayer(@Packet);                                      // Load the high priority transmitter buffer
-        if UniqueNodeIDTestPass then                                            // Wait 50ms+ for RID to be received
-        begin
-          CAN_Data_LoadPacket(@Packet, NMRABus_CheckIDFrameEncode(FT_RID), 0, 0, 0, 0, 0, 0, 0, 0, 0, True);
-          CAN_Data_ListAddCANLayer(@Packet);                                    // Load the high priority transmitter buffer
-          if UniqueNodeIDTestPass then                                          // Wait 50ms+ for RID to be received
+  if UniqueNodeIDTestPass(FT_CID0) then                                         // Wait 50ms+ for RID to be received
+    if UniqueNodeIDTestPass(FT_CID1) then                                       // Wait 50ms+ for RID to be received
+      if UniqueNodeIDTestPass(FT_CID2) then                                     // Wait 50ms+ for RID to be received
+        if UniqueNodeIDTestPass(FT_CID3) then                                   // Wait 50ms+ for RID to be received
+          if UniqueNodeIDTestPass(FT_RID) then                                  // Wait 50ms+ for RID to be received
             NMRABus.State := NMRABus.State or BS_PERMITED;
-        end
-      end
-    end
-  end
 end;
 
 procedure NMRABus_Disconnect;
 begin
+  NMRABus.State := NMRABus.State and not BS_PERMITED;
 end;
 
 end.

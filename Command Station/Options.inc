@@ -3,4 +3,4 @@
 
 {.$DEFINE DCCTIMER_DISABLE}             // Does not enable the DCC 56us Timer
 
-{$DEFINE UART_ENABLE}                  // Adds/Removes all UART Code from the build
+{.$DEFINE UART_ENABLE}                  // Adds/Removes all UART Code from the build

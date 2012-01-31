@@ -24,8 +24,6 @@ program NMRABusCommandStation;
  * NOTES:
  *}
  
- DOES NOT RECOVER FROM NODE 2 BEING OFF....
- 
 uses
   NMRABus, MCP2515, CAN_Data, MCU_Setup;
   
@@ -65,29 +63,17 @@ begin
     UART1_Write_Text(s_Temp2);
   end;
 end;
+
+procedure PrintConnectedState;
+begin
+  if NMRABus_Connected then
+    UART1_Write_Text('Connected'+LF)
+  else
+    UART1_Write_Text('Not Connected'+LF)
+end;
 {$ENDIF}
 
-procedure CheckForPendingCANLayerPacket(ClearInterruptFlag: Boolean);
-var
-  TxControl: Byte;
-begin
-  if ClearInterruptFlag then
-    MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
-    
-  if CAN_Layer_Buffer.Transmitting then
-  begin
-    LATD0_bit := not LATD0_bit;
-    TXControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
-    if TXControl.TXREQ_MCP2515 = 0 then
-    begin
-      MCP2515_CANWriteTXBuffer(CAN_TX_1, CAN_Layer_Buffer.Packet.ID, CAN_Layer_Buffer.Packet.Count, CAN_Layer_Buffer.Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer
-      CAN_Layer_Buffer.Transmitting := False;                                   // Release the loop waiting for the transmission in NMRABus.mpas
-      NMRABus.RIDTimeCounter := 0;                                              // Start timing out the spec time to wait to see if the Alais ID is a duplicate
-    end
-  end;
-end;
-
-procedure CheckForPendingMessageLayerPacket(ClearInterruptFlag: Boolean);
+procedure CheckForPendingMessageLayerPacket(CalledFromTxBufferEmptyInterrupt: Boolean);
 var
   TxControl: Byte;
   Packet: TCAN_Packet;
@@ -99,7 +85,7 @@ begin
   // The Tx timer currently will clear the TxF Flag so if the timer slips in "just before" this interrupt, that is signaling an empty transmitter,
   // the Tx timer will load the Tx buffer and clear the flag.  That means this will be called but the flag will be cleared and this branch will
   // not be called and we are safe from overwriting the Tx buffer in the MCP2515 with what was just loaded in the Tx Timer.
-  if ClearInterruptFlag then
+  if CalledFromTxBufferEmptyInterrupt then
     MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
     
   if CAN_Data_NextPacketMessageLayer(@CAN_Tx_List, Packet) then                 // Is there a Message Level Packet in the list ready to be transmitted?
@@ -118,48 +104,72 @@ begin
   CAN_Data_ListAddMessageLayer(@CAN_Rx_List, @Packet);                                          // Queue the Packet into the circular recieve list
 end;
 
+procedure CheckForPendingCANLayerPacket(CalledFromTxBufferEmptyInterrupt: Boolean);
+var
+  TxControl: Byte;
+begin
+  if CalledFromTxBufferEmptyInterrupt then
+  begin
+    MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
+    if CAN_Layer_Buffer.State and CAN_LAYER_STATE_TRANSMIT_PENDING <> 0 then
+    begin
+      LATD0_bit := not LATD0_bit;
+      CAN_Layer_Buffer.State := CAN_Layer_Buffer.State or CAN_LAYER_STATE_TRANSMITTED;
+      CAN_Layer_Buffer.State := CAN_Layer_Buffer.State and not CAN_LAYER_STATE_TRANSMIT_PENDING;
+      NMRABus.RIDTimeCounter := 0;                                                // Start timing out the spec time to wait to see if the Alais ID is a duplicate
+    end
+  end;
+
+  if CAN_Layer_Buffer.State and CAN_LAYER_STATE_TRANSMIT_PENDING <> 0 then
+  begin
+    TXControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
+    if TXControl.TXREQ_MCP2515 = 0 then                                         // Is the Transmit Buffer Empty?
+      MCP2515_CANWriteTXBuffer(CAN_TX_1, CAN_Layer_Buffer.Packet.ID, CAN_Layer_Buffer.Packet.Count, CAN_Layer_Buffer.Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer
+  end;
+end;
+
 procedure PacketReceivedOnCANLayer;
 var
   Packet: TCAN_Packet;
   Decode: DWord;
 begin
   MCP2515_CANReadRXBuffer(CAN_TX_1, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
+  Decode := Packet.ID shr 12;                                                 // Strip off the lower 12 bits (Alias ID)
+  if Decode and $7000 <> 0 then                                               // Is it a Check ID (CID) message?
   begin
-    Decode := Packet.ID shr 12;                                                 // Strip off the lower 12 bits (Alias ID)
-    if Decode and $7000 <> 0 then                                               // Is it a Check ID (CID) message?
-    begin
-      case Decode of
-        $7000: begin         // Check ID (CID) Frame - “Most” Significant 12 Bits of 48 Bit Node ID
-               end;
-        $6000: begin         // Check ID (CID) Frame - 3rd 12 Bits of 48 Bit Node ID
-               end;
-        $5000: begin         // Check ID (CID) Frame - 2nd 12 Bits of 48 Bit Node ID
-               end;
-        $4000: begin         // Check ID (CID) Frame - “Least” Significant 12 Bits of 48 Bit Node ID
-               end;
-      end
-    end else
-    begin
-      case Decode of
-        $0700: begin          // Reserve ID Frame (RID)
-                 // Someone is using the Alias ID we want to use
-                 NMRABus.RIDTimeCounter := RID_TIME_COUNT_MAX;                             // Stop the clock waiting for the CAN Layer message response
-                 CAN_Layer_Buffer.ReceivedRID := True;
-               end;
-        $0701: begin          // Alias Map Definition (AMD) Frame
-               end;
-        $0702: begin          // Alias Mapping Enquiry (AME) Frame
-               end;
-        $0703: begin          // Alias Map Reset (AMR) Frame
-               end;
-      end;
+    case Decode of
+      $7000: begin         // Check ID (CID) Frame - “Most” Significant 12 Bits of 48 Bit Node ID
+             end;
+      $6000: begin         // Check ID (CID) Frame - 3rd 12 Bits of 48 Bit Node ID
+             end;
+      $5000: begin         // Check ID (CID) Frame - 2nd 12 Bits of 48 Bit Node ID
+             end;
+      $4000: begin         // Check ID (CID) Frame - “Least” Significant 12 Bits of 48 Bit Node ID
+             end;
+    end
+  end else
+  begin
+    case Decode of
+      $0700: begin          // Reserve ID Frame (RID)
+               // Someone is using the Alias ID we want to use
+               NMRABus.RIDTimeCounter := RID_TIME_COUNT_MAX;                                     // Stop the clock waiting for the CAN Layer message response
+               CAN_Layer_Buffer.State := CAN_Layer_Buffer.State and not CAN_LAYER_STATE_SUCCESS; // Another Node has the same Alias ID
+             end;
+      $0701: begin          // Alias Map Definition (AMD) Frame
+             end;
+      $0702: begin          // Alias Mapping Enquiry (AME) Frame
+             end;
+      $0703: begin          // Alias Map Reset (AMR) Frame
+             end;
     end;
   end;
 end;
 
 procedure HandleMCP2515Error;
 begin
-  MCP2515_CANModifyBit(CANINTE_MCP2515, ERRIF_MCP2515, False);       // Clear Error Interrupt Flag
+  MCP2515_CANModifyBit(CANINTF_MCP2515, ERRIF_MCP2515, False);       // Clear Error Interrupt Flag
+  CAN_Layer_Buffer.State := CAN_Layer_Buffer.State or CAN_LAYER_STATE_ERROR;
+  CAN_Layer_Buffer.State := CAN_Layer_Buffer.State and not CAN_LAYER_STATE_SUCCESS; // Another Node has the same Alias ID
 end;
 
 
@@ -183,9 +193,6 @@ procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 1m
 begin
   T2IF_bit := 0;  // Clear the Flag
-  
-  LATD1_bit := not LATD1_bit;
-  
   NMRABus_GlobalTimer;
 end;
 
@@ -210,8 +217,6 @@ var
 begin
   CNIF_bit := 0;     // Clear Flag
 
- // UART1_Write_Text('CN Int');
-  
   while (PORTF.CAN_INTERRUPT_PIN = 0) do                                        // ALWAYS check for the interrupt pin to be low as it won't go high until all are cleared
   begin
     Flags := MCP2515_CANReadRegister(CANINTF_MCP2515);
@@ -247,12 +252,15 @@ begin
   MCP2515_Initialize;
   MCU_Setup_Initialize;
   NMRABus_Connect;
+  {$IFDEF UART_ENABLE}PrintConnectedState;{$ENDIF}
   while (TRUE) do
     begin
       if not NMRABus_Connected then
       begin
+        {$IFDEF UART_ENABLE}UART1_Write_Text('Reconnecting'+LF);{$ENDIF}
         RecreateAliasID;
         NMRABus_Connect;
+       {$IFDEF UART_ENABLE}PrintConnectedState;{$ENDIF}
       end;
       
       if NMRABus_Connected then
