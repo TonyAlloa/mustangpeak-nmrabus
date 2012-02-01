@@ -30,12 +30,16 @@ const
   CAN_PROP_SEG   = 3;
   CAN_PHASESEG_1 = 3;
   CAN_PHASESEG_2 = 4;
+  
+
+  ID_1st : DWord = $08002F4F;          // Set the NMRABus Frame Type to NMRABus Message (1)
+  ID_2nd : DWord = $08000003;
 
 var Can_Init_Flags, Can_Send_Flags, Can_Rcv_Flags : byte;    // can flags
     Rx_Data_Len : byte;                                      // received data length in bytes
     RxTx_Data    : array[8] of byte;                         // CAN rx/tx data buffer
     Msg_Rcvd : byte;                                         // reception flag
-    Tx_ID, Rx_ID : longint;                                  // can rx and tx ID
+    Tx_ID, Rx_ID : DWord;                                  // can rx and tx ID
 
 // CANSPI module connections
 var CanSpi_CS : sbit at RC0_bit;
@@ -48,6 +52,8 @@ begin
 
   ANSEL  := 0;                                                 // Configure AN pins as digital I/O
   ANSELH := 0;
+  PORTA := 0;                                                  // clear PORTA
+  TRISA := 0;                                                  // set PORTA as output
   PORTB := 0;                                                  // clear PORTC
   TRISB := 0;                                                  // set PORTC as output
   
@@ -73,9 +79,9 @@ begin
   CANSPISetOperationMode(_CANSPI_MODE_CONFIG,0xFF);                            // set CONFIGURATION mode
   CANSPISetMask(_CANSPI_MASK_B1, LongInt($FFFFFFFF), _CANSPI_CONFIG_XTD_MSG);                    // set all mask1 bits to ones
   CANSPISetMask(_CANSPI_MASK_B2, LongInt($FFFFFFFF), _CANSPI_CONFIG_XTD_MSG);                    // set all mask2 bits to ones
-  CANSPISetFilter(_CANSPI_FILTER_B2_F3, 12111, _CANSPI_CONFIG_XTD_MSG);          // set id of filter B2_F3 to 3
+  CANSPISetFilter(_CANSPI_FILTER_B2_F3, ID_1st, _CANSPI_CONFIG_XTD_MSG);          // set id of filter B2_F3 to 3
   CANSPISetOperationMode(_CANSPI_MODE_NORMAL,0xFF);                            // set NORMAL mode
-  Tx_ID := 3;                                                                  // set tx ID
+  Tx_ID := ID_2nd;                                                             // set tx ID
   
   while (TRUE) do                                                              // endless loop
     begin
@@ -84,10 +90,10 @@ begin
   //   CANSPIWrite(Tx_ID, RxTx_Data, 1, Can_Send_Flags);
   //    delay_ms(10);
   ///
-    
+      PORTA := not PORTA;
     
       Msg_Rcvd := CANSPIRead(Rx_ID , RxTx_Data , Rx_Data_Len, Can_Rcv_Flags);  // receive message
-      if ((Rx_ID = 12111) and Msg_Rcvd) then                                   // if message received check id
+      if ((Rx_ID = ID_1st) and Msg_Rcvd) then                                   // if message received check id
         begin
           PORTB := RxTx_Data[0];                                               // id correct, output data at PORTB
           Inc(RxTx_Data[0]) ;                                                  // increment received data

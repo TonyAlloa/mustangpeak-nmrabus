@@ -86,13 +86,16 @@ begin
   // the Tx timer will load the Tx buffer and clear the flag.  That means this will be called but the flag will be cleared and this branch will
   // not be called and we are safe from overwriting the Tx buffer in the MCP2515 with what was just loaded in the Tx Timer.
   if CalledFromTxBufferEmptyInterrupt then
-    MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
+  begin
+    MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
+
+  end;
     
   if CAN_Data_NextPacketMessageLayer(@CAN_Tx_List, Packet) then                 // Is there a Message Level Packet in the list ready to be transmitted?
   begin
-    TxControl := MCP2515_CANReadRegister(TXB0CTRL_MCP2515);
+    TxControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
     if TxControl.TXREQ_MCP2515 = 0 then                                         // CAN Controller Buffer is not currently pending a transmission
-      MCP2515_CANWriteTXBuffer(CAN_TX_0, Packet.ID, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
+      MCP2515_CANWriteTXBuffer(CAN_TX_1, Packet.ID, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
   end;
 end;
 
@@ -100,7 +103,7 @@ procedure PacketReceivedOnMessageLayer;
 var
   Packet: TCAN_Packet;
 begin
-  MCP2515_CANReadRXBuffer(CAN_TX_0, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);  // Flags AutoReset
+  MCP2515_CANReadRXBuffer(CAN_TX_1, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);  // Flags AutoReset
   CAN_Data_ListAddMessageLayer(@CAN_Rx_List, @Packet);                                          // Queue the Packet into the circular recieve list
 end;
 
@@ -110,7 +113,7 @@ var
 begin
   if CalledFromTxBufferEmptyInterrupt then
   begin
-    MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
+    MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
     if CAN_Layer_Buffer.State and CAN_LAYER_STATE_TRANSMIT_PENDING <> 0 then
     begin
       LATD0_bit := not LATD0_bit;
@@ -122,9 +125,9 @@ begin
 
   if CAN_Layer_Buffer.State and CAN_LAYER_STATE_TRANSMIT_PENDING <> 0 then
   begin
-    TXControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
+    TXControl := MCP2515_CANReadRegister(TXB0CTRL_MCP2515);
     if TXControl.TXREQ_MCP2515 = 0 then                                         // Is the Transmit Buffer Empty?
-      MCP2515_CANWriteTXBuffer(CAN_TX_1, CAN_Layer_Buffer.Packet.ID, CAN_Layer_Buffer.Packet.Count, CAN_Layer_Buffer.Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer
+      MCP2515_CANWriteTXBuffer(CAN_TX_0, CAN_Layer_Buffer.Packet.ID, CAN_Layer_Buffer.Packet.Count, CAN_Layer_Buffer.Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer
   end;
 end;
 
@@ -133,7 +136,7 @@ var
   Packet: TCAN_Packet;
   Decode: DWord;
 begin
-  MCP2515_CANReadRXBuffer(CAN_TX_1, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
+  MCP2515_CANReadRXBuffer(CAN_TX_0, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
   Decode := Packet.ID shr 12;                                                 // Strip off the lower 12 bits (Alias ID)
   if Decode and $7000 <> 0 then                                               // Is it a Check ID (CID) message?
   begin
@@ -200,15 +203,12 @@ procedure INTERRUPT_CAN_TX_Timer(); iv IVT_ADDR_T3INTERRUPT;
 begin
   T3IF_bit := 0;  // Clear the Flag
   
- // LATD0_bit := 1;
   // We are safe in reading the CAN here as we have the same priority as the Pin Change. The CN not get interrupted in the middle of this routine so the SPI calls are safe.
   // It is possible that the Interrupt Flag is set and TxReq is low if this timer is called just before pin change notification interrupt is called.  If so it is
   // necessary to clear the interrupt flag since we have already handled loading the Tx register and the pin change notification interrupt does not check for TxReq to be
   // zero before loading the transmitter
   CheckForPendingCANLayerPacket(False);
   CheckForPendingMessageLayerPacket(False);
-  
- // LATD0_bit := 0
 end;
 
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;
@@ -216,21 +216,24 @@ var
   Flags: Byte;
 begin
   CNIF_bit := 0;     // Clear Flag
-
   while (PORTF.CAN_INTERRUPT_PIN = 0) do                                        // ALWAYS check for the interrupt pin to be low as it won't go high until all are cleared
   begin
+    LATD1_bit := not LATD1_bit;
+    
+    PrintMCP2515Registers(CANINTF_MCP2515, 1);
+    
     Flags := MCP2515_CANReadRegister(CANINTF_MCP2515);
-    
-    if Flags.RX0IF_MCP2515 = 1 then                                           // Receiver 0 full
-      PacketReceivedOnMessageLayer;
-    if Flags.TX0IF_MCP2515 = 1 then                                           // Transmitter 0 empty, this means a Message Layer normal priority message was transmitted
-      CheckForPendingMessageLayerPacket(True);                                // If another Message Layer Packet is in the circular list load it into the CAN transmit buffer
-      
-    if Flags.RX1IF_MCP2515 = 1 then                                           // Receiver 1 full
+
+    if Flags.RX0IF_MCP2515 = 1 then                                           // Receiver 1 full
       PacketReceivedOnCANLayer;
-    if Flags.TX1IF_MCP2515 = 1 then                                           // Transmitter 1 empty, this is means CAN Layer high priority message was transmitted
+    if Flags.TX0IF_MCP2515 = 1 then                                           // Transmitter 1 empty, this is means CAN Layer high priority message was transmitted
       CheckForPendingCANLayerPacket(True);
-    
+      
+    if Flags.RX1IF_MCP2515 = 1 then                                           // Receiver 0 full
+      PacketReceivedOnMessageLayer;
+    if Flags.TX1IF_MCP2515 = 1 then                                           // Transmitter 0 empty, this means a Message Layer normal priority message was transmitted
+      CheckForPendingMessageLayerPacket(True);                                // If another Message Layer Packet is in the circular list load it into the CAN transmit buffer
+
     if Flags.ERRIF_MCP2515 = 1 then
       HandleMCP2515Error;
   end;
@@ -265,15 +268,25 @@ begin
       
       if NMRABus_Connected then
       begin
-        if CAN_Data_NextPacketMessageLayer(@CAN_Rx_List, Packet) then
+      
+        // Start the interchange
+        Packet.Bytes[0] := 4;
+     //   CAN_Data_LoadPacket(@Packet, ID_1st, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
+     //   CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
+     //   UART1_Write_Text('Starting'+LF);
+        
+        while NMRABus_Connected do
         begin
-          if Packet.ID = ID_2nd then                                              // Message was received (interrupt) if it is ours then ...
+          if CAN_Data_NextPacketMessageLayer(@CAN_Rx_List, Packet) then
           begin
-            PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
-            Inc(Packet.Bytes[0]);
-            CAN_Data_LoadPacket(@Packet, ID_1st, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-            Delay_ms(10);
-            CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
+            if Packet.ID = ID_2nd then                                              // Message was received (interrupt) if it is ours then ...
+            begin
+              PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
+              Inc(Packet.Bytes[0]);
+              CAN_Data_LoadPacket(@Packet, ID_1st, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
+              Delay_ms(10);
+              CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
+            end
           end
         end
       end

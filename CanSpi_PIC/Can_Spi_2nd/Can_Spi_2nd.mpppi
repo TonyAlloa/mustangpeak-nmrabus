@@ -54,5 +54,4 @@ File1=SPI
 Node1=Sources
 Node2=Image Files
 Node3=Active Comments Files
-Node4=Output Files
-Count=4
+Count=3
