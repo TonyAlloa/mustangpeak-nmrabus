@@ -22,14 +22,24 @@ File0=Can_Spi_1st.mpas
 Count=0
 [IMAGES]
 Count=1
-File0=..\CAN SPI.jpg
+File0=
 ActiveImageIndex=0
+[OPENED_FILES]
+Count=1
+File0=Can_Spi_1st.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
 Count=1
-File0=CAN_SPI.xml
+File0=
 [OTHER_FILES]
+Count=0
+[SEARCH_PATH]
+Count=3
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\CanSpi_dsPIC_Baseline\
+[HEADER_PATH]
 Count=0
 [HEADERS]
 Count=0
@@ -41,7 +51,4 @@ File0=CAN_SPI
 File1=SPI
 [EXPANDED NODES]
 Node1=Sources
-Node2=Image Files
-Node3=Active Comments Files
-Node4=Output Files
-Count=4
+Count=1

@@ -116,7 +116,6 @@ begin
     MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
     if CAN_Layer_Buffer.State and CAN_LAYER_STATE_TRANSMIT_PENDING <> 0 then
     begin
-      LATD0_bit := not LATD0_bit;
       CAN_Layer_Buffer.State := CAN_Layer_Buffer.State or CAN_LAYER_STATE_TRANSMITTED;
       CAN_Layer_Buffer.State := CAN_Layer_Buffer.State and not CAN_LAYER_STATE_TRANSMIT_PENDING;
       NMRABus.RIDTimeCounter := 0;                                                // Start timing out the spec time to wait to see if the Alais ID is a duplicate
@@ -170,9 +169,12 @@ end;
 
 procedure HandleMCP2515Error;
 begin
-  MCP2515_CANModifyBit(CANINTF_MCP2515, ERRIF_MCP2515, False);       // Clear Error Interrupt Flag
-  CAN_Layer_Buffer.State := CAN_Layer_Buffer.State or CAN_LAYER_STATE_ERROR;
-  CAN_Layer_Buffer.State := CAN_Layer_Buffer.State and not CAN_LAYER_STATE_SUCCESS; // Another Node has the same Alias ID
+  MCP2515_CANModifyBit(CANINTF_MCP2515, ERRIF_MCP2515, False);                  // Clear Error Interrupt Flag
+  if NMRABus.State and BS_PERMITED = 0 then                                     // Only look during the time the node is attempting to log onto the bus (Inhibited) and become Permitted
+  begin
+    CAN_Layer_Buffer.State := CAN_Layer_Buffer.State or CAN_LAYER_STATE_ERROR;
+    CAN_Layer_Buffer.State := CAN_Layer_Buffer.State and not CAN_LAYER_STATE_SUCCESS; // Something went wrong on the bus while trying to log on to it, start over
+  end
 end;
 
 
@@ -218,11 +220,9 @@ begin
   CNIF_bit := 0;     // Clear Flag
   while (PORTF.CAN_INTERRUPT_PIN = 0) do                                        // ALWAYS check for the interrupt pin to be low as it won't go high until all are cleared
   begin
-    LATD1_bit := not LATD1_bit;
-    
-    PrintMCP2515Registers(CANINTF_MCP2515, 1);
-    
     Flags := MCP2515_CANReadRegister(CANINTF_MCP2515);
+    
+          LATD0_bit := not LATD0_bit;
 
     if Flags.RX0IF_MCP2515 = 1 then                                           // Receiver 1 full
       PacketReceivedOnCANLayer;
@@ -271,19 +271,19 @@ begin
       
         // Start the interchange
         Packet.Bytes[0] := 4;
-     //   CAN_Data_LoadPacket(@Packet, ID_1st, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-     //   CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
-     //   UART1_Write_Text('Starting'+LF);
+        CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
+        CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
+        UART1_Write_Text('Starting'+LF);
         
         while NMRABus_Connected do
         begin
           if CAN_Data_NextPacketMessageLayer(@CAN_Rx_List, Packet) then
           begin
-            if Packet.ID = ID_2nd then                                              // Message was received (interrupt) if it is ours then ...
+            if Packet.ID = ID_1st then                                              // Message was received (interrupt) if it is ours then ...
             begin
               PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
               Inc(Packet.Bytes[0]);
-              CAN_Data_LoadPacket(@Packet, ID_1st, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
+              CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
               Delay_ms(10);
               CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
             end
