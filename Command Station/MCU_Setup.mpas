@@ -90,7 +90,7 @@ begin
   T3IP_1_bit := 1;
   T3IP_2_bit := 1;
   T3IE_bit := 1;      // Enable the Interrupt
-  PR3 := 5000;        // Every 150us try to load a CAN message
+  PR3 := 10000;        // Every 500us try to load a CAN message
   TON_T3CON_bit := 1; // Turn on
 
   CNIF_bit := 0;      // Clear Flag

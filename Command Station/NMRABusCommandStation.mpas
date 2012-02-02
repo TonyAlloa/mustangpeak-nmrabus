@@ -284,7 +284,7 @@ begin
               PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
               Inc(Packet.Bytes[0]);
               CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-              Delay_ms(10);
+              Delay_us(10000);
               CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
             end
           end
