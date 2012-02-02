@@ -1,6 +1,0 @@
-[PROJECTS]
-Count=2
-Project0=CAN SPI 1st\Can_Spi_1st.mppds
-Project1=CAN SPI 2nd\Can_Spi_2nd.mppds
-[ActiveProject]
-Index=0
