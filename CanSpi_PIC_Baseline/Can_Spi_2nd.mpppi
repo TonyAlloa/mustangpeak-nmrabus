@@ -35,15 +35,11 @@ File0=CAN_SPI_Board.xml
 [OTHER_FILES]
 Count=0
 [SEARCH_PATH]
-Count=8
+Count=4
 Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for PIC\defs\
 Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for PIC\Uses\P16\
-Path2=C:\Users\Jim\Desktop\NMRABus Parallels XP\CanSpi_PIC\Can_Spi_2nd\
-Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for PIC\defs\
-Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for PIC\Uses\P16\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\CanSpi_PIC\Can_Spi_2nd\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\CanSpi_PIC\
-Path7=C:\Users\Jim\Desktop\NMRABus Parallels XP\CanSpi_PIC\
+Path2=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for PIC\Examples\Extra Boards\Can Spi\Can_Spi_2nd\
+Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for PIC\Examples\Extra Boards\Can Spi\
 [HEADER_PATH]
 Count=0
 [HEADERS]
@@ -58,4 +54,5 @@ File1=SPI
 Node1=Sources
 Node2=Image Files
 Node3=Active Comments Files
-Count=3
+Node4=Output Files
+Count=4
