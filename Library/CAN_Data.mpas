@@ -20,7 +20,7 @@ type
   TCANData = array[8] of Byte;
   
   TCAN_Packet = record
-    ID: DWord;                                                                  // Standard or Extended ID
+    Header: DWord;                                                              // Standard or Extended Header
     Count: Byte;                                                                // Number of Bytes in Packet
     Bytes: TCANData;                                                            // Packet Information
     ExtendedID: Boolean;                                                        //
@@ -65,7 +65,7 @@ var
 begin
   for i := 0 to MAX_CAN_LIST_LENGTH - 1 do
   begin
-    List^.List[i].ID := 0;
+    List^.List[i].Header := 0;
     List^.List[i].Count := 0;
     for j := 0 to MAX_CAN_DATA_BYTES-1 do
       List^.List[i].Bytes[j] := 0;
@@ -84,7 +84,7 @@ end;
 
 procedure CAN_Data_LoadPacket(Packet: PCAN_Packet; ID: DWord; DataCount: Byte; Byte7, Byte6, Byte5, Byte4, Byte3, Byte2, Byte1, Byte0: Byte; IsExtended: Boolean);
 begin
-  Packet^.ID := ID;
+  Packet^.Header := ID;
   Packet^.Count := DataCount;
   Packet^.Bytes[0] := Byte0;
   Packet^.Bytes[1] := Byte1;

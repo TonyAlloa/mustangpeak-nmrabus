@@ -95,7 +95,7 @@ begin
   begin
     TxControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
     if TxControl.TXREQ_MCP2515 = 0 then                                         // CAN Controller Buffer is not currently pending a transmission
-      MCP2515_CANWriteTXBuffer(CAN_TX_1, Packet.ID, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
+      MCP2515_CANWriteTXBuffer(CAN_TX_1, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
   end;
 end;
 
@@ -103,7 +103,7 @@ procedure PacketReceivedOnMessageLayer;
 var
   Packet: TCAN_Packet;
 begin
-  MCP2515_CANReadRXBuffer(CAN_TX_1, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);  // Flags AutoReset
+  MCP2515_CANReadRXBuffer(CAN_TX_1, Packet.Header, Packet.Count, Packet.Bytes, Packet.ExtendedID);  // Flags AutoReset
   CAN_Data_ListAddMessageLayer(@CAN_Rx_List, @Packet);                                          // Queue the Packet into the circular recieve list
 end;
 
@@ -126,7 +126,7 @@ begin
   begin
     TXControl := MCP2515_CANReadRegister(TXB0CTRL_MCP2515);
     if TXControl.TXREQ_MCP2515 = 0 then                                         // Is the Transmit Buffer Empty?
-      MCP2515_CANWriteTXBuffer(CAN_TX_0, CAN_Layer_Buffer.Packet.ID, CAN_Layer_Buffer.Packet.Count, CAN_Layer_Buffer.Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer
+      MCP2515_CANWriteTXBuffer(CAN_TX_0, CAN_Layer_Buffer.Packet.Header, CAN_Layer_Buffer.Packet.Count, CAN_Layer_Buffer.Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer
   end;
 end;
 
@@ -134,36 +134,51 @@ procedure PacketReceivedOnCANLayer;
 var
   Packet: TCAN_Packet;
   Decode: DWord;
+  NodeID: TNodeID;
 begin
-  MCP2515_CANReadRXBuffer(CAN_TX_0, Packet.ID, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
-  Decode := Packet.ID shr 12;                                                 // Strip off the lower 12 bits (Alias ID)
-  if Decode and $7000 <> 0 then                                               // Is it a Check ID (CID) message?
+  MCP2515_CANReadRXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
+  
+  if Packet.Header and FT_AMD = FT_AMD then
   begin
-    case Decode of
-      $7000: begin         // Check ID (CID) Frame - “Most” Significant 12 Bits of 48 Bit Node ID
-             end;
-      $6000: begin         // Check ID (CID) Frame - 3rd 12 Bits of 48 Bit Node ID
-             end;
-      $5000: begin         // Check ID (CID) Frame - 2nd 12 Bits of 48 Bit Node ID
-             end;
-      $4000: begin         // Check ID (CID) Frame - “Least” Significant 12 Bits of 48 Bit Node ID
-             end;
+    NMRABus_PacketBytesToNodeID(@Packet, NodeID);
+    if NMRABus_EqualNodeID(NodeID) then
+    begin
+      // Signal User
+      // if Permitted send PCER Message
+      // Go Off line
     end
   end else
+  if NMRABus_EqualAliasID(Packet.Header and $00000FFF) then                   // Hey that is our Alias ID
   begin
-    case Decode of
-      $0700: begin          // Reserve ID Frame (RID)
-               // Someone is using the Alias ID we want to use
-               NMRABus.RIDTimeCounter := RID_TIME_COUNT_MAX;                                     // Stop the clock waiting for the CAN Layer message response
-               CAN_Layer_Buffer.State := CAN_Layer_Buffer.State and not CAN_LAYER_STATE_SUCCESS; // Another Node has the same Alias ID
-             end;
-      $0701: begin          // Alias Map Definition (AMD) Frame
-             end;
-      $0702: begin          // Alias Mapping Enquiry (AME) Frame
-             end;
-      $0703: begin          // Alias Map Reset (AMR) Frame
-             end;
-    end;
+    if Packet.Header and $07000000 <> 0 then
+    begin
+      if NMRABus_Connected then
+      begin
+        NMRABus.State := NMRABus.State or BS_INHIBITED_PENDING;
+        NMRABus_CreateCANControlFramePacket(FT_AMR, @Packet);
+        CAN_Data_ListAddCANLayer(@Packet);
+      end;
+    end
+  end else
+  if NMRABus_Connected then
+  begin
+    if Packet.Header and FT_AME = FT_AME then
+    begin
+      if Packet.Count <> 0 then
+      begin
+        NMRABus_PacketBytesToNodeID(@Packet, NodeID);
+        if NMRABus_EqualNodeID(NodeID) then
+        begin
+          NMRABus_CreateCANControlFramePacket(FT_AMD, @Packet);
+          CAN_Data_ListAddCANLayer(@Packet);
+        end
+      end else
+      begin
+      end
+    end else
+    begin
+      // Message Frame
+    end
   end;
 end;
 
@@ -223,6 +238,7 @@ begin
     Flags := MCP2515_CANReadRegister(CANINTF_MCP2515);
     
           LATD0_bit := not LATD0_bit;
+ //    PrintMCP2515Registers(CANINTF_MCP2515, 1);
 
     if Flags.RX0IF_MCP2515 = 1 then                                           // Receiver 1 full
       PacketReceivedOnCANLayer;
@@ -249,7 +265,6 @@ var
   Tx_ID, Rx_ID : dword;                                   // can rx and tx ID
   i: Integer;
 begin
-
   CAN_Data_Initialize;
   NMRABus_Initialize;
   MCP2515_Initialize;
@@ -261,7 +276,7 @@ begin
       if not NMRABus_Connected then
       begin
         {$IFDEF UART_ENABLE}UART1_Write_Text('Reconnecting'+LF);{$ENDIF}
-        RecreateAliasID;
+        NMRABus_RecreateAliasID;
         NMRABus_Connect;
        {$IFDEF UART_ENABLE}PrintConnectedState;{$ENDIF}
       end;
@@ -273,13 +288,13 @@ begin
         Packet.Bytes[0] := 4;
         CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
         CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
-        UART1_Write_Text('Starting'+LF);
+      //  UART1_Write_Text('Starting'+LF);
         
         while NMRABus_Connected do
         begin
           if CAN_Data_NextPacketMessageLayer(@CAN_Rx_List, Packet) then
           begin
-            if Packet.ID = ID_1st then                                              // Message was received (interrupt) if it is ours then ...
+            if Packet.Header = ID_1st then                                              // Message was received (interrupt) if it is ours then ...
             begin
               PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
               Inc(Packet.Bytes[0]);
