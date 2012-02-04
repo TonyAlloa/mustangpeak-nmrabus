@@ -97,24 +97,20 @@ begin
   Packet^.ExtendedID := IsExtended;
 end;
 
-function CAN_Data_List_Full(List: PCAN_List): Boolean;
-begin
-  Result := List^.Count = MAX_CAN_LIST_LENGTH
-end;
-
 procedure QueuePacket(Queue: PCAN_List; Packet: PCAN_Packet);
 begin
-  Queue^.List[CAN_Rx_List.Head] := Packet^;   // The head is already setup
-  Inc(Queue^.Head);                            // Move to the next possible head
-  if Queue^.Head >= MAX_CAN_LIST_LENGTH then   // Circular list
-    Queue^.Head := 0;
+  Queue^.List[Queue^.Head] := Packet^;         // The head is already setup
+  if Queue^.Head = MAX_CAN_LIST_LENGTH - 1 then   // Circular list
+    Queue^.Head := 0
+  else
+    Inc(Queue^.Head);                            // Move to the next possible head
   Inc(Queue^.Count);                           // Update the count
 end;
 
 function CAN_Data_ListAddMessageLayer(List: PCAN_List; Packet: PCAN_Packet): Boolean;
 begin
-  if not CAN_Data_List_Full(List) then
-  begin
+  if List^.Count < MAX_CAN_LIST_LENGTH then
+  begin 
     QueuePacket(List, Packet);
     Result := True;
   end else
@@ -125,10 +121,11 @@ function CAN_Data_NextPacketMessageLayer(List: PCAN_List; var Packet: TCAN_Packe
 begin
   if List^.Count > 0 then
   begin
-    Packet := List^.List[CAN_Rx_List.Tail];
-    Inc(List^.Tail);
-    if List^.Tail >= MAX_CAN_LIST_LENGTH then
-      List^.Tail := 0;
+    Packet := List^.List[List^.Tail];
+    if List^.Tail = MAX_CAN_LIST_LENGTH - 1 then
+      List^.Tail := 0
+    else
+      Inc(List^.Tail);
     Dec(List^.Count);
     Result := True;
   end else

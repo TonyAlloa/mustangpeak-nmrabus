@@ -23,10 +23,10 @@ const
 // Frame Types.  These define what the Frame of the CAN message consists of.
 const
   FT_CAN                            = $00000000;  // Frame Type CAN Control Message
-  FT_CID0                           = $04000000;  // First 12 Bits of 48 bit Node ID
-  FT_CID1                           = $05000000;  // 2rd 12 Bits of 48 bit Node ID
-  FT_CID2                           = $06000000;  // 3nd 12 Bits of 48 bit Node ID
-  FT_CID3                           = $07000000;  // Last 12 Bits of 48 bit Node ID
+  FT_CID0                           = $07000000;  // First 12 Bits of 48 bit Node ID
+  FT_CID1                           = $06000000;  // 2rd 12 Bits of 48 bit Node ID
+  FT_CID2                           = $05000000;  // 3nd 12 Bits of 48 bit Node ID
+  FT_CID3                           = $04000000;  // Last 12 Bits of 48 bit Node ID
   FT_RID                            = $00700000;  // Reserve ID
   FT_AMD                            = $00701000;  // Alias Map Definition
   FT_AME                            = $00702000;  // Alias Mapping Enquiry
@@ -268,6 +268,7 @@ end;
 // *****************************************************************************
 procedure NMRABus_LoadFramePacketDataWith48BitNodeID(Packet: PCAN_Packet);
 begin
+  Packet^.Count := 6;
   Packet^.Bytes[0] := NMRABus.Node_ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
   Packet^.Bytes[1] := NMRABus.Node_ID[1] shr 8;
   Packet^.Bytes[2] := NMRABus.Node_ID[1];
@@ -289,10 +290,10 @@ begin
   Packet^.Count := 0;
   Packet^.ExtendedID := True;
   Packet^.Header := $10000000 or VariableField or NMRABus.Node_Alias_ID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
-  if VariableField = FT_CID3 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[1] shr 8) and $00FFF000) else
-  if VariableField = FT_CID2 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
-  if VariableField = FT_CID1 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[0] shr 8) and $00FFF000) else
-  if VariableField = FT_CID0 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
+  if VariableField = FT_CID0 then Packet^.Header := Packet^.Header or (NMRABus.Node_ID[1] and $00FFF000) else
+  if VariableField = FT_CID1 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
+  if VariableField = FT_CID2 then Packet^.Header := Packet^.Header or (NMRABus.Node_ID[0] and $00FFF000) else
+  if VariableField = FT_CID3 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
   
   if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
     NMRABus_LoadFramePacketDataWith48BitNodeID(Packet);
@@ -351,12 +352,13 @@ begin
       if NMRABus_UniqueNodeIDTestPass(FT_CID2) then                             // Wait 50ms+ for RID to be received
         if NMRABus_UniqueNodeIDTestPass(FT_CID3) then                           // Wait 50ms+ for RID to be received
           if NMRABus_UniqueNodeIDTestPass(FT_RID) then                          // Wait 50ms+ for RID to be received
-          begin
-            NMRABus_CreateCANControlFramePacket(FT_AMD, @Packet);               // 6.2.2
-            CAN_Data_ListAddCANLayer(@Packet);
-            NMRABus.State := NMRABus.State or BS_PERMITED;
-            NMRABus_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Packet);
-          end;
+            if NMRABus_UniqueNodeIDTestPass(FT_AMD) then                        // Wait 50ms+ for RID to be received    // 6.2.2
+            begin
+              NMRABus.State := NMRABus.State or BS_PERMITED;
+              NMRABus_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Packet);
+              CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
+              while CAN_Tx_List.Count > 0 do;
+            end;
 end;
 
 // *****************************************************************************

@@ -77,6 +77,8 @@ procedure CheckForPendingMessageLayerPacket(CalledFromTxBufferEmptyInterrupt: Bo
 var
   TxControl: Byte;
   Packet: TCAN_Packet;
+
+    sx: string[16];
 begin
   // This is the only place to tell when a message was actually put on the CANbus.  If the TX flag is set then the message was placed on the bus
   // and the TX buffer can be loaded with a new message
@@ -88,13 +90,12 @@ begin
   if CalledFromTxBufferEmptyInterrupt then
   begin
     MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
-
   end;
-    
-  if CAN_Data_NextPacketMessageLayer(@CAN_Tx_List, Packet) then                 // Is there a Message Level Packet in the list ready to be transmitted?
+  
+  TxControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
+  if TxControl.TXREQ_MCP2515 = 0 then                                         // CAN Controller Buffer is not currently pending a transmission
   begin
-    TxControl := MCP2515_CANReadRegister(TXB1CTRL_MCP2515);
-    if TxControl.TXREQ_MCP2515 = 0 then                                         // CAN Controller Buffer is not currently pending a transmission
+    if CAN_Data_NextPacketMessageLayer(@CAN_Tx_List, Packet) then                 // Is there a Message Level Packet in the list ready to be transmitted?
       MCP2515_CANWriteTXBuffer(CAN_TX_1, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
   end;
 end;
@@ -237,7 +238,7 @@ begin
   begin
     Flags := MCP2515_CANReadRegister(CANINTF_MCP2515);
     
-          LATD0_bit := not LATD0_bit;
+    //      LATD0_bit := not LATD0_bit;
  //    PrintMCP2515Registers(CANINTF_MCP2515, 1);
 
     if Flags.RX0IF_MCP2515 = 1 then                                           // Receiver 1 full
@@ -283,12 +284,10 @@ begin
       
       if NMRABus_Connected then
       begin
-      
-        // Start the interchange
-        Packet.Bytes[0] := 4;
         CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
         CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
-      //  UART1_Write_Text('Starting'+LF);
+
+        {$IFDEF UART_ENABLE}UART1_Write_Text('Starting'+LF);{$ENDIF}
         
         while NMRABus_Connected do
         begin
@@ -299,8 +298,8 @@ begin
               PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
               Inc(Packet.Bytes[0]);
               CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-              Delay_us(10000);
-              CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
+           //   Delay_us(10000);
+           //   CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
             end
           end
         end
