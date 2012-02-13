@@ -10,7 +10,7 @@ const
   MUSTANGPEAK_UNIQUE_ID_0_LO = $00010700;  // The Bottom 3 Bytes
   MUSTANGPEAK_UNIQUE_ID_0_HI = $00050101;  // The Top 3 Bytes
   
-  RID_TIME_COUNT_MAX = 51;   //  Clock Ticks every 1ms so to ensure at least 50ms need 51 asyncronous ticks
+  MAX_BUS_LOGIN_TIMEOUT = 51;              // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
 
 // *****************************************************************************
 //  Extended CAN Frames
@@ -27,10 +27,11 @@ const
   FT_CID1                           = $06000000;  // 2rd 12 Bits of 48 bit Node ID
   FT_CID2                           = $05000000;  // 3nd 12 Bits of 48 bit Node ID
   FT_CID3                           = $04000000;  // Last 12 Bits of 48 bit Node ID
+  FT_CID_MASK                       = $07000000;
   FT_RID                            = $00700000;  // Reserve ID
   FT_AMD                            = $00701000;  // Alias Map Definition
   FT_AME                            = $00702000;  // Alias Mapping Enquiry
-  FT_AMR                            = $00703000;  // Alias Map Reset Fram
+  FT_AMR                            = $00703000;  // Alias Map Reset Frame
   
   
   FT_INITIALIZATION_COMPLETE        = $09017000;
@@ -47,13 +48,14 @@ const
   FT_DATAGRAM_SINGLE = $0E;  // Single Frame Datagram
   FT_STREAM          = $0F;  // Stream Data
   
-  FT_CID_MASK        = $17000000;
-  
   // NMRABus States
   BS_PERMITED          = $01;    // CAN Frame Layer is permitted (Node ID's resolved with bus)
   BS_INITIALIZED       = $02;    // Message Layer has sent its first Initialize Complete Message
-  BS_INHIBITED_PENDING = $04;    // The node is about to switch to Inhibited state after all necessary clean up is
 
+  BSI_TRANSMITTING_CAN_LAYER     = $01;     // The CAN Transmit engine is placing a CAN Layer packet on the Bus
+  BSI_TRANSMITTING_NMRABUS_LAYER = $02;     // The CAN Transmit engine is placing a NRMABus Layer packet on the Bus
+  BSI_TRANSMITTING_ANY_LAYER     =  BSI_TRANSMITTING_CAN_LAYER or BSI_TRANSMITTING_NMRABUS_LAYER;
+  
 type
   TNodeID = array[0..1] of DWORD;    // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
   TNodeAliasID = Word;
@@ -63,15 +65,16 @@ type
     Node_ID: TNodeID;                // Unique 48 Bit ID for Node
     Unique_ID_Global_Seed: TNodeID;  // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
     Node_Alias_ID: TNodeAliasID;     // 12 Bit Alias ID
-    RIDTimeCounter: Word;            // Times the 20ms spec to wait for duplicate Node ID
-    
-    State: Word;                     // State of the Bus; see the BS_xxxx
+    BusLoginCount: Integer;          // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
+    State: Word;                     // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
+    Interrupt_State: Byte;           // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
   end;
   
   
 
 var
   NMRABus: TNMRABus;
+  
   procedure NMRABus_Connect;
   function NMRABus_Connected: Boolean;
   procedure NMRABus_Disconnect;
@@ -82,6 +85,8 @@ var
   procedure NMRABus_CreateCANControlFramePacket(VariableField: DWord; Packet: PCAN_Packet);
   function NMRABus_EqualNodeID(var NodeID: TNodeID): boolean;
   procedure NMRABus_PacketBytesToNodeID(Packet: PCAN_Packet; var NodeID: TNodeID);
+  procedure NMRABus_WaitForTransmitToFinish;
+  procedure NMRABus_WaitForTransmitToStart;
   
 
 implementation
@@ -223,6 +228,8 @@ end;
 // *****************************************************************************
 procedure NMRABus_Initialize;
 begin
+  NMRABus.State := 0;
+  NMRABus.Interrupt_State := 0;
   NMRABus.Node_ID[0] := MUSTANGPEAK_UNIQUE_ID_0_LO;
   NMRABus.Node_ID[1] := MUSTANGPEAK_UNIQUE_ID_0_HI;
 
@@ -255,7 +262,7 @@ end;
 // *****************************************************************************
 procedure NMRABus_GlobalTimer;
 begin
-  Inc(NMRABus.RIDTimeCounter);
+  Inc(NMRABus.BusLoginCount);
 end;
 
 // *****************************************************************************
@@ -297,9 +304,6 @@ begin
   
   if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
     NMRABus_LoadFramePacketDataWith48BitNodeID(Packet);
-    
-  if (VariableField = FT_AMR) and (NMRABus.State and BS_INHIBITED_PENDING <> 0) then
-    NMRABus.State := NMRABus.State and not BS_PERMITED and not BS_INHIBITED_PENDING;
 end;
 
 // *****************************************************************************
@@ -321,45 +325,83 @@ begin
     NMRABus_LoadFramePacketDataWith48BitNodeID(Packet);
 end;
 
-// *****************************************************************************
-//  function NMRABus_UniqueNodeIDTestPass
-//     Parameters:
-//     Returns:
+
+procedure NMRABus_WaitForTransmitToFinish;
+begin
+  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER <> 0 do;
+end;
+
+procedure NMRABus_WaitForTransmitToStart;
+begin
+  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER = 0 do;
+end;
+
+function NMRABus_RID_Received: Boolean;
 //
-//     Description:
+// Warning this destroys any other packet in the receive buffer
 //
-// *****************************************************************************
-function NMRABus_UniqueNodeIDTestPass(MessageType: DWord): Boolean;
 var
   Packet: TCAN_Packet;
 begin
   Result := False;
+  while not Result and CAN_Data_RxNextPacketCANLayer(Packet) do
+    Result := Packet.Header and FT_RID = FT_RID
+end;
+
+function SendAndWaitForCheckIDPacket(MessageType: DWord): Boolean;
+var
+  Packet: TCAN_Packet;
+begin
+  Result := True;
   NMRABus_CreateCANControlFramePacket(MessageType, @Packet);
-  CAN_Data_ListAddCANLayer(@Packet);                                            // Load the high priority transmitter buffer
-  while CAN_Layer_Buffer.State and CAN_LAYER_STATE_TRANSMIT_PENDING <> 0 do;    // Wait for the Bus Timer to load and transmit the packet on the CAN Bus
-  while NMRABus.RIDTimeCounter < RID_TIME_COUNT_MAX do;                         // The message has hit the CAN Bus now wait and see if anyone objects to our Alias ID
-  if CAN_Layer_Buffer.State and CAN_LAYER_STATE_ERROR = 0 then
-    Result := CAN_Layer_Buffer.State and CAN_LAYER_STATE_SUCCESS <> 0
+  CAN_Data_TxListAddCANLayer(@Packet);                                          // Load the high priority transmitter buffer
+  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER = 0 do           // Wait For Transmit To Start;
+  begin
+    if Result then                                                              // Is some other node using our Alias?
+      Result := not NMRABus_RID_Received
+  end;
+  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER <> 0 do          // Wait For Transmit To Finish;
+  begin
+    if Result then                                                              // Is some other node using our Alias?
+      Result := not NMRABus_RID_Received
+  end;
+end;
+
+function BusLogoutTimeout: Boolean;
+begin
+  Result := True;
+  NMRABus.BusLoginCount := 0;
+  while NMRABus.BusLoginCount < MAX_BUS_LOGIN_TIMEOUT do
+  begin
+    if Result then
+      Result := not NMRABus_RID_Received
+  end;
 end;
 
 procedure NMRABus_Connect;
 var
   Packet: TCAN_Packet;
 begin
+  CAN_Data_Flush_Lists;                                                         // Flush any pending packets
+  Delay_ms(10);
+  NMRABus_WaitForTransmitToFinish;                                              // Allow all pending CAN Controller messages to clear
   NMRABus.State := NMRABus.State and not BS_PERMITED;                           // Not permitted until we successfully get through this log in series
-  if NMRABus_UniqueNodeIDTestPass(FT_CID0) then                                 // Wait 50ms+ for RID to be received
-    if NMRABus_UniqueNodeIDTestPass(FT_CID1) then                               // Wait 50ms+ for RID to be received
-      if NMRABus_UniqueNodeIDTestPass(FT_CID2) then                             // Wait 50ms+ for RID to be received
-        if NMRABus_UniqueNodeIDTestPass(FT_CID3) then                           // Wait 50ms+ for RID to be received
-          if NMRABus_UniqueNodeIDTestPass(FT_RID) then                          // Wait 50ms+ for RID to be received
-            if NMRABus_UniqueNodeIDTestPass(FT_AMD) then                        // Wait 50ms+ for RID to be received    // 6.2.2
+  if SendAndWaitForCheckIDPacket(FT_CID0) then
+    if SendAndWaitForCheckIDPacket(FT_CID1) then
+      if SendAndWaitForCheckIDPacket(FT_CID2) then
+        if SendAndWaitForCheckIDPacket(FT_CID3) then                            // Queue up the Check ID Messages in the Transmit Buffer for the CAN Layer
+          if BusLogoutTimeout then
+            if SendAndWaitForCheckIDPacket(FT_AMD) then
             begin
               NMRABus.State := NMRABus.State or BS_PERMITED;
               NMRABus_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Packet);
-              CAN_Data_ListAddMessageLayer(@CAN_Tx_List, @Packet);
-              while CAN_Tx_List.Count > 0 do;
-            end;
+              CAN_Data_TxListAddNMRABusLayer(@Packet);
+              NMRABus_WaitForTransmitToStart;
+              NMRABus_WaitForTransmitToFinish;
+              NMRABus.State := NMRABus.State or BS_INITIALIZED;
+            end
 end;
+
 
 // *****************************************************************************
 //  procedure NMRABus_Disconnect

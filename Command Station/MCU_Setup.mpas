@@ -69,36 +69,36 @@ begin
   MCP2515_CANModifyBit(CANINTE_MCP2515, TX1IE_MCP2515, True);           // Transmit Buffer Empty Interrupt,
   MCP2515_CANModifyBit(CANINTE_MCP2515, ERRIE_MCP2515, True);           // Error Interrupt
 
-  T1IP_0_bit := 1;   // Timer 1 Interrupt Priority = 7
+  T1IP_0_bit := 1;           // Timer 1 Interrupt Priority = 7
   T1IP_1_bit := 1;
   T1IP_2_bit := 1;
+  PR1 := 1120;               // 56us timer with a 80Mhz clock
   T1IF_bit := 0;             // Clear T1IF
   T1IE_bit := 1;             // Enable Timer1 interrupts
-  PR1 := 1120;               // 56us timer with a 80Mhz clock
   {$IFNDEF DCCTIMER_DISABLE}TON_T1CON_bit := 1;{$ENDIF} // Turn on
 
-  T2IF_bit := 0;            // Clear the Interrupt flag
-  T2IP_0_bit := 1;          // Timer 2 Interrupt Priority = 1
-  T2IP_1_bit := 0;
+  T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
+  T2IP_1_bit := 1;
   T2IP_2_bit := 0;
   PR2 := 20000;             // Clock ticks every 50ns * 20000 = 1ms interrupts
+  T2IF_bit := 0;            // Clear T2IF
   T2IE_bit := 1;            // Enable the Interrupt
   TON_T2CON_bit := 1;       // Turn on
 
-  T3IF_bit := 0;      // Clear the Interrupt flag
-  T3IP_0_bit := 0;    // Timer 2 Interrupt Priority = 6 must be EQUAL to the Pin Change Notifier (SPI CAN)
+  T3IP_0_bit := 0;          // Timer 3 Interrupt Priority = 6 must be EQUAL to the Pin Change Notifier (SPI CAN)
   T3IP_1_bit := 1;
   T3IP_2_bit := 1;
-  T3IE_bit := 1;      // Enable the Interrupt
-  PR3 := 10000;        // Every 500us try to load a CAN message
-  TON_T3CON_bit := 1; // Turn on
+  T3IF_bit := 0;            // Clear T3IF
+  T3IE_bit := 1;            // Enable the Interrupt
+  PR3 := 2000;              // 50ns * PR3 seconds to fire timer to load a CAN message
+ // TON_T3CON_bit := 1;     // Turn on will occur when a message is placed in the packet lists
 
-  CNIF_bit := 0;      // Clear Flag
-  CNIP_0_bit := 0;    // Interrupt Priority = 6 (next below DCC)
+  CNIF_bit := 0;            // Clear Flag
+  CNIP_0_bit := 0;          // Interrupt Priority = 6 (next below DCC)
   CNIP_1_bit := 1;
   CNIP_2_bit := 1;
-  CN17IE_bit := 1;    // RF4 (CN17) set for interrupt
-  CNIE_bit := 1;      // Enable the Interrupt for Pin Change
+  CN17IE_bit := 1;          // RF4 (CN17) set for interrupt
+  CNIE_bit := 1;            // Enable the Interrupt for Pin Change
 
   // DO I NEED TO CLEAR ERROR FLAG, ETC IN SPI DEVICES BEFORE STARTING THE TIMERS/PIN CHANGE NOTFIERS
   // AS WE MAY HAVE BUFFER OVERFLOW ISSUES BETWEEN THE TIME WE INITIALIZED THE SPI DEVICES AND WE
