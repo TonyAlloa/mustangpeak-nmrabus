@@ -52,9 +52,11 @@ const
   BS_PERMITED          = $01;    // CAN Frame Layer is permitted (Node ID's resolved with bus)
   BS_INITIALIZED       = $02;    // Message Layer has sent its first Initialize Complete Message
 
-  BSI_TRANSMITTING_CAN_LAYER     = $01;     // The CAN Transmit engine is placing a CAN Layer packet on the Bus
-  BSI_TRANSMITTING_NMRABUS_LAYER = $02;     // The CAN Transmit engine is placing a NRMABus Layer packet on the Bus
-  BSI_TRANSMITTING_ANY_LAYER     =  BSI_TRANSMITTING_CAN_LAYER or BSI_TRANSMITTING_NMRABUS_LAYER;
+  BSI_TRANSMITTING_CAN_LAYER      = $01;     // The CAN Transmit engine is placing a CAN Layer packet on the Bus
+  BSI_TRANSMITTING_NMRABUS_LAYER  = $02;     // The CAN Transmit engine is placing a NRMABus Layer packet on the Bus
+  BSI_TRANSMITTING_ANY_LAYER      =  BSI_TRANSMITTING_CAN_LAYER or BSI_TRANSMITTING_NMRABUS_LAYER;
+  BSI_FORCE_TX_DONE_CAN_LAYER     = $04;
+  BSI_FORCE_TX_DONE_NMRABUS_LAYER = $08;
   
 type
   TNodeID = array[0..1] of DWORD;    // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
@@ -336,18 +338,6 @@ begin
   while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER = 0 do;
 end;
 
-function NMRABus_RID_Received: Boolean;
-//
-// Warning this destroys any other packet in the receive buffer
-//
-var
-  Packet: TCAN_Packet;
-begin
-  Result := False;
-  while not Result and CAN_Data_RxNextPacketCANLayer(Packet) do
-    Result := Packet.Header and FT_RID = FT_RID
-end;
-
 function SendAndWaitForCheckIDPacket(MessageType: DWord): Boolean;
 var
   Packet: TCAN_Packet;
@@ -355,16 +345,10 @@ begin
   Result := True;
   NMRABus_CreateCANControlFramePacket(MessageType, @Packet);
   CAN_Data_TxListAddCANLayer(@Packet);                                          // Load the high priority transmitter buffer
-  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER = 0 do           // Wait For Transmit To Start;
-  begin
-    if Result then                                                              // Is some other node using our Alias?
-      Result := not NMRABus_RID_Received
-  end;
-  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER <> 0 do          // Wait For Transmit To Finish;
-  begin
-    if Result then                                                              // Is some other node using our Alias?
-      Result := not NMRABus_RID_Received
-  end;
+  NMRABus_WaitForTransmitToStart;
+  NMRABus_WaitForTransmitToFinish;
+  
+  NEED TO KNOW IF A RID WAS RECEIVED HERE.....
 end;
 
 function BusLogoutTimeout: Boolean;
@@ -373,9 +357,11 @@ begin
   NMRABus.BusLoginCount := 0;
   while NMRABus.BusLoginCount < MAX_BUS_LOGIN_TIMEOUT do
   begin
-    if Result then
-      Result := not NMRABus_RID_Received
+    // The interrupt is looking for problems
   end;
+  
+  NEED TO KNOW IF A RID WAS RECEIVED HERE.....
+  
 end;
 
 procedure NMRABus_Connect;

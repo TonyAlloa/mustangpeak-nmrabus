@@ -75,33 +75,22 @@ begin
 end;
 {$ENDIF}
 
-procedure UpdateTxPacketLoadTimer;
-begin
-  if (CAN_LayerTxList.Count = 0) and (NMRANet_LayerTxList.Count = 0) then       // Shut down the timer if there is nothing left to send
-  begin
-    CAN_TX_Timer_Enable_bit := 0;
-    TMR3 := 0;
-  end;
-end;
 
-procedure CheckForPendingNMRABusLayerPacket(CalledFromTxBufferEmptyInterrupt: Boolean);
+// ****************************************************************************
+// procedure TransmitCompleteOnNMRALayerPacket
+//
+//  Description:
+//
+// ****************************************************************************
+procedure TransmitCompleteOnNMRALayerPacket;
 var
   TxControl: Byte;
   Packet: TCAN_Packet;
 begin
-  // This is the only place to tell when a message was actually put on the CANbus.  If the TX flag is set then the message was placed on the bus
-  // and the TX buffer can be loaded with a new message
-
-  // This assumes that the transmitter is not pending a transmission.  Due to the load Tx timer this needs to be carefully dealt with
-  // The Tx timer currently will clear the TxF Flag so if the timer slips in "just before" this interrupt, that is signaling an empty transmitter,
-  // the Tx timer will load the Tx buffer and clear the flag.  That means this will be called but the flag will be cleared and this branch will
-  // not be called and we are safe from overwriting the Tx buffer in the MCP2515 with what was just loaded in the Tx Timer.
-  if CalledFromTxBufferEmptyInterrupt then
-  begin
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_NMRABUS_LAYER;
-    MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
-  end;
-  
+  MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
+  NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_FORCE_TX_DONE_NMRABUS_LAYER;
+  NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_NMRABUS_LAYER;
+   
   if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABUS_LAYER = 0 then        // We are tracking if the CAN buffers are full or not, are we empty?
   begin
     if CAN_Data_TxNextPacketNMRABusLayer(Packet) then
@@ -110,9 +99,16 @@ begin
       MCP2515_CANWriteTXBuffer(CAN_TX_1, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
     end;
   end;
-  UpdateTxPacketLoadTimer
 end;
 
+// ****************************************************************************
+// procedure PacketReceivedOnNMRABusLayer
+//
+//  Description:
+//                 All NMRABus Layer messages are low priority and placed in the List for
+//     handling in the main message loop
+//
+// ****************************************************************************
 procedure PacketReceivedOnNMRABusLayer;
 var
   Packet: TCAN_Packet;
@@ -124,16 +120,19 @@ begin
   end
 end;
 
-procedure CheckForPendingCANLayerPacket(CalledFromTxBufferEmptyInterrupt: Boolean);
+// ****************************************************************************
+// procedure TransmitCompleteOnCANLayerPacket
+//
+//  Description:
+//
+// ****************************************************************************
+procedure TransmitCompleteOnCANLayerPacket;
 var
- // TxControl: Byte;
   Packet: TCAN_Packet;
 begin
-  if CalledFromTxBufferEmptyInterrupt then
-  begin
-    MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_CAN_LAYER;
-  end;
+  MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
+  NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_FORCE_TX_DONE_CAN_LAYER;
+  NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_CAN_LAYER;
   
   if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then            // We are tracking if the CAN buffers are full or not, are we empty?
   begin
@@ -142,21 +141,77 @@ begin
       NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_CAN_LAYER;
       MCP2515_CANWriteTXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
     end
-  end;
-
-  UpdateTxPacketLoadTimer
+  end
 end;
 
+// ****************************************************************************
+// procedure PacketReceivedOnCANLayer
+//
+//  Description:
+//                 All CAN Layer messages are high priority and are dealt with immediately
+//
+// ****************************************************************************
 procedure PacketReceivedOnCANLayer;
 var
-  Packet: TCAN_Packet;
+  RxPacket, TxPacket: TCAN_Packet;
   Decode: DWord;
   NodeID: TNodeID;
+  SendPacket: Boolean;
 begin
-  MCP2515_CANReadRXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, Packet.ExtendedID);    // Flags AutoReset
-  if not CAN_Data_RxListAddCANLayer(@Packet) then                                                     // Queue the Packet into the circular recieve list
+  TxPacket.Header := 0;
+  
+  MCP2515_CANReadRXBuffer(CAN_TX_0, RxPacket.Header, RxPacket.Count, RxPacket.Bytes, RxPacket.ExtendedID);    // Flags AutoReset
+ 
+  if NMRABus_EqualAliasID(RxPacket.Header and $00000FFF) then                 // Is the Alias equal to ours?
   begin
-    // Buffer Overrun......
+    if RxPacket.Header and FT_CID_MASK <> 0 then                              // If it is a CID message then force node to try again for an Alias
+    begin
+      NMRABus_CreateCANControlFramePacket(FT_RID, @TxPacket);
+      CAN_Data_TxListAddCANLayer(@TxPacket);
+    end else
+    begin
+      if NMRABus_Connected then                                               // Detected a duplicate Alias, we need to shut down and restart with a fresh Alais ID
+      begin
+        CAN_Data_Flush_Lists;                                                 // Clear any queued packets
+        NMRABus_Disconnect;                                                   // Take the node off line
+        NMRABus_CreateCANControlFramePacket(FT_AMR, @TxPacket);               // Send an Alias Map Reset
+        CAN_Data_TxListAddCANLayer(@TxPacket);
+      end
+    end
+  end else
+  if RxPacket.Header and FT_AMD = FT_AMD then                                 // Alias Map Definition Message
+  begin
+    NMRABus_PacketBytesToNodeID(@RxPacket, NodeID);
+    if NMRABus_EqualNodeID(NodeID) then                                       // Is the 48 Bit node ID equal to ours?
+    begin
+      if NMRABus_Connected then
+      begin
+        // Send PCER Message with Duplicate Node ID Detected (Optional), Go Offline (Optional)
+      end else
+      begin
+        // User Defined Action
+      end
+    end;
+  end else
+  if NMRABus_Connected and RxPacket.Header and FT_AME = FT_AME then           // Alias Mapping Enquiry
+  begin
+    SendPacket := True;
+    if RxPacket.Count > 0 then
+    begin
+      NMRABus_PacketBytesToNodeID(@RxPacket, NodeID);
+      SendPacket := NMRABus_EqualNodeID(NodeID)                               // Is the 48 Bit node ID equal to ours?
+    end ;
+    if SendPacket then
+    begin
+      NMRABus_CreateCANControlFramePacket(FT_AMD, @TxPacket);                 // Send an Alias Map Definition
+      CAN_Data_TxListAddCANLayer(@TxPacket);
+    end;
+  end;
+  
+  if (TxPacket.Header <> 0) and (NMRABus.State and BSI_TRANSMITTING_ANY_LAYER = 0) then
+  begin
+    NMRABus.Interrupt_State := NMRABus.Interrupt_State and BSI_FORCE_TX_DONE_CAN_LAYER;
+    CNIF_bit := 1;                                                            // Set Flag to force interrupt to be called
   end
 end;
 
@@ -190,13 +245,6 @@ end;
 procedure INTERRUPT_CAN_TX_Timer(); iv IVT_ADDR_T3INTERRUPT;
 begin
   T3IF_bit := 0;  // Clear the Flag
-
-  // We are safe in reading the CAN here as we have the same priority as the Pin Change. The CN not get interrupted in the middle of this routine so the SPI calls are safe.
-  // It is possible that the Interrupt Flag is set and TxReq is low if this timer is called just before pin change notification interrupt is called.  If so it is
-  // necessary to clear the interrupt flag since we have already handled loading the Tx register and the pin change notification interrupt does not check for TxReq to be
-  // zero before loading the transmitter
-  CheckForPendingCANLayerPacket(False);
-  CheckForPendingNMRABusLayerPacket(False);
 end;
 
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;
@@ -210,13 +258,13 @@ begin
 
     if Flags.RX0IF_MCP2515 = 1 then                                             // Receiver 0 full (CAN Layer Data coming in)
       PacketReceivedOnCANLayer;
-    if Flags.TX0IF_MCP2515 = 1 then                                             // Transmitter 0 empty, this means CAN Layer message was transmitted
-      CheckForPendingCANLayerPacket(True);
+    if (Flags.TX0IF_MCP2515 = 1) or (NMRABus.Interrupt_State and BSI_FORCE_TX_DONE_CAN_LAYER <> 0) then                                             // Transmitter 0 empty, this means CAN Layer message was transmitted
+      TransmitCompleteOnCANLayerPacket;
       
     if Flags.RX1IF_MCP2515 = 1 then                                             // Receiver 1 full (NMRANet Layer Data coming in)
       PacketReceivedOnNMRABusLayer;
-    if Flags.TX1IF_MCP2515 = 1 then                                             // Transmitter 1 empty, this means a Message Layer message was transmitted
-      CheckForPendingNMRABusLayerPacket(True);
+    if (Flags.TX1IF_MCP2515 = 1) or (NMRABus.Interrupt_State and BSI_FORCE_TX_DONE_NMRABUS_LAYER <> 0) then                                             // Transmitter 1 empty, this means a Message Layer message was transmitted
+      TransmitCompleteOnNMRALayerPacket;
 
     if Flags.ERRIF_MCP2515 = 1 then
       HandleMCP2515Error;
@@ -224,85 +272,17 @@ begin
   PinChangeState := PORTF;
 end;
 
-procedure EqualAliasIDTest(Packet: PCAN_Packet);
-var
-  TxPacket: TCAN_Packet;
-begin
-  if NMRABus_EqualAliasID(Packet^.Header and $00000FFF) then                 // Is the Alias equal to ours?
-  begin
-    if Packet^.Header and FT_CID_MASK <> 0 then                              // If it is a CID message then force node to try again for an Alias
-    begin
-      NMRABus_CreateCANControlFramePacket(FT_RID, @TxPacket);
-      CAN_Data_TxListAddCANLayer(@TxPacket);
-    end else
-    begin
-      if NMRABus_Connected then                                               // Detected a duplicate Alias, we need to shut down and restart with a fresh Alais ID
-      begin
-        CAN_Data_Flush_Lists;                                                 // Clear any queued packets
-        NMRABus_WaitForTransmitToFinish;                                      // Wait for any packets in the middle of transmitting to finish
-        NMRABus_Disconnect;                                                   // Take the node off line
-        NMRABus_CreateCANControlFramePacket(FT_AMR, @TxPacket);               // Send an Alias Map Reset
-        CAN_Data_TxListAddCANLayer(@TxPacket);
-        NMRABus_WaitForTransmitToStart;                                       // Wait for the Packet to be sent
-        NMRABus_WaitForTransmitToFinish
-      end
-    end
-  end;
-end;
-
-procedure HandleReceivedCAN_LayerPackets;
-var
-  RxPacket, TxPacket: TCAN_Packet;
-  NodeID: TNodeID;
-  SendPacket: Boolean;
-begin
-  if CAN_Data_RxNextPacketCANLayer(RxPacket) then
-  begin
-  
-    if RxPacket.Header and FT_AMD = FT_AMD then                                   // Alias Map Definition Message
-    begin
-      NMRABus_PacketBytesToNodeID(@RxPacket, NodeID);
-      if NMRABus_EqualNodeID(NodeID) then                                       // Is the 48 Bit node ID equal to ours?
-      begin
-        if NMRABus_Connected then
-        begin
-          // Send PCER Message with Duplicate Node ID Detected (Optional), Go Offline (Optional)
-        end else
-        begin
-          // User Defined Action
-        end
-      end;
-    end;
-    
-    EqualAliasIDTest(@RxPacket);
-    
-    if NMRABus_Connected then
-    begin
-      if RxPacket.Header and FT_AME = FT_AME then
-      begin
-        SendPacket := True;
-        if RxPacket.Count > 0 then
-        begin
-          NMRABus_PacketBytesToNodeID(@RxPacket, NodeID);
-          SendPacket := NMRABus_EqualNodeID(NodeID)                             // Is the 48 Bit node ID equal to ours?
-        end ;
-        if SendPacket then
-        begin
-          NMRABus_CreateCANControlFramePacket(FT_AMD, @TxPacket);               // Send an Alias Map Definition
-          CAN_Data_TxListAddCANLayer(@TxPacket);
-        end;
-      end
-    end
-  end;
-end;
 
 procedure HandleReceivedNMRABus_LayerPackets;
 var
-  RxPacket: TCAN_Packet;
+  RxPacket, TxPacket: TCAN_Packet;
 begin
   if CAN_Data_RxNextPacketNMRABusLayer(RxPacket) then
   begin
-    EqualAliasIDTest(@RxPacket);
+    TxPacket.Header := 0;
+ //   EqualAliasIDTest(@RxPacket, @TxPacket);
+    
+    /// what to do here??????
     
     if RxPacket.Header and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST then
     begin
