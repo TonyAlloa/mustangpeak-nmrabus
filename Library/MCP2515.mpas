@@ -113,8 +113,6 @@ implementation
 
 function SPI_Write_MP(DataByte: Byte): Byte;
 begin
-//  SPI1_Write(DataByte); Exit;
-
   // We have waited for the SPI to empty before returning so the buffer is empty on entry
   Result := SPI1BUF;       // Force the SPIRBF flag to clear
   nop;
@@ -127,8 +125,6 @@ end;
 
 function SPI_Read_MP(Dummy: Byte): Byte;
 begin
-//  Result := SPI1_Read(Dummy); Exit;
-
   // We have waited for the SPI to empty before returning so the buffer is empty on entry
   Result := SPI1BUF;       // Force the SPIRBF flag to clear
   nop;
@@ -222,7 +218,7 @@ procedure MCP2515_CANWriteTXBuffer(Buffer: Byte; ID: DWord; DataCount: Byte; var
 //
 var
   i: Integer;
-  Address, Ctrl: Byte;
+  Address: Byte;
 begin
   CanSpi_CS_MCP2515 := 0; nop;
 
@@ -240,7 +236,6 @@ begin
     SPI_Write_MP(%01000100);
     Address := TXB2CTRL_MCP2515
   end;
-
   ID := ((ID and $1FFC0000) shl 3) or (ID and $0003FFFF);
   
   if IsExtended then
@@ -259,7 +254,7 @@ begin
   end;
 
   SPI_Write_MP(Byte( DataCount ));
-
+  
   for i := 0 to DataCount - 1 do
     SPI_Write_MP( DataBytes[i]);
 

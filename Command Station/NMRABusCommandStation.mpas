@@ -37,14 +37,20 @@ var
   CanSpi_CS_MCP2515                : sbit at LATF0_bit;
   CanSpi_CS_Direction_MCP2515      : sbit at TRISF0_bit;
 
-// CANSPI module connections
-var CanSpi_CS            : sbit at LATF0_bit;
-    CanSpi_CS_Direction  : sbit at TRISF0_bit;
-    CanSpi_Rst           : sbit at LATF1_bit;
-    CanSpi_Rst_Direction : sbit at TRISF1_bit;
-// End CANSPI module connections
+  // CANSPI module connections
+var 
+  CanSpi_CS            : sbit at LATF0_bit;
+  CanSpi_CS_Direction  : sbit at TRISF0_bit;
+  CanSpi_Rst           : sbit at LATF1_bit;
+  CanSpi_Rst_Direction : sbit at TRISF1_bit;
+ // End CANSPI module connections
 
-   CAN_TX_Timer_Enable_bit      : sbit at TON_T3CON_bit;
+  CAN_TX_Timer_Enable_bit      : sbit at TON_T3CON_bit;
+   
+  LockCANList: PLockListFunc;
+  UnLockCANList: PUnLockListFunc;
+  LockNMRABusList: PLockListFunc;
+  UnLockNMRABusList: PUnLockListFunc;
 
 {$IFDEF UART_ENABLE}
 procedure PrintMCP2515Registers(StartReg, Count: Byte);
@@ -75,6 +81,36 @@ begin
 end;
 {$ENDIF}
 
+procedure LockListNMRABus;
+begin
+  CN17IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
+end;
+
+procedure UnlockListNMRABus;
+begin
+  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
+  begin
+    MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, True);                 // Set Transmit Done Flag to start the Transmit Engine
+    CNIF_bit := 1;                                                              // Set Flag to force interrupt to be called
+    CN17IE_bit := 1;                                                            // Enable Pin Change interrupt for CAN
+  end
+end;
+
+procedure LockListCAN;
+begin
+  CN17IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
+end;
+
+procedure UnlockListCAN;
+begin
+  if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then
+  begin
+    MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, True);                 // Set Transmit Done Flag to start the Transmit Engine
+    CNIF_bit := 1;                                                              // Set Flag to force interrupt to be called
+    CN17IE_bit := 1;                                                            // Enable Pin Change interrupt for CAN
+  end
+end;
+
 
 // ****************************************************************************
 // procedure TransmitCompleteOnNMRALayerPacket
@@ -84,11 +120,9 @@ end;
 // ****************************************************************************
 procedure TransmitCompleteOnNMRALayerPacket;
 var
-  TxControl: Byte;
   Packet: TCAN_Packet;
 begin
   MCP2515_CANModifyBit(CANINTF_MCP2515, TX1IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
-  NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_FORCE_TX_DONE_NMRABUS_LAYER;
   NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_NMRABUS_LAYER;
    
   if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABUS_LAYER = 0 then        // We are tracking if the CAN buffers are full or not, are we empty?
@@ -130,18 +164,13 @@ procedure TransmitCompleteOnCANLayerPacket;
 var
   Packet: TCAN_Packet;
 begin
-  MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                // Clear Transmitter Interrupt Flag
-  NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_FORCE_TX_DONE_CAN_LAYER;
-  NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_CAN_LAYER;
-  
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then            // We are tracking if the CAN buffers are full or not, are we empty?
+  MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, False);                  // Clear Transmitter Interrupt Flag
+  if CAN_Data_TxNextPacketCANLayer(Packet) then                                 // Is there a CAN Level Packet in the list ready to be transmitted?
   begin
-    if CAN_Data_TxNextPacketCANLayer(Packet) then                               // Is there a CAN Level Packet in the list ready to be transmitted?
-    begin
-      NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_CAN_LAYER;
-      MCP2515_CANWriteTXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
-    end
-  end
+    NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_CAN_LAYER;
+    MCP2515_CANWriteTXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
+  end else
+    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_CAN_LAYER;
 end;
 
 // ****************************************************************************
@@ -154,64 +183,34 @@ end;
 procedure PacketReceivedOnCANLayer;
 var
   RxPacket, TxPacket: TCAN_Packet;
-  Decode: DWord;
-  NodeID: TNodeID;
-  SendPacket: Boolean;
 begin
-  TxPacket.Header := 0;
-  
   MCP2515_CANReadRXBuffer(CAN_TX_0, RxPacket.Header, RxPacket.Count, RxPacket.Bytes, RxPacket.ExtendedID);    // Flags AutoReset
- 
-  if NMRABus_EqualAliasID(RxPacket.Header and $00000FFF) then                 // Is the Alias equal to ours?
+  if NMRABus_EqualAliasID(RxPacket.Header and $00000FFF) then                   // Is the Alias equal to ours?
   begin
-    if RxPacket.Header and FT_CID_MASK <> 0 then                              // If it is a CID message then force node to try again for an Alias
+    if RxPacket.Header and FT_RID = FT_RID then                                 // Reserve ID
+      NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_RID;
+
+    if RxPacket.Header and FT_CID_MASK <> 0 then                                // If it is a CID message then force node to try again for an Alias
     begin
+      if RxPacket.Header and FT_CID0 = FT_CID0 then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_CID0;
+      if RxPacket.Header and FT_CID1 = FT_CID1 then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_CID1;
+      if RxPacket.Header and FT_CID2 = FT_CID2 then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_CID2;
+      if RxPacket.Header and FT_CID3 = FT_CID3 then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_CID3;
       NMRABus_CreateCANControlFramePacket(FT_RID, @TxPacket);
-      CAN_Data_TxListAddCANLayer(@TxPacket);
+      CAN_Data_TxListAddCANLayerThroughLockedList(@TxPacket);
     end else
     begin
-      if NMRABus_Connected then                                               // Detected a duplicate Alias, we need to shut down and restart with a fresh Alais ID
+      if NMRABus_Connected then                                                 // Detected a duplicate Alias, we need to shut down and restart with a fresh Alais ID
       begin
-        CAN_Data_Flush_Lists;                                                 // Clear any queued packets
-        NMRABus_Disconnect;                                                   // Take the node off line
-        NMRABus_CreateCANControlFramePacket(FT_AMR, @TxPacket);               // Send an Alias Map Reset
-        CAN_Data_TxListAddCANLayer(@TxPacket);
+        CAN_Data_Flush_Lists;                                                   // Clear any queued packets
+        NMRABus_Disconnect;                                                     // Take the node off line
+        NMRABus_CreateCANControlFramePacket(FT_AMR, @TxPacket);                 // Send an Alias Map Reset
+        CAN_Data_TxListAddCANLayerThroughLockedList(@TxPacket);
       end
     end
   end else
-  if RxPacket.Header and FT_AMD = FT_AMD then                                 // Alias Map Definition Message
   begin
-    NMRABus_PacketBytesToNodeID(@RxPacket, NodeID);
-    if NMRABus_EqualNodeID(NodeID) then                                       // Is the 48 Bit node ID equal to ours?
-    begin
-      if NMRABus_Connected then
-      begin
-        // Send PCER Message with Duplicate Node ID Detected (Optional), Go Offline (Optional)
-      end else
-      begin
-        // User Defined Action
-      end
-    end;
-  end else
-  if NMRABus_Connected and RxPacket.Header and FT_AME = FT_AME then           // Alias Mapping Enquiry
-  begin
-    SendPacket := True;
-    if RxPacket.Count > 0 then
-    begin
-      NMRABus_PacketBytesToNodeID(@RxPacket, NodeID);
-      SendPacket := NMRABus_EqualNodeID(NodeID)                               // Is the 48 Bit node ID equal to ours?
-    end ;
-    if SendPacket then
-    begin
-      NMRABus_CreateCANControlFramePacket(FT_AMD, @TxPacket);                 // Send an Alias Map Definition
-      CAN_Data_TxListAddCANLayer(@TxPacket);
-    end;
-  end;
-  
-  if (TxPacket.Header <> 0) and (NMRABus.State and BSI_TRANSMITTING_ANY_LAYER = 0) then
-  begin
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State and BSI_FORCE_TX_DONE_CAN_LAYER;
-    CNIF_bit := 1;                                                            // Set Flag to force interrupt to be called
+    CAN_Data_RxListAddCANLayer(@RxPacket);                                   // Low priority Packet queue and and handle it in the main loop
   end
 end;
 
@@ -252,18 +251,18 @@ var
   Flags: Byte;
 begin
   CNIF_bit := 0;     // Clear Flag
-  while (PORTF.CAN_INTERRUPT_PIN = 0) do                                        // ALWAYS check for the interrupt pin to be low as it won't go high until all are cleared
+  while (PORTF.CAN_INTERRUPT_PIN = 0) do                                        // ALWAYS check for the interrupt pin to be low as it won't go high until all are cleared, which is NECESSARY or a new interrupt will keep the line low and the new interrupt not trigger a pin change interrupt
   begin
     Flags := MCP2515_CANReadRegister(CANINTF_MCP2515);                          // Read what Interrupt Flags are set
-
+    
     if Flags.RX0IF_MCP2515 = 1 then                                             // Receiver 0 full (CAN Layer Data coming in)
       PacketReceivedOnCANLayer;
-    if (Flags.TX0IF_MCP2515 = 1) or (NMRABus.Interrupt_State and BSI_FORCE_TX_DONE_CAN_LAYER <> 0) then                                             // Transmitter 0 empty, this means CAN Layer message was transmitted
+    if Flags.TX0IF_MCP2515 = 1 then                                             // Transmitter 0 empty, this means CAN Layer message was transmitted
       TransmitCompleteOnCANLayerPacket;
       
     if Flags.RX1IF_MCP2515 = 1 then                                             // Receiver 1 full (NMRANet Layer Data coming in)
       PacketReceivedOnNMRABusLayer;
-    if (Flags.TX1IF_MCP2515 = 1) or (NMRABus.Interrupt_State and BSI_FORCE_TX_DONE_NMRABUS_LAYER <> 0) then                                             // Transmitter 1 empty, this means a Message Layer message was transmitted
+    if Flags.TX1IF_MCP2515 = 1 then                                             // Transmitter 1 empty, this means a Message Layer message was transmitted
       TransmitCompleteOnNMRALayerPacket;
 
     if Flags.ERRIF_MCP2515 = 1 then
@@ -273,10 +272,11 @@ begin
 end;
 
 
-procedure HandleReceivedNMRABus_LayerPackets;
+procedure HandleReceivedNMRABusLayerPackets;
 var
   RxPacket, TxPacket: TCAN_Packet;
 begin
+  TxPacket.Header := 0;
   if CAN_Data_RxNextPacketNMRABusLayer(RxPacket) then
   begin
     TxPacket.Header := 0;
@@ -290,6 +290,65 @@ begin
   end;
 end;
 
+procedure HandleReceivedCANLayerPackets;
+var
+  RxPacket, TxPacket: TCAN_Packet;
+  NodeID: TNodeID;
+  SendPacket: Boolean;
+begin
+  TxPacket.Header := 0;
+  if CAN_Data_RxNextPacketCANLayer(RxPacket) then                               // Do we have a CAN received message waiting to be handled?
+  begin
+    if RxPacket.Header and FT_AMD = FT_AMD then                                 // Alias Map Definition Message
+    begin
+      if RxPacket.Header and FT_RID = FT_RID then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_RID;
+      NMRABus_PacketBytesToNodeID(@RxPacket, NodeID);
+      if NMRABus_EqualNodeID(NodeID) then                                       // Is the 48 Bit node ID equal to ours?
+      begin
+        if NMRABus_Connected then
+        begin
+          // Send PCER Message with Duplicate Node ID Detected (Optional), Go Offline (Optional)
+        end else
+        begin
+          // User Defined Action
+        end
+      end;
+    end else
+    if RxPacket.Header and FT_AME = FT_AME then                                // Alias Mapping Enquiry
+    begin
+      if NMRABus_Connected then
+      begin
+        if RxPacket.Header and FT_AME = FT_AME then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_AME;
+        SendPacket := True;
+        if RxPacket.Count > 0 then
+        begin
+          NMRABus_PacketBytesToNodeID(@RxPacket, NodeID);
+          SendPacket := NMRABus_EqualNodeID(NodeID)                             // Is the 48 Bit node ID equal to ours?
+        end ;
+        if SendPacket then
+        begin
+          NMRABus_CreateCANControlFramePacket(FT_AMD, @TxPacket);               // Send an Alias Map Definition
+          CAN_Data_TxListAddCANLayerThroughLockedList(@TxPacket);
+        end
+      end
+    end else
+    if RxPacket.Header and FT_AMD = FT_AMD then                                // Alias Map Definition
+    begin
+      if RxPacket.Header and FT_AMD = FT_AMD then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_AMD;
+    end else
+    if RxPacket.Header and FT_AMR = FT_AMR then                                // Alias Map Reset
+    begin
+      if RxPacket.Header and FT_AMR = FT_AMR then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_AMD;
+    end;
+
+    if (TxPacket.Header <> 0) and (NMRABus.State and BSI_TRANSMITTING_CAN_LAYER = 0) then
+    begin                                                                       // If a CAN Packet is transmitting the Tx Done flag will be called anyway so we don't have to set this in that case
+      MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, True);               // Set Transmit Done Flag to start the Transmit Engine
+      CNIF_bit := 1;                                                            // Set Flag to force interrupt to be called
+    end
+  end
+end;
+
 
 // *******************
 // MAIN LOOP
@@ -298,10 +357,16 @@ end;
 var
   Packet: TCAN_Packet;
 begin
+  LockCANList := @LockListCAN;
+  UnLockCANList := @UnLockListCAN;
+  LockNMRABusList := @LockListNMRABus;
+  UnLockNMRABusList := @UnLockListNMRABus;
+  
   CAN_Data_Initialize;
   NMRABus_Initialize;
   MCP2515_Initialize;
   MCU_Setup_Initialize;
+  {$IFDEF UART_ENABLE}PrintConnectedState;{$ENDIF}
   NMRABus_Connect;
   {$IFDEF UART_ENABLE}PrintConnectedState;{$ENDIF}
   while (TRUE) do
@@ -317,14 +382,17 @@ begin
       
       if NMRABus_Connected then
       begin
-
-        CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-        CAN_Data_TxListAddNMRABusLayer(@Packet);
-
         {$IFDEF UART_ENABLE}UART1_Write_Text('Starting'+LF);{$ENDIF}
+        
+        
+        CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
+        CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
         
         while NMRABus_Connected do
         begin
+   //       HandleReceivedCANLayerPackets;
+  //        HandleReceivedNMRABusLayerPackets;
+        
           if CAN_Data_RxNextPacketNMRABusLayer(Packet) then
           begin
             if Packet.Header = ID_1st then                                          // Message was received (interrupt) if it is ours then ...
@@ -333,7 +401,7 @@ begin
               Inc(Packet.Bytes[0]);
               Delay_ms(1000);
               CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-              CAN_Data_TxListAddNMRABusLayer(@Packet);
+              CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
             end
           end
         end

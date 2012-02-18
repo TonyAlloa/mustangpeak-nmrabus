@@ -11,6 +11,10 @@ const
   
 type
   TCANData = array[8] of Byte;
+  TLockListFunc = procedure;
+  PLockListFunc = ^TLockListFunc;
+  TUnLockListFunc = procedure;
+  PUnLockListFunc = ^TUnLockListFunc;
   
   TCAN_Packet = record
     Header: DWord;                                                              // Standard or Extended Header
@@ -29,40 +33,45 @@ type
   end;
   PCAN_List = ^TCAN_List;
  
-var
-  CAN_LayerTxList: TCAN_List;
-  NMRANet_LayerTxList: TCAN_List;
-  NMRANet_LayerRxList: TCAN_List;
-
 // Initializes the unit
 procedure CAN_Data_Initialize;
 // Helper to load the passed packet reference with the passed data
 procedure CAN_Data_LoadPacket(Packet: PCAN_Packet; ID: DWord; DataCount: Byte; Byte7, Byte6, Byte5, Byte4, Byte3, Byte2, Byte1, Byte0: Byte; IsExtended: Boolean);
 
 // Queue the passed packet into the buffer.  The passed packet is copied and can be freed when function returns.  If Queue is full returns False
-function CAN_Data_TxListAddNMRABusLayer(Packet: PCAN_Packet): Boolean;
+function CAN_Data_TxListAddNMRABusLayerThroughLockedList(Packet: PCAN_Packet): Boolean;
 // Receives the next received packet.  Returns False if there are none in the Queue
 function CAN_Data_TxNextPacketNMRABusLayer(var Packet: TCAN_Packet): Boolean;
-// Returns true if the List has a packet to send
-function CAN_Data_TxHasPacketNMRABusLayer: Boolean;
 // Queue the passed packet into the buffer.  The passed packet is copied and can be freed when function returns.  If Queue is full returns False
 function CAN_Data_RxListAddNMRABusLayer(Packet: PCAN_Packet): Boolean;
 // Receives the next received packet.  Returns False if there are none in the Queue
 function CAN_Data_RxNextPacketNMRABusLayer(var Packet: TCAN_Packet): Boolean;
 
 // Queue the passed packet into the buffer.  The passed packet is copied and can be freed when function returns.  If Queue is full returns False
-function CAN_Data_TxListAddCANLayer(Packet: PCAN_Packet): Boolean;
+function CAN_Data_TxListAddCANLayerThroughLockedList(Packet: PCAN_Packet): Boolean;
 // Receives the next received packet.  Returns False if there are none in the Queue
 function CAN_Data_TxNextPacketCANLayer(var Packet: TCAN_Packet): Boolean;
 // Returns true if the List has a packet to send
 function CAN_Data_TxHasPacketCANLayer: Boolean;
-
-
+// Queue the passed packet into the buffer.  The passed packet is copied and can be freed when function returns.  If Queue is full returns False
+function CAN_Data_RxListAddCANLayer(Packet: PCAN_Packet): Boolean;
+// Receives the next received packet.  Returns False if there are none in the Queue
+function CAN_Data_RxNextPacketCANLayer(var Packet: TCAN_Packet): Boolean;
 //
 procedure CAN_Data_Flush_Lists;
 
 var
   CAN_TX_Timer_Enable_bit: sbit; sfr; external;
+  LockCANList: PLockListFunc; external;
+  UnLockCANList: PUnLockListFunc; external;
+  LockNMRABusList: PLockListFunc; external;
+  UnLockNMRABusList: PUnLockListFunc; external;
+  
+var
+  CAN_LayerRxList: TCAN_List;
+  CAN_LayerTxList: TCAN_List;
+  NMRANet_LayerTxList: TCAN_List;
+  NMRANet_LayerRxList: TCAN_List;
 
 implementation
 
@@ -84,6 +93,7 @@ end;
 
 procedure CAN_Data_Initialize;
 begin
+  InitializeQueue(@CAN_LayerRxList);
   InitializeQueue(@CAN_LayerTxList);
   InitializeQueue(@NMRANet_LayerRxList);
   InitializeQueue(@NMRANet_LayerTxList);
@@ -103,12 +113,6 @@ begin
   Packet^.Bytes[7] := Byte7;
   Packet^.ExtendedID := IsExtended;
 end;
-
-procedure QueuePacket(Queue: PCAN_List; Packet: PCAN_Packet);
-begin
-
-end;
-
 
 function CAN_Data_ListAdd(List: PCAN_List; Packet: PCAN_Packet): Boolean;
 begin
@@ -141,19 +145,16 @@ begin
     Result := False
 end;
 
-function CAN_Data_TxListAddNMRABusLayer(Packet: PCAN_Packet): Boolean;
+function CAN_Data_TxListAddNMRABusLayerThroughLockedList(Packet: PCAN_Packet): Boolean;
 begin
-  Result := CAN_Data_ListAdd(@NMRANet_LayerTxList, Packet)
+  LockNMRABusList();
+  Result := CAN_Data_ListAdd(@NMRANet_LayerTxList, Packet);
+  UnLockNMRABusList();
 end;
 
 function CAN_Data_TxNextPacketNMRABusLayer(var Packet: TCAN_Packet): Boolean;
 begin
   Result := CAN_Data_NextPacket(@NMRANet_LayerTxList, Packet)
-end;
-
-function CAN_Data_TxHasPacketNMRABusLayer: Boolean;
-begin
-  Result := NMRANet_LayerTxList.Count > 0
 end;
 
 function CAN_Data_RxListAddNMRABusLayer(Packet: PCAN_Packet): Boolean;
@@ -166,9 +167,11 @@ begin
   Result := CAN_Data_NextPacket(@NMRANet_LayerRxList, Packet)
 end;
 
-function CAN_Data_TxListAddCANLayer(Packet: PCAN_Packet): Boolean;
+function CAN_Data_TxListAddCANLayerThroughLockedList(Packet: PCAN_Packet): Boolean;
 begin
-  Result := CAN_Data_ListAdd(@CAN_LayerTxList, Packet)
+  LockCANList();
+  Result := CAN_Data_ListAdd(@CAN_LayerTxList, Packet);
+  UnlockCANList();
 end;
 
 function CAN_Data_TxNextPacketCANLayer(var Packet: TCAN_Packet): Boolean;
@@ -181,6 +184,16 @@ begin
   Result := CAN_LayerTxList.Count > 0
 end;
 
+function CAN_Data_RxListAddCANLayer(Packet: PCAN_Packet): Boolean;
+begin
+  Result := CAN_Data_ListAdd(@CAN_LayerRxList, Packet)
+end;
+
+function CAN_Data_RxNextPacketCANLayer(var Packet: TCAN_Packet): Boolean;
+begin
+  Result := CAN_Data_NextPacket(@CAN_LayerRxList, Packet)
+end;
+
 procedure CAN_Data_FlushList(List: PCAN_List);
 begin
   List^.Head := 0;
@@ -190,6 +203,7 @@ end;
 
 procedure CAN_Data_Flush_Lists;
 begin
+  CAN_Data_FlushList(@CAN_LayerRxList);
   CAN_Data_FlushList(@CAN_LayerTxList);
   CAN_Data_FlushList(@NMRANet_LayerTxList);
   CAN_Data_FlushList(@NMRANet_LayerRxList);

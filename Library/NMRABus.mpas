@@ -1,7 +1,7 @@
 unit NMRABus;
 
 uses
-  CAN_Data;
+  CAN_Data, MCP2515;
   
 {$I Options.inc}
 
@@ -55,9 +55,16 @@ const
   BSI_TRANSMITTING_CAN_LAYER      = $01;     // The CAN Transmit engine is placing a CAN Layer packet on the Bus
   BSI_TRANSMITTING_NMRABUS_LAYER  = $02;     // The CAN Transmit engine is placing a NRMABus Layer packet on the Bus
   BSI_TRANSMITTING_ANY_LAYER      =  BSI_TRANSMITTING_CAN_LAYER or BSI_TRANSMITTING_NMRABUS_LAYER;
-  BSI_FORCE_TX_DONE_CAN_LAYER     = $04;
-  BSI_FORCE_TX_DONE_NMRABUS_LAYER = $08;
   
+  BRM_CID0                        = $0001;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID1                        = $0002;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID2                        = $0004;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID3                        = $0008;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_RID                         = $0010;   // Received a Reserve ID Frame
+  BRM_AMD                         = $0020;   // Received a Alias Map Definition Frame
+  BRM_AME                         = $0040;   // Received a Alias Mapping Enquiry Frame
+  BRM_AMR                         = $0080;   // Received a Alias Map Reset Frame
+
 type
   TNodeID = array[0..1] of DWORD;    // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
   TNodeAliasID = Word;
@@ -70,6 +77,7 @@ type
     BusLoginCount: Integer;          // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
     State: Word;                     // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
     Interrupt_State: Byte;           // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
+    ReceivedMessages: Word;          // Allows tracking what messages have been received.  Use the BRM_xxxx flags.  The user may clear these states and wait until it is set but be aware they may set in the interrupts
   end;
   
   
@@ -232,6 +240,7 @@ procedure NMRABus_Initialize;
 begin
   NMRABus.State := 0;
   NMRABus.Interrupt_State := 0;
+  NMRABus.ReceivedMessages := 0;
   NMRABus.Node_ID[0] := MUSTANGPEAK_UNIQUE_ID_0_LO;
   NMRABus.Node_ID[1] := MUSTANGPEAK_UNIQUE_ID_0_HI;
 
@@ -268,7 +277,7 @@ begin
 end;
 
 // *****************************************************************************
-//  function NMRABus_LoadFramePacketDataWith48BitNodeID
+//  procedure NMRABus_LoadFramePacketDataWith48BitNodeID
 //     Parameters:
 //     Returns:
 //
@@ -287,7 +296,7 @@ begin
 end;
 
 // *****************************************************************************
-//  function NMRABus_CreateCANControlFramePacket
+//  procedure NMRABus_CreateCANControlFramePacket
 //     Parameters:
 //     Returns:
 //
@@ -309,7 +318,7 @@ begin
 end;
 
 // *****************************************************************************
-//  function NMRABus_CreateNMRABusMessagePacket
+//  procedure NMRABus_CreateNMRABusMessagePacket
 //     Parameters:
 //     Returns:
 //
@@ -328,29 +337,62 @@ begin
 end;
 
 
+// *****************************************************************************
+//  procedure NMRABus_WaitForTransmitToFinish
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRABus_WaitForTransmitToFinish;
 begin
   while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER <> 0 do;
 end;
 
+// *****************************************************************************
+//  procedure NMRABus_WaitForTransmitToFinish
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRABus_WaitForTransmitToStart;
 begin
   while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER = 0 do;
 end;
 
+// *****************************************************************************
+//  function SendAndWaitForCheckIDPacket
+//     Parameters:
+//     Returns:
+//
+//     Description:  Returns True if all went well, False if the Alias is already
+//                   used
+//
+// *****************************************************************************
 function SendAndWaitForCheckIDPacket(MessageType: DWord): Boolean;
 var
   Packet: TCAN_Packet;
 begin
   Result := True;
-  NMRABus_CreateCANControlFramePacket(MessageType, @Packet);
-  CAN_Data_TxListAddCANLayer(@Packet);                                          // Load the high priority transmitter buffer
+  NMRABus_CreateCANControlFramePacket(MessageType, @Packet);                    // Load the high priority transmitter buffer
+  CAN_Data_TxListAddCANLayerThroughLockedList(@Packet);
   NMRABus_WaitForTransmitToStart;
   NMRABus_WaitForTransmitToFinish;
-  
-  NEED TO KNOW IF A RID WAS RECEIVED HERE.....
+  Result := NMRABus.ReceivedMessages and BRM_RID = 0;                           // Set in the CAN Rx Interrupt
 end;
 
+// *****************************************************************************
+//  function NMRABus_Connect
+//     Parameters:
+//     Returns:
+//
+//     Description:  Returns True if all went well, False if the Alias is already
+//                   used
+//
+// *****************************************************************************
 function BusLogoutTimeout: Boolean;
 begin
   Result := True;
@@ -359,11 +401,17 @@ begin
   begin
     // The interrupt is looking for problems
   end;
-  
-  NEED TO KNOW IF A RID WAS RECEIVED HERE.....
-  
+  Result := NMRABus.ReceivedMessages and BRM_RID = 0;                           // Set in the CAN Rx Interrupt
 end;
 
+// *****************************************************************************
+//  function NMRABus_Connect
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRABus_Connect;
 var
   Packet: TCAN_Packet;
@@ -372,6 +420,7 @@ begin
   Delay_ms(10);
   NMRABus_WaitForTransmitToFinish;                                              // Allow all pending CAN Controller messages to clear
   NMRABus.State := NMRABus.State and not BS_PERMITED;                           // Not permitted until we successfully get through this log in series
+  NMRABus.ReceivedMessages := NMRABus.ReceivedMessages and not BRM_RID;         // Clear the Reserve ID Flag so we can monitor it to see if we get a reply to our login
   if SendAndWaitForCheckIDPacket(FT_CID0) then
     if SendAndWaitForCheckIDPacket(FT_CID1) then
       if SendAndWaitForCheckIDPacket(FT_CID2) then
@@ -381,11 +430,11 @@ begin
             begin
               NMRABus.State := NMRABus.State or BS_PERMITED;
               NMRABus_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Packet);
-              CAN_Data_TxListAddNMRABusLayer(@Packet);
+              CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
               NMRABus_WaitForTransmitToStart;
               NMRABus_WaitForTransmitToFinish;
               NMRABus.State := NMRABus.State or BS_INITIALIZED;
-            end
+            end;
 end;
 
 
