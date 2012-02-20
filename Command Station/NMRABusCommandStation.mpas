@@ -25,7 +25,7 @@ program NMRABusCommandStation;
  *}
  
 uses
-  NMRABus, MCP2515, CAN_Data, MCU_Setup;
+  NMRABus, MCP2515, CAN_Data, MCU_Setup_dsPIC4013, NMRA_DCC;
   
 {$I Options.inc}
 
@@ -44,13 +44,16 @@ var
   CanSpi_Rst           : sbit at LATF1_bit;
   CanSpi_Rst_Direction : sbit at TRISF1_bit;
  // End CANSPI module connections
+ 
+  Track_DCC_Out_Pin                 : sbit at LATD1_bit;
+  Track_DCC_Out_Pin_Direction       : sbit at TRISD1_bit;
 
-  CAN_TX_Timer_Enable_bit      : sbit at TON_T3CON_bit;
-   
   LockCANList: PLockListFunc;
   UnLockCANList: PUnLockListFunc;
   LockNMRABusList: PLockListFunc;
   UnLockNMRABusList: PUnLockListFunc;
+  GetUniqueID: PGetUniqueIDFunc;
+
 
 {$IFDEF UART_ENABLE}
 procedure PrintMCP2515Registers(StartReg, Count: Byte);
@@ -81,11 +84,23 @@ begin
 end;
 {$ENDIF}
 
+// ****************************************************************************
+// procedure LockListNMRABus
+//
+//  Description:
+//
+// ****************************************************************************
 procedure LockListNMRABus;
 begin
   CN17IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
 end;
 
+// ****************************************************************************
+// procedure UnlockListNMRABus
+//
+//  Description:
+//
+// ****************************************************************************
 procedure UnlockListNMRABus;
 begin
   if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
@@ -96,11 +111,23 @@ begin
   end
 end;
 
+// ****************************************************************************
+// procedure LockListCAN
+//
+//  Description:
+//
+// ****************************************************************************
 procedure LockListCAN;
 begin
   CN17IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
 end;
 
+// ****************************************************************************
+// procedure UnlockListCAN
+//
+//  Description:    8us Long
+//
+// ****************************************************************************
 procedure UnlockListCAN;
 begin
   if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then
@@ -108,7 +135,19 @@ begin
     MCP2515_CANModifyBit(CANINTF_MCP2515, TX0IF_MCP2515, True);                 // Set Transmit Done Flag to start the Transmit Engine
     CNIF_bit := 1;                                                              // Set Flag to force interrupt to be called
     CN17IE_bit := 1;                                                            // Enable Pin Change interrupt for CAN
-  end
+  end;
+end;
+
+// ****************************************************************************
+// procedure UniqueID
+//
+//  Description:   Callback from NMRABus to load the 48 Bit Unique ID
+//
+// ****************************************************************************
+procedure UniqueID(var HiID, LoID: DWord);
+begin
+  LoID := MUSTANGPEAK_UNIQUE_ID_0_LO;
+  HiID := MUSTANGPEAK_UNIQUE_ID_0_HI;
 end;
 
 
@@ -157,7 +196,7 @@ end;
 // ****************************************************************************
 // procedure TransmitCompleteOnCANLayerPacket
 //
-//  Description:
+//  Description:   63us
 //
 // ****************************************************************************
 procedure TransmitCompleteOnCANLayerPacket;
@@ -168,7 +207,7 @@ begin
   if CAN_Data_TxNextPacketCANLayer(Packet) then                                 // Is there a CAN Level Packet in the list ready to be transmitted?
   begin
     NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_CAN_LAYER;
-    MCP2515_CANWriteTXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
+    MCP2515_CANWriteTXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission, 52.25us
   end else
     NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_CAN_LAYER;
 end;
@@ -231,7 +270,13 @@ end;
 procedure INTERRUPT_DCC_Timer(); iv IVT_ADDR_T1INTERRUPT;
 begin
   T1IF_bit := 0;                                                                // Clear the Flag
-  Delay_us(20);
+  
+  Track_DCC_Out_Pin := Track.TX_Flags.TRANSMITTING_FLAG_DCC_PIN_BIT;
+  
+  // Now we can update the xxxx_DCC_PIN_BIT flags for the next 56us time slot
+  NMRA_DCC_56us_TimeTick(@Track);                                                          // < 1us
+  NMRA_DCC_TransmitterStateMachine(@Track);                                                // < 5us
+  NMRA_DCC_LoadPacketIntoTransmitterStateMachine(@Track, PREAMBLE_BIT_COUNT_NORMAL);      // < 11us    Max
 end;
 
 procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
@@ -241,12 +286,7 @@ begin
   NMRABus_GlobalTimer;
 end;
 
-procedure INTERRUPT_CAN_TX_Timer(); iv IVT_ADDR_T3INTERRUPT;
-begin
-  T3IF_bit := 0;  // Clear the Flag
-end;
-
-procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;
+procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;         // 93us when a TransmitCompleteOnCANLayerPacket called with new Tx Packet waiting
 var
   Flags: Byte;
 begin
@@ -356,9 +396,12 @@ end;
 
 var
   Packet: TCAN_Packet;
+  DCC_Message: TDCCPacket;
 begin
   LockCANList := @LockListCAN;
   UnLockCANList := @UnLockListCAN;
+  GetUniqueID := @UniqueID;
+  
   LockNMRABusList := @LockListNMRABus;
   UnLockNMRABusList := @UnLockListNMRABus;
   
@@ -366,6 +409,7 @@ begin
   NMRABus_Initialize;
   MCP2515_Initialize;
   MCU_Setup_Initialize;
+  NMRA_DCC_Initialize;
   {$IFDEF UART_ENABLE}PrintConnectedState;{$ENDIF}
   NMRABus_Connect;
   {$IFDEF UART_ENABLE}PrintConnectedState;{$ENDIF}
@@ -384,6 +428,7 @@ begin
       begin
         {$IFDEF UART_ENABLE}UART1_Write_Text('Starting'+LF);{$ENDIF}
         
+        NMRA_DCC_Packet_Init;                                                   // Send the 20 Idle Packets per the NMRA Spec
         
         CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
         CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
@@ -402,6 +447,10 @@ begin
               Delay_ms(1000);
               CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
               CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
+              
+              NMRA_DCC_LoadPacket(@DCC_Message, $FF, $FF, $FF, $FF, $FF, 5);
+              NMRA_DCC_QueuePacket(@Track, @DCC_Message, True);
+              
             end
           end
         end

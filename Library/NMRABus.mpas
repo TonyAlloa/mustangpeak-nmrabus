@@ -80,11 +80,15 @@ type
     ReceivedMessages: Word;          // Allows tracking what messages have been received.  Use the BRM_xxxx flags.  The user may clear these states and wait until it is set but be aware they may set in the interrupts
   end;
   
-  
+  TGetUniqueIDFunc = procedure(var Hi, Lo: DWord);
+  PGetUniqueIDFunc = ^TGetUniqueIDFunc;
+
 
 var
   NMRABus: TNMRABus;
   
+  GetUniqueID: PGetUniqueIDFunc; external;
+
   procedure NMRABus_Connect;
   function NMRABus_Connected: Boolean;
   procedure NMRABus_Disconnect;
@@ -241,9 +245,7 @@ begin
   NMRABus.State := 0;
   NMRABus.Interrupt_State := 0;
   NMRABus.ReceivedMessages := 0;
-  NMRABus.Node_ID[0] := MUSTANGPEAK_UNIQUE_ID_0_LO;
-  NMRABus.Node_ID[1] := MUSTANGPEAK_UNIQUE_ID_0_HI;
-
+  GetUniqueID(NMRABus.Node_ID[1], NMRABus.Node_ID[0]);
   NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Node_ID[0];
   NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Node_ID[1];
 
@@ -377,11 +379,13 @@ var
   Packet: TCAN_Packet;
 begin
   Result := True;
-  NMRABus_CreateCANControlFramePacket(MessageType, @Packet);                    // Load the high priority transmitter buffer
-  CAN_Data_TxListAddCANLayerThroughLockedList(@Packet);
+  NMRABus_CreateCANControlFramePacket(MessageType, @Packet);                    // Load the high priority transmitter buffer = 14us
+  CAN_Data_TxListAddCANLayerThroughLockedList(@Packet);                         // 150us
   NMRABus_WaitForTransmitToStart;
   NMRABus_WaitForTransmitToFinish;
   Result := NMRABus.ReceivedMessages and BRM_RID = 0;                           // Set in the CAN Rx Interrupt
+  
+
 end;
 
 // *****************************************************************************

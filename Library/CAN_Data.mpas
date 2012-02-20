@@ -61,7 +61,6 @@ function CAN_Data_RxNextPacketCANLayer(var Packet: TCAN_Packet): Boolean;
 procedure CAN_Data_Flush_Lists;
 
 var
-  CAN_TX_Timer_Enable_bit: sbit; sfr; external;
   LockCANList: PLockListFunc; external;
   UnLockCANList: PUnLockListFunc; external;
   LockNMRABusList: PLockListFunc; external;
@@ -124,7 +123,6 @@ begin
     else
       Inc(List^.Head);                                                          // Move to the next possible head
     Inc(List^.Count);                                                           // Update the count
-    CAN_TX_Timer_Enable_bit := 1;                                               // Start the Timer to fire interrupt state machine
     Result := True;
   end else
     Result := False
@@ -170,7 +168,7 @@ end;
 function CAN_Data_TxListAddCANLayerThroughLockedList(Packet: PCAN_Packet): Boolean;
 begin
   LockCANList();
-  Result := CAN_Data_ListAdd(@CAN_LayerTxList, Packet);
+  Result := CAN_Data_ListAdd(@CAN_LayerTxList, Packet);                         // 2.75us
   UnlockCANList();
 end;
 
