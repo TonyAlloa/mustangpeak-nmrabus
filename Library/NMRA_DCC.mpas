@@ -137,9 +137,6 @@ var
   Track: TDCCBufferInfo;
 
 
-  Track_DCC_Out_Pin                 : sbit; sfr; external;       // Port that has the Track DCC data stream
-  Track_DCC_Out_Pin_Direction       : sbit; sfr; external;
-
   AddressSlot_LoadRefreshPacketFunc: PAddressSlot_LoadRefreshPacketFunc;
   
 // Call once on start up
@@ -219,9 +216,6 @@ procedure NMRA_DCC_ResetTransmitter(ABuffer: PDCCBufferInfo); forward;
 procedure NMRA_DCC_Initialize;
 begin
   InitializeBuffer(@Track, @TrackQueue, @TrackQueuePriority, MAX_TRACK_BUFFER_DEPTH, MAX_TRACK_PRIORITY_BUFFER_DEPTH);
-
-  Track_DCC_Out_Pin_Direction       := 0;   // Output
-  Track_DCC_Out_Pin                 := 0;
 end;
 
 // ****************************************************************************
