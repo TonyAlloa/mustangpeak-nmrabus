@@ -1,4 +1,4 @@
-program NMRABusCommandStation;
+program NMRABus_TrackBooster;
 
 {*
  * Project name:
@@ -10,29 +10,23 @@ program NMRABusCommandStation;
        - initial release;
  * Description:
  *}
- 
+
 uses
-  NMRABus, 
-  CAN_Data, 
-  MCU_Setup_dsPIC4013, 
-  NMRA_DCC;
-  
+  NMRABus,
+  CAN_Data,
+  MCU_Setup_dsPIC4013;
+
 {$I Options.inc}
 
 // Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
 const
-  MUSTANGPEAK_COMMANDSTATION_ID_0_LO = $00010700;  // The Bottom 3 Bytes
-  MUSTANGPEAK_COMMANDSTATION_ID_0_HI = $00050101;  // The Top 3 Bytes
-  
+  MUSTANGPEAK_TRACKBOOSTER_ID_0_LO = $00010701;  // The Bottom 3 Bytes
+  MUSTANGPEAK_TRACKBOOSTER_ID_0_HI = $00050101;  // The Top 3 Bytes
+
   ID_1st : DWord = $08002F4F;          // TESTING ONLY
   ID_2nd : DWord = $08000003;          // TESTING ONLY
 
 var
-  Track_DCC_Out_Pin                 : sbit at LATB10_bit;
-  Track_DCC_Out_Bar_Pin             : sbit at LATB9_bit;
-  Track_DCC_Out_Pin_Direction       : sbit at TRISB10_bit;
-  Track_DCC_Out_Pin_Bar_Direction   : sbit at TRISB9_bit;
-
   GetUniqueID: PGetUniqueIDFunc;
 
 
@@ -44,27 +38,14 @@ var
 // ****************************************************************************
 procedure UniqueID(var HiID, LoID: DWord);
 begin
-  LoID := MUSTANGPEAK_COMMANDSTATION_ID_0_LO;
-  HiID := MUSTANGPEAK_COMMANDSTATION_ID_0_HI;
+  LoID := MUSTANGPEAK_TRACKBOOSTER_ID_0_LO;
+  HiID := MUSTANGPEAK_TRACKBOOSTER_ID_0_HI;
 end;
 
 
 // *****************************************************************************
 //  INTERRUPTS
 // *****************************************************************************
-
-procedure INTERRUPT_DCC_Timer(); iv IVT_ADDR_T1INTERRUPT;
-begin
-  T1IF_bit := 0;                                                                // Clear the Flag
-  
-  Track_DCC_Out_Pin := Track.TX_Flags.TRANSMITTING_FLAG_DCC_PIN_BIT;
-  Track_DCC_Out_Bar_Pin := not Track_DCC_Out_Pin;
-  
-  // Now we can update the xxxx_DCC_PIN_BIT flags for the next 56us time slot
-  NMRA_DCC_56us_TimeTick(@Track);                                                          // < 1us
-  NMRA_DCC_TransmitterStateMachine(@Track);                                                // < 5us
-  NMRA_DCC_LoadPacketIntoTransmitterStateMachine(@Track, PREAMBLE_BIT_COUNT_NORMAL);      // < 11us    Max
-end;
 
 procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 1m
@@ -105,24 +86,14 @@ end;
 
 var
   Packet: TCAN_Packet;
-  DCC_Message: TDCCPacket;
 begin
 
-  Track_DCC_Out_Pin := 0;
-  Track_DCC_Out_Pin := 0;
-  Track_DCC_Out_Pin_Direction := 0;      // Output
-  Track_DCC_Out_Pin_Bar_Direction := 0;  // Output
-  
   GetUniqueID := @UniqueID;
 
-  LATD0_bit := 0;
-  TRISD0_bit := 0;
-  
 
   CAN_Data_Initialize;
   NMRABus_Initialize;
   MCU_Setup_Initialize;
-  NMRA_DCC_Initialize;
   NMRABus_Connect;
   while (TRUE) do
     begin
@@ -131,19 +102,17 @@ begin
         NMRABus_RecreateAliasID;
         NMRABus_Connect;
       end;
-      
+
       if NMRABus_Connected then
       begin
-        NMRA_DCC_Packet_Init;                                                   // Send the 20 Idle Packets per the NMRA Spec
-        
         CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
         CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
-        
+
         while NMRABus_Connected do
         begin
           HandleLoPriorityReceivedCANLayerPackets;
           HandleLoPriorityReceivedNMRABusLayerPackets;
-        
+
           if CAN_Data_RxNextPacketNMRABusLayer(Packet) then
           begin
             if Packet.Header = ID_1st then                                          // Message was received (interrupt) if it is ours then ...
@@ -153,9 +122,6 @@ begin
               Delay_ms(1000);
               CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
               CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
-              
-              NMRA_DCC_LoadPacket(@DCC_Message, $FF, $FF, $FF, $FF, $FF, 5);
-              NMRA_DCC_QueuePacket(@Track, @DCC_Message, True);
             end
           end
         end

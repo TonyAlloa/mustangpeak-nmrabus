@@ -3,7 +3,7 @@ unit MCU_Setup_dsPIC4013;
 uses
   CAN_Data,
   NMRABus;
-  
+
 {$I Options.inc}
 
 const
@@ -21,7 +21,7 @@ var
   UnLockCANList: PUnLockListFunc;
   LockNMRABusList: PLockListFunc;
   UnLockNMRABusList: PUnLockListFunc;
-  
+
   PinChangeState: Word;
 
 implementation
@@ -86,9 +86,9 @@ begin
   TRISB := 0;                                           // set PORTB as output
   PORTD := 0;                                           // set PORTD as output
   TRISD := 0;
-  
+
   PinChangeState := 0;
-  
+
   {$IFDEF UART_ENABLE}
   // Initialize UART
   UART1_Init(115200);                       // Initialize UART module a
@@ -96,7 +96,7 @@ begin
 
   U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
   {$ENDIF}
-  
+
   SPI1_Init();       // Initialize SPI1 module
   SPIEN_bit := 0;    // Disable SPI
   SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
@@ -130,14 +130,6 @@ begin
   C1IF_bit := 0;                                                                // Clear the CAN interrupt flag
   C1IE_bit := 1;                                                                // Enabled the CAN 1 interrupt
 
-  T1IP_0_bit := 1;           // Timer 1 Interrupt Priority = 7
-  T1IP_1_bit := 1;
-  T1IP_2_bit := 1;
-  PR1 := 1120;               // 56us timer with a 80Mhz clock
-  T1IF_bit := 0;             // Clear T1IF
-  T1IE_bit := 1;             // Enable Timer1 interrupts
-  {$IFNDEF DCCTIMER_DISABLE}TON_T1CON_bit := 1;{$ENDIF} // Turn on
-
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
   T2IP_1_bit := 1;
   T2IP_2_bit := 0;
@@ -152,7 +144,7 @@ begin
   CNIP_2_bit := 1;
   CN17IE_bit := 1;          // RF4 (CN17) set for interrupt
   CNIE_bit := 1;            // Enable the Interrupt for Pin Change
-  
+
   LockCANList := @LockListCAN;
   UnLockCANList := @UnLockListCAN;
   LockNMRABusList := @LockListNMRABus;
