@@ -1,7 +1,7 @@
 unit NMRABus;
 
 uses
-  CAN_Data;
+  CAN_Data, MCP2515;
   
 {$I Options.inc}
 
@@ -384,6 +384,8 @@ begin
   NMRABus_WaitForTransmitToStart;
   NMRABus_WaitForTransmitToFinish;
   Result := NMRABus.ReceivedMessages and BRM_RID = 0;                           // Set in the CAN Rx Interrupt
+  
+
 end;
 
 // *****************************************************************************
