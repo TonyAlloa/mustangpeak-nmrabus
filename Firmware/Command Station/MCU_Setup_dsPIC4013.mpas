@@ -1,0 +1,157 @@
+unit MCU_Setup_dsPIC4013;
+
+uses
+  CAN_Data;
+
+{$I Options.inc}
+
+const
+  CAN_SWJ        = 1;               // 2 Quanta Jump,  Set up for 125Khz Baud Rate with a 20 Mhz Crystal
+  CAN_PROP_SEG   = 3;               // 4 Quanta
+  CAN_PHASESEG_1 = 3;               // 5 Quanta
+  CAN_PHASESEG_2 = 1;               // 6 Quanta
+                                    //  16 Quanta Total
+  CAN_BRP        = 10;               // 500ns per CAN quanta * 16 Quanta = 8us or 125k baud
+
+  ID_1st : DWord = $08002F4F;          // Set the NMRABus Frame Type to NMRABus Message (1)
+  ID_2nd : DWord = $08000003;
+  
+procedure MCU_Setup_Initialize;
+procedure CANReadRXBuffer(Buffer: Byte; var ID: DWord; var DataCount: Byte; var DataBytes: TCANData; var IsExtended: Boolean);
+procedure CANWriteTXBuffer(Buffer: Byte; ID: DWord; DataCount: Byte; var DataBytes: TCANData; IsExtended: Boolean; Priority: Byte);
+
+var
+  PinChangeState: Word;
+
+implementation
+
+procedure MCU_Setup_Initialize;
+begin
+  ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
+
+  PinChangeState := 0;
+  
+  {$IFDEF UART_ENABLE}
+  // Initialize UART
+  UART1_Init(115200);                       // Initialize UART module a
+  Delay_ms(100);                            // Wait for UART module to stabilize
+
+  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
+  {$ENDIF}
+  
+  SPI1_Init();       // Initialize SPI1 module
+  SPIEN_bit := 0;    // Disable SPI
+  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
+  SPI1CON := SPI1CON or $0003 or $0018;  // Setup for 5 Mhz (with the CAN plug in boards)     $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
+  SPI1IF_bit := 0;   // Clear the Flag
+  SPI1IE_bit := 1;   // Enable SPI 1 Interrupts
+  SPI1IP_0_bit := 1; // Interrupt Priority of the SPI is 1 (001)
+  SPI1IP_1_bit := 0;
+  SPI1IP_2_bit := 0;
+  SPIEN_bit := 1;    // Enable the SPI
+
+  // Make sure on startup of the SPI I don't get into reentrant problems with the interrupts
+  // i.e. enabling the interrupts before we are done calling initilization SPI commands for the
+  // slaves.
+  CAN1Initialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _CAN_CONFIG_SAMPLE_THRICE and _CAN_CONFIG_PHSEG2_PRG_ON and _CAN_CONFIG_XTD_MSG);   // Initialize external CAN module
+  CAN1SetOperationMode(_CAN_MODE_CONFIG, 0xFF);                            // set CONFIGURATION mode
+  CANCKS_bit := 1;                                                                // Fcan = Fcy
+  CAN1SetMask(_CAN_MASK_B1, LongInt( $08000000), _CAN_CONFIG_XTD_MSG);            // This is the CAN Layer so only filter on bit 27 that is a 0 if it is a CAN layer packet, a Message Layer packet is a 1
+  CAN1SetFilter(_CAN_FILTER_B1_F1, LongInt( $00000000), _CAN_CONFIG_XTD_MSG);     // Bit 27 must be a 0 to filter in only the CAN layer packets
+  CAN1SetMask(_CAN_MASK_B2, LongInt( $08000000), _CAN_CONFIG_XTD_MSG);            // This is the Message Layer so only filter on bit 27 that is a 1 if it is a Message layer packet, a CAN Layer packet is a 0
+  CAN1SetFilter(_CAN_FILTER_B2_F1, LongInt( $08000000), _CAN_CONFIG_XTD_MSG);     // Bit 27 must be a 1 to filter in only the Message layer packets
+  CAN1SetOperationMode(_CAN_MODE_NORMAL,0xFF);                             // set NORMAL mode
+
+  C1IP_0_bit := 0;          // CAN 1 Interrupt Priority = 6, second only to the DCC Timer
+  C1IP_1_bit := 1;
+  C1IP_2_bit := 1;
+  C1IF_bit := 0;
+  C1IE_Bit := 1;            // CAN1 Interrupt Enabled
+  
+  RXB0IE_bit := 1;          // Interrupt when RX0 receives a message
+  RXB1IE_bit := 1;          // Interrupt when RX1 receives a message
+  TXB0IE_bit := 1;          // Interrupt when TX0 receives a message
+  TXB1IE_bit := 1;          // Interrupt when TX1 receives a message
+  ERRIE_bit := 1;           // Interrupt when Error occurs in a message
+  
+  T1IP_0_bit := 1;           // Timer 1 Interrupt Priority = 7
+  T1IP_1_bit := 1;
+  T1IP_2_bit := 1;
+  PR1 := 1120;               // 56us timer with a 80Mhz clock
+  T1IF_bit := 0;             // Clear T1IF
+  T1IE_bit := 1;             // Enable Timer1 interrupts
+  {$IFNDEF DCCTIMER_DISABLE}TON_T1CON_bit := 1;{$ENDIF} // Turn on
+
+  T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
+  T2IP_1_bit := 1;
+  T2IP_2_bit := 0;
+  PR2 := 20000;             // Clock ticks every 50ns * 20000 = 1ms interrupts
+  T2IF_bit := 0;            // Clear T2IF
+  T2IE_bit := 1;            // Enable the Interrupt
+  TON_T2CON_bit := 1;       // Turn on
+
+  CNIF_bit := 0;            // Clear Flag
+  CNIP_0_bit := 0;          // Interrupt Priority = 6 (next below DCC)
+  CNIP_1_bit := 1;
+  CNIP_2_bit := 1;
+  CN17IE_bit := 1;          // RF4 (CN17) set for interrupt
+  CNIE_bit := 1;            // Enable the Interrupt for Pin Change
+
+  // DO I NEED TO CLEAR ERROR FLAG, ETC IN SPI DEVICES BEFORE STARTING THE TIMERS/PIN CHANGE NOTFIERS
+  // AS WE MAY HAVE BUFFER OVERFLOW ISSUES BETWEEN THE TIME WE INITIALIZED THE SPI DEVICES AND WE
+  // START TO SERVICE THEM WITH THE INTERRUPTS..........
+
+  PinChangeState := PORTF;
+
+end;
+
+procedure CANWriteTXBuffer(Buffer: Byte; ID: DWord; DataCount: Byte; var DataBytes: TCANData; IsExtended: Boolean; Priority: Byte);
+//   Priorty = 0..3 with 3 being highest priority, see CAN_TX_PRIORITY_x constants
+var
+  Reg: ^Word;
+begin
+  case Buffer of
+    0: Reg := @C1TX0SID;
+    1: Reg := @C1TX1SID;
+    2: Reg := @C1TX2SID;
+  end;
+  Reg^ := ((ID shl 2) and $00FC) or ((ID shl 5) and $F800);
+  if IsExtended then
+    Reg^ := Reg^ or $0001;
+  Inc(Reg);
+  Reg^ := ((ID shr 17) and $00FF) or ((ID shr 13) and $F000); Inc(Reg);
+  Reg^ := ((ID shr 1) and $FC00) or (( DataCount shl 3) and $0078); Inc(Reg);
+  Reg^ := DataBytes[0] or (DataBytes[1] shl 8); Inc(Reg);
+  Reg^ := DataBytes[2] or (DataBytes[3] shl 8); Inc(Reg);
+  Reg^ := DataBytes[4] or (DataBytes[5] shl 8); Inc(Reg);
+  Reg^ := DataBytes[6] or (DataBytes[7] shl 8); Inc(Reg);
+  Reg^ := (Reg^ and $FFFC) or Priority or $0008;
+end;
+
+procedure CANReadRXBuffer(Buffer: Byte; var ID: DWord; var DataCount: Byte; var DataBytes: TCANData; var IsExtended: Boolean);
+var
+  Reg: ^Word;
+begin
+  case Buffer of
+    0: Reg := @C1RX0SID;
+    1: Reg := @C1RX1SID;
+  end;
+  
+  ID := ((DWORD( Reg^) shr 2) and $000007FF);
+  IsExtended := ID and $0001 <> 0;
+  Inc(Reg);
+  ID := ID or ((DWORD( Reg^) shl 17) and $1FFE0000); Inc(Reg);
+  ID := ID or ((DWORD( Reg^) shl 1) and $001F800);
+  DataCount := Reg^ and $000F; Inc(Reg);
+  DataBytes[0] := Lo( Reg^);
+  DataBytes[1] := Hi( Reg^); Inc(Reg);
+  DataBytes[2] := Lo( Reg^);
+  DataBytes[3] := Hi( Reg^); Inc(Reg);
+  DataBytes[4] := Lo( Reg^);
+  DataBytes[5] := Hi( Reg^); Inc(Reg);
+  DataBytes[6] := Lo( Reg^);
+  DataBytes[7] := Hi( Reg^); Inc(Reg);
+  Reg^.RXFUL := 0;
+end;
+
+end.

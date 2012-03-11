@@ -1,0 +1,456 @@
+unit NMRABus;
+
+uses
+  CAN_Data;
+  
+{$I Options.inc}
+
+// Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
+const
+  MUSTANGPEAK_UNIQUE_ID_0_LO = $00010700;  // The Bottom 3 Bytes
+  MUSTANGPEAK_UNIQUE_ID_0_HI = $00050101;  // The Top 3 Bytes
+  
+  MAX_BUS_LOGIN_TIMEOUT = 51;              // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
+
+// *****************************************************************************
+//  Extended CAN Frames
+//  29 Bits Divided as follows:
+//     - 1 Bit = Priority (1 = Low Priority typical)
+//     - 4 Bits = Frame Type (FT_xxxx Constants)
+//     - 12 Bits = Destination Node Address Alias or Message Type (MT_xxx Constants)
+//     - 12 Bits = Source Node Address Alias
+//
+// Frame Types.  These define what the Frame of the CAN message consists of.
+const
+  FT_CAN                            = $00000000;  // Frame Type CAN Control Message
+  FT_CID0                           = $07000000;  // First 12 Bits of 48 bit Node ID
+  FT_CID1                           = $06000000;  // 2rd 12 Bits of 48 bit Node ID
+  FT_CID2                           = $05000000;  // 3nd 12 Bits of 48 bit Node ID
+  FT_CID3                           = $04000000;  // Last 12 Bits of 48 bit Node ID
+  FT_CID_MASK                       = $07000000;
+  FT_RID                            = $00700000;  // Reserve ID
+  FT_AMD                            = $00701000;  // Alias Map Definition
+  FT_AME                            = $00702000;  // Alias Mapping Enquiry
+  FT_AMR                            = $00703000;  // Alias Map Reset Frame
+  
+  
+  FT_INITIALIZATION_COMPLETE        = $09017000;
+  FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
+  FT_VERIFY_NODE_ID_NUMBER_NO_DEST  = $080A7000;
+  FT_VERIFIED_NODE_ID_NUMBER        = $080B7000;
+  FT_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
+  FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
+
+  FT_BROADCAST_1     = $08;  // Broadcast Message
+  FT_BROADCAST_2     = $09;  // Broadcast Message again....
+  FT_DATAGRAM_FIRST  = $0C;  // First Frame of Datagram
+  FT_DATAGRAM_LAST   = $0D;  // Last Frame of Datagram
+  FT_DATAGRAM_SINGLE = $0E;  // Single Frame Datagram
+  FT_STREAM          = $0F;  // Stream Data
+  
+  // NMRABus States
+  BS_PERMITED          = $01;    // CAN Frame Layer is permitted (Node ID's resolved with bus)
+  BS_INITIALIZED       = $02;    // Message Layer has sent its first Initialize Complete Message
+
+  BSI_TRANSMITTING_CAN_LAYER      = $01;     // The CAN Transmit engine is placing a CAN Layer packet on the Bus
+  BSI_TRANSMITTING_NMRABUS_LAYER  = $02;     // The CAN Transmit engine is placing a NRMABus Layer packet on the Bus
+  BSI_TRANSMITTING_ANY_LAYER      =  BSI_TRANSMITTING_CAN_LAYER or BSI_TRANSMITTING_NMRABUS_LAYER;
+  
+  BRM_CID0                        = $0001;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID1                        = $0002;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID2                        = $0004;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID3                        = $0008;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_RID                         = $0010;   // Received a Reserve ID Frame
+  BRM_AMD                         = $0020;   // Received a Alias Map Definition Frame
+  BRM_AME                         = $0040;   // Received a Alias Mapping Enquiry Frame
+  BRM_AMR                         = $0080;   // Received a Alias Map Reset Frame
+
+type
+  TNodeID = array[0..1] of DWORD;    // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
+  TNodeAliasID = Word;
+  
+
+  TNMRABus = record
+    Node_ID: TNodeID;                // Unique 48 Bit ID for Node
+    Unique_ID_Global_Seed: TNodeID;  // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
+    Node_Alias_ID: TNodeAliasID;     // 12 Bit Alias ID
+    BusLoginCount: Integer;          // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
+    State: Word;                     // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
+    Interrupt_State: Byte;           // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
+    ReceivedMessages: Word;          // Allows tracking what messages have been received.  Use the BRM_xxxx flags.  The user may clear these states and wait until it is set but be aware they may set in the interrupts
+  end;
+  
+  TGetUniqueIDFunc = procedure(var Hi, Lo: DWord);
+  PGetUniqueIDFunc = ^TGetUniqueIDFunc;
+
+
+var
+  NMRABus: TNMRABus;
+  
+  GetUniqueID: PGetUniqueIDFunc; external;
+
+  procedure NMRABus_Connect;
+  function NMRABus_Connected: Boolean;
+  procedure NMRABus_Disconnect;
+  procedure NMRABus_Initialize;
+  procedure NMRABus_GlobalTimer;
+  procedure NMRABus_RecreateAliasID;
+  function NMRABus_EqualAliasID(AliasID: Word): Boolean;
+  procedure NMRABus_CreateCANControlFramePacket(VariableField: DWord; Packet: PCAN_Packet);
+  function NMRABus_EqualNodeID(var NodeID: TNodeID): boolean;
+  procedure NMRABus_PacketBytesToNodeID(Packet: PCAN_Packet; var NodeID: TNodeID);
+  procedure NMRABus_WaitForTransmitToFinish;
+  procedure NMRABus_WaitForTransmitToStart;
+  
+
+implementation
+
+// *****************************************************************************
+//  function NMRABus_PacketBytesToNodeID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_PacketBytesToNodeID(Packet: PCAN_Packet; var NodeID: TNodeID);
+begin
+  NodeID[0] := Packet^.Bytes[0];
+  NodeID[0] := NodeID[0] or Packet^.Bytes[1] shl 8;
+  NodeID[0] := NodeID[0] or Packet^.Bytes[2] shl 16;
+  NodeID[1] := Packet^.Bytes[3];
+  NodeID[1] := NodeID[1] or Packet^.Bytes[4] shl 8;
+  NodeID[1] := NodeID[1] or Packet^.Bytes[5] shl 16;
+end;
+
+// *****************************************************************************
+//  function NMRABus_EqualAliasID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABus_EqualNodeID(var NodeID: TNodeID): boolean;
+begin
+  Result := (NodeID[1] = NMRABus.Node_ID[1]) and (NodeID[0] = NMRABus.Node_ID[0])
+end;
+
+// *****************************************************************************
+//  function NMRABus_EqualAliasID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABus_EqualAliasID(AliasID: Word): Boolean;
+begin
+  Result := AliasID = NMRABus.Node_Alias_ID
+end;
+
+// *****************************************************************************
+//  procedure LoadNodeID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_LoadNodeID(var NodeID: TNodeID; Upper, Lower: DWORD);
+begin
+  NodeID[0] := Lower;
+  NodeID[1] := Upper;
+end;
+
+// *****************************************************************************
+//  procedure PsudoRandomNumberGenerator
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_PsudoRandomNumberGenerator;
+var
+  temp1,              // Upper 24 Bits of temp 48 bit number
+  temp2: DWORD;       // Lower 24 Bits of temp 48 Bit number
+begin
+  temp1 := ((NMRABus.Unique_ID_Global_Seed[1] shl 9) or ((NMRABus.Unique_ID_Global_Seed[0] shr 15) and $000001FF)) and $00FFFFFF;   // x(i+1)(2^9 + 1)*x(i) + C  = 2^9 * x(i) + x(i) + C
+  temp2 := (NMRABus.Unique_ID_Global_Seed[0] shl 9) and $00FFFFFF;                                                                  // Calculate 2^9 * x
+  
+  NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Unique_ID_Global_Seed[0] + temp2 + $7A4BA9;   // Now y = 2^9 * x so all we have left is x(i+1) = y + x + c
+  NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Unique_ID_Global_Seed[1] + temp1 + $1B0CA3;
+
+  NMRABus.Unique_ID_Global_Seed[1] := (NMRABus.Unique_ID_Global_Seed[1] and $00FFFFFF) or (NMRABus.Unique_ID_Global_Seed[0] and $FF000000) shr 24;   // Handle the carries of the lower 24 bits into the upper
+  NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Unique_ID_Global_Seed[0] and $00FFFFFF;
+end;
+
+// *****************************************************************************
+//  function NMRABus_GenerateID_Alias_From_Global_Seed
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABus_GenerateID_Alias_From_Global_Seed: Word;
+begin
+  Result := (NMRABus.Unique_ID_Global_Seed[0] xor NMRABus.Unique_ID_Global_Seed[1] xor (NMRABus.Unique_ID_Global_Seed[0] shr 12) xor (NMRABus.Unique_ID_Global_Seed[1] shr 12)) and $00000FFF;
+end;
+
+// *****************************************************************************
+//  procedure CreateAliasID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_CreateAliasID(Regenerate: Boolean);
+begin
+  if Regenerate then
+    NMRABus_PsudoRandomNumberGenerator;
+  NMRABus.Node_Alias_ID := NMRABus_GenerateID_Alias_From_Global_Seed;
+  if NMRABus.Node_Alias_ID = 0 then
+  begin
+    NMRABus_PsudoRandomNumberGenerator;
+    NMRABus.Node_Alias_ID := NMRABus_GenerateID_Alias_From_Global_Seed;
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRABus_RecreateAliasID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_RecreateAliasID;
+begin
+  NMRABus_CreateAliasID(True)
+end;
+
+// *****************************************************************************
+//  procedure NMRABus_Initialize
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_Initialize;
+begin
+  NMRABus.State := 0;
+  NMRABus.Interrupt_State := 0;
+  NMRABus.ReceivedMessages := 0;
+  GetUniqueID(NMRABus.Node_ID[1], NMRABus.Node_ID[0]);
+  NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Node_ID[0];
+  NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Node_ID[1];
+
+  NMRABus_CreateAliasID(False);
+end;
+
+// *****************************************************************************
+//  function NMRABus_Connected
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABus_Connected: Boolean;
+begin
+  Result := NMRABus.State and BS_PERMITED <> 0
+end;
+
+// *****************************************************************************
+//  procedure NMRABus_GlobalTimer
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_GlobalTimer;
+begin
+  Inc(NMRABus.BusLoginCount);
+end;
+
+// *****************************************************************************
+//  procedure NMRABus_LoadFramePacketDataWith48BitNodeID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_LoadFramePacketDataWith48BitNodeID(Packet: PCAN_Packet);
+begin
+  Packet^.Count := 6;
+  Packet^.Bytes[0] := NMRABus.Node_ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
+  Packet^.Bytes[1] := NMRABus.Node_ID[1] shr 8;
+  Packet^.Bytes[2] := NMRABus.Node_ID[1];
+  Packet^.Bytes[3] := NMRABus.Node_ID[0] shr 16;
+  Packet^.Bytes[4] := NMRABus.Node_ID[0] shr 8;
+  Packet^.Bytes[5] := NMRABus.Node_ID[0];
+end;
+
+// *****************************************************************************
+//  procedure NMRABus_CreateCANControlFramePacket
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_CreateCANControlFramePacket(VariableField: DWord; Packet: PCAN_Packet);
+begin
+  Packet^.Count := 0;
+  Packet^.ExtendedID := True;
+  Packet^.Header := $10000000 or VariableField or NMRABus.Node_Alias_ID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
+  if VariableField = FT_CID0 then Packet^.Header := Packet^.Header or (NMRABus.Node_ID[1] and $00FFF000) else
+  if VariableField = FT_CID1 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
+  if VariableField = FT_CID2 then Packet^.Header := Packet^.Header or (NMRABus.Node_ID[0] and $00FFF000) else
+  if VariableField = FT_CID3 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
+  
+  if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
+    NMRABus_LoadFramePacketDataWith48BitNodeID(Packet);
+end;
+
+// *****************************************************************************
+//  procedure NMRABus_CreateNMRABusMessagePacket
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCAN_Packet);
+begin
+  Packet^.Count := 0;
+  Packet^.ExtendedID := True;
+  if DestinationAliasID <> 0 then Packet^.Header := Packet^.Header or (DestinationAliasID shl 12);
+  Packet^.Header := $10000000 or VariableField or NMRABus.Node_Alias_ID;
+  
+  if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
+    NMRABus_LoadFramePacketDataWith48BitNodeID(Packet);
+end;
+
+
+// *****************************************************************************
+//  procedure NMRABus_WaitForTransmitToFinish
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_WaitForTransmitToFinish;
+begin
+  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER <> 0 do;
+end;
+
+// *****************************************************************************
+//  procedure NMRABus_WaitForTransmitToFinish
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_WaitForTransmitToStart;
+begin
+  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER = 0 do;
+end;
+
+// *****************************************************************************
+//  function SendAndWaitForCheckIDPacket
+//     Parameters:
+//     Returns:
+//
+//     Description:  Returns True if all went well, False if the Alias is already
+//                   used
+//
+// *****************************************************************************
+function SendAndWaitForCheckIDPacket(MessageType: DWord): Boolean;
+var
+  Packet: TCAN_Packet;
+begin
+  Result := True;
+  NMRABus_CreateCANControlFramePacket(MessageType, @Packet);                    // Load the high priority transmitter buffer = 14us
+  CAN_Data_TxListAddCANLayerThroughLockedList(@Packet);                         // 150us
+  NMRABus_WaitForTransmitToStart;
+  NMRABus_WaitForTransmitToFinish;
+  Result := NMRABus.ReceivedMessages and BRM_RID = 0;                           // Set in the CAN Rx Interrupt
+end;
+
+// *****************************************************************************
+//  function NMRABus_Connect
+//     Parameters:
+//     Returns:
+//
+//     Description:  Returns True if all went well, False if the Alias is already
+//                   used
+//
+// *****************************************************************************
+function BusLogoutTimeout: Boolean;
+begin
+  Result := True;
+  NMRABus.BusLoginCount := 0;
+  while NMRABus.BusLoginCount < MAX_BUS_LOGIN_TIMEOUT do
+  begin
+    // The interrupt is looking for problems
+  end;
+  Result := NMRABus.ReceivedMessages and BRM_RID = 0;                           // Set in the CAN Rx Interrupt
+end;
+
+// *****************************************************************************
+//  function NMRABus_Connect
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_Connect;
+var
+  Packet: TCAN_Packet;
+begin
+  CAN_Data_Flush_Lists;                                                         // Flush any pending packets
+  Delay_ms(10);
+  NMRABus_WaitForTransmitToFinish;                                              // Allow all pending CAN Controller messages to clear
+  NMRABus.State := NMRABus.State and not BS_PERMITED;                           // Not permitted until we successfully get through this log in series
+  NMRABus.ReceivedMessages := NMRABus.ReceivedMessages and not BRM_RID;         // Clear the Reserve ID Flag so we can monitor it to see if we get a reply to our login
+  if SendAndWaitForCheckIDPacket(FT_CID0) then
+    if SendAndWaitForCheckIDPacket(FT_CID1) then
+      if SendAndWaitForCheckIDPacket(FT_CID2) then
+        if SendAndWaitForCheckIDPacket(FT_CID3) then                            // Queue up the Check ID Messages in the Transmit Buffer for the CAN Layer
+          if BusLogoutTimeout then
+            if SendAndWaitForCheckIDPacket(FT_AMD) then
+            begin
+              NMRABus.State := NMRABus.State or BS_PERMITED;
+              NMRABus_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Packet);
+              CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
+              NMRABus_WaitForTransmitToStart;
+              NMRABus_WaitForTransmitToFinish;
+              NMRABus.State := NMRABus.State or BS_INITIALIZED;
+            end;
+end;
+
+
+// *****************************************************************************
+//  procedure NMRABus_Disconnect
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABus_Disconnect;
+begin
+  NMRABus.State := NMRABus.State and not BS_PERMITED;
+end;
+
+end.
