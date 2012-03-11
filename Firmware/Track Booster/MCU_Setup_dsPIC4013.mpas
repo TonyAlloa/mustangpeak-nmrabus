@@ -21,6 +21,18 @@ var
   UnLockCANList: PUnLockListFunc;
   LockNMRABusList: PLockListFunc;
   UnLockNMRABusList: PUnLockListFunc;
+  
+  PWM_A_HI: sbit at LATD3_bit;
+  PWM_A_LO: sbit at LATD1_bit;
+  PWM_B_HI: sbit at LATD8_bit;
+  PWM_B_LO: sbit at LATD2_bit;
+
+  PWM_A_HI_Direction: sbit at TRISD3_bit;
+  PWM_A_LO_Direction: sbit at TRISD1_bit;
+  PWM_B_HI_Direction: sbit at TRISD8_bit;
+  PWM_B_LO_Direction: sbit at TRISD2_bit;
+  
+  DCC_CMD_In: sbit at RB0_bit;
 
   PinChangeState: Word;
 
@@ -81,12 +93,17 @@ end;
 procedure MCU_Setup_Initialize;
 begin
   ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
-
-  PORTB := 0;                                           // clear PORTB
-  TRISB := 0;                                           // set PORTB as output
-  PORTD := 0;                                           // set PORTD as output
-  TRISD := 0;
-
+  
+  PWM_A_HI := 0;
+  PWM_A_LO := 0;
+  PWM_B_HI := 0;
+  PWM_B_LO := 0;
+  
+  PWM_A_HI_Direction := 0;
+  PWM_A_LO_Direction := 0;
+  PWM_B_HI_Direction := 0;
+  PWM_B_LO_Direction := 0;
+  
   PinChangeState := 0;
 
   {$IFDEF UART_ENABLE}
@@ -139,10 +156,11 @@ begin
   TON_T2CON_bit := 1;       // Turn on
 
   CNIF_bit := 0;            // Clear Flag
-  CNIP_0_bit := 1;          // Interrupt Priority = 5
-  CNIP_1_bit := 0;
+  CNIP_0_bit := 1;          // Interrupt Priority = 7
+  CNIP_1_bit := 1;
   CNIP_2_bit := 1;
-  CN17IE_bit := 1;          // RF4 (CN17) set for interrupt
+  CN2IE_bit := 1;           // CN2 RB0 - DCC In
+//  CN3IE_bit := 1;           // CN3 RB1 - Programming ACK
   CNIE_bit := 1;            // Enable the Interrupt for Pin Change
 
   LockCANList := @LockListCAN;

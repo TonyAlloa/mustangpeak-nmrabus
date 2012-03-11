@@ -27,11 +27,12 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=4
+Count=5
 File0=NMRABus_TrackBooster.mpas
 File1=..\Library\CAN_Data.mpas
 File2=..\Library\NMRABus.mpas
 File3=MCU_Setup_dsPIC4013.mpas
+File4=..\..\..\..\..\..\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\P30F4013.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

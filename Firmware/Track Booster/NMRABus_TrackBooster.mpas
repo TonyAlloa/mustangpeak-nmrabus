@@ -20,7 +20,7 @@ uses
 
 // Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
 const
-  MUSTANGPEAK_TRACKBOOSTER_ID_0_LO = $00010701;  // The Bottom 3 Bytes
+  MUSTANGPEAK_TRACKBOOSTER_ID_0_LO = $00010706;  // The Bottom 3 Bytes
   MUSTANGPEAK_TRACKBOOSTER_ID_0_HI = $00050101;  // The Top 3 Bytes
 
   ID_1st : DWord = $08002F4F;          // TESTING ONLY
@@ -28,7 +28,7 @@ const
 
 var
   GetUniqueID: PGetUniqueIDFunc;
-
+  
 
 // ****************************************************************************
 // procedure UniqueID
@@ -76,6 +76,24 @@ var
   Flags: Byte;
 begin
   CNIF_bit := 0;     // Clear Flag
+  
+  LATD0_bit := not DCC_CMD_In;
+  
+  PWM_A_HI := 0;
+  PWM_A_LO := 0;
+  PWM_B_HI := 0;
+  PWM_B_LO := 0;
+  
+  if DCC_CMD_In = 0 then
+  begin
+    PWM_A_HI := 1;
+    PWM_B_LO := 1;
+  end else
+  begin
+    PWM_A_LO := 1;
+    PWM_B_HI := 1;
+  end;
+  
   PinChangeState := PORTF;
 end;
 
@@ -90,6 +108,8 @@ begin
 
   GetUniqueID := @UniqueID;
 
+  TRISD0_bit := 0;
+  
 
   CAN_Data_Initialize;
   NMRABus_Initialize;

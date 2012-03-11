@@ -82,11 +82,6 @@ procedure MCU_Setup_Initialize;
 begin
   ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
 
-  PORTB := 0;                                           // clear PORTB
-  TRISB := 0;                                           // set PORTB as output
-  PORTD := 0;                                           // set PORTD as output
-  TRISD := 0;
-  
   PinChangeState := 0;
   
   {$IFDEF UART_ENABLE}
