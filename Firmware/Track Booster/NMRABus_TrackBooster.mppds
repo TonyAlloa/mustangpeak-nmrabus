@@ -41,7 +41,7 @@ Count=0
 Count=0
 [SEARCH_PATH]
 Count=4
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
 Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Track Booster\
 Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\

@@ -39,12 +39,11 @@ Count=0
 [OTHER_FILES]
 Count=0
 [SEARCH_PATH]
-Count=5
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Count=4
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
 Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Track Booster\
-Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
 [HEADER_PATH]
 Count=0
 [HEADERS]
