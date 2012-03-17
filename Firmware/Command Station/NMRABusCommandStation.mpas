@@ -15,15 +15,14 @@ uses
   NMRABus, 
   CAN_Data, 
   MCU_Setup_dsPIC4013, 
-  NMRA_DCC;
+  _25AAxxxx,
+  NMRA_DCC,
+  NodeIDs;
   
 {$I Options.inc}
 
 // Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
 const
-  MUSTANGPEAK_COMMANDSTATION_ID_0_LO = $00010700;  // The Bottom 3 Bytes
-  MUSTANGPEAK_COMMANDSTATION_ID_0_HI = $00050101;  // The Top 3 Bytes
-  
   ID_1st : DWord = $08002F4F;          // TESTING ONLY
   ID_2nd : DWord = $08000003;          // TESTING ONLY
 
@@ -45,7 +44,7 @@ var
 procedure UniqueID(var HiID, LoID: DWord);
 begin
   LoID := MUSTANGPEAK_COMMANDSTATION_ID_0_LO;
-  HiID := MUSTANGPEAK_COMMANDSTATION_ID_0_HI;
+  HiID := MUSTANGPEAK_ID_0_HI;
 end;
 
 

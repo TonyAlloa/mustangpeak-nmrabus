@@ -1,4 +1,4 @@
-program NMRABus_TrackBooster;
+program NMRABus_ProgBooster;
 
 {*
  * Project name:
@@ -18,11 +18,10 @@ uses
 
 {$I Options.inc}
 
+
 // Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
 const
-  MUSTANGPEAK_TRACKBOOSTER_ID_0_LO = $00010704;  // The Bottom 3 Bytes
-  MUSTANGPEAK_TRACKBOOSTER_ID_0_HI = $00050101;  // The Top 3 Bytes
-
+ //{$I NodeIDs.inc}
   ID_1st : DWord = $08002F4F;          // TESTING ONLY
   ID_2nd : DWord = $08000003;          // TESTING ONLY
 
@@ -38,8 +37,8 @@ var
 // ****************************************************************************
 procedure UniqueID(var HiID, LoID: DWord);
 begin
-  LoID := MUSTANGPEAK_TRACKBOOSTER_ID_0_LO;
-  HiID := MUSTANGPEAK_TRACKBOOSTER_ID_0_HI;
+  LoID := MUSTANGPEAK_PROGRAMMINGBOOSTER_ID_0_LO;
+  HiID := MUSTANGPEAK_ID_0_HI;
 end;
 
 

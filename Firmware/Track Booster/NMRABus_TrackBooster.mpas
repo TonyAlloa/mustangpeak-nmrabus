@@ -14,15 +14,12 @@ program NMRABus_TrackBooster;
 uses
   NMRABus,
   CAN_Data,
-  MCU_Setup_dsPIC4013;
+  MCU_Setup_dsPIC4013,
+  NodeIDs;
 
 {$I Options.inc}
 
-// Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
 const
-  MUSTANGPEAK_TRACKBOOSTER_ID_0_LO = $00010706;  // The Bottom 3 Bytes
-  MUSTANGPEAK_TRACKBOOSTER_ID_0_HI = $00050101;  // The Top 3 Bytes
-
   ID_1st : DWord = $08002F4F;          // TESTING ONLY
   ID_2nd : DWord = $08000003;          // TESTING ONLY
 
@@ -39,7 +36,7 @@ var
 procedure UniqueID(var HiID, LoID: DWord);
 begin
   LoID := MUSTANGPEAK_TRACKBOOSTER_ID_0_LO;
-  HiID := MUSTANGPEAK_TRACKBOOSTER_ID_0_HI;
+  HiID := MUSTANGPEAK_ID_0_HI;
 end;
 
 

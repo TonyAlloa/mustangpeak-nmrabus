@@ -1,0 +1,17 @@
+unit NodeIDs;
+
+// Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
+const
+  MUSTANGPEAK_ID_0_HI = $00050101;  // The Top 3 Bytes
+  
+  MUSTANGPEAK_COMMANDSTATION_ID_0_LO     = $00010700;  // The Bottom 3 Bytes
+  MUSTANGPEAK_TRACKBOOSTER_ID_0_LO       = $00010701;  // The Bottom 3 Bytes
+  MUSTANGPEAK_ACCESSORYBOOSTER_ID_0_LO   = $00010702;  // The Bottom 3 Bytes
+  MUSTANGPEAK_PROGRAMMINGBOOSTER_ID_0_LO = $00010703;  // The Bottom 3 Bytes
+  MUSTANGPEAK_TFT_THROTTLE_ID_0_LO       = $00010704;  // The Bottom 3 Bytes
+  MUSTANGPEAK_XPRESSNET_ID_0_LO          = $00010705;  // The Bottom 3 Bytes
+
+implementation
+
+
+end.

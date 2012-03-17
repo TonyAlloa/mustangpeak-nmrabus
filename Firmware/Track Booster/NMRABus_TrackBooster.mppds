@@ -16,23 +16,25 @@ Value=2000
 [EEPROM_DEFINITION]
 Value=
 [FILES]
-Count=4
+Count=5
 File0=NMRABus_TrackBooster.mpas
 File1=..\Library\CAN_Data.mpas
 File2=..\Library\NMRABus.mpas
 File3=MCU_Setup_dsPIC4013.mpas
+File4=..\Library\NodeIDs.mpas
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=5
+Count=6
 File0=NMRABus_TrackBooster.mpas
 File1=..\Library\CAN_Data.mpas
 File2=..\Library\NMRABus.mpas
 File3=MCU_Setup_dsPIC4013.mpas
 File4=..\..\..\..\..\..\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\P30F4013.mpas
+File5=..\Library\NodeIDs.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -41,7 +43,7 @@ Count=0
 Count=0
 [SEARCH_PATH]
 Count=4
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
 Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Track Booster\
 Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
