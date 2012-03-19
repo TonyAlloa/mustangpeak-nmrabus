@@ -1,3 +1,19 @@
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+//    Implements a NMRABus based Command Station
+//
+// ******************************************************************************
 program NMRABusCommandStation;
 
 {*
@@ -12,11 +28,13 @@ program NMRABusCommandStation;
  *}
  
 uses
-  NMRABus, 
-  CAN_Data, 
-  MCU_Setup_dsPIC4013, 
+  NMRABus,
+  CAN_Data,
+  MCU_Setup_dsPIC4013,
   _25AAxxxx,
-  NMRA_DCC,
+  NMRABusDCC,
+  NMRABusNodeItems,
+  NMRABusAddressSlots,
   NodeIDs;
   
 {$I Options.inc}
@@ -27,10 +45,17 @@ const
   ID_2nd : DWord = $08000003;          // TESTING ONLY
 
 var
+  // DCC SIGNAL PINS
   Track_DCC_Out_Pin                 : sbit at LATB10_bit;
   Track_DCC_Out_Bar_Pin             : sbit at LATB9_bit;
   Track_DCC_Out_Pin_Direction       : sbit at TRISB10_bit;
   Track_DCC_Out_Pin_Bar_Direction   : sbit at TRISB9_bit;
+  
+  // EEPROM SPI PINS
+  CS_Bank_0                         : sbit at LATB12_bit;
+  CS_Bank_1                         : sbit at LATB11_bit;
+  CS_Bank_0_Direction               : sbit at TRISB12_bit;
+  CS_Bank_1_Direction               : sbit at TRISB12_bit;
 
   GetUniqueID: PGetUniqueIDFunc;
 
@@ -112,27 +137,35 @@ begin
   Track_DCC_Out_Pin_Direction := 0;      // Output
   Track_DCC_Out_Pin_Bar_Direction := 0;  // Output
   
-  GetUniqueID := @UniqueID;
+  GetUniqueID := @UniqueID;                                                     // Callback to access the Node's Unique ID
 
-  LATD0_bit := 0;
-  TRISD0_bit := 0;
-  
+  LATD0_bit := 0;         // Debugging output
+  TRISD0_bit := 0;        // Debugging output
 
+  _25AAxxxx_Initialize;
+  NMRABusNodeItems_Initialize;
   CAN_Data_Initialize;
   NMRABus_Initialize;
   MCU_Setup_Initialize;
   NMRA_DCC_Initialize;
+  AddressSlots_Initialize;
+ 
+  UART1_Write_Text('Connecting'+LF);
   NMRABus_Connect;
   while (TRUE) do
     begin
       if not NMRABus_Connected then
       begin
+        UART1_Write_Text('Reconnecting'+LF);
         NMRABus_RecreateAliasID;
         NMRABus_Connect;
       end;
       
       if NMRABus_Connected then
       begin
+        
+        UART1_Write_Text('Connected'+LF);
+
         NMRA_DCC_Packet_Init;                                                   // Send the 20 Idle Packets per the NMRA Spec
         
         CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data

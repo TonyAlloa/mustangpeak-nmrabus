@@ -1,3 +1,19 @@
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+//    Implements an interface for 25AA1024, 512, 256, etc SPI EEPROM Chips
+//
+// ******************************************************************************
 unit _25AAxxxx;
 
 {$DEFINE EEPROM_ONE_BANK}
@@ -38,13 +54,22 @@ function LocalSPI_Read: Byte;
 var
   Dummy: Byte;
 begin
-  Dummy := $FF;
-  Result := SPI_Read(Dummy);
+  // We have waited for the SPI to empty before returning so the buffer is empty on entry
+  Result := SPI1BUF;       // Force the SPIRBF flag to clear
+  nop;
+  SPI1BUF := Dummy;   // This will set the SPITBF flag until the byte is written into the output latch to be sent.
+  while SPIRBF_bit = 0 do;
+  Result := SPI1BUF;
 end;
 
-procedure LocalSPI_Write(DataByte: Byte);
+function LocalSPI_Write(DataByte: Byte): Byte;
 begin
-  SPI_Write(DataByte);
+  // We have waited for the SPI to empty before returning so the buffer is empty on entry
+  Result := SPI1BUF;       // Force the SPIRBF flag to clear
+  nop;
+  SPI1BUF := DataByte;   // This will set the SPITBF flag until the byte is written into the output latch to be sent.
+  while SPIRBF_bit = 0 do;
+  Result := SPI1BUF;
 end;
 
 procedure SetBank_CS(Bank: Word; CS_State: Word);
@@ -86,14 +111,19 @@ end;
 procedure _25AAxxxx_Read(Bank: Word; Address: DWORD; Count: Word; Buffer: PByte);
 var
   i: Integer;
+  Dummy: Byte;
 begin
   SetBank_CS(Bank, 0);
   LocalSPI_Write($03);           // Read Instruction
   WriteAddress(Address);
-  for i := 0 to Count - 1 do
+  i := 0;
+  while i < Count do
   begin
-    Buffer^ := LocalSPI_Read;
-    Inc(Buffer)
+    SPI1BUF := Dummy;          // This will set the SPITBF flag until the byte is written into the output latch to be sent.
+    while SPIRBF_bit = 0 do;
+    Buffer^ := SPI1BUF;
+    Inc(Buffer);
+    Inc(i);
   end;
   SetBank_CS(Bank, 1);
 end;
@@ -121,10 +151,12 @@ begin
   SetBank_CS(Bank, 0);
   LocalSPI_Write($02);           // Write Instruction
   WriteAddress(Address);         // Can not check for Write Enabled in the Status here!
-  for i := 0 to Count - 1 do
+  i := 0;
+  while i < Count do
   begin
     LocalSPI_Write(Buffer^);
-    Inc(Buffer)
+    Inc(Buffer);
+    Inc(i);
   end;
   SetBank_CS(Bank, 1);
 end;

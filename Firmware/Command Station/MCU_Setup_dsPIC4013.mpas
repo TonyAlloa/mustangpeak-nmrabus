@@ -1,3 +1,20 @@
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+//    Implements specifics of the dsPIC4013 IC (registers, callbacks from libraries
+//    that implementation will be different for different microcontrollers.
+//
+// ******************************************************************************
 unit MCU_Setup_dsPIC4013;
 
 uses
@@ -96,7 +113,7 @@ begin
   SPI1_Init();       // Initialize SPI1 module
   SPIEN_bit := 0;    // Disable SPI
   SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
-  SPI1CON := SPI1CON or $0003 or $0010;  // Setup for 5 Mhz      $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
+  SPI1CON := SPI1CON or $001F;   // That is all she's got captain.... 20Mhz
   SPIEN_bit := 1;    // Enable the SPI
 
   CAN1Initialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _CAN_CONFIG_SAMPLE_THRICE and _CAN_CONFIG_PHSEG2_PRG_ON and _CAN_CONFIG_XTD_MSG);   // Initialize external CANSPI module
