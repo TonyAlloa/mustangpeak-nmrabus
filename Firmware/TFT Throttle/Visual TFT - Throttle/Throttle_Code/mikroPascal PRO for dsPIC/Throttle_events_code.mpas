@@ -1,0 +1,100 @@
+unit Throttle_events_code;
+
+uses Throttle_objects, Throttle_resources;
+
+procedure Box1Click();
+procedure ButtonPrevPress();
+procedure ButtonNextPress();
+//--------------------- Externals ---------------------//
+var Box2 : TBox; external;
+var Box1 : TBox; external;
+var ButtonPrev : TButton; external;
+var ButtonPrev_Caption : string[4]; external;
+var ButtonNext : TButton; external;
+var ButtonNext_Caption : string[4]; external;
+var Label1 : TLabel; external;
+var Label1_Caption : string[40]; external;
+var Label2 : TLabel; external;
+var Label2_Caption : string[40]; external;
+var Label3 : TLabel; external;
+var Label3_Caption : string[40]; external;
+var Label4 : TLabel; external;
+var Label4_Caption : string[40]; external;
+var Label5 : TLabel; external;
+var Label5_Caption : string[40]; external;
+var Label6 : TLabel; external;
+var Label6_Caption : string[40]; external;
+var Label7 : TLabel; external;
+var Label7_Caption : string[40]; external;
+var Label8 : TLabel; external;
+var Label8_Caption : string[40]; external;
+var Label9 : TLabel; external;
+var Label9_Caption : string[40]; external;
+var Label10 : TLabel; external;
+var Label10_Caption : string[40]; external;
+var Label11 : TLabel; external;
+var Label11_Caption : string[40]; external;
+var Label12 : TLabel; external;
+var Label12_Caption : string[40]; external;
+var Label13 : TLabel; external;
+var Label13_Caption : string[40]; external;
+var Label14 : TLabel; external;
+var Label14_Caption : string[40]; external;
+var Label15 : TLabel; external;
+var Label15_Caption : string[40]; external;
+var Label16 : TLabel; external;
+var Label16_Caption : string[40]; external;
+var Label17 : TLabel; external;
+var Label17_Caption : string[40]; external;
+var Label18 : TLabel; external;
+var Label18_Caption : string[40]; external;
+var Label19 : TLabel; external;
+var Label19_Caption : string[40]; external;
+var Box3 : TBox; external;
+const Label20 : TCLabel; code; far; external;
+const Label21 : TCLabel; code; far; external;
+var LabelReceived : TLabel; external;
+var LabelReceived_Caption : string[12]; external;
+var LabelTransmitted : TLabel; external;
+var LabelTransmitted_Caption : string[12]; external;
+var Screen1           : TScreen; external;
+procedure DrawScreen(aScreen : ^TScreen); external;
+procedure DrawButton(Abutton : ^TButton); external;
+procedure DrawLabel(ALabel : ^TLabel); external;
+procedure DrawCLabel(ALabel : ^TCLabel); external;
+procedure DrawBox(ABox : ^TBox); external;
+//----------------- End of Externals ------------------//
+
+//-------------- User code declarations ---------------//
+const
+  MAX_PAGE_INDEX = 10;
+
+var
+  PageIndex,
+  CurrentPage: Integer;
+
+//-------------- End of User code declarations --------//
+
+implementation
+
+//--------------------- User code ---------------------//
+
+//----------------- End of User code ------------------//
+
+// Event Handlers
+procedure Box1Click();
+  begin
+
+  end;
+
+procedure ButtonPrevPress();
+  begin
+
+  end;
+
+procedure ButtonNextPress();
+  begin
+
+  end;
+
+end.

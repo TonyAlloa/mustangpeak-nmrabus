@@ -1,0 +1,113 @@
+unit Throttle_objects;
+
+type TOnEventPtr = procedure();
+
+type TBytePtr = ^byte;
+
+type TButton = record
+  OwnerScreenAddress   : ^byte;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Pen_Width            : byte;
+  Pen_Color            : word;
+  Visible              : byte;
+  Active               : byte;
+  Transparent          : byte;
+  Caption              : ^char;
+  Fontname             : ^ const far byte;
+  Font_Color           : word;
+  Gradient             : byte;
+  Gradient_Orientation : byte;
+  Gradient_Start_Color : word;
+  Gradient_End_Color   : word;
+  Color                : word;
+  PressColEnabled      : byte;
+  Press_Color          : word;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
+
+type TLabel = record
+  OwnerScreenAddress   : ^byte;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Caption              : ^char;
+  Fontname             : ^ const far byte;
+  Font_Color           : word;
+  Visible              : byte;
+  Active               : byte;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
+
+type TCLabel = record
+  OwnerScreenAddress   : ^byte;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Caption              : ^ const far char;
+  Fontname             : ^ const far byte;
+  Font_Color           : word;
+  Visible              : byte;
+  Active               : byte;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end; code; far;
+
+type TBox = record
+  OwnerScreenAddress   : ^byte;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Pen_Width            : byte;
+  Pen_Color            : word;
+  Visible              : byte;
+  Active               : byte;
+  Transparent          : byte;
+  Gradient             : byte;
+  Gradient_Orientation : byte;
+  Gradient_Start_Color : word;
+  Gradient_End_Color   : word;
+  Color                : word;
+  PressColEnabled      : byte;
+  Press_Color          : word;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
+
+type TScreen = record
+  Color                      : word;
+  Width                      : word;
+  Height                     : word;
+  ObjectsCount               : byte;
+  ButtonsCount               : word;
+  Buttons                    : ^ const code far ^TButton;
+  LabelsCount                : word;
+  Labels                     : ^ const code far ^TLabel;
+  CLabelsCount               : word;
+  CLabels                    : ^ const code far ^TCLabel;
+  BoxesCount                 : word;
+  Boxes                      : ^ const code far ^TBox;
+end;
+
+implementation
+
+end.

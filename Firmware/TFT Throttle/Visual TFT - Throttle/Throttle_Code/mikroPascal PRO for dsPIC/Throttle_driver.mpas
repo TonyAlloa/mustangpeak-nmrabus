@@ -1,0 +1,1373 @@
+unit Throttle_driver;
+
+uses Throttle_objects, Throttle_resources;
+
+/////////////////////////
+// External Declarations
+procedure Box1Click(); external;
+procedure ButtonPrevPress(); external;
+procedure ButtonNextPress(); external;
+/////////////////////////
+
+procedure DrawScreen(aScreen : ^TScreen);
+procedure Process_TP_Press( X : word; Y : word);
+procedure Check_TP();
+procedure Start_TP();
+procedure DrawButton(Abutton : ^TButton);
+procedure DrawLabel(ALabel : ^TLabel);
+procedure DrawCLabel(ALabel : ^TCLabel);
+procedure DrawBox(ABox : ^TBox);
+
+
+// TFT module connections
+var TFT_DataPort : char  at LATA;
+    TFT_RST : sbit  at LATC1_bit;
+    TFT_BLED : sbit  at LATD7_bit;
+    TFT_RS : sbit  at LATB15_bit;
+    TFT_CS : sbit  at LATC3_bit;
+    TFT_RD : sbit  at LATD12_bit;
+    TFT_WR : sbit  at LATD13_bit;
+    TFT_DataPort_Direction : char  at TRISA;
+    TFT_RST_Direction : sbit  at TRISC1_bit;
+    TFT_BLED_Direction : sbit  at TRISD7_bit;
+    TFT_RS_Direction : sbit  at TRISB15_bit;
+    TFT_CS_Direction : sbit  at TRISC3_bit;
+    TFT_RD_Direction : sbit  at TRISD12_bit;
+    TFT_WR_Direction : sbit  at TRISD13_bit;
+// End TFT module connections
+
+// Touch Panel module connections
+var DriveX_Left : sbit at LATB13_bit;
+var DriveX_Right : sbit at LATB11_bit;
+var DriveY_Up : sbit at LATB12_bit;
+var DriveY_Down : sbit at LATB10_bit;
+var DriveX_Left_Direction : sbit at TRISB13_bit;
+var DriveX_Right_Direction : sbit at TRISB11_bit;
+var DriveY_Up_Direction : sbit at TRISB12_bit;
+var DriveY_Down_Direction : sbit at TRISB10_bit;
+// End Touch Panel module connections
+
+// Global variables
+var Xcoord, Ycoord : word;
+const ADC_THRESHOLD = 800;
+var PenDown : byte;
+type TPointer = dword;
+var PressedObject : TPointer;
+var PressedObjectType : integer;
+var display_width, display_height : word;
+
+var
+    _object_count : integer;
+    object_pressed : byte;
+    local_button : ^TButton;
+    exec_button : ^TButton;
+    button_order : short;
+    local_label : ^TLabel;
+    exec_label : ^TLabel;
+    label_order : short;
+    local_clabel : ^TCLabel;
+    exec_clabel : ^TCLabel;
+    clabel_order : short;
+    local_box : ^TBox;
+    exec_box : ^TBox;
+    box_order : short;
+
+
+
+/////////////////////////
+var CurrentScreen : ^ TScreen;
+
+const Screen1_Buttons  : array[2] of ^TButton; code; far; forward;
+const Screen1_Labels  : array[21] of ^TLabel; code; far; forward;
+const Screen1_CLabels  : array[2] of ^TCLabel; code; far; forward;
+const Screen1_Boxes  : array[3] of ^TBox; code; far; forward;
+
+var Screen1           : TScreen;
+var Box2 : TBox;
+var Box1 : TBox;
+var ButtonPrev : TButton;
+    ButtonPrev_Caption : string[5];
+
+var ButtonNext : TButton;
+    ButtonNext_Caption : string[5];
+
+var Label1 : TLabel;
+    Label1_Caption : string[41];
+
+var Label2 : TLabel;
+    Label2_Caption : string[41];
+
+var Label3 : TLabel;
+    Label3_Caption : string[41];
+
+var Label4 : TLabel;
+    Label4_Caption : string[41];
+
+var Label5 : TLabel;
+    Label5_Caption : string[41];
+
+var Label6 : TLabel;
+    Label6_Caption : string[41];
+
+var Label7 : TLabel;
+    Label7_Caption : string[41];
+
+var Label8 : TLabel;
+    Label8_Caption : string[41];
+
+var Label9 : TLabel;
+    Label9_Caption : string[41];
+
+var Label10 : TLabel;
+    Label10_Caption : string[41];
+
+var Label11 : TLabel;
+    Label11_Caption : string[41];
+
+var Label12 : TLabel;
+    Label12_Caption : string[41];
+
+var Label13 : TLabel;
+    Label13_Caption : string[41];
+
+var Label14 : TLabel;
+    Label14_Caption : string[41];
+
+var Label15 : TLabel;
+    Label15_Caption : string[41];
+
+var Label16 : TLabel;
+    Label16_Caption : string[41];
+
+var Label17 : TLabel;
+    Label17_Caption : string[41];
+
+var Label18 : TLabel;
+    Label18_Caption : string[41];
+
+var Label19 : TLabel;
+    Label19_Caption : string[41];
+
+var Box3 : TBox;
+    const Label20_Caption : string[10] = 'Received:'; code; far;
+    const Label20 : TCLabel = 
+         (
+         @Screen1              , //   Label20.OwnerScreen
+         24                    , //   Label20.Order          
+         6                     , //   Label20.Left           
+         266                   , //   Label20.Top             
+         54                    , //   Label20.Width         
+         12                    , //   Label20.Height       
+         @Label20_Caption      , //   Label20.Caption        
+         @Tahoma11x13_Regular  , //   Label20.FontName       
+         0x0000                , //   Label20.Font_Color     
+         1                     , //   Label20.Visible        
+         1                     , //   Label20.Active        
+         0                     ,//    Label20.OnUpPtr
+         0                     ,//    Label20.OnDownPtr
+         0                     ,//    Label20.OnClickPtr
+         0                      //    Label20.OnPressPtr
+         ); code; far;
+
+    const Label21_Caption : string[13] = 'Transmitted:'; code; far;
+    const Label21 : TCLabel = 
+         (
+         @Screen1              , //   Label21.OwnerScreen
+         25                    , //   Label21.Order          
+         115                   , //   Label21.Left           
+         266                   , //   Label21.Top             
+         69                    , //   Label21.Width         
+         12                    , //   Label21.Height       
+         @Label21_Caption      , //   Label21.Caption        
+         @Tahoma11x13_Regular  , //   Label21.FontName       
+         0x0000                , //   Label21.Font_Color     
+         1                     , //   Label21.Visible        
+         0                     , //   Label21.Active        
+         0                     ,//    Label21.OnUpPtr
+         0                     ,//    Label21.OnDownPtr
+         0                     ,//    Label21.OnClickPtr
+         0                      //    Label21.OnPressPtr
+         ); code; far;
+
+var LabelReceived : TLabel;
+    LabelReceived_Caption : string[13];
+
+var LabelTransmitted : TLabel;
+    LabelTransmitted_Caption : string[13];
+
+      const Screen1_Buttons  : array[2] of ^TButton =
+         (
+         @ButtonPrev,          
+         @ButtonNext           
+         ); code; far;
+      const Screen1_Labels  : array[21] of ^TLabel =
+         (
+         @Label1,              
+         @Label2,              
+         @Label3,              
+         @Label4,              
+         @Label5,              
+         @Label6,              
+         @Label7,              
+         @Label8,              
+         @Label9,              
+         @Label10,             
+         @Label11,             
+         @Label12,             
+         @Label13,             
+         @Label14,             
+         @Label15,             
+         @Label16,             
+         @Label17,             
+         @Label18,             
+         @Label19,             
+         @LabelReceived,       
+         @LabelTransmitted     
+         ); code; far;
+      const Screen1_CLabels  : array[2] of ^TCLabel =
+         (
+         @Label20,             
+         @Label21              
+         ); code; far;
+      const Screen1_Boxes  : array[3] of ^TBox =
+         (
+         @Box2,                
+         @Box1,                
+         @Box3                 
+         ); code; far;
+
+
+implementation
+
+// set index
+procedure Set_Index(index : byte);
+  begin
+    TFT_RS := 0;
+    Lo(LATA) := index;
+    TFT_WR := 0;
+    TFT_WR := 1;
+  end;
+
+// write command
+procedure Write_Command(cmd : byte);
+  begin
+    TFT_RS := 1;
+    Lo(LATA) := cmd;
+    TFT_WR := 0;
+    TFT_WR := 1;
+  end;
+
+// write data
+procedure Write_Data(_data : word);
+  begin
+    TFT_RS := 1;
+    Lo(LATE) := Hi(_data);
+    Lo(LATA) := Lo(_data);
+    TFT_WR := 0;
+    TFT_WR := 1;
+  end;
+
+
+
+procedure Init_ADC();
+  begin
+    AD1PCFGL := 0xCFFF;
+    AD1PCFGH := 0xCFFF;
+    ADC1_Init();
+  end;
+procedure InitializeTouchPanel(); // static
+  begin
+    Init_ADC();
+    TFT_Set_Active(@Set_Index, @Write_Command, @Write_Data);
+    TFT_Init(240, 320);
+
+    TP_TFT_Init(240, 320, 13, 12);                                  // Initialize touch panel
+    TP_TFT_Set_ADC_Threshold(ADC_THRESHOLD);                              // Set touch panel ADC threshold
+
+    PenDown := 0;
+    PressedObject := 0;
+    PressedObjectType := -1;
+  end;
+
+
+procedure Calibrate();
+  begin
+    TFT_Set_Pen(CL_WHITE, 3);
+    TFT_Set_Font(@TFT_defaultFont, CL_WHITE, FO_HORIZONTAL);
+    TFT_Write_Text('Touch selected corners for calibration', 1, 150);
+    TFT_Line(229, 309, 239, 319);
+    TFT_Line(233, 319, 239, 319);
+    TFT_Line(239, 313, 239, 319);
+    TFT_Write_Text('first here', 160, 290);
+
+    TP_TFT_Calibrate_Min();                      // Calibration of bottom left corner
+    Delay_ms(500);
+
+    TFT_Set_Pen(CL_BLACK, 3);
+    TFT_Set_Font(@TFT_defaultFont, CL_BLACK, FO_HORIZONTAL);
+    TFT_Line(229, 309, 239, 319);
+    TFT_Line(233, 319, 239, 319);
+    TFT_Line(239, 313, 239, 319);
+    TFT_Write_Text('first here', 160, 290);
+
+    TFT_Set_Pen(CL_WHITE, 3);
+    TFT_Set_Font(@TFT_defaultFont, CL_WHITE, FO_HORIZONTAL);
+    TFT_Line(0, 0, 10, 10);
+    TFT_Line(0, 0, 6, 0);
+    TFT_Line(0, 0, 0, 6);
+    TFT_Write_Text('now here', 20, 5);
+
+    TP_TFT_Calibrate_Max();                      // Calibration of bottom left corner
+    Delay_ms(500);
+  end;
+
+
+procedure InitializeObjects();    // static
+  begin
+    Screen1.Color                     := 0xA514;
+    Screen1.Width                     := 240;
+    Screen1.Height                    := 320;
+    Screen1.ButtonsCount              := 2;
+    Screen1.Buttons                   := @Screen1_Buttons;
+    Screen1.LabelsCount               := 21;
+    Screen1.Labels                    := @Screen1_Labels;
+    Screen1.CLabelsCount               := 2;
+    Screen1.CLabels                    := @Screen1_CLabels;
+    Screen1.BoxesCount                := 3;
+    Screen1.Boxes                     := @Screen1_Boxes;
+    Screen1.ObjectsCount              := 28;
+
+
+    Box2.OwnerScreenAddress  := @Screen1;
+    Box2.Order               := 0;
+    Box2.Left                := 0;
+    Box2.Top                 := 285;
+    Box2.Width               := 240;
+    Box2.Height              := 34;
+    Box2.Pen_Width           := 1;
+    Box2.Pen_Color           := 0x0000;
+    Box2.Visible             := 1;
+    Box2.Active              := 0;
+    Box2.Transparent         := 1;
+    Box2.Gradient            := 1;
+    Box2.Gradient_Orientation := 0;
+    Box2.Gradient_Start_Color := 0xFFFF;
+    Box2.Gradient_End_Color  := 0xC618;
+    Box2.Color               := 0xC618;
+    Box2.PressColEnabled := 1;
+    Box2.Press_Color         := 0x8410;
+    Box2.OnUpPtr             := 0;
+    Box2.OnDownPtr           := 0;
+    Box2.OnClickPtr          := 0;
+    Box2.OnPressPtr          := 0;
+
+    Box1.OwnerScreenAddress  := @Screen1;
+    Box1.Order               := 1;
+    Box1.Left                := 0;
+    Box1.Top                 := 0;
+    Box1.Width               := 240;
+    Box1.Height              := 258;
+    Box1.Pen_Width           := 1;
+    Box1.Pen_Color           := 0x0000;
+    Box1.Visible             := 1;
+    Box1.Active              := 1;
+    Box1.Transparent         := 1;
+    Box1.Gradient            := 1;
+    Box1.Gradient_Orientation := 0;
+    Box1.Gradient_Start_Color := 0xC618;
+    Box1.Gradient_End_Color  := 0xFFFF;
+    Box1.Color               := 0xC618;
+    Box1.PressColEnabled := 1;
+    Box1.Press_Color         := 0x8410;
+    Box1.OnUpPtr             := 0;
+    Box1.OnDownPtr           := 0;
+    Box1.OnClickPtr          := @Box1Click;
+    Box1.OnPressPtr          := 0;
+
+    ButtonPrev.OwnerScreenAddress  := @Screen1;
+    ButtonPrev.Order               := 2;
+    ButtonPrev.Left                := 11;
+    ButtonPrev.Top                 := 289;
+    ButtonPrev.Width               := 98;
+    ButtonPrev.Height              := 26;
+    ButtonPrev.Pen_Width           := 1;
+    ButtonPrev.Pen_Color           := 0x0000;
+    ButtonPrev.Visible             := 1;
+    ButtonPrev.Active              := 1;
+    ButtonPrev.Transparent         := 1;
+    ButtonPrev.Caption             := @ButtonPrev_Caption;
+    ButtonPrev_Caption             := 'Prev';
+    ButtonPrev.FontName            := @Tahoma11x13_Regular;
+    ButtonPrev.PressColEnabled     := 1;
+    ButtonPrev.Font_Color          := 0x0000;
+    ButtonPrev.Gradient            := 1;
+    ButtonPrev.Gradient_Orientation := 0;
+    ButtonPrev.Gradient_Start_Color := 0xFFFF;
+    ButtonPrev.Gradient_End_Color  := 0xC618;
+    ButtonPrev.Color               := 0xC618;
+    ButtonPrev.Press_Color         := 0xC618;
+    ButtonPrev.OnUpPtr             := 0;
+    ButtonPrev.OnDownPtr           := 0;
+    ButtonPrev.OnClickPtr          := 0;
+    ButtonPrev.OnPressPtr          := @ButtonPrevPress;
+
+    ButtonNext.OwnerScreenAddress  := @Screen1;
+    ButtonNext.Order               := 3;
+    ButtonNext.Left                := 121;
+    ButtonNext.Top                 := 289;
+    ButtonNext.Width               := 98;
+    ButtonNext.Height              := 26;
+    ButtonNext.Pen_Width           := 1;
+    ButtonNext.Pen_Color           := 0x0000;
+    ButtonNext.Visible             := 1;
+    ButtonNext.Active              := 1;
+    ButtonNext.Transparent         := 1;
+    ButtonNext.Caption             := @ButtonNext_Caption;
+    ButtonNext_Caption             := 'Next';
+    ButtonNext.FontName            := @Tahoma11x13_Regular;
+    ButtonNext.PressColEnabled     := 1;
+    ButtonNext.Font_Color          := 0x0000;
+    ButtonNext.Gradient            := 1;
+    ButtonNext.Gradient_Orientation := 0;
+    ButtonNext.Gradient_Start_Color := 0xFFFF;
+    ButtonNext.Gradient_End_Color  := 0xC618;
+    ButtonNext.Color               := 0xC618;
+    ButtonNext.Press_Color         := 0xC618;
+    ButtonNext.OnUpPtr             := 0;
+    ButtonNext.OnDownPtr           := 0;
+    ButtonNext.OnClickPtr          := 0;
+    ButtonNext.OnPressPtr          := @ButtonNextPress;
+
+    Label1.OwnerScreenAddress  := @Screen1;
+    Label1.Order               := 4;
+    Label1.Left                := 2;
+    Label1.Top                 := 2;
+    Label1.Width               := 28;
+    Label1.Height              := 12;
+    Label1.Visible             := 1;
+    Label1.Active              := 1;
+    Label1.Caption             := @Label1_Caption;
+    Label1_Caption             := 'Text';
+    Label1.FontName            := @Tahoma11x13_Regular;
+    Label1.Font_Color          := 0x0000;
+    Label1.OnUpPtr             := 0;
+    Label1.OnDownPtr           := 0;
+    Label1.OnClickPtr          := 0;
+    Label1.OnPressPtr          := 0;
+
+    Label2.OwnerScreenAddress  := @Screen1;
+    Label2.Order               := 5;
+    Label2.Left                := 2;
+    Label2.Top                 := 15;
+    Label2.Width               := 28;
+    Label2.Height              := 12;
+    Label2.Visible             := 1;
+    Label2.Active              := 1;
+    Label2.Caption             := @Label2_Caption;
+    Label2_Caption             := 'Text';
+    Label2.FontName            := @Tahoma11x13_Regular;
+    Label2.Font_Color          := 0x0000;
+    Label2.OnUpPtr             := 0;
+    Label2.OnDownPtr           := 0;
+    Label2.OnClickPtr          := 0;
+    Label2.OnPressPtr          := 0;
+
+    Label3.OwnerScreenAddress  := @Screen1;
+    Label3.Order               := 6;
+    Label3.Left                := 2;
+    Label3.Top                 := 29;
+    Label3.Width               := 28;
+    Label3.Height              := 12;
+    Label3.Visible             := 1;
+    Label3.Active              := 1;
+    Label3.Caption             := @Label3_Caption;
+    Label3_Caption             := 'Text';
+    Label3.FontName            := @Tahoma11x13_Regular;
+    Label3.Font_Color          := 0x0000;
+    Label3.OnUpPtr             := 0;
+    Label3.OnDownPtr           := 0;
+    Label3.OnClickPtr          := 0;
+    Label3.OnPressPtr          := 0;
+
+    Label4.OwnerScreenAddress  := @Screen1;
+    Label4.Order               := 7;
+    Label4.Left                := 2;
+    Label4.Top                 := 42;
+    Label4.Width               := 28;
+    Label4.Height              := 12;
+    Label4.Visible             := 1;
+    Label4.Active              := 1;
+    Label4.Caption             := @Label4_Caption;
+    Label4_Caption             := 'Text';
+    Label4.FontName            := @Tahoma11x13_Regular;
+    Label4.Font_Color          := 0x0000;
+    Label4.OnUpPtr             := 0;
+    Label4.OnDownPtr           := 0;
+    Label4.OnClickPtr          := 0;
+    Label4.OnPressPtr          := 0;
+
+    Label5.OwnerScreenAddress  := @Screen1;
+    Label5.Order               := 8;
+    Label5.Left                := 2;
+    Label5.Top                 := 56;
+    Label5.Width               := 28;
+    Label5.Height              := 12;
+    Label5.Visible             := 1;
+    Label5.Active              := 1;
+    Label5.Caption             := @Label5_Caption;
+    Label5_Caption             := 'Text';
+    Label5.FontName            := @Tahoma11x13_Regular;
+    Label5.Font_Color          := 0x0000;
+    Label5.OnUpPtr             := 0;
+    Label5.OnDownPtr           := 0;
+    Label5.OnClickPtr          := 0;
+    Label5.OnPressPtr          := 0;
+
+    Label6.OwnerScreenAddress  := @Screen1;
+    Label6.Order               := 9;
+    Label6.Left                := 2;
+    Label6.Top                 := 69;
+    Label6.Width               := 28;
+    Label6.Height              := 12;
+    Label6.Visible             := 1;
+    Label6.Active              := 1;
+    Label6.Caption             := @Label6_Caption;
+    Label6_Caption             := 'Text';
+    Label6.FontName            := @Tahoma11x13_Regular;
+    Label6.Font_Color          := 0x0000;
+    Label6.OnUpPtr             := 0;
+    Label6.OnDownPtr           := 0;
+    Label6.OnClickPtr          := 0;
+    Label6.OnPressPtr          := 0;
+
+    Label7.OwnerScreenAddress  := @Screen1;
+    Label7.Order               := 10;
+    Label7.Left                := 2;
+    Label7.Top                 := 82;
+    Label7.Width               := 28;
+    Label7.Height              := 12;
+    Label7.Visible             := 1;
+    Label7.Active              := 1;
+    Label7.Caption             := @Label7_Caption;
+    Label7_Caption             := 'Text';
+    Label7.FontName            := @Tahoma11x13_Regular;
+    Label7.Font_Color          := 0x0000;
+    Label7.OnUpPtr             := 0;
+    Label7.OnDownPtr           := 0;
+    Label7.OnClickPtr          := 0;
+    Label7.OnPressPtr          := 0;
+
+    Label8.OwnerScreenAddress  := @Screen1;
+    Label8.Order               := 11;
+    Label8.Left                := 2;
+    Label8.Top                 := 96;
+    Label8.Width               := 28;
+    Label8.Height              := 12;
+    Label8.Visible             := 1;
+    Label8.Active              := 1;
+    Label8.Caption             := @Label8_Caption;
+    Label8_Caption             := 'Text';
+    Label8.FontName            := @Tahoma11x13_Regular;
+    Label8.Font_Color          := 0x0000;
+    Label8.OnUpPtr             := 0;
+    Label8.OnDownPtr           := 0;
+    Label8.OnClickPtr          := 0;
+    Label8.OnPressPtr          := 0;
+
+    Label9.OwnerScreenAddress  := @Screen1;
+    Label9.Order               := 12;
+    Label9.Left                := 2;
+    Label9.Top                 := 109;
+    Label9.Width               := 28;
+    Label9.Height              := 12;
+    Label9.Visible             := 1;
+    Label9.Active              := 1;
+    Label9.Caption             := @Label9_Caption;
+    Label9_Caption             := 'Text';
+    Label9.FontName            := @Tahoma11x13_Regular;
+    Label9.Font_Color          := 0x0000;
+    Label9.OnUpPtr             := 0;
+    Label9.OnDownPtr           := 0;
+    Label9.OnClickPtr          := 0;
+    Label9.OnPressPtr          := 0;
+
+    Label10.OwnerScreenAddress  := @Screen1;
+    Label10.Order               := 13;
+    Label10.Left                := 2;
+    Label10.Top                 := 123;
+    Label10.Width               := 28;
+    Label10.Height              := 12;
+    Label10.Visible             := 1;
+    Label10.Active              := 1;
+    Label10.Caption             := @Label10_Caption;
+    Label10_Caption             := 'Text';
+    Label10.FontName            := @Tahoma11x13_Regular;
+    Label10.Font_Color          := 0x0000;
+    Label10.OnUpPtr             := 0;
+    Label10.OnDownPtr           := 0;
+    Label10.OnClickPtr          := 0;
+    Label10.OnPressPtr          := 0;
+
+    Label11.OwnerScreenAddress  := @Screen1;
+    Label11.Order               := 14;
+    Label11.Left                := 2;
+    Label11.Top                 := 136;
+    Label11.Width               := 28;
+    Label11.Height              := 12;
+    Label11.Visible             := 1;
+    Label11.Active              := 1;
+    Label11.Caption             := @Label11_Caption;
+    Label11_Caption             := 'Text';
+    Label11.FontName            := @Tahoma11x13_Regular;
+    Label11.Font_Color          := 0x0000;
+    Label11.OnUpPtr             := 0;
+    Label11.OnDownPtr           := 0;
+    Label11.OnClickPtr          := 0;
+    Label11.OnPressPtr          := 0;
+
+    Label12.OwnerScreenAddress  := @Screen1;
+    Label12.Order               := 15;
+    Label12.Left                := 2;
+    Label12.Top                 := 149;
+    Label12.Width               := 28;
+    Label12.Height              := 12;
+    Label12.Visible             := 1;
+    Label12.Active              := 1;
+    Label12.Caption             := @Label12_Caption;
+    Label12_Caption             := 'Text';
+    Label12.FontName            := @Tahoma11x13_Regular;
+    Label12.Font_Color          := 0x0000;
+    Label12.OnUpPtr             := 0;
+    Label12.OnDownPtr           := 0;
+    Label12.OnClickPtr          := 0;
+    Label12.OnPressPtr          := 0;
+
+    Label13.OwnerScreenAddress  := @Screen1;
+    Label13.Order               := 16;
+    Label13.Left                := 2;
+    Label13.Top                 := 163;
+    Label13.Width               := 28;
+    Label13.Height              := 12;
+    Label13.Visible             := 1;
+    Label13.Active              := 1;
+    Label13.Caption             := @Label13_Caption;
+    Label13_Caption             := 'Text';
+    Label13.FontName            := @Tahoma11x13_Regular;
+    Label13.Font_Color          := 0x0000;
+    Label13.OnUpPtr             := 0;
+    Label13.OnDownPtr           := 0;
+    Label13.OnClickPtr          := 0;
+    Label13.OnPressPtr          := 0;
+
+    Label14.OwnerScreenAddress  := @Screen1;
+    Label14.Order               := 17;
+    Label14.Left                := 2;
+    Label14.Top                 := 176;
+    Label14.Width               := 28;
+    Label14.Height              := 12;
+    Label14.Visible             := 1;
+    Label14.Active              := 1;
+    Label14.Caption             := @Label14_Caption;
+    Label14_Caption             := 'Text';
+    Label14.FontName            := @Tahoma11x13_Regular;
+    Label14.Font_Color          := 0x0000;
+    Label14.OnUpPtr             := 0;
+    Label14.OnDownPtr           := 0;
+    Label14.OnClickPtr          := 0;
+    Label14.OnPressPtr          := 0;
+
+    Label15.OwnerScreenAddress  := @Screen1;
+    Label15.Order               := 18;
+    Label15.Left                := 2;
+    Label15.Top                 := 190;
+    Label15.Width               := 28;
+    Label15.Height              := 12;
+    Label15.Visible             := 1;
+    Label15.Active              := 1;
+    Label15.Caption             := @Label15_Caption;
+    Label15_Caption             := 'Text';
+    Label15.FontName            := @Tahoma11x13_Regular;
+    Label15.Font_Color          := 0x0000;
+    Label15.OnUpPtr             := 0;
+    Label15.OnDownPtr           := 0;
+    Label15.OnClickPtr          := 0;
+    Label15.OnPressPtr          := 0;
+
+    Label16.OwnerScreenAddress  := @Screen1;
+    Label16.Order               := 19;
+    Label16.Left                := 2;
+    Label16.Top                 := 203;
+    Label16.Width               := 28;
+    Label16.Height              := 12;
+    Label16.Visible             := 1;
+    Label16.Active              := 1;
+    Label16.Caption             := @Label16_Caption;
+    Label16_Caption             := 'Text';
+    Label16.FontName            := @Tahoma11x13_Regular;
+    Label16.Font_Color          := 0x0000;
+    Label16.OnUpPtr             := 0;
+    Label16.OnDownPtr           := 0;
+    Label16.OnClickPtr          := 0;
+    Label16.OnPressPtr          := 0;
+
+    Label17.OwnerScreenAddress  := @Screen1;
+    Label17.Order               := 20;
+    Label17.Left                := 2;
+    Label17.Top                 := 216;
+    Label17.Width               := 28;
+    Label17.Height              := 12;
+    Label17.Visible             := 1;
+    Label17.Active              := 1;
+    Label17.Caption             := @Label17_Caption;
+    Label17_Caption             := 'Text';
+    Label17.FontName            := @Tahoma11x13_Regular;
+    Label17.Font_Color          := 0x0000;
+    Label17.OnUpPtr             := 0;
+    Label17.OnDownPtr           := 0;
+    Label17.OnClickPtr          := 0;
+    Label17.OnPressPtr          := 0;
+
+    Label18.OwnerScreenAddress  := @Screen1;
+    Label18.Order               := 21;
+    Label18.Left                := 2;
+    Label18.Top                 := 230;
+    Label18.Width               := 28;
+    Label18.Height              := 12;
+    Label18.Visible             := 1;
+    Label18.Active              := 1;
+    Label18.Caption             := @Label18_Caption;
+    Label18_Caption             := 'Text';
+    Label18.FontName            := @Tahoma11x13_Regular;
+    Label18.Font_Color          := 0x0000;
+    Label18.OnUpPtr             := 0;
+    Label18.OnDownPtr           := 0;
+    Label18.OnClickPtr          := 0;
+    Label18.OnPressPtr          := 0;
+
+    Label19.OwnerScreenAddress  := @Screen1;
+    Label19.Order               := 22;
+    Label19.Left                := 2;
+    Label19.Top                 := 243;
+    Label19.Width               := 28;
+    Label19.Height              := 12;
+    Label19.Visible             := 1;
+    Label19.Active              := 1;
+    Label19.Caption             := @Label19_Caption;
+    Label19_Caption             := 'Text';
+    Label19.FontName            := @Tahoma11x13_Regular;
+    Label19.Font_Color          := 0x0000;
+    Label19.OnUpPtr             := 0;
+    Label19.OnDownPtr           := 0;
+    Label19.OnClickPtr          := 0;
+    Label19.OnPressPtr          := 0;
+
+    Box3.OwnerScreenAddress  := @Screen1;
+    Box3.Order               := 23;
+    Box3.Left                := 0;
+    Box3.Top                 := 259;
+    Box3.Width               := 240;
+    Box3.Height              := 26;
+    Box3.Pen_Width           := 1;
+    Box3.Pen_Color           := 0x0000;
+    Box3.Visible             := 1;
+    Box3.Active              := 0;
+    Box3.Transparent         := 1;
+    Box3.Gradient            := 1;
+    Box3.Gradient_Orientation := 0;
+    Box3.Gradient_Start_Color := 0xFFFF;
+    Box3.Gradient_End_Color  := 0xC618;
+    Box3.Color               := 0xC618;
+    Box3.PressColEnabled := 1;
+    Box3.Press_Color         := 0x8410;
+    Box3.OnUpPtr             := 0;
+    Box3.OnDownPtr           := 0;
+    Box3.OnClickPtr          := 0;
+    Box3.OnPressPtr          := 0;
+
+    LabelReceived.OwnerScreenAddress  := @Screen1;
+    LabelReceived.Order               := 26;
+    LabelReceived.Left                := 62;
+    LabelReceived.Top                 := 266;
+    LabelReceived.Width               := 14;
+    LabelReceived.Height              := 12;
+    LabelReceived.Visible             := 1;
+    LabelReceived.Active              := 1;
+    LabelReceived.Caption             := @LabelReceived_Caption;
+    LabelReceived_Caption             := '0';
+    LabelReceived.FontName            := @Tahoma11x13_Regular;
+    LabelReceived.Font_Color          := 0x0000;
+    LabelReceived.OnUpPtr             := 0;
+    LabelReceived.OnDownPtr           := 0;
+    LabelReceived.OnClickPtr          := 0;
+    LabelReceived.OnPressPtr          := 0;
+
+    LabelTransmitted.OwnerScreenAddress  := @Screen1;
+    LabelTransmitted.Order               := 27;
+    LabelTransmitted.Left                := 186;
+    LabelTransmitted.Top                 := 266;
+    LabelTransmitted.Width               := 14;
+    LabelTransmitted.Height              := 12;
+    LabelTransmitted.Visible             := 1;
+    LabelTransmitted.Active              := 1;
+    LabelTransmitted.Caption             := @LabelTransmitted_Caption;
+    LabelTransmitted_Caption             := '0';
+    LabelTransmitted.FontName            := @Tahoma11x13_Regular;
+    LabelTransmitted.Font_Color          := 0x0000;
+    LabelTransmitted.OnUpPtr             := 0;
+    LabelTransmitted.OnDownPtr           := 0;
+    LabelTransmitted.OnClickPtr          := 0;
+    LabelTransmitted.OnPressPtr          := 0;
+  end;
+
+function IsInsideObject (X, Y, Left, Top, Width, Height : word) : byte; // static
+begin
+  if ( (Left<= X) and (Left+ Width - 1 >= X) and
+       (Top <= Y)  and (Top + Height - 1 >= Y) ) then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+function GetButton (index : byte) : ^TButton; // static
+var objPtr : ^ const code far ^TButton;
+  begin
+    objPtr := CurrentScreen^.Buttons + index;
+    Result := objPtr^;
+  end;
+
+function GetLabel (index : byte) : ^TLabel; // static
+var objPtr : ^ const code far ^TLabel;
+  begin
+    objPtr := CurrentScreen^.Labels + index;
+    Result := objPtr^;
+  end;
+
+function GetCLabel (index : byte) : ^TCLabel; // static
+var objPtr : ^ const code far ^TCLabel;
+  begin
+    objPtr := CurrentScreen^.CLabels + index;
+    Result := objPtr^;
+  end;
+
+function GetBox (index : byte) : ^TBox; // static
+var objPtr : ^ const code far ^TBox;
+  begin
+    objPtr := CurrentScreen^.Boxes + index;
+    Result := objPtr^;
+  end;
+
+
+procedure DrawButton(Abutton : ^TButton);
+  begin
+    if (Abutton^.Visible = 1) then
+      begin
+        if object_pressed = 1 then
+          begin
+            object_pressed := 0;
+            TFT_Set_Brush(Abutton^.Transparent, Abutton^.Press_Color, Abutton^.Gradient, Abutton^.Gradient_Orientation, Abutton^.Gradient_End_Color, Abutton^.Gradient_Start_Color);
+          end
+        else
+          TFT_Set_Brush(Abutton^.Transparent, Abutton^.Color, Abutton^.Gradient, Abutton^.Gradient_Orientation, Abutton^.Gradient_Start_Color, Abutton^.Gradient_End_Color);
+        TFT_Set_Pen(Abutton^.Pen_Color, Abutton^.Pen_Width);
+        TFT_Rectangle(Abutton^.Left, Abutton^.Top, Abutton^.Left + Abutton^.Width - 1, Abutton^.Top + Abutton^.Height - 1);
+        TFT_Set_Font(Abutton^.FontName, Abutton^.Font_Color, FO_HORIZONTAL);
+        TFT_Write_Text_Return_Pos(Abutton^.Caption, Abutton^.Left, Abutton^.Top);
+        TFT_Write_Text(Abutton^.Caption, (Abutton^.Left + ((Abutton^.Width - caption_length) div 2)), (Abutton^.Top + ((Abutton^.Height - caption_height) div 2)));
+      end;
+  end;
+
+procedure DrawLabel(ALabel : ^TLabel);
+var x_pos, y_pos : integer;
+  begin
+    x_pos := 0;
+    y_pos := 0;
+    if (ALabel^.Visible = 1) then
+      begin
+        TFT_Set_Font(ALabel^.FontName, ALabel^.Font_Color, FO_HORIZONTAL);
+        TFT_Write_Text_Return_Pos(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
+        x_pos := ALabel^.Left + (integer((ALabel^.Width - caption_length)) div 2);
+        y_pos := ALabel^.Top + (integer((ALabel^.Height - caption_height)) div 2);
+        if (x_pos > ALabel^.Left) then
+          TFT_Write_Text(ALabel^.Caption, x_pos, y_pos)
+        else
+          TFT_Write_Text(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
+      end;
+  end;
+
+procedure DrawCLabel(ALabel : ^TCLabel);
+var x_pos, y_pos : integer;
+  begin
+    x_pos := 0;
+    y_pos := 0;
+    if (ALabel^.Visible = 1) then
+      begin
+        TFT_Set_Font(ALabel^.FontName, ALabel^.Font_Color, FO_HORIZONTAL);
+        TFT_Write_Const_Text_Return_Pos(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
+        x_pos := ALabel^.Left + (integer((ALabel^.Width - caption_length)) div 2);
+        y_pos := ALabel^.Top + (integer((ALabel^.Height - caption_height)) div 2);
+        if (x_pos > ALabel^.Left) then
+          TFT_Write_Const_Text(ALabel^.Caption, x_pos, y_pos)
+        else
+          TFT_Write_Const_Text(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
+      end;
+  end;
+
+procedure DrawBox(ABox : ^TBox);
+  begin
+    if (ABox^.Visible = 1) then
+      begin
+        if object_pressed = 1 then
+          begin
+            object_pressed := 0;
+            TFT_Set_Brush(ABox^.Transparent, ABox^.Press_Color, ABox^.Gradient, ABox^.Gradient_Orientation, ABox^.Gradient_End_Color, ABox^.Gradient_Start_Color);
+          end
+        else
+          TFT_Set_Brush(ABox^.Transparent, ABox^.Color, ABox^.Gradient, ABox^.Gradient_Orientation, ABox^.Gradient_Start_Color, ABox^.Gradient_End_Color);
+        TFT_Set_Pen(ABox^.Pen_Color, ABox^.Pen_Width);
+        TFT_Rectangle(ABox^.Left, ABox^.Top, ABox^.Left + ABox^.Width - 1, ABox^.Top + ABox^.Height - 1);
+      end;
+  end;
+
+procedure DrawScreen(aScreen : ^TScreen);
+var order : byte;
+var button_idx : byte;
+    local_button : ^TButton;
+var label_idx : byte;
+    local_label : ^TLabel;
+var clabel_idx : byte;
+    local_clabel : ^TCLabel;
+var box_idx : byte;
+    local_box : ^TBox;
+var save_bled, save_bled_direction : byte;
+
+  begin
+    object_pressed := 0;
+    order := 0;
+    button_idx := 0;
+    label_idx := 0;
+    clabel_idx := 0;
+    box_idx := 0;
+    CurrentScreen := aScreen;
+
+    if (display_width <> CurrentScreen^.Width) or (display_height <> CurrentScreen^.Height) then
+      begin
+        save_bled := TFT_BLED;
+        save_bled_direction := TFT_BLED_Direction;
+        TFT_BLED_Direction := 0;
+        TFT_BLED           := 0;
+        TFT_Set_Active(@Set_Index, @Write_Command, @Write_Data);
+        TFT_Init(CurrentScreen^.Width, CurrentScreen^.Height);
+        TP_TFT_Init(CurrentScreen^.Width, CurrentScreen^.Height, 13, 12);                                  // Initialize touch panel
+        TP_TFT_Set_ADC_Threshold(ADC_THRESHOLD);                              // Set touch panel ADC threshold
+        TFT_Fill_Screen(CurrentScreen^.Color);
+        display_width := CurrentScreen^.Width;
+        display_height := CurrentScreen^.Height;
+        TFT_BLED           := save_bled;
+        TFT_BLED_Direction := save_bled_direction;
+      end
+    else
+      TFT_Fill_Screen(CurrentScreen^.Color);
+
+
+    while (order < CurrentScreen^.ObjectsCount) do
+      begin
+      if (button_idx < CurrentScreen^.ButtonsCount) then
+        begin
+          local_button := GetButton(button_idx);
+          if (order = local_button^.Order) then
+            begin
+              Inc(button_idx);
+              Inc(order);
+              DrawButton(local_button);
+            end
+        end;
+
+      if (label_idx < CurrentScreen^.LabelsCount) then
+        begin
+          local_label := GetLabel(label_idx);
+          if (order = local_label^.Order) then
+            begin
+              Inc(label_idx);
+              Inc(order);
+              DrawLabel(local_label);
+            end
+        end;
+
+      if (clabel_idx < CurrentScreen^.CLabelsCount) then
+        begin
+          local_clabel := GetCLabel(clabel_idx);
+          if (order = local_clabel^.Order) then
+            begin
+              Inc(clabel_idx);
+              Inc(order);
+              DrawCLabel(local_clabel);
+            end
+        end;
+
+      if (box_idx < CurrentScreen^.BoxesCount) then
+        begin
+          local_box := GetBox(box_idx);
+          if (order = local_box^.Order) then
+            begin
+              Inc(box_idx);
+              Inc(order);
+              DrawBox(local_box);
+            end
+        end;
+
+    end;
+end;
+
+procedure Get_Object( X : word; Y : word);
+var counter : integer;
+  begin
+    button_order        := -1;
+    label_order         := -1;
+    clabel_order        := -1;
+    box_order           := -1;
+    //  Buttons
+    counter := CurrentScreen^.ButtonsCount;
+    for _object_count := 0 to counter - 1 do
+      begin
+        local_button := GetButton(_object_count);
+        if (local_button^.Active = 1) then
+          if (IsInsideObject(X, Y, local_button^.Left, local_button^.Top,
+                             local_button^.Width, local_button^.Height) = 1) then
+            begin
+              button_order := local_button^.Order;
+              exec_button := local_button;
+            end;
+      end;
+
+    //  Labels
+    counter := CurrentScreen^.LabelsCount;
+    for _object_count := 0 to counter - 1 do
+      begin
+        local_label := GetLabel(_object_count);
+        if (local_label^.Active = 1) then
+          if (IsInsideObject(X, Y, local_label^.Left, local_label^.Top,
+                             local_label^.Width, local_label^.Height) = 1) then
+            begin
+              label_order := local_label^.Order;
+              exec_label := local_label;
+            end;
+      end;
+
+    //  CLabels
+    counter := CurrentScreen^.CLabelsCount;
+    for _object_count := 0 to counter - 1 do
+      begin
+        local_clabel := GetCLabel(_object_count);
+        if (local_clabel^.Active = 1) then
+          if (IsInsideObject(X, Y, local_clabel^.Left, local_clabel^.Top,
+                             local_clabel^.Width, local_clabel^.Height) = 1) then
+            begin
+              clabel_order := local_clabel^.Order;
+              exec_clabel := local_clabel;
+            end;
+      end;
+
+    //  Boxes
+    counter := CurrentScreen^.BoxesCount;
+    for _object_count := 0 to counter - 1 do
+      begin
+        local_box := GetBox(_object_count);
+        if (local_box^.Active = 1) then
+          if (IsInsideObject(X, Y, local_box^.Left, local_box^.Top,
+                             local_box^.Width, local_box^.Height) = 1) then
+            begin
+              box_order := local_box^.Order;
+              exec_box := local_box;
+            end;
+      end;
+
+    _object_count := -1;
+    if (button_order >  _object_count ) then
+      _object_count := button_order;
+    if (label_order >  _object_count ) then
+      _object_count := label_order;
+    if (clabel_order >  _object_count ) then
+      _object_count := clabel_order;
+    if (box_order >  _object_count ) then
+      _object_count := box_order;
+  end;
+
+
+procedure Process_TP_Press( X : word; Y : word); // static
+  begin
+    exec_button         := 0;
+    exec_label          := 0;
+    exec_clabel         := 0;
+    exec_box            := 0;
+
+    Get_Object(X, Y);
+
+
+    if (_object_count <> -1) then
+      begin
+        if (_object_count = button_order) then
+          if (exec_button^.Active = 1) then
+            if (exec_button^.OnPressPtr <> 0) then
+              begin
+                exec_button^.OnPressPtr^();
+                exit;
+              end;
+
+        if (_object_count = label_order) then
+          if (exec_label^.Active = 1) then
+            if (exec_label^.OnPressPtr <> 0) then
+              begin
+                exec_label^.OnPressPtr^();
+                exit;
+              end;
+
+        if (_object_count = clabel_order) then
+          if (exec_clabel^.Active = 1) then
+            if (exec_clabel^.OnPressPtr <> 0) then
+              begin
+                exec_clabel^.OnPressPtr^();
+                exit;
+              end;
+
+        if (_object_count = box_order) then
+          if (exec_box^.Active = 1) then
+            if (exec_box^.OnPressPtr <> 0) then
+              begin
+                exec_box^.OnPressPtr^();
+                exit;
+              end;
+
+      end;
+  end;
+
+procedure Process_TP_Up( X : word; Y : word); // static
+  begin
+    case PressedObjectType of
+      // Button
+      0 : begin
+            if (PressedObject <> 0) then
+              begin
+                exec_button := ^TButton(PressedObject);
+                if ((exec_button^.PressColEnabled = 1) and (exec_button^.OwnerScreenAddress = ^byte(CurrentScreen))) then
+                  begin
+                    DrawButton(exec_button);
+                  end;
+              end;
+          end;
+      // Box
+      6 : begin
+            if (PressedObject <> 0) then
+              begin
+                exec_box := ^TBox(PressedObject);
+                if ((exec_box^.PressColEnabled = 1) and (exec_box^.OwnerScreenAddress = ^byte(CurrentScreen))) then
+                    DrawBox(exec_box);
+              end;
+          end;
+    end;
+
+    exec_label          := 0;
+    exec_clabel          := 0;
+
+    Get_Object(X, Y);
+
+    if (_object_count <> -1) then
+      begin
+        // Buttons
+        if (_object_count = button_order) then
+          begin
+            if (exec_button^.Active = 1) then
+              begin
+                if (exec_button^.OnUpPtr <> 0) then
+                  exec_button^.OnUpPtr();
+                if PressedObject = TPointer(exec_button) then
+                  if (exec_button^.OnClickPtr <> 0) then
+                    exec_button^.OnClickPtr^();
+                PressedObject := 0;
+                PressedObjectType := -1;
+                exit;
+              end;
+          end;
+
+        // Labels
+        if (_object_count = label_order) then
+          begin
+            if (exec_label^.Active = 1) then
+              begin
+                if (exec_label^.OnUpPtr <> 0) then
+                  exec_label^.OnUpPtr();
+                if PressedObject = TPointer(exec_label) then
+                  if (exec_label^.OnClickPtr <> 0) then
+                    exec_label^.OnClickPtr^();
+                PressedObject := 0;
+                PressedObjectType := -1;
+                exit;
+              end;
+          end;
+
+        // CLabels
+        if (_object_count = clabel_order) then
+          begin
+            if (exec_clabel^.Active = 1) then
+              begin
+                if (exec_clabel^.OnUpPtr <> 0) then
+                  exec_clabel^.OnUpPtr();
+                if PressedObject = TPointer(exec_clabel) then
+                  if (exec_clabel^.OnClickPtr <> 0) then
+                    exec_clabel^.OnClickPtr^();
+                PressedObject := 0;
+                PressedObjectType := -1;
+                exit;
+              end;
+          end;
+
+        // Boxes
+        if (_object_count = box_order) then
+          begin
+            if (exec_box^.Active = 1) then
+              begin
+                if (exec_box^.OnUpPtr <> 0) then
+                  exec_box^.OnUpPtr();
+                if PressedObject = TPointer(exec_box) then
+                  if (exec_box^.OnClickPtr <> 0) then
+                    exec_box^.OnClickPtr^();
+                PressedObject := 0;
+                PressedObjectType := -1;
+                exit;
+              end;
+          end;
+
+      end;
+    PressedObject := 0;
+    PressedObjectType := -1;
+  end;
+
+procedure Process_TP_Down( X : word; Y : word); // static
+  begin
+    object_pressed      := 0;
+    exec_button         := 0;
+    exec_label          := 0;
+    exec_clabel         := 0;
+    exec_box            := 0;
+
+    Get_Object(X, Y);
+
+    if (_object_count <> -1) then
+      begin
+        if (_object_count = button_order) then
+          if (exec_button^.Active = 1) then
+            begin
+              if (exec_button^.PressColEnabled = 1) then
+                begin
+                  object_pressed := 1;
+                  DrawButton(exec_button);
+                end;
+              PressedObject := TPointer(exec_button);
+              PressedObjectType := 0;
+              if (exec_button^.OnDownPtr <> 0) then
+                begin
+                  exec_button^.OnDownPtr^();
+                  exit;
+                end;
+            end;
+
+        if (_object_count = label_order) then
+          if (exec_label^.Active = 1) then
+            begin
+              PressedObject := TPointer(exec_label);
+              PressedObjectType := 2;
+              if (exec_label^.OnDownPtr <> 0) then
+                begin
+                  exec_label^.OnDownPtr^();
+                  exit;
+                end;
+            end;
+
+        if (_object_count = clabel_order) then
+          if (exec_clabel^.Active = 1) then
+            begin
+              PressedObject := TPointer(exec_clabel);
+              PressedObjectType := 10;
+              if (exec_clabel^.OnDownPtr <> 0) then
+                begin
+                  exec_clabel^.OnDownPtr^();
+                  exit;
+                end;
+            end;
+
+        if (_object_count = box_order) then
+          if (exec_box^.Active = 1) then
+            begin
+              if (exec_box^.PressColEnabled = 1) then
+                begin
+                  object_pressed := 1;
+                  DrawBox(exec_box);
+                end;
+              PressedObject := TPointer(exec_box);
+              PressedObjectType := 6;
+              if (exec_box^.OnDownPtr <> 0) then
+                begin
+                  exec_box^.OnDownPtr^();
+                  exit;
+                end;
+            end;
+
+      end;
+  end;
+
+procedure Check_TP();
+  begin
+    if (TP_TFT_Press_Detect()) then
+      begin
+        // After a PRESS is detected read X-Y and convert it to Display dimensions space
+        if (TP_TFT_Get_Coordinates(@Xcoord, @Ycoord) = 0) then
+          begin
+            Process_TP_Press(Xcoord, Ycoord);
+            if PenDown = 0 then
+              begin
+                PenDown := 1;
+                Process_TP_Down(Xcoord, Ycoord);
+              end;
+          end;
+      end
+    else if PenDown = 1 then
+      begin
+        PenDown := 0;
+        Process_TP_Up(Xcoord, Ycoord);
+      end;
+  end;
+
+procedure Init_MCU();
+  begin
+    TRISE := 0;
+    TFT_DataPort_Direction := 0;
+    CLKDIV := CLKDIV and 0xFFE0;    // PLLPRE<4:0> = 0  ->  N1 = 2    8MHz / 2 = 4MHz
+                                    // (must be within 0.8 MHz to 8 MHz range)
+    PLLFBD :=   30;                 // PLLDIV<8:0> = 30 ->  M = 32    4MHz * 32 = 128MHz
+                                    // (must be within 100 MHz to 200 MHz range)
+    PLLPOST_1_bit := 0;
+    PLLPOST_0_bit := 0;             // PLLPOST<1:0> = 0 ->  N2 = 2    128MHz / 2 = 64MHz
+                                    // (must be within 12.5 MHz to 80 MHz range)
+    Delay_ms(150);
+    TFT_Set_Default_Mode();
+    TP_TFT_Rotate_180(0);
+    TFT_Set_Active(@Set_Index, @Write_Command, @Write_Data);
+  end;
+
+procedure Start_TP();
+  begin
+    Init_MCU();
+
+    InitializeTouchPanel();
+
+  Delay_ms(1000);
+  TFT_Fill_Screen(0);
+  Calibrate();
+  TFT_Fill_Screen(0);
+
+    InitializeObjects();
+    display_width := Screen1.Width;
+    display_height := Screen1.Height;
+    DrawScreen(@Screen1);
+  end;
+
+end.

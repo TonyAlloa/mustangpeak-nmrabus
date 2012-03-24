@@ -12,21 +12,51 @@ program NMRABus_TFT_Throttle;
  *}
 
 uses
-  NMRABus,
-  CAN_Data,
+//  NMRABus,
+//  CAN_Data,
+  ECAN_Defs,
   MCU_Setup_dsPIC33FJ256GP710A,
   NodeIDs;
 
 {$I Options.inc}
 
+// TFT display connections
+var TFT_DataPort : byte at LATA;
+var TFT_WR : sbit at LATD13_bit;
+var TFT_RD : sbit at LATD12_bit;
+var TFT_CS : sbit at LATC3_bit;
+var TFT_RS : sbit at LATB15_bit;
+var TFT_RST : sbit at LATC1_bit;
+
+var TFT_DataPort_Direction : byte at TRISA;
+var TFT_WR_Direction : sbit at TRISD13_bit;
+var TFT_RD_Direction : sbit at TRISD12_bit;
+var TFT_CS_Direction : sbit at TRISC3_bit;
+var TFT_RS_Direction : sbit at TRISB15_bit;
+var TFT_RST_Direction : sbit at TRISC1_bit;
+// End of TFT display connections
+
 const
-  MUSTANGPEAK_ID_0_HI = $00050101;  // The Top 3 Bytes
+  ID_1st : DWord = $0FFFFFFF;          // TESTING ONLY
+  ID_2nd : DWord = $00000003;          // TESTING ONLY
+  
+  // Fcy = Fosc/2 in the dsPIC33 (64Mhz/2 = 32Mhz)
+  // Ftq = N*F_baud where N must be between 8 and 25
+  // Baud = 125kHz
+  // BRP = Fcy/(2*Ftq)-1
+  
+  SJW = $0001;                         // Length = 1 Time Quantas
+  BRP = $0009;                         // Divide by 7
+  SEG1PH = $0004;                      // Length = 5 Time Quantas
+  SEG2PH = $0005;                      // Length = 5 Time Quantas
+  PRSEG  = $0005;                      // Length = 5 Time Quanta
+  
+  LF = #13+#10;
+  SCREEN_DELAY = 5000;  // ms
+  DELTA_Y = 14;
 
-  ID_1st : DWord = $08002F4F;          // TESTING ONLY
-  ID_2nd : DWord = $08000003;          // TESTING ONLY
-
-var
-  GetUniqueID: PGetUniqueIDFunc;
+//var
+ // GetUniqueID: PGetUniqueIDFunc;
 
 
 // ****************************************************************************
@@ -38,7 +68,7 @@ var
 procedure UniqueID(var HiID, LoID: DWord);
 begin
   LoID := MUSTANGPEAK_TFT_THROTTLE_ID_0_LO;
-  HiID := MUSTANGPEAK_TFT_THROTTLE_ID_0_HI;
+  HiID := MUSTANGPEAK_ID_0_HI;
 end;
 
 
@@ -50,9 +80,10 @@ procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 1m
 begin
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRABus_GlobalTimer;
+//  NMRABus_GlobalTimer;
 end;
 
+{
 procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
 begin
   C1IF_bit := 0;
@@ -69,34 +100,128 @@ begin
     end
   end;
 end;
+}
 
-procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;         // 93us when a TransmitCompleteOnCANLayerPacket called with new Tx Packet waiting
-var
-  Flags: Byte;
+procedure C1Interrupt(); iv IVT_ADDR_C1INTERRUPT;         // ECAN event interrupt
 begin
-  CNIF_bit := 0;     // Clear Flag
-  PinChangeState := PORTF;
+  TFT_Write_Text('Interrupt', 10, 100);
+  IFS2.C1IF := 0;                                 // clear ECAN interrupt flag
+  if(C1INTF.TBIF <> 0) then                       // was it tx interrupt?
+  begin
+    C1INTF.TBIF := 0;                                   // if yes clear tx interrupt flag
+    TFT_Write_Text('TX Interrupt', 10, 120);
+  end;
+
+  if(C1INTF.RBIF <> 0) then                             // was it rx interrupt?
+  begin
+    C1INTF.RBIF := 0;                                 // if yes clear rx interrupt flag
+    TFT_Write_Text('RX Interrupt', 10, 140);
+  end;
 end;
 
-
+var
+  Can_Init_Flags, Can_Send_Flags, Can_Rcv_Flags : word; // can flags
+  Rx_Data_Len  : word;                                  // received data length in bytes
+  RxTx_Data    : array[8] of byte;                      // can rx/tx data buffer
+  Msg_Rcvd     : word;                                  // reception flag
+  Rx_ID        : longint;
+  i: Integer;
+  s1: string[4];
+  s2: string[32];
+  SCREEN_COLOR: Word;
+  FONT_COLOR: Word;
+  
 // *******************
 // MAIN LOOP
 // *******************
-
-var
-  Packet: TCAN_Packet;
 begin
+  SCREEN_COLOR := TFT_RGBToColor16bit(255, 255, 255);
+  FONT_COLOR := TFT_RGBToColor16bit(0, 0, 0);
 
-  GetUniqueID := @UniqueID;
+//  GetUniqueID := @UniqueID;
 
 
-  CAN_Data_Initialize;
-  NMRABus_Initialize;
+ // CAN_Data_Initialize;
+ // NMRABus_Initialize;
   MCU_Setup_Initialize;
-  NMRABus_Connect;
+ // NMRABus_Connect;
+ 
+  CLKDIV := CLKDIV and 0xFFE0;
+  PLLFBD := 30;
+  PLLPOST_1_bit := 0;
+  PLLPOST_0_bit := 0;                      // = 64 Mhz
+  
+ { UART2_Init_Advanced(57600, _UART_8BIT_NOPARITY, _UART_ONE_STOPBIT, _UART_HI_SPEED);
+  UART2_Write_Text('Testing');
+  UART2_Write_Text(LF);  }
+
+  TFT_Set_Default_Mode();
+  TFT_Init(240, 320);    // Initialize 240x320 TFT display
+  TFT_Fill_Screen(SCREEN_COLOR);
+  TFT_Set_Font(@TFT_defaultFont, FONT_COLOR, FO_HORIZONTAL);
+  i := 0;
+
+   
+  Can_Rcv_Flags  := 0;                             //
+
+  Can_Send_Flags := _ECAN_TX_PRIORITY_0 and           // form value to be used
+                    _ECAN_TX_XTD_FRAME and            // with CANSendMessage
+                    _ECAN_TX_NO_RTR_FRAME;
+
+  Can_Init_Flags := _ECAN_CONFIG_SAMPLE_THRICE and    // form value to be used
+                    _ECAN_CONFIG_PHSEG2_PRG_ON and    // with CANInitialize
+                    _ECAN_CONFIG_XTD_MSG;// and
+                  //  _ECAN_CONFIG_MATCH_MSG_TYPE and
+                  //  _ECAN_CONFIG_LINE_FILTER_OFF;
+
+  RxTx_Data[0] := 9;                               // set initial data to be sent
+  ECAN1DmaChannelInit(0, 1, @ECAN1RxTxRAMBuffer);  // init dma channel 0 for
+                                                   // dma to ECAN peripheral transfer
+  ECAN1DmaChannelInit(2, 0, @ECAN1RxTxRAMBuffer);  // init dma channel 2 for
+                                                   // ECAN peripheral to dma transfer
+
+  ECAN1Initialize(SJW, BRP, SEG1PH, SEG2PH, PRSEG, Can_Init_Flags);  // initialize ECAN
+  
+  ECAN1SetBufferSize(ECAN1RAMBUFFERSIZE);          // set number of rx+tx buffers in DMA RAM
+
+  ECAN1SelectTxBuffers(0x000F);                    // select transmit buffers
+                                                   // 0x000F = buffers 0:3 are transmit buffers
+  ECAN1SetOperationMode(_ECAN_MODE_CONFIG,0xFF);   // set CONFIGURATION mode
+  
+  ECAN1SetMask(_ECAN_MASK_0, LongInt( $08000000), {_ECAN_CONFIG_MATCH_MSG_TYPE and} _ECAN_CONFIG_XTD_MSG);        // Test the bits that define a NMRA Level Message or not, as well as an Extended ID only
+  ECAN1SetFilter(_ECAN_FILTER_0, LongInt( $08000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_4, _ECAN_CONFIG_XTD_MSG);  // Buffer 4..Buffer 5 are NMRA Level Rx Buffers
+  ECAN1SetFilter(_ECAN_FILTER_2, LongInt( $08000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_5, _ECAN_CONFIG_XTD_MSG);  // Buffer 4..Buffer 5 are NMRA Level Rx Buffers
+  ECAN1SetFilter(_ECAN_FILTER_3, LongInt( $00000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_6, _ECAN_CONFIG_XTD_MSG);  // Buffer 6..Buffer 7 are CAN Level Rx Buffers
+  ECAN1SetFilter(_ECAN_FILTER_4, LongInt( $00000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_7, _ECAN_CONFIG_XTD_MSG);  // Buffer 6..Buffer 6 are CAN Level Rx Buffers
+  ECAN1SetFilter(_ECAN_FILTER_5, LongInt( $00000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_8, _ECAN_CONFIG_XTD_MSG);  // Buffer 6..Buffer 7 are CAN Level Rx Buffers
+  ECAN1SetFilter(_ECAN_FILTER_6, LongInt( $00000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_9, _ECAN_CONFIG_XTD_MSG);  // Buffer 6..Buffer 6 are CAN Level Rx Buffers
+
+  ECAN1SetOperationMode(_ECAN_MODE_NORMAL, 0xFF);    // set NORMAL mode
+
+ // ECAN1Write(ID_1st, RxTx_Data, 1, Can_Send_Flags);  // send initial message
+
   while (TRUE) do
     begin
-      if not NMRABus_Connected then
+   //   Msg_Rcvd := ECAN1Read(Rx_ID , RxTx_Data , Rx_Data_Len, Can_Rcv_Flags); // receive message
+      {if ((Rx_ID = ID_2nd) and (Msg_Rcvd <> 0)) <> 0 then   }                 // if message received check id
+      if ECAN1Read(Rx_ID , RxTx_Data , Rx_Data_Len, Can_Rcv_Flags) then
+        begin
+       //   TFT_Write_Text('Received', 1, i);
+          i := i + DELTA_Y;
+          RxTx_Data[0] := Rx_ID shr 24;
+          RxTx_Data[1] := Rx_ID shr 16;
+          RxTx_Data[2] := Rx_ID shr 8;
+          RxTx_Data[3] := Rx_ID;
+
+      //    PORTB := RxTx_Data[0];                                             // id correct, output data at PORTB
+      //    Inc(RxTx_Data[0]);
+      //    Delay_ms(10);
+          ECAN1Write(ID_1st, RxTx_Data, 4, Can_Send_Flags);                  // send incremented data back
+        end;
+
+    
+    
+  {    if not NMRABus_Connected then
       begin
         NMRABus_RecreateAliasID;
         NMRABus_Connect;
@@ -124,6 +249,6 @@ begin
             end
           end
         end
-      end
+      end   }
     end;
 end.

@@ -1,0 +1,2357 @@
+object TatDiagram
+  NettoExportOffset = 1
+  AutomaticNodes = False
+  AutoScroll = True
+  AutoPage = False
+  Background.Scroll = True
+  Background.Style = biTile
+  Background.Visible = False
+  Background.Gradient.Direction = grTopBottom
+  Background.Gradient.StartColor = clWhite
+  Background.Gradient.EndColor = clYellow
+  Background.Gradient.Visible = False
+  Background.PrintGradient = False
+  SnapGrid.Active = True
+  SnapGrid.Force = True
+  SnapGrid.Visible = False
+  SnapGrid.SizeX = 2.000000000000000000
+  SnapGrid.SizeY = 2.000000000000000000
+  SnapGrid.Style = gsLines
+  SnapGrid.SnapToRuler = True
+  ShowLinkPoints = False
+  LeftRuler.Visible = False
+  LeftRuler.Divisions = 5
+  LeftRuler.Font.Charset = DEFAULT_CHARSET
+  LeftRuler.Font.Color = clWindowText
+  LeftRuler.Font.Height = -9
+  LeftRuler.Font.Name = 'Arial'
+  LeftRuler.Font.Style = []
+  LeftRuler.Units = unMili
+  LeftRuler.MinorTickLength = 4
+  LeftRuler.MajorTickLength = 6
+  LeftRuler.Color = clWhite
+  LeftRuler.TickColor = clBlack
+  LeftRuler.Size = 16
+  LeftRuler.AutoFactor = True
+  LeftRuler.GridColor = clBlack
+  TopRuler.Visible = False
+  TopRuler.Divisions = 5
+  TopRuler.Font.Charset = DEFAULT_CHARSET
+  TopRuler.Font.Color = clWindowText
+  TopRuler.Font.Height = -9
+  TopRuler.Font.Name = 'Arial'
+  TopRuler.Font.Style = []
+  TopRuler.Units = unMili
+  TopRuler.MinorTickLength = 4
+  TopRuler.MajorTickLength = 6
+  TopRuler.Color = clWhite
+  TopRuler.TickColor = clBlack
+  TopRuler.Size = 16
+  TopRuler.AutoFactor = True
+  TopRuler.GridColor = clBlack
+  Zoom = 101
+  BorderColor = clGray
+  VertScrollBar.Smooth = True
+  MouseWheelMode = mwOff
+  ActiveLayers = 7
+  Layers = <
+    item
+      LayerName = 'Layer0'
+    end
+    item
+      LayerName = 'Layer1'
+    end>
+  LinkCursor = crHandPoint
+  PanCursor = crHandPoint
+  ZoomCursor = crSizeNS
+  IgnoreScreenDPI = False
+  ShowCrossIndicators = True
+  PageLines.Visible = False
+  PageLines.Pen.Color = clMaroon
+  PageLines.Pen.Mode = pmBlack
+  PageLines.Pen.Style = psDot
+  KeyActions = [kaEscape, kaMove, kaPage, kaResize, kaSelect]
+  HandlesStyle = hsVisio
+  SmoothMode = smAntiAlias
+  TextRenderingMode = tmAntiAlias
+  SelectionMode = slmMultiple
+  CanMoveOutOfBounds = False
+  PageSettings.PaperName = '0x0'
+  PageSettings.PaperId = 1
+  PageSettings.PaperWidth = 127.000000000000000000
+  PageSettings.PaperHeight = 169.333333333333300000
+  PageSettings.Orientation = dpoLandscape
+  PageSettings.LeftMarginStr = '0'
+  PageSettings.TopMarginStr = '0'
+  PageSettings.RightMarginStr = '0'
+  PageSettings.BottomMarginStr = '0'
+  RulerAutoUnit = True
+  MeasUnit = duMili
+  WheelZoom = True
+  WheelZoomIncrement = 10
+  WheelZoomMin = 50
+  WheelZoomMax = 1000
+  BorderStyle = bsSingle
+  Color = clMedGray
+  ParentColor = False
+  object Box2: TDgrBox
+    Tag = 1
+    Top = 570.000000000000000000
+    Width = 480.000000000000000000
+    Height = 68.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 5
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 2
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 'Double click on Box to add a handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    Collapsed = False
+  end
+  object Box1: TDgrBox
+    Tag = 1
+    Top = 0.020000000000000020
+    Width = 480.000000000000000000
+    Height = 516.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 5
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 2
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 'Double click on Box to add a handler.'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'Box1Click'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    Collapsed = False
+  end
+  object ButtonPrev: TDgrButton
+    Tag = 1
+    Left = 22.000000000000000000
+    Top = 578.000000000000000000
+    Width = 196.000000000000000000
+    Height = 52.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    ClipText = False
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Prev'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 24
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 'Double click on button to add handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnPress = 'ButtonPrevPress'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    Collapsed = False
+  end
+  object ButtonNext: TDgrButton
+    Tag = 1
+    Left = 242.000000000000000000
+    Top = 578.000000000000000000
+    Width = 196.000000000000000000
+    Height = 52.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    ClipText = False
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Next'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 24
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 'Double click on button to add handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnPress = 'ButtonNextPress'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label1: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 4.000000000000000000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label2: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 30.800000000000000000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label3: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 57.599999999999990000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label4: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 84.399999999999990000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label5: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 111.200000000000000000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label6: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 138.000000000000000000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label7: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 164.800000000000000000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label8: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 191.600000000000000000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label9: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 218.400000000000000000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label10: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 245.200000000000000000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label11: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 272.000000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label12: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 298.800000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label13: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 325.600000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label14: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 352.400000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label15: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 379.200000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label16: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 406.000000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label17: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 432.800000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label18: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 459.600000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label19: TDgrLabel
+    Tag = 1
+    Left = 4.000000000000000000
+    Top = 486.400000000000100000
+    Width = 56.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 40
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Box3: TDgrBox
+    Tag = 1
+    Top = 517.010000000000000000
+    Width = 480.000000000000000000
+    Height = 52.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 5
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 2
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 'Double click on Box to add a handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    Collapsed = False
+  end
+  object Label20: TDgrLabel
+    Tag = 1
+    Left = 12.000000000000000000
+    Top = 532.000000000000000000
+    Width = 107.800000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Received:'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = True
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object Label21: TDgrLabel
+    Tag = 1
+    Left = 230.000000000000000000
+    Top = 532.000000000000000000
+    Width = 137.280000000000000000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Transmitted:'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = True
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object LabelReceived: TDgrLabel
+    Tag = 1
+    Left = 124.000000000000000000
+    Top = 532.000000000000000000
+    Width = 27.319999999999990000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = '0'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 12
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object LabelTransmitted: TDgrLabel
+    Tag = 1
+    Left = 372.000000000000000000
+    Top = 532.000000000000000000
+    Width = 27.319999999999990000
+    Height = 24.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -21
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = '0'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -21
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 12
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+end
+
+SCREEN_SECTION
+
+	ScreenName=Screen1
+		CurrentLayer=0
+		StartScreen=True
+		StaticScreen=False
+		ScreenColor=clMedGray
+		ScreenOrientation=1
+		ScreenShowGrid=False
+		ScreenGridColor=clBlack
+
+	ScreenCount=1
+	ActiveScreen=Screen1
+
+SCREEN_SECTION_END
+
+PROJECT_INFO_START
+
+VERSION       = 2
+BOARD         = MikroMMB_for_dsPIC33_hw_rev_1.10
+COMPILER      = mikroPascal PRO for dsPIC
+CONTROLLER    = HX8347-D
+DIMENSIONS    = 240x320
+DEVICE        = P33FJ256GP710A
+CLOCK         = 64000000
+TP_CHECKED    = True
+READX_ADCHNO  = 13
+READY_ADCHNO  = 12
+
+TFT_CONNECTION_START
+TFT_DataPort            = LATA
+TFT_RST                 = LATC1_bit
+TFT_DataPort_Direction  = TRISA
+TFT_RST_Direction       = TRISC1_bit
+TFT_BLED_Direction      = TRISD7_bit
+TFT_RS_Direction        = TRISB15_bit
+TFT_CS_Direction        = TRISC3_bit
+TFT_RD_Direction        = TRISD12_bit
+TFT_BLED                = LATD7_bit
+TFT_WR_Direction        = TRISD13_bit
+TFT_RS                  = LATB15_bit
+TFT_CS                  = LATC3_bit
+TFT_RD                  = LATD12_bit
+TFT_WR                  = LATD13_bit
+TFT_CONNECTION_END
+
+TP_CONNECTION_START
+DRIVEY_UP               = LATB12_bit
+DRIVEY_DOWN             = LATB10_bit
+DRIVEY_UP_DIRECTION     = TRISB12_bit
+DRIVEY_DOWN_DIRECTION   = TRISB10_bit
+DRIVEX_LEFT             = LATB13_bit
+DRIVEX_RIGHT            = LATB11_bit
+DRIVEX_LEFT_DIRECTION   = TRISB13_bit
+DRIVEX_RIGHT_DIRECTION  = TRISB11_bit
+TP_CONNECTION_END
+
+ADC_CODE_START
+procedure Init_ADC();
+  begin
+    AD1PCFGL := 0xCFFF;
+    AD1PCFGH := 0xCFFF;
+    ADC1_Init();
+  end;
+ADC_CODE_END
+
+INIT_MCU_CODE_START
+procedure Init_MCU();
+  begin
+    TRISE := 0;
+    TFT_DataPort_Direction := 0;
+    CLKDIV := CLKDIV and 0xFFE0;    // PLLPRE<4:0> = 0  ->  N1 = 2    8MHz / 2 = 4MHz
+                                    // (must be within 0.8 MHz to 8 MHz range)
+    PLLFBD :=   30;                 // PLLDIV<8:0> = 30 ->  M = 32    4MHz * 32 = 128MHz
+                                    // (must be within 100 MHz to 200 MHz range)
+    PLLPOST_1_bit := 0;
+    PLLPOST_0_bit := 0;             // PLLPOST<1:0> = 0 ->  N2 = 2    128MHz / 2 = 64MHz
+                                    // (must be within 12.5 MHz to 80 MHz range)
+    Delay_ms(150);
+    TFT_Set_Default_Mode();
+    TP_TFT_Rotate_180(0);
+    TFT_Set_Active(@Set_Index, @Write_Command, @Write_Data);
+  end;
+INIT_MCU_CODE_END
+
+EXT_MEM_TYPE=MMC
+EXT_MEM_DECL_CODE_START
+// MMC/SD Connections
+var Mmc_Chip_Select : sbit at LATG9_bit;
+var Mmc_Chip_Select_Direction : sbit at TRISG9_bit;
+// end of MMC/SD
+// TFT Get Data globals
+var Ext_Data_Buffer : array[512] of byte;
+var currentSector : longint;
+var res_file_size : dword;
+// end of TFT Get Data
+EXT_MEM_DECL_CODE_END
+
+INIT_EXT_MEM_CODE_START
+procedure Init_Ext_Mem();
+  begin
+    currentSector := -1;
+    // Initialize SPI
+    SPI2_Init_Advanced(_SPI_MASTER, _SPI_8_BIT, _SPI_PRESCALE_SEC_1, _SPI_PRESCALE_PRI_64,
+                      _SPI_SS_DISABLE, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_IDLE_2_ACTIVE);
+    Delay_ms(10);
+
+    // Initialize MMC
+    if (Mmc_Fat_Init() = 0) then
+      begin
+        // Reinitialize SPI at higher speed
+        SPI2_Init_Advanced(_SPI_MASTER, _SPI_8_BIT, _SPI_PRESCALE_SEC_1, _SPI_PRESCALE_PRI_4,
+                          _SPI_SS_DISABLE, _SPI_DATA_SAMPLE_MIDDLE, _SPI_CLK_IDLE_LOW, _SPI_IDLE_2_ACTIVE);
+
+        // Open resource file for read
+        Mmc_Fat_Assign('%FILE_NAME', 0);
+        Mmc_Fat_Reset(res_file_size);
+      end;
+  end;
+INIT_EXT_MEM_CODE_END
+
+GET_DATA_CODE_START
+function TFT_Get_Data(offset: dword; count: word; var num : word): ^byte;
+var start_sector: dword;
+pos : word;
+begin
+  start_sector := Mmc_Get_File_Write_Sector() + offset div 512;
+  pos := dword(offset) mod 512;
+
+  if(start_sector = currentSector+1) then 
+    begin
+      Mmc_Multi_Read_Sector(Ext_Data_Buffer);
+      currentSector := start_sector;
+    end
+  else if(start_sector <> currentSector) then
+    begin
+      if(currentSector <> -1) then
+        Mmc_Multi_Read_Stop();
+      Mmc_Multi_Read_Start(start_sector);
+      Mmc_Multi_Read_Sector(Ext_Data_Buffer);
+      currentSector := start_sector;
+    end;
+
+  if(count>512-pos) then 
+    num := 512-pos
+  else
+    num := count;
+
+  result := @Ext_Data_Buffer+pos;
+end;
+GET_DATA_CODE_END
+
+THRESHOLD     = 800
+XMIN          = 149
+XMAX          = 776
+YMIN          = 68
+YMAX          = 765
+CALIBRATION   = Manual
+TP_ENABLE     = 1
+
+RSRC_FORMAT   = CODE
+RSRC_JPEG2BMP = True
+RSRC_FILESYS  = True
+
+PROJECT_INFO_END
