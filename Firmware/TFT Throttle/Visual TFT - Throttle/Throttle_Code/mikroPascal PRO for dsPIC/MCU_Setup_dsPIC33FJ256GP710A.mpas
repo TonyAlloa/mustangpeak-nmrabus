@@ -3,6 +3,7 @@ unit MCU_Setup_dsPIC33FJ256GP710A;
 uses
   CAN_Data,
   NodeIDs,
+  ECAN_Defs,
   NMRABus;
 
 {$I Options.inc}
@@ -10,9 +11,9 @@ uses
 const
   CAN_SWJ        = 1;               // Set up for 125Khz Baud Rate with a 16Mhz Crystal
   CAN_BRP        = 9;               // All in terms of number of Tq actual value in register will be BRP-1
-  CAN_PHASESEG_1 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_1-1
-  CAN_PHASESEG_2 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
-  CAN_PROP_SEG   = 3;               // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
+  CAN_PHASESEG_1 = 4;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_1-1
+  CAN_PHASESEG_2 = 5;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
+  CAN_PROP_SEG   = 5;               // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
 
 
   procedure MCU_Setup_Initialize;
@@ -27,45 +28,6 @@ var
 
 implementation
 
-{******************************************************************************
- *  rx/tx buffer structure.
- *  These buffers are located in DMA RAM and therefore are not defined as
- *  physical registers among mcu SFRs.
- *
- ******************************************************************************}
-{type data_field_buffer = record
-  Data_ : array[8] of byte; // Data Field Buffer
-end;
-
-type __RxTxBuffer = record
-  CxTRBnSID  : word;        // CAN SID register
-  CxTRBnEID  : word;        // CAN EID register
-  CxTRBnDLC  : word;        // CAN DLC register
-  CxTRBnData : data_field_buffer;  // CAN DATA registers
-  CxTRBnSTAT : word;        // CAN status register
-end;      // CAN rx/tx buffer structure in DMA RAM}
-
-{******************************************************************************
- * Set number of rx+tx buffers in DMA RAM
- * Max is 32.
- ******************************************************************************}
-const 
-  ECAN1RAMBUFFERSIZE = 16;      // tx+rx buffers = 16
-
-{******************************************************************************
- * The folowing variable is a rx/tx buffer and it must be located in DMA RAM
- * space.
- * The absolute address should be adjusted according to the mcu used,
- * since the DMA RAM is not located at the same addresses for mcus with 8,16
- * and 30kB of RAM.
- ******************************************************************************}
-const 
-  ECAN1RamStartAddress : word = 0x7800;
-
-var 
-  ECAN1RxTxRAMBuffer : array[ECAN1RAMBUFFERSIZE] of __RxTxBuffer; absolute ECAN1RamStartAddress;     // defined for mcus with 30kB of RAM
-
-     (*
 // ****************************************************************************
 // procedure LockListNMRABus
 //
@@ -74,8 +36,8 @@ var
 // ****************************************************************************
 procedure LockListNMRABus;
 begin
-  TXB1IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
-  RXB1IE_bit := 0;
+//  TXB1IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
+//  RXB1IE_bit := 0;
 end;
 
 // ****************************************************************************
@@ -86,10 +48,12 @@ end;
 // ****************************************************************************
 procedure UnlockListNMRABus;
 begin
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
-    TXB1IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
-  TXB1IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
-  RXB1IE_bit := 1;
+// PROBLEM WITH ECAN, I can't modify the ICODE so I can't trigger a start.... I don't think
+
+ // if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
+ //   TXB1IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
+ // TXB1IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
+ // RXB1IE_bit := 1;
 end;
 
 // ****************************************************************************
@@ -100,8 +64,8 @@ end;
 // ****************************************************************************
 procedure LockListCAN;
 begin
-  TXB0IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
-  RXB0IE_bit := 0;
+ // TXB0IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
+ // RXB0IE_bit := 0;
 end;
 
 // ****************************************************************************
@@ -112,12 +76,14 @@ end;
 // ****************************************************************************
 procedure UnlockListCAN;
 begin
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then
-    TXB0IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
-  TXB0IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
-  RXB0IE_bit := 1;
+  // PROBLEM WITH ECAN, I can't modify the ICODE so I can't trigger a start.... I don't think
+  
+ // if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then
+  //  TXB0IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
+ // TXB0IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
+ // RXB0IE_bit := 1;
 end;
-        *)
+
         
 procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 begin
@@ -125,7 +91,10 @@ begin
 end;
 
 procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT;
-begin
+begin  
+
+  LATG3_bit := not LATG3_bit;
+
   WIN_bit := 0;                                                                 // Access the correct Bank
   C1IF_bit := 0;
   TBIF_bit := 0;                                                                // TX Interrupt Flag Reset
@@ -154,6 +123,9 @@ end;
 procedure MCU_Setup_Initialize;
 begin
   ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
+  
+  LATG3_bit := 0;
+  TRISG3_bit := 0;
 
   PinChangeState := 0;
 
@@ -191,6 +163,9 @@ begin
   RBIF_bit := 0;                                                                // RX Interrupt Flag Reset
   TBIE_bit := 1;                                                                // TX Interrupt Enable
   RBIE_bit := 1;                                                                // RX Interrupt Enable
+  C1IP_0_bit := 0;
+  C1IP_1_bit := 0;
+  C1IP_2_bit := 1;                                                              // Interrupt Priority Level of 4
   C1IF_bit := 0;                                                                // Clear the CAN 1 Interrupt Flag
   C1IE_bit := 1;                                                                // Enable CAN 1 Event Interrupts (not Rx Ready or TX Complete Interrupts
 

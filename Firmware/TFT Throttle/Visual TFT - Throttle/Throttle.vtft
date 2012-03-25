@@ -6465,7 +6465,7 @@ SCREEN_SECTION
 
 	ScreenName=Screen_CAN
 		CurrentLayer=0
-		StartScreen=True
+		StartScreen=False
 		StaticScreen=False
 		ScreenColor=clMedGray
 		ScreenOrientation=1
@@ -6482,8 +6482,8 @@ SCREEN_SECTION
 		ScreenGridColor=clBlack
 
 	ScreenName=ScreenThrottle
-		CurrentLayer=0
-		StartScreen=False
+		CurrentLayer=4
+		StartScreen=True
 		StaticScreen=False
 		ScreenColor=clGray
 		ScreenOrientation=1

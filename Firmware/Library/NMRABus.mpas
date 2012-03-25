@@ -711,6 +711,9 @@ var
   CANPtr: ^Word;
   SID, EID: DWORD;
 begin
+ {$IFDEF dsPIC33}
+ 
+ {$ELSE}
   case Buffer of
     0: CANPtr := @C1RX0SID;
     1: CANPtr := @C1RX1SID;
@@ -741,6 +744,7 @@ begin
   DataBytes[7] := CANPtr^ shr 8;
   Inc(CANPtr);                                                                  // Move to C1RXnCON
   CANPtr^ := CANPtr^ and $FF7F;                                                 // Clear the RXFUL flag
+  {$ENDIF}
 end;
 
 // ****************************************************************************
@@ -762,6 +766,9 @@ var
   CANPtr: ^Word;
   SID, EID: DWORD;
 begin
+ {$IFDEF dsPIC33}
+
+ {$ELSE}
   SID := (Header and $1FFC0000) shr 18;
   EID := Header and $0003FFFF;
 
@@ -794,6 +801,7 @@ begin
   CANPtr^ := DataBytes[6] or (DataBytes[7] shl 8);
   Inc(CANPtr);                                                                  // Move to C1TXnCON
   CANPtr^ := (CANPtr^ and $FFFC) or Priority or $0008;                          // Set Priority and Set TXREQ to start transmit
+ {$ENDIF}
 end;
 
 end.

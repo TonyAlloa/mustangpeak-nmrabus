@@ -3125,9 +3125,9 @@ procedure Start_TP();
   TFT_Fill_Screen(0);
 
     InitializeObjects();
-    display_width := Screen_CAN.Width;
-    display_height := Screen_CAN.Height;
-    DrawScreen(@Screen_CAN);
+    display_width := ScreenThrottle.Width;
+    display_height := ScreenThrottle.Height;
+    DrawScreen(@ScreenThrottle);
   end;
 
 end.

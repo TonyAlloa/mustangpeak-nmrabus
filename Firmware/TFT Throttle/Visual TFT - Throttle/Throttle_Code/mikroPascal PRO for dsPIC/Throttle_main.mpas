@@ -18,14 +18,61 @@
 
 program Throttle_main;
 
+var
+  GetUniqueIDFunc: PGetUniqueIDFunc;
+  Can_Init_Flags, Can_Send_Flags, Can_Rcv_Flags : word; // can flags
+  Rx_Data_Len  : word;                                  // received data length in bytes
+  RxTx_Data    : array[8] of byte;                      // can rx/tx data buffer
+  Msg_Rcvd, Cnt     : word;                                  // reception flag
+  Rx_ID        : longint;
+  s1: array[0..4] of Char;
+
+// ****************************************************************************
+// procedure UniqueID
+//
+//  Description:   Callback from NMRABus to load the 48 Bit Unique ID
+//
+// ****************************************************************************
+procedure UniqueID(var HiID, LoID: DWord);
 begin
+  LoID := MUSTANGPEAK_TFT_THROTTLE_ID_0_LO;
+  HiID := MUSTANGPEAK_ID_0_HI;
+end;
+
+begin
+  GetUniqueIDFunc := @UniqueID;                                                 // Callback to access the Node's Unique ID
   MCU_Setup_Initialize;
+  NMRABus_Initialize;
+  
+ // while true do
+  begin
+    ECAN1Write($0002, RxTx_Data, 8, _ECAN_TX_PRIORITY_0 and _ECAN_TX_XTD_FRAME and _ECAN_TX_NO_RTR_FRAME);  // send initial message
+    delay_ms(10);
+  end;
 
   Start_TP();
+  Can_Rcv_Flags  := 0;
+  Cnt := 0;
+  IntToHex(C1CFG1, s1);
+  strcpy(ButtonRoundF18.Caption, s1);
+  IntToHex(C1CFG2, s1);
+  strcpy(ButtonRoundF19.Caption, s1);
+  DrawRoundButton(@ButtonRoundF18);
+  DrawRoundButton(@ButtonRoundF19);
+  IntToHex(Cnt, s1);
+  strcpy(ButtonRoundF20.Caption, s1);
+  DrawRoundButton(@ButtonRoundF20);
 
   while (TRUE) do
     begin
       Check_TP();
+      if ECAN1Read(Rx_ID , RxTx_Data , Rx_Data_Len, Can_Rcv_Flags) then
+      begin
+         Inc(Cnt);
+         IntToHex(Cnt, s1);
+         strcpy(ButtonRoundF20.Caption, s1);
+          DrawRoundButton(@ButtonRoundF20);
+      end;
     end;
 
 end.

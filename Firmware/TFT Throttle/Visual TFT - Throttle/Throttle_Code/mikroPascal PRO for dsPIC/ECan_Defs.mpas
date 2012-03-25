@@ -1,0 +1,43 @@
+unit ECan_Defs;
+
+
+{******************************************************************************
+ *  rx/tx buffer structure.
+ *  These buffers are located in DMA RAM and therefore are not defined as
+ *  physical registers among mcu SFRs.
+ *
+ ******************************************************************************}
+{type data_field_buffer = record
+  Data_ : array[8] of byte; // Data Field Buffer
+end;
+
+type __RxTxBuffer = record
+  CxTRBnSID  : word;        // CAN SID register
+  CxTRBnEID  : word;        // CAN EID register
+  CxTRBnDLC  : word;        // CAN DLC register
+  CxTRBnData : data_field_buffer;  // CAN DATA registers
+  CxTRBnSTAT : word;        // CAN status register
+end;      // CAN rx/tx buffer structure in DMA RAM}
+
+{******************************************************************************
+ * Set number of rx+tx buffers in DMA RAM
+ * Max is 32.
+ ******************************************************************************}
+const
+  ECAN1RAMBUFFERSIZE = 16;      // tx+rx buffers = 16
+
+{******************************************************************************
+ * The folowing variable is a rx/tx buffer and it must be located in DMA RAM
+ * space.
+ * The absolute address should be adjusted according to the mcu used,
+ * since the DMA RAM is not located at the same addresses for mcus with 8,16
+ * and 30kB of RAM.
+ ******************************************************************************}
+const 
+  ECAN1RamStartAddress : word = 0x7800;
+
+var 
+  ECAN1RxTxRAMBuffer : array[ECAN1RAMBUFFERSIZE] of __RxTxBuffer; absolute ECAN1RamStartAddress;     // defined for mcus with 30kB of RAM
+
+implementation
+end.
