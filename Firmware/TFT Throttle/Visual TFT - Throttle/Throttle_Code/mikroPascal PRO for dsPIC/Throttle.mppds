@@ -11,21 +11,33 @@ Value=Throttle_main.mpas
 Value=0
 [EEPROM_DEFINITION]
 Value=
+[USE_HEAP]
+Value=0
+[HEAP_SIZE]
+Value=2000
 [FILES]
-Count=5
+Count=9
 File0=Throttle_main.mpas
 File1=Throttle_objects.mpas
 File2=Throttle_driver.mpas
 File3=Throttle_events_code.mpas
 File4=Throttle_resources.mpas
+File5=MCU_Setup_dsPIC33FJ256GP710A.mpas
+File6=..\..\..\..\Library\NodeIDs.mpas
+File7=..\..\..\..\Library\CAN_Data.mpas
+File8=..\..\..\..\Library\NMRABus.mpas
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
+ActiveImageIndex=-1
 [OPENED_FILES]
-Count=2
+Count=5
 File0=Throttle_main.mpas
 File1=Throttle_events_code.mpas
+File2=Throttle_driver.mpas
+File3=MCU_Setup_dsPIC33FJ256GP710A.mpas
+File4=..\..\..\..\Library\NMRABus.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -33,7 +45,11 @@ Count=0
 [OTHER_FILES]
 Count=0
 [SEARCH_PATH]
-Count=0
+Count=4
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
+Path3=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
 [HEADER_PATH]
 Count=0
 [HEADERS]
@@ -41,13 +57,17 @@ Count=0
 [PLDS]
 Count=0
 [Useses]
-Count=4
+Count=9
 File0=TFT
 File1=TFT_Fonts
 File2=ADC
 File3=TFT_TouchPanel
+File4=Spi
+File5=String
+File6=C_Type
+File7=Conversions
+File8=ECAN
 [EXPANDED NODES]
 Node1=Sources
-Node2=Header Files
-Node3=Output Files
-Count=3
+Node2=Output Files
+Count=2

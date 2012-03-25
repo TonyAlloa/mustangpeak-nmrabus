@@ -106,12 +106,17 @@ type
   
   TGetUniqueIDFunc = procedure(var Hi, Lo: DWord);
   PGetUniqueIDFunc = ^TGetUniqueIDFunc;
-
+  TSignalTransmitOnCANLayerFunc = procedure();
+  PSignalTransmitOnCANLayerFunc = ^TSignalTransmitOnCANLayerFunc;
+  TSignalTransmitOnNMRALayerFunc = procedure();
+  PSignalTransmitOnNMRALayerFunc = ^TSignalTransmitOnNMRALayerFunc;
 
 var
   NMRABus: TNMRABus;
   
-  GetUniqueID: PGetUniqueIDFunc; external;
+  GetUniqueIDFunc: PGetUniqueIDFunc; external;
+  SignalTransmitOnCANLayerFunc: PSignalTransmitOnCANLayerFunc; external;
+  SignalTransmitOnNMRALayerFunc: PSignalTransmitOnNMRALayerFunc; external;
 
   procedure NMRABus_Connect;
   function NMRABus_Connected: Boolean;
@@ -280,7 +285,7 @@ begin
   NMRABus.State := 0;
   NMRABus.Interrupt_State := 0;
   NMRABus.ReceivedMessages := 0;
-  GetUniqueID(NMRABus.Node_ID[1], NMRABus.Node_ID[0]);
+  GetUniqueIDFunc(NMRABus.Node_ID[1], NMRABus.Node_ID[0]);
   NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Node_ID[0];
   NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Node_ID[1];
 
@@ -498,7 +503,6 @@ procedure HandleTransmitCompleteOnNMRALayerPacket;
 var
   Packet: TCAN_Packet;
 begin
-  TXB1IF_bit := 0;                                                              // Clear Transmitter Interrupt Flag
   if CAN_Data_TxNextPacketNMRABusLayer(Packet) then
   begin
     NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_NMRABUS_LAYER;
@@ -519,7 +523,6 @@ procedure HandlePacketReceivedOnNMRABusLayer;
 var
   Packet: TCAN_Packet;
 begin
-  RXB1IF_bit := 0;
   CANReadRXBuffer(CAN_RX_1, Packet.Header, Packet.Count, Packet.Bytes, Packet.ExtendedID);         // Flags AutoReset
   if not CAN_Data_RxListAddNMRABusLayer(@Packet) then                                              // Queue the Packet into the circular recieve list
   begin
@@ -537,7 +540,6 @@ procedure HandleTransmitCompleteOnCANLayerPacket;
 var
   Packet: TCAN_Packet;
 begin
-  TXB0IF_bit := 0;                                                              // Clear Transmitter Interrupt Flag
   if CAN_Data_TxNextPacketCANLayer(Packet) then                                 // Is there a CAN Level Packet in the list ready to be transmitted?
   begin
     NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_CAN_LAYER;
@@ -557,7 +559,6 @@ procedure HandlePacketReceivedOnCANLayer;
 var
   RxPacket, TxPacket: TCAN_Packet;
 begin
-  RXB0IF_bit := 0;
   CANReadRXBuffer(CAN_RX_0, RxPacket.Header, RxPacket.Count, RxPacket.Bytes, RxPacket.ExtendedID);
 
   if NMRABus_EqualAliasID(RxPacket.Header and $00000FFF) then                   // Is the Alias equal to ours?
@@ -643,7 +644,6 @@ var
   NodeID: TNodeID;
   SendPacket: Boolean;
 begin
-  TxPacket.Header := 0;
   if CAN_Data_RxNextPacketCANLayer(RxPacket) then                               // Do we have a CAN received message waiting to be handled?
   begin
     if RxPacket.Header and FT_AMD = FT_AMD then                                 // Alias Map Definition Message
@@ -689,7 +689,7 @@ begin
     end;
 
     if (TxPacket.Header <> 0) and (NMRABus.State and BSI_TRANSMITTING_CAN_LAYER = 0) then // If a CAN Packet is transmitting the Tx Done flag will be called anyway so we don't have to set this in that case
-      TXB0IF_bit := 1;                                                          // Set Transmit Done Flag to start the Transmit Engine
+      SignalTransmitOnCANLayerFunc()                                                            // Set Transmit Done Flag to start the Transmit Engine
   end
 end;
 

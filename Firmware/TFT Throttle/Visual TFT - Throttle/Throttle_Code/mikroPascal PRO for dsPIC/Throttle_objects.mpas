@@ -32,6 +32,34 @@ type TButton = record
   OnPressPtr           : ^TOnEventPtr;
 end;
 
+type TButton_Round = record
+  OwnerScreenAddress   : ^byte;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Pen_Width            : byte;
+  Pen_Color            : word;
+  Visible              : byte;
+  Active               : byte;
+  Transparent          : byte;
+  Caption              : ^char;
+  Fontname             : ^ const far byte;
+  Font_Color           : word;
+  Gradient             : byte;
+  Gradient_Orientation : byte;
+  Gradient_Start_Color : word;
+  Gradient_End_Color   : word;
+  Color                : word;
+  PressColEnabled      : byte;
+  Press_Color          : word;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
+
 type TLabel = record
   OwnerScreenAddress   : ^byte;
   Order                : byte;
@@ -93,6 +121,18 @@ type TBox = record
   OnPressPtr           : ^TOnEventPtr;
 end;
 
+type TLine = record
+  OwnerScreenAddress   : ^byte;
+  Order                : byte;
+  First_Point_X        : word;
+  First_Point_Y        : word;
+  Second_Point_X       : word;
+  Second_Point_Y       : word;
+  Pen_Width            : byte;
+  Visible              : byte;
+  Color                : word;
+end;
+
 type TScreen = record
   Color                      : word;
   Width                      : word;
@@ -100,12 +140,16 @@ type TScreen = record
   ObjectsCount               : byte;
   ButtonsCount               : word;
   Buttons                    : ^ const code far ^TButton;
+  Buttons_RoundCount         : word;
+  Buttons_Round              : ^ const code far ^TButton_Round;
   LabelsCount                : word;
   Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;
   CLabels                    : ^ const code far ^TCLabel;
   BoxesCount                 : word;
   Boxes                      : ^ const code far ^TBox;
+  LinesCount                 : word;
+  Lines                      : ^ const code far ^TLine;
 end;
 
 implementation

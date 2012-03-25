@@ -18,13 +18,14 @@
 
 program Throttle_main;
 
-  begin
+begin
+  MCU_Setup_Initialize;
 
-    Start_TP();
+  Start_TP();
 
-    while (TRUE) do
-      begin
-        Check_TP();
-      end;
+  while (TRUE) do
+    begin
+      Check_TP();
+    end;
 
-  end.
+end.

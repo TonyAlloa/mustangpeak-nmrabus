@@ -123,6 +123,7 @@ begin
 //  RXB1IE_bit := 1;                                                              // NMRABus Layer Receive Interrupt Enable
   ERRIF_bit := 1;                                                               // CAN Error Interrupt Enable
   C1IF_bit := 0;                                                                // Clear the CAN interrupt flag
+  C1IF_bit := 1;                                                                // Clear the CAN
   C1IE_bit := 1;                                                                // Enabled the CAN 1 interrupt
 
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)

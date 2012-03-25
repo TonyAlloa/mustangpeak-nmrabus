@@ -56,15 +56,27 @@ end;
 procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
 begin
   C1IF_bit := 0;
-  while (C1CTRL and $000E) shr 1 > 0 do                                                 // Use the ICODE flags to quickly figure out who is needing attention
+  while (C1CTRL and $000E) shr 1 > 0 do                                         // Use the ICODE flags to quickly figure out who is needing attention
   begin
     case (C1CTRL and $000E) shr 1 of
       1: HandleCANError;                                                        // ERRIF and ERRIE are set
       2: begin end;                                                             // TX2IF and TX2IE are set
-      3: HandleTransmitCompleteOnNMRALayerPacket;                               // TX1IF and TX1IE are set
-      4: HandleTransmitCompleteOnCANLayerPacket;                                // TX0IF and TX0IE are set
-      5: HandlePacketReceivedOnNMRABusLayer;                                    // RX1IF and RX1IE are set
-      6: HandlePacketReceivedOnCANLayer;                                        // RX0IF and RX0IE are set
+      3: begin
+           TXB1IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
+           HandleTransmitCompleteOnNMRALayerPacket;                               // TX1IF and TX1IE are set
+         end;
+      4: begin
+           TXB0IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
+           HandleTransmitCompleteOnCANLayerPacket;                              // TX0IF and TX0IE are set
+         end;
+      5: begin
+           RXB1IF_bit := 0;                                                     // Clear Receive Interrupt Flag
+           HandlePacketReceivedOnNMRABusLayer;                                  // RX1IF and RX1IE are set
+         end;
+      6: begin
+           RXB0IF_bit := 0;
+           HandlePacketReceivedOnCANLayer;                                        // RX0IF and RX0IE are set
+         end;
       7: begin end;                                                             // WAKIF and WAKIE are set (wakeup)
     end
   end;

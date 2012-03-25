@@ -57,7 +57,9 @@ var
   CS_Bank_0_Direction               : sbit at TRISB12_bit;
   CS_Bank_1_Direction               : sbit at TRISB12_bit;
 
-  GetUniqueID: PGetUniqueIDFunc;
+  GetUniqueIDFunc: PGetUniqueIDFunc;
+  SignalTransmitOnCANLayerFunc: PSignalTransmitOnCANLayerFunc;
+  SignalTransmitOnNMRALayerFunc: PSignalTransmitOnNMRALayerFunc;
 
 
 // ****************************************************************************
@@ -70,6 +72,28 @@ procedure UniqueID(var HiID, LoID: DWord);
 begin
   LoID := MUSTANGPEAK_COMMANDSTATION_ID_0_LO;
   HiID := MUSTANGPEAK_ID_0_HI;
+end;
+
+// ****************************************************************************
+// procedure SignalTransmitOnCANLayer
+//
+//  Description:   Callback from NMRABus to start a CAN Message Transmit from the TX CAN Data Array
+//
+// ****************************************************************************
+procedure SignalTransmitOnCANLayer;
+begin
+  TXB0IF_bit := 1;
+end;
+
+// ****************************************************************************
+// procedure SignalTransmitOnNMRALayer
+//
+//  Description:   Callback from NMRABus to start a NMRA Message Transmit from the TX NMRA Data Array
+//
+// ****************************************************************************
+procedure SignalTransmitOnNMRALayer;
+begin
+  TXB1IF_bit := 1;
 end;
 
 
@@ -100,23 +124,33 @@ end;
 procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
 begin
   C1IF_bit := 0;
-  while (C1CTRL and $000E) shr 1 > 0 do                                                 // Use the ICODE flags to quickly figure out who is needing attention
+  while (C1CTRL and $000E) shr 1 > 0 do                                         // Use the ICODE flags to quickly figure out who is needing attention
   begin
     case (C1CTRL and $000E) shr 1 of
       1: HandleCANError;                                                        // ERRIF and ERRIE are set
       2: begin end;                                                             // TX2IF and TX2IE are set
-      3: HandleTransmitCompleteOnNMRALayerPacket;                               // TX1IF and TX1IE are set
-      4: HandleTransmitCompleteOnCANLayerPacket;                                // TX0IF and TX0IE are set
-      5: HandlePacketReceivedOnNMRABusLayer;                                    // RX1IF and RX1IE are set
-      6: HandlePacketReceivedOnCANLayer;                                        // RX0IF and RX0IE are set
+      3: begin
+           TXB1IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
+           HandleTransmitCompleteOnNMRALayerPacket;                               // TX1IF and TX1IE are set
+         end;
+      4: begin
+           TXB0IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
+           HandleTransmitCompleteOnCANLayerPacket;                              // TX0IF and TX0IE are set
+         end;
+      5: begin
+           RXB1IF_bit := 0;                                                     // Clear Receive Interrupt Flag
+           HandlePacketReceivedOnNMRABusLayer;                                  // RX1IF and RX1IE are set
+         end;
+      6: begin
+           RXB0IF_bit := 0;
+           HandlePacketReceivedOnCANLayer;                                        // RX0IF and RX0IE are set
+         end;
       7: begin end;                                                             // WAKIF and WAKIE are set (wakeup)
     end
   end;
 end;
 
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;         // 93us when a TransmitCompleteOnCANLayerPacket called with new Tx Packet waiting
-var
-  Flags: Byte;
 begin
   CNIF_bit := 0;     // Clear Flag
   PinChangeState := PORTF;
@@ -137,7 +171,9 @@ begin
   Track_DCC_Out_Pin_Direction := 0;      // Output
   Track_DCC_Out_Pin_Bar_Direction := 0;  // Output
   
-  GetUniqueID := @UniqueID;                                                     // Callback to access the Node's Unique ID
+  GetUniqueIDFunc := @UniqueID;                                                 // Callback to access the Node's Unique ID
+  SignalTransmitOnCANLayerFunc := @SignalTransmitOnCANLayer;
+  SignalTransmitOnNMRALayerFunc := @SignalTransmitOnNMRALayer;
 
   LATD0_bit := 0;         // Debugging output
   TRISD0_bit := 0;        // Debugging output

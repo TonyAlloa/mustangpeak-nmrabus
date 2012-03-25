@@ -1,0 +1,215 @@
+unit MCU_Setup_dsPIC33FJ256GP710A;
+
+uses
+  CAN_Data,
+  NodeIDs,
+  NMRABus;
+
+{$I Options.inc}
+
+const
+  CAN_SWJ        = 1;               // Set up for 125Khz Baud Rate with a 16Mhz Crystal
+  CAN_BRP        = 9;               // All in terms of number of Tq actual value in register will be BRP-1
+  CAN_PHASESEG_1 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_1-1
+  CAN_PHASESEG_2 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
+  CAN_PROP_SEG   = 3;               // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
+
+
+  procedure MCU_Setup_Initialize;
+
+var
+{  LockCANList: PLockListFunc;
+  UnLockCANList: PUnLockListFunc;
+  LockNMRABusList: PLockListFunc;
+  UnLockNMRABusList: PUnLockListFunc;    }
+
+  PinChangeState: Word;
+
+implementation
+
+{******************************************************************************
+ *  rx/tx buffer structure.
+ *  These buffers are located in DMA RAM and therefore are not defined as
+ *  physical registers among mcu SFRs.
+ *
+ ******************************************************************************}
+{type data_field_buffer = record
+  Data_ : array[8] of byte; // Data Field Buffer
+end;
+
+type __RxTxBuffer = record
+  CxTRBnSID  : word;        // CAN SID register
+  CxTRBnEID  : word;        // CAN EID register
+  CxTRBnDLC  : word;        // CAN DLC register
+  CxTRBnData : data_field_buffer;  // CAN DATA registers
+  CxTRBnSTAT : word;        // CAN status register
+end;      // CAN rx/tx buffer structure in DMA RAM}
+
+{******************************************************************************
+ * Set number of rx+tx buffers in DMA RAM
+ * Max is 32.
+ ******************************************************************************}
+const 
+  ECAN1RAMBUFFERSIZE = 16;      // tx+rx buffers = 16
+
+{******************************************************************************
+ * The folowing variable is a rx/tx buffer and it must be located in DMA RAM
+ * space.
+ * The absolute address should be adjusted according to the mcu used,
+ * since the DMA RAM is not located at the same addresses for mcus with 8,16
+ * and 30kB of RAM.
+ ******************************************************************************}
+const 
+  ECAN1RamStartAddress : word = 0x7800;
+
+var 
+  ECAN1RxTxRAMBuffer : array[ECAN1RAMBUFFERSIZE] of __RxTxBuffer; absolute ECAN1RamStartAddress;     // defined for mcus with 30kB of RAM
+
+     (*
+// ****************************************************************************
+// procedure LockListNMRABus
+//
+//  Description:
+//
+// ****************************************************************************
+procedure LockListNMRABus;
+begin
+  TXB1IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
+  RXB1IE_bit := 0;
+end;
+
+// ****************************************************************************
+// procedure UnlockListNMRABus
+//
+//  Description:
+//
+// ****************************************************************************
+procedure UnlockListNMRABus;
+begin
+  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
+    TXB1IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
+  TXB1IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
+  RXB1IE_bit := 1;
+end;
+
+// ****************************************************************************
+// procedure LockListCAN
+//
+//  Description:
+//
+// ****************************************************************************
+procedure LockListCAN;
+begin
+  TXB0IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
+  RXB0IE_bit := 0;
+end;
+
+// ****************************************************************************
+// procedure UnlockListCAN
+//
+//  Description:
+//
+// ****************************************************************************
+procedure UnlockListCAN;
+begin
+  if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then
+    TXB0IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
+  TXB0IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
+  RXB0IE_bit := 1;
+end;
+        *)
+        
+procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
+begin
+  T2IF_bit := 0;  // Reset the Flag
+end;
+
+procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT;
+begin
+  WIN_bit := 0;                                                                 // Access the correct Bank
+  C1IF_bit := 0;
+  TBIF_bit := 0;                                                                // TX Interrupt Flag Reset
+  RBIF_bit := 0;                                                                // RX Interrupt Flag Reset
+  while C1VEC and $007F <> $0040 do
+  begin
+    case (C1VEC and $007F) of
+      0: begin
+           // TRB0 Buffer Transmit Finished (CAN Layer)
+         end;
+      1: begin
+           // TRB1 Buffer Transmit Finished (NMRA Layer)
+         end;
+      2: begin
+           // TRB1 Buffer Received Data (CAN Layer)
+         end;
+      3: begin
+           // TRB2 Buffer Received Data (NMRA Layer)
+         end;
+    end
+  end;
+end;
+
+
+        
+procedure MCU_Setup_Initialize;
+begin
+  ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
+
+  PinChangeState := 0;
+
+  {$IFDEF UART_ENABLE}
+  // Initialize UART
+  UART1_Init(115200);                       // Initialize UART module a
+  Delay_ms(100);                            // Wait for UART module to stabilize
+
+  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
+  {$ENDIF}
+
+  SPI1_Init();       // Initialize SPI1 module
+  SPIEN_bit := 0;    // Disable SPI
+  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
+  SPI1CON := SPI1CON or $0003 or $0018;  // Setup for 5 Mhz (with the CAN plug in boards)     $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
+  SPI1IF_bit := 0;   // Clear the Flag
+  SPI1IE_bit := 1;   // Enable SPI 1 Interrupts
+  SPI1IP_0_bit := 1; // Interrupt Priority of the SPI is 1 (001)
+  SPI1IP_1_bit := 0;
+  SPI1IP_2_bit := 0;
+  SPIEN_bit := 1;    // Enable the SPI
+
+  ECAN1DmaChannelInit(0, 1, Word( @ECAN1RxTxRAMBuffer));                        // init dma channel 0 for dma to ECAN peripheral transfer
+  ECAN1DmaChannelInit(2, 0, Word( @ECAN1RxTxRAMBuffer));                        // init dma channel 2 for ECAN peripheral to dma transfer
+  ECAN1Initialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _ECAN_CONFIG_SAMPLE_THRICE and _ECAN_CONFIG_PHSEG2_PRG_ON and _ECAN_CONFIG_XTD_MSG);   // Initialize external CANSPI module
+  ECAN1SetBufferSize(ECAN1RAMBUFFERSIZE);                                       // set number of rx+tx buffers in DMA RAM
+  ECAN1SelectTxBuffers(0x0003);                                                 // select transmit buffers 0x0003 = buffers 0 and 1 are transmit buffers (0 = CAN Layer, 1 = NMRA Layer)
+  ECAN1SetOperationMode(_ECAN_MODE_CONFIG, 0xFF);                               // set CONFIGURATION mode
+  ECAN1SetMask(_ECAN_MASK_0, LongInt($08000000), _ECAN_CONFIG_MATCH_MSG_TYPE and _ECAN_CONFIG_XTD_MSG);   // Filter on bit 27 to distinguish between a CAN Layer and NMRA Layer packet
+  ECAN1SetFilter(_ECAN_FILTER_0, LongInt($00000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_2, _ECAN_CONFIG_XTD_MSG);   // Filter 0 is set to filter on bit 27 (MASK 0) if it a "0" (CAN Layer).  Buffer 0-1 are TX buffers so start with RX_Buffer_2.
+  ECAN1SetFilter(_ECAN_FILTER_1, LongInt($08000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_3, _ECAN_CONFIG_XTD_MSG);   // Filter 1 is set to filter on bit 27 (MASK 0) if it a "1" (NMRA Layer).  Buffer 0-1 are TX buffers so start with RX_Buffer_2.
+  ECAN1SetOperationMode(_ECAN_MODE_NORMAL,0xFF);                                // set NORMAL mode
+  WIN_bit := 0;                                                                 // Set Bank to access Interrupt Bits
+  TBIF_bit := 0;                                                                // TX Interrupt ag Reset
+  RBIF_bit := 0;                                                                // RX Interrupt Flag Reset
+  TBIE_bit := 1;                                                                // TX Interrupt Enable
+  RBIE_bit := 1;                                                                // RX Interrupt Enable
+  C1IF_bit := 0;                                                                // Clear the CAN 1 Interrupt Flag
+  C1IE_bit := 1;                                                                // Enable CAN 1 Event Interrupts (not Rx Ready or TX Complete Interrupts
+
+  T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
+  T2IP_1_bit := 1;
+  T2IP_2_bit := 0;
+  PR2 := 20000;             // Clock ticks every 50ns * 20000 = 1ms interrupts
+  T2IF_bit := 0;            // Clear T2IF
+  T2IE_bit := 1;            // Enable the Interrupt
+  TON_T2CON_bit := 1;       // Turn on
+
+
+ { LockCANList := @LockListCAN;
+  UnLockCANList := @UnLockListCAN;
+  LockNMRABusList := @LockListNMRABus;
+  UnLockNMRABusList := @UnLockListNMRABus; }
+
+  PinChangeState := PORTF;
+
+end;
+
+end.
