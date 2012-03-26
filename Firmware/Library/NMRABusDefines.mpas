@@ -1,0 +1,93 @@
+unit NMRABusDefines;
+
+{$I Options.inc}
+
+const
+  MAX_BUS_LOGIN_TIMEOUT = 51;              // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
+
+  CAN_TX_0 = 0;
+  CAN_TX_1 = 1;
+  CAN_TX_2 = 2;
+
+  CAN_RX_0 = 0;
+  CAN_RX_1 = 1;
+
+  CAN_TX_PRIORITY_0 = 0;
+  CAN_TX_PRIORITY_1 = 1;
+  CAN_TX_PRIORITY_2 = 2;
+  CAN_TX_PRIORITY_3 = 3;
+
+// *****************************************************************************
+//  Extended CAN Frames
+//  29 Bits Divided as follows:
+//     - 1 Bit = Priority (1 = Low Priority typical)
+//     - 4 Bits = Frame Type (FT_xxxx Constants)
+//     - 12 Bits = Destination Node Address Alias or Message Type (MT_xxx Constants)
+//     - 12 Bits = Source Node Address Alias
+//
+// Frame Types.  These define what the Frame of the CAN message consists of.
+const
+  FT_CAN                            = $00000000;  // Frame Type CAN Control Message
+  FT_CID0                           = $07000000;  // First 12 Bits of 48 bit Node ID
+  FT_CID1                           = $06000000;  // 2rd 12 Bits of 48 bit Node ID
+  FT_CID2                           = $05000000;  // 3nd 12 Bits of 48 bit Node ID
+  FT_CID3                           = $04000000;  // Last 12 Bits of 48 bit Node ID
+  FT_CID_MASK                       = $07000000;
+  FT_RID                            = $00700000;  // Reserve ID
+  FT_AMD                            = $00701000;  // Alias Map Definition
+  FT_AME                            = $00702000;  // Alias Mapping Enquiry
+  FT_AMR                            = $00703000;  // Alias Map Reset Frame
+
+
+  FT_INITIALIZATION_COMPLETE        = $09017000;
+  FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
+  FT_VERIFY_NODE_ID_NUMBER_NO_DEST  = $080A7000;
+  FT_VERIFIED_NODE_ID_NUMBER        = $080B7000;
+  FT_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
+  FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
+
+  FT_BROADCAST_1     = $08;  // Broadcast Message
+  FT_BROADCAST_2     = $09;  // Broadcast Message again....
+  FT_DATAGRAM_FIRST  = $0C;  // First Frame of Datagram
+  FT_DATAGRAM_LAST   = $0D;  // Last Frame of Datagram
+  FT_DATAGRAM_SINGLE = $0E;  // Single Frame Datagram
+  FT_STREAM          = $0F;  // Stream Data
+
+  // NMRABus States
+  BS_PERMITED          = $01;    // CAN Frame Layer is permitted (Node ID's resolved with bus)
+  BS_INITIALIZED       = $02;    // Message Layer has sent its first Initialize Complete Message
+
+  BSI_TRANSMITTING_CAN_LAYER      = $01;     // The CAN Transmit engine is placing a CAN Layer packet on the Bus
+  BSI_TRANSMITTING_NMRABUS_LAYER  = $02;     // The CAN Transmit engine is placing a NRMABus Layer packet on the Bus
+  BSI_TRANSMITTING_ANY_LAYER      =  BSI_TRANSMITTING_CAN_LAYER or BSI_TRANSMITTING_NMRABUS_LAYER;
+
+  BRM_CID0                        = $0001;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID1                        = $0002;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID2                        = $0004;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_CID3                        = $0008;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
+  BRM_RID                         = $0010;   // Received a Reserve ID Frame
+  BRM_AMD                         = $0020;   // Received a Alias Map Definition Frame
+  BRM_AME                         = $0040;   // Received a Alias Mapping Enquiry Frame
+  BRM_AMR                         = $0080;   // Received a Alias Map Reset Frame
+
+type
+  TNodeID = array[0..1] of DWORD;    // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
+  TNodeAliasID = Word;
+
+
+  TNMRABus = record
+    Node_ID: TNodeID;                // Unique 48 Bit ID for Node
+    Unique_ID_Global_Seed: TNodeID;  // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
+    Node_Alias_ID: TNodeAliasID;     // 12 Bit Alias ID
+    BusLoginCount: Integer;          // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
+    State: Word;                     // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
+    Interrupt_State: Byte;           // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
+    ReceivedMessages: Word;          // Allows tracking what messages have been received.  Use the BRM_xxxx flags.  The user may clear these states and wait until it is set but be aware they may set in the interrupts
+  end;
+  
+var
+  NMRABus: TNMRABus;
+
+implementation
+
+end.

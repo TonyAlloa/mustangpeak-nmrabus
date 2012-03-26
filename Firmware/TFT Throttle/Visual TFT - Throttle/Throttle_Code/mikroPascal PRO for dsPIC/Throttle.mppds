@@ -16,7 +16,7 @@ Value=0
 [HEAP_SIZE]
 Value=2000
 [FILES]
-Count=9
+Count=13
 File0=Throttle_main.mpas
 File1=Throttle_objects.mpas
 File2=Throttle_driver.mpas
@@ -26,20 +26,25 @@ File5=MCU_Setup_dsPIC33FJ256GP710A.mpas
 File6=..\..\..\..\Library\NodeIDs.mpas
 File7=..\..\..\..\Library\CAN_Data.mpas
 File8=..\..\..\..\Library\NMRABus.mpas
+File9=ECan_Defs.mpas
+File10=..\..\..\..\Library\NMRABusUtilities.mpas
+File11=..\..\..\..\Library\NMRABusDefines.mpas
+File12=..\..\..\..\Library\CANStorage.mpas
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=7
+Count=8
 File0=Throttle_main.mpas
 File1=MCU_Setup_dsPIC33FJ256GP710A.mpas
 File2=..\..\..\..\Library\NMRABus.mpas
 File3=..\..\..\..\Library\CAN_Data.mpas
-File4=..\..\..\..\Library\NodeIDs.mpas
-File5=ECAN_Defs.mpas
-File6=..\..\..\NMRABus_TFT_Throttle.mpas
+File4=ECan_Defs.mpas
+File5=..\..\..\..\Library\NMRABusUtilities.mpas
+File6=..\..\..\..\Library\NMRABusDefines.mpas
+File7=..\..\..\..\Library\CANStorage.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -48,7 +53,7 @@ Count=0
 Count=0
 [SEARCH_PATH]
 Count=4
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
 Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
 Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
@@ -71,4 +76,5 @@ File7=Conversions
 File8=ECAN
 [EXPANDED NODES]
 Node1=Sources
-Count=1
+Node2=Output Files
+Count=2

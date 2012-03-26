@@ -1,9 +1,11 @@
 unit MCU_Setup_dsPIC33FJ256GP710A;
 
 uses
+  Throttle_driver,
   CAN_Data,
   NodeIDs,
   ECAN_Defs,
+  NMRABusDefines,
   NMRABus;
 
 {$I Options.inc}
@@ -19,14 +21,28 @@ const
   procedure MCU_Setup_Initialize;
 
 var
-{  LockCANList: PLockListFunc;
+  LockCANList: PLockListFunc;
   UnLockCANList: PUnLockListFunc;
   LockNMRABusList: PLockListFunc;
-  UnLockNMRABusList: PUnLockListFunc;    }
+  UnLockNMRABusList: PUnLockListFunc;
+  SignalTransmitOnCANLayerFunc: PSignalTransmitOnCANLayerFunc;
+  SignalTransmitOnNMRALayerFunc: PSignalTransmitOnNMRALayerFunc;
 
   PinChangeState: Word;
 
 implementation
+
+// ****************************************************************************
+// procedure UnlockListCAN
+//
+//  Description:
+//
+// ****************************************************************************
+procedure SignalTransmitOnLayerFunc;
+begin
+  TBIF_bit := 1;  // Will this work????
+  C1IF_bit := 1;
+end;
 
 // ****************************************************************************
 // procedure LockListNMRABus
@@ -36,8 +52,8 @@ implementation
 // ****************************************************************************
 procedure LockListNMRABus;
 begin
-//  TXB1IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
-//  RXB1IE_bit := 0;
+  TBIE_bit := 0;                                                                // TX Interrupt Disable
+  RBIE_bit := 0;                                                                // RX Interrupt Disable
 end;
 
 // ****************************************************************************
@@ -48,12 +64,10 @@ end;
 // ****************************************************************************
 procedure UnlockListNMRABus;
 begin
-// PROBLEM WITH ECAN, I can't modify the ICODE so I can't trigger a start.... I don't think
-
- // if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
- //   TXB1IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
- // TXB1IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
- // RXB1IE_bit := 1;
+  TBIE_bit := 1;                                                                // TX Interrupt Enable
+  RBIE_bit := 1;                                                                // RX Interrupt Enable
+  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
+    SignalTransmitOnLayerFunc                                                   // Set Transmit Done Flag to start the Transmit Engine
 end;
 
 // ****************************************************************************
@@ -64,8 +78,8 @@ end;
 // ****************************************************************************
 procedure LockListCAN;
 begin
- // TXB0IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
- // RXB0IE_bit := 0;
+  TBIE_bit := 0;                                                                // TX Interrupt Disable
+  RBIE_bit := 0;                                                                // RX Interrupt Disable
 end;
 
 // ****************************************************************************
@@ -76,50 +90,17 @@ end;
 // ****************************************************************************
 procedure UnlockListCAN;
 begin
-  // PROBLEM WITH ECAN, I can't modify the ICODE so I can't trigger a start.... I don't think
-  
- // if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then
-  //  TXB0IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
- // TXB0IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
- // RXB0IE_bit := 1;
+  TBIE_bit := 1;                                                                // TX Interrupt Enable
+  RBIE_bit := 1;                                                                // RX Interrupt Enable
+  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
+    SignalTransmitOnLayerFunc                                                   // Set Transmit Done Flag to start the Transmit Engine
 end;
 
-        
 procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 begin
   T2IF_bit := 0;  // Reset the Flag
 end;
 
-procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT;
-begin  
-
-  LATG3_bit := not LATG3_bit;
-
-  WIN_bit := 0;                                                                 // Access the correct Bank
-  C1IF_bit := 0;
-  TBIF_bit := 0;                                                                // TX Interrupt Flag Reset
-  RBIF_bit := 0;                                                                // RX Interrupt Flag Reset
-  while C1VEC and $007F <> $0040 do
-  begin
-    case (C1VEC and $007F) of
-      0: begin
-           // TRB0 Buffer Transmit Finished (CAN Layer)
-         end;
-      1: begin
-           // TRB1 Buffer Transmit Finished (NMRA Layer)
-         end;
-      2: begin
-           // TRB1 Buffer Received Data (CAN Layer)
-         end;
-      3: begin
-           // TRB2 Buffer Received Data (NMRA Layer)
-         end;
-    end
-  end;
-end;
-
-
-        
 procedure MCU_Setup_Initialize;
 begin
   ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
@@ -128,6 +109,13 @@ begin
   TRISG3_bit := 0;
 
   PinChangeState := 0;
+  
+  LockCANList := @LockListCAN;
+  UnLockCANList := @UnLockListCAN;
+  LockNMRABusList := @LockListNMRABus;
+  UnLockNMRABusList := @UnLockListNMRABus;
+  SignalTransmitOnCANLayerFunc := @SignalTransmitOnLayerFunc;
+  SignalTransmitOnNMRALayerFunc := @SignalTransmitOnLayerFunc;
 
   {$IFDEF UART_ENABLE}
   // Initialize UART
@@ -148,8 +136,8 @@ begin
   SPI1IP_2_bit := 0;
   SPIEN_bit := 1;    // Enable the SPI
 
-  ECAN1DmaChannelInit(0, 1, Word( @ECAN1RxTxRAMBuffer));                        // init dma channel 0 for dma to ECAN peripheral transfer
-  ECAN1DmaChannelInit(2, 0, Word( @ECAN1RxTxRAMBuffer));                        // init dma channel 2 for ECAN peripheral to dma transfer
+  ECAN1DmaChannelInit(0, 1, Word( @ECAN1RxTxRAMBuffer));                        // init dma channel 0 for dma to ECAN peripheral transfer   TX
+  ECAN1DmaChannelInit(2, 0, Word( @ECAN1RxTxRAMBuffer));                        // init dma channel 2 for ECAN peripheral to dma transfer   RX
   ECAN1Initialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _ECAN_CONFIG_SAMPLE_THRICE and _ECAN_CONFIG_PHSEG2_PRG_ON and _ECAN_CONFIG_XTD_MSG);   // Initialize external CANSPI module
   ECAN1SetBufferSize(ECAN1RAMBUFFERSIZE);                                       // set number of rx+tx buffers in DMA RAM
   ECAN1SelectTxBuffers(0x0003);                                                 // select transmit buffers 0x0003 = buffers 0 and 1 are transmit buffers (0 = CAN Layer, 1 = NMRA Layer)
@@ -177,11 +165,6 @@ begin
   T2IE_bit := 1;            // Enable the Interrupt
   TON_T2CON_bit := 1;       // Turn on
 
-
- { LockCANList := @LockListCAN;
-  UnLockCANList := @UnLockListCAN;
-  LockNMRABusList := @LockListNMRABus;
-  UnLockNMRABusList := @UnLockListNMRABus; }
 
   PinChangeState := PORTF;
 

@@ -1,0 +1,214 @@
+unit NMRABusUtilities;
+
+{$I Options.inc}
+
+uses
+  NMRABusDefines,
+  CAN_Data;
+
+
+procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCAN_Packet);
+procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCAN_Packet);
+procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCAN_Packet);
+procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCAN_Packet; var NodeID: TNodeID);
+function NMRABusUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
+function NMRABusUtilities_EqualAliasID(AliasID: Word): Boolean;
+procedure NMRABusUtilities_LoadNodeID(var NodeID: TNodeID; Upper, Lower: DWORD);
+procedure NMRABusUtilities_PsudoRandomNumberGenerator;
+function NMRABusUtilities_GenerateID_Alias_From_Global_Seed: Word;
+procedure NMRABusUtilities_CreateAliasID(Regenerate: Boolean);
+procedure NMRABusUtilities_RecreateAliasID;
+
+
+implementation
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCAN_Packet);
+begin
+  Packet^.Count := 6;
+  Packet^.Bytes[0] := NMRABus.Node_ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
+  Packet^.Bytes[1] := NMRABus.Node_ID[1] shr 8;
+  Packet^.Bytes[2] := NMRABus.Node_ID[1];
+  Packet^.Bytes[3] := NMRABus.Node_ID[0] shr 16;
+  Packet^.Bytes[4] := NMRABus.Node_ID[0] shr 8;
+  Packet^.Bytes[5] := NMRABus.Node_ID[0];
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_CreateCANControlFramePacket
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCAN_Packet);
+begin
+  Packet^.Count := 0;
+  Packet^.ExtendedID := True;
+  Packet^.Header := $10000000 or VariableField or NMRABus.Node_Alias_ID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
+  if VariableField = FT_CID0 then Packet^.Header := Packet^.Header or (NMRABus.Node_ID[1] and $00FFF000) else
+  if VariableField = FT_CID1 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
+  if VariableField = FT_CID2 then Packet^.Header := Packet^.Header or (NMRABus.Node_ID[0] and $00FFF000) else
+  if VariableField = FT_CID3 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
+
+  if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
+    NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_CreateNMRABusMessagePacket
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCAN_Packet);
+begin
+  Packet^.Count := 0;
+  Packet^.ExtendedID := True;
+  if DestinationAliasID <> 0 then 
+    Packet^.Header := Packet^.Header or (DestinationAliasID shl 12);
+  Packet^.Header := $10000000 or VariableField or NMRABus.Node_Alias_ID;
+
+  if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
+    NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
+end;
+
+// *****************************************************************************
+//  function NMRABusUtilities_PacketBytesToNodeID
+//     Parameters:
+//     Returns:
+//
+//     Description: Extracts the NodeID from the 8 CAN bytes in the passed Packet
+//  Requires that the packet contains a valid NodeID in the bytes.
+//
+// *****************************************************************************
+procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCAN_Packet; var NodeID: TNodeID);
+begin
+  NodeID[0] := Packet^.Bytes[0];
+  NodeID[0] := NodeID[0] or Packet^.Bytes[1] shl 8;
+  NodeID[0] := NodeID[0] or Packet^.Bytes[2] shl 16;
+  NodeID[1] := Packet^.Bytes[3];
+  NodeID[1] := NodeID[1] or Packet^.Bytes[4] shl 8;
+  NodeID[1] := NodeID[1] or Packet^.Bytes[5] shl 16;
+end;
+
+// *****************************************************************************
+//  function NMRABusUtilities_EqualAliasID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
+begin
+  Result := (NodeID[1] = NMRABus.Node_ID[1]) and (NodeID[0] = NMRABus.Node_ID[0])
+end;
+
+// *****************************************************************************
+//  function NMRABusUtilities_EqualAliasID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusUtilities_EqualAliasID(AliasID: Word): Boolean;
+begin
+  Result := AliasID = NMRABus.Node_Alias_ID
+end;
+
+// *****************************************************************************
+//  procedure LoadNodeID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_LoadNodeID(var NodeID: TNodeID; Upper, Lower: DWORD);
+begin
+  NodeID[0] := Lower;
+  NodeID[1] := Upper;
+end;
+
+// *****************************************************************************
+//  procedure PsudoRandomNumberGenerator
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_PsudoRandomNumberGenerator;
+var
+  temp1,              // Upper 24 Bits of temp 48 bit number
+  temp2: DWORD;       // Lower 24 Bits of temp 48 Bit number
+begin
+  temp1 := ((NMRABus.Unique_ID_Global_Seed[1] shl 9) or ((NMRABus.Unique_ID_Global_Seed[0] shr 15) and $000001FF)) and $00FFFFFF;   // x(i+1)(2^9 + 1)*x(i) + C  = 2^9 * x(i) + x(i) + C
+  temp2 := (NMRABus.Unique_ID_Global_Seed[0] shl 9) and $00FFFFFF;                                                                  // Calculate 2^9 * x
+
+  NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Unique_ID_Global_Seed[0] + temp2 + $7A4BA9;   // Now y = 2^9 * x so all we have left is x(i+1) = y + x + c
+  NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Unique_ID_Global_Seed[1] + temp1 + $1B0CA3;
+
+  NMRABus.Unique_ID_Global_Seed[1] := (NMRABus.Unique_ID_Global_Seed[1] and $00FFFFFF) or (NMRABus.Unique_ID_Global_Seed[0] and $FF000000) shr 24;   // Handle the carries of the lower 24 bits into the upper
+  NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Unique_ID_Global_Seed[0] and $00FFFFFF;
+end;
+
+// *****************************************************************************
+//  function NMRABusUtilities_GenerateID_Alias_From_Global_Seed
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusUtilities_GenerateID_Alias_From_Global_Seed: Word;
+begin
+  Result := (NMRABus.Unique_ID_Global_Seed[0] xor NMRABus.Unique_ID_Global_Seed[1] xor (NMRABus.Unique_ID_Global_Seed[0] shr 12) xor (NMRABus.Unique_ID_Global_Seed[1] shr 12)) and $00000FFF;
+end;
+
+// *****************************************************************************
+//  procedure CreateAliasID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_CreateAliasID(Regenerate: Boolean);
+begin
+  if Regenerate then
+    NMRABusUtilities_PsudoRandomNumberGenerator;
+  NMRABus.Node_Alias_ID := NMRABusUtilities_GenerateID_Alias_From_Global_Seed;
+  if NMRABus.Node_Alias_ID = 0 then
+  begin
+    NMRABusUtilities_PsudoRandomNumberGenerator;
+    NMRABus.Node_Alias_ID := NMRABusUtilities_GenerateID_Alias_From_Global_Seed;
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_RecreateAliasID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_RecreateAliasID;
+begin
+  NMRABusUtilities_CreateAliasID(True)
+end;
+
+end.

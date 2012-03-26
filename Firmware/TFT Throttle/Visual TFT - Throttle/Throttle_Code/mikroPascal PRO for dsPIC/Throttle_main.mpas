@@ -18,14 +18,55 @@
 
 program Throttle_main;
 
+const
+  ID_1st : DWord = $08002F4F;          // TESTING ONLY
+  ID_2nd : DWord = $08000003;          // TESTING ONLY
+
+procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT;
+begin
+  WIN_bit := 0;                                                                 // Access the correct Bank
+  C1IF_bit := 0;
+  while (C1VEC and $007F) <> $0040 do
+  begin
+  
+  LATG3_bit := 1;
+  
+  
+    case (C1VEC and $007F) of
+      0: begin
+           // TRB0 Buffer Transmit Finished (CAN Layer)
+           TBIF_bit := 0;                                                       // TX Interrupt Flag Reset
+           HandleTransmitCompleteOnCANLayerPacket;
+         end;
+      1: begin
+           // TRB1 Buffer Transmit Finished (NMRA Layer)
+           TBIF_bit := 0;                                                       // TX Interrupt Flag Reset
+           HandleTransmitCompleteOnNMRALayerPacket;                             //
+         end;
+      2: begin
+           // TRB1 Buffer Received Data (CAN Layer)
+           RBIF_bit := 0;                                                       // RX Interrupt Flag Reset
+           HandlePacketReceivedOnCANLayer;
+         end;
+      3: begin
+           // TRB2 Buffer Received Data (NMRA Layer)
+           RBIF_bit := 0;                                                       // RX Interrupt Flag Reset
+           HandlePacketReceivedOnNMRABusLayer;
+         end;
+    end
+  end;
+end;
+
 var
   GetUniqueIDFunc: PGetUniqueIDFunc;
+
   Can_Init_Flags, Can_Send_Flags, Can_Rcv_Flags : word; // can flags
   Rx_Data_Len  : word;                                  // received data length in bytes
   RxTx_Data    : array[8] of byte;                      // can rx/tx data buffer
   Msg_Rcvd, Cnt     : word;                                  // reception flag
   Rx_ID        : longint;
   s1: array[0..4] of Char;
+  Packet: TCAN_Packet;
 
 // ****************************************************************************
 // procedure UniqueID
@@ -39,40 +80,169 @@ begin
   HiID := MUSTANGPEAK_ID_0_HI;
 end;
 
+// ****************************************************************************
+// procedure SignalTransmitOnLayerFunc
+//
+//  Description:   Callback from NMRABus
+//
+// ****************************************************************************
+
+var
+  BufferArray: array[6] of TCANRawBuffer;
+  TXBuffer: TCANRawBufferList;
+  ID: DWORD;
+  DataCount: Byte;
+  DataBytes: TCAN_DataBytes;
+  Priority: Byte;
+  IsExtended: Boolean;
+
 begin
+  CANStorage_InitializeList(@TXBuffer, @BufferArray, @BufferArray[5]);
+  
+  ID := $1FFFFFFF;
+  DataCount := 8;
+  DataBytes[0] := $01;
+  DataBytes[1] := $02;
+  DataBytes[2] := $03;
+  DataBytes[3] := $04;
+  DataBytes[4] := $05;
+  DataBytes[5] := $06;
+  DataBytes[6] := $07;
+  DataBytes[7] := $08;
+  Priority := 4;
+  IsExtended := True;
+  CANStorage_LoadTransmitterBuffer(@TXBuffer, ID, DataCount, DataBytes, Priority, IsExtended);
+  
+  ID := $00000000;
+  DataCount := 0;
+  DataBytes[0] := $00;
+  DataBytes[1] := $00;
+  DataBytes[2] := $00;
+  DataBytes[3] := $00;
+  DataBytes[4] := $00;
+  DataBytes[5] := $00;
+  DataBytes[6] := $00;
+  DataBytes[7] := $00;
+  Priority := 0;
+  IsExtended := False;
+  
+  Tail does not work here.....
+  
+  CANStorage_ReadReceiverBuffer(@TXBuffer, ID, DataCount, DataBytes, IsExtended);
+
   GetUniqueIDFunc := @UniqueID;                                                 // Callback to access the Node's Unique ID
+
   MCU_Setup_Initialize;
   NMRABus_Initialize;
-  
- // while true do
-  begin
-    ECAN1Write($0002, RxTx_Data, 8, _ECAN_TX_PRIORITY_0 and _ECAN_TX_XTD_FRAME and _ECAN_TX_NO_RTR_FRAME);  // send initial message
-    delay_ms(10);
-  end;
-
   Start_TP();
+  
+  
   Can_Rcv_Flags  := 0;
   Cnt := 0;
-  IntToHex(C1CFG1, s1);
+  
+{  WordToHex(DMA0CON, s1);
   strcpy(ButtonRoundF18.Caption, s1);
-  IntToHex(C1CFG2, s1);
-  strcpy(ButtonRoundF19.Caption, s1);
   DrawRoundButton(@ButtonRoundF18);
+  
+  WordToHex(DMA2CON, s1);
+  strcpy(ButtonRoundF19.Caption, s1);
   DrawRoundButton(@ButtonRoundF19);
-  IntToHex(Cnt, s1);
+  
+  WordToHex(DMA0REQ, s1);
   strcpy(ButtonRoundF20.Caption, s1);
   DrawRoundButton(@ButtonRoundF20);
+  
+  WordToHex(DMA0STA, s1);
+  strcpy(ButtonRoundF21.Caption, s1);
+  DrawRoundButton(@ButtonRoundF21);
+  
+  WordToHex(DMA0STB, s1);
+  strcpy(ButtonRoundF22.Caption, s1);
+  DrawRoundButton(@ButtonRoundF22);
+  
+  WordToHex(DMA0PAD, s1);
+  strcpy(ButtonRoundF23.Caption, s1);
+  DrawRoundButton(@ButtonRoundF23);
+  
+  WordToHex(DMA2PAD, s1);
+  strcpy(ButtonRoundF24.Caption, s1);
+  DrawRoundButton(@ButtonRoundF24);
 
+  WordToHex(DMA0CNT, s1);
+  strcpy(ButtonRoundF25.Caption, s1);
+  DrawRoundButton(@ButtonRoundF25); }
+  
+ // DMA2PAD := DMA2PAD + $100;
+  
+  WordToHex(DMA2STA, s1);
+  strcpy(ButtonRoundF18.Caption, 'DMA2STA: ' + s1);
+  DrawRoundButton(@ButtonRoundF18);
+  WordToHex(DMA2PAD, s1);
+  strcpy(ButtonRoundF19.Caption, 'DMA2PAD: ' + s1);
+  DrawRoundButton(@ButtonRoundF19);
+  
+  ECAN1RxTxRAMBuffer[0].CxTRBnSID := 0;
+  ECAN1RxTxRAMBuffer[1].CxTRBnSID := 0;
+  ECAN1RxTxRAMBuffer[2].CxTRBnSID := 0;
+  ECAN1RxTxRAMBuffer[3].CxTRBnSID := 0;
+  
+  
+while true do
+begin
+
+
+  WordToHex(ECAN1RxTxRAMBuffer[0].CxTRBnSID, s1);
+  strcpy(ButtonRoundF23.Caption, s1);
+  DrawRoundButton(@ButtonRoundF23);
+  
+  WordToHex(ECAN1RxTxRAMBuffer[1].CxTRBnSID, s1);
+  strcpy(ButtonRoundF24.Caption, s1);
+  DrawRoundButton(@ButtonRoundF24);
+  
+  WordToHex(ECAN1RxTxRAMBuffer[2].CxTRBnSID, s1);
+  strcpy(ButtonRoundF25.Caption, s1);
+  DrawRoundButton(@ButtonRoundF25);
+  
+  WordToHex(ECAN1RxTxRAMBuffer[3].CxTRBnSID, s1);
+  strcpy(ButtonRoundF26.Caption, s1);
+  DrawRoundButton(@ButtonRoundF26);
+  
+  if CAN_Data_RxNextPacketNMRABusLayer(Packet) then
+  begin
+  end;
+end;
+
+  NMRABus_Connect;
   while (TRUE) do
+  begin
+    Check_TP();
+    
+    if not NMRABus_Connected then
     begin
-      Check_TP();
-      if ECAN1Read(Rx_ID , RxTx_Data , Rx_Data_Len, Can_Rcv_Flags) then
-      begin
-         Inc(Cnt);
-         IntToHex(Cnt, s1);
-         strcpy(ButtonRoundF20.Caption, s1);
-          DrawRoundButton(@ButtonRoundF20);
-      end;
+      NMRABusUtilities_RecreateAliasID;
+      NMRABus_Connect;
     end;
+    
+    if NMRABus_Connected then
+    begin
+      while NMRABus_Connected do
+      begin
+        HandleLoPriorityReceivedCANLayerPackets;
+        HandleLoPriorityReceivedNMRABusLayerPackets;
+
+        if CAN_Data_RxNextPacketNMRABusLayer(Packet) then
+        begin
+          if Packet.Header = ID_1st then                                          // Message was received (interrupt) if it is ours then ...
+          begin
+            PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
+            Inc(Packet.Bytes[0]);
+            Delay_ms(1000);
+            CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
+            CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
+          end
+        end
+      end
+    end
+  end;
 
 end.
