@@ -39,7 +39,7 @@ type
   end;
   PCANRawBufferList = ^TCANRawBufferList;
   
-function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; var ID: DWord; var DataCount: Byte; var DataBytes: TCAN_DataBytes; Priority: Byte; IsExtended: Boolean): Boolean;
+function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; ID: DWord; DataCount: Byte; var DataBytes: TCAN_DataBytes; Priority: Byte; IsExtended: Boolean): Boolean;
 function CANStorage_ReadReceiverBuffer(List: PCANRawBufferList; var ID: DWord; var DataCount: Byte; var DataBytes: TCAN_DataBytes; IsExtended: Boolean): Boolean;
 procedure CANStorage_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; LastBufferPtr: PCANRawBuffer);
   
@@ -224,7 +224,7 @@ end;
 //     Description:   Loads the passed paramters into the next empty Buffer FIFO list
 //
 // *****************************************************************************
-function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; var ID: DWord; var DataCount: Byte; var DataBytes: TCAN_DataBytes; Priority: Byte; IsExtended: Boolean): Boolean;
+function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; ID: DWord; DataCount: Byte; var DataBytes: TCAN_DataBytes; Priority: Byte; IsExtended: Boolean): Boolean;
 var
   Head: PCANRawBuffer;
 begin

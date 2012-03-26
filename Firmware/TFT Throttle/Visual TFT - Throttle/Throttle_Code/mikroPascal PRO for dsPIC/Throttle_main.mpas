@@ -126,7 +126,7 @@ begin
   Priority := 0;
   IsExtended := False;
   
-  Tail does not work here.....
+//  Tail does not work here.....
   
   CANStorage_ReadReceiverBuffer(@TXBuffer, ID, DataCount, DataBytes, IsExtended);
 
