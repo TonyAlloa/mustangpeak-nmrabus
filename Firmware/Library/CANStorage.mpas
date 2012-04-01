@@ -2,6 +2,10 @@ unit CANStorage;
 
 {$I Options.inc}
 
+const
+  CAN_DIRECTION_READ = 1;
+  CAN_DIRECTION_WRITE = 0;
+
 type
   TCAN_DataBytes = array[8] of Byte;
   PCAN_DataBytes = ^TCAN_DataBytes;
@@ -24,6 +28,18 @@ type
   end;
   PCANRawBuffer = ^TCANRawBuffer;
   
+ // ***************************************************************************
+  // CAN Message Buffers in user friendly form that can be easily maniuplated then
+  // loaded into the Raw CAN FIFOs
+  // ***************************************************************************
+  TCANBuffer = record
+    ID: DWord;
+    DataCount: Byte;
+    DataBytes: TCAN_DataBytes;
+    IsExtended: Boolean;
+  end;
+  PCANBuffer = ^TCANBuffer;
+  
 const
   RAWBUFFERSIZE = SizeOf(TCANRawBuffer);
   
@@ -39,12 +55,47 @@ type
   end;
   PCANRawBufferList = ^TCANRawBufferList;
   
-function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; ID: DWord; DataCount: Byte; var DataBytes: TCAN_DataBytes; Priority: Byte; IsExtended: Boolean): Boolean;
-function CANStorage_ReadReceiverBuffer(List: PCANRawBufferList; var ID: DWord; var DataCount: Byte; var DataBytes: TCAN_DataBytes; IsExtended: Boolean): Boolean;
+
+function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; var Buffer: TCANBuffer; Priority: Word): Boolean;
+function CANStorage_ReadReceiverBuffer(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 procedure CANStorage_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; LastBufferPtr: PCANRawBuffer);
+function CANStorage_InitTransmit(ListPtr: PCANRawBufferList): Boolean;
   
 implementation
 
+// *****************************************************************************
+//  procedure CANStorage_InitTransmit;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description: Transfers the message from the queue to the CAN bus
+// *****************************************************************************
+function CANStorage_InitTransmit(ListPtr: PCANRawBufferList): Boolean;
+begin
+  Result := False;
+  {$IFDEF dsPIC33} 
+    // Setup Priority, TXREQ, and align DMA/CAN Module to the Buffer.  IF there is not a transmit in progress that will call the interrupt and auto load the next buffer
+  {$ELSE}
+  {$IFDEF dsPIC30} 
+   // Setup Priority, TXREQ, and align DMA/CAN Module to the Buffer.  IF there is not a transmit in progress that will call the interrupt and auto load the next buffer
+  {$ELSE}
+    Error; (*ERROR:  You must define either dsPIC33 or dsPIC30 in your options file*)
+  {$ENDIF} {$ENDIF}
+end;
+
+// *****************************************************************************
+//  procedure CANStorage_InitializeList;
+//
+//  Parameters: ListPtr        : Pointer to the FIFO buffer Lists
+//              BufferArrayPtr : Pointer to the first item in the RawBufferArray
+//              LasterBuffer   : Pointer to the last item in the RawBufferArray
+//
+//  Result:
+//
+//  Description: Initializes a FIFO Buffer Array
+// *****************************************************************************
 procedure CANStorage_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; LastBufferPtr: PCANRawBuffer);
 begin
   ListPtr^.Buffers := BufferArrayPtr;
@@ -60,19 +111,18 @@ end;
 //     Returns: Pointer to the Next Buffer if available, nil if no buffers are available
 //
 //     Description:   Returns the Next Item in the List available for filling
+//                    NOTE: This will not return item 0 for an empty list it will
+//                          always return item 1 as the first item used in the list....
 //
 // *****************************************************************************
 function NextHead(List: PCANRawBufferList): PCANRawBuffer;
 begin
   Result := List^.HeadPtr;                                                      // Take the current head
-  if List^.HeadPtr <> List^.TailPtr then                                        // If the list is empty then just return the Head
-  begin
-    Inc(Result);                                                                // Increment it
-    if Result > List^.BufferEndPtr then                                         // Wrap it if necessary
-      Result := @List^.Buffers^[0];
-    if Result = List^.TailPtr then                                                // If the new Head = Tail then the list is full
-      Result := PCANRawBuffer( nil);
-  end
+  Inc(Result); //:= Result + Sizeof(TCANRawBuffer);                                     // Increment it to the next item
+  if Result > List^.BufferEndPtr then                                           // Wrap it if necessary
+    Result := @List^.Buffers^[0];
+  if Result = List^.TailPtr then                                                // If the new Head = Tail then the list is full
+    Result := PCANRawBuffer( nil);
 end;
 
 // *****************************************************************************
@@ -86,10 +136,10 @@ end;
 // *****************************************************************************
 function CurrentTail(List: PCANRawBufferList): PCANRawBuffer;
 begin
-  if List^.HeadPtr <> List^.TailPtr then
+ // if List^.HeadPtr <> List^.TailPtr then
     Result := List^.TailPtr                                                     // Take the current Tail
-  else
-    Result := PCANRawBuffer( nil);                                              // List is empty
+ // else
+ //   Result := PCANRawBuffer( nil);                                              // List is empty
 end;
 
 // *****************************************************************************
@@ -102,57 +152,54 @@ end;
 //                    the buffers are filled with copies of what the perphial registers need
 //
 // *****************************************************************************
-procedure dsPIC33_DMA_Style_Buffer(Direction: Byte; CANPtr: ^Word; var ID: DWord; var DataCount: Byte; var DataBytes: TCAN_DataBytes; Priority: Byte; IsExtended: Boolean);
-var
-  IsStandardID: Boolean;
+procedure dsPIC33_DMA_Style_Buffer(Direction: Byte; CANPtr: ^Word; var Buffer: TCANBuffer; Priority: Word);
 begin
-  if Direction = 0 then
+  if Direction = CAN_DIRECTION_WRITE then
   begin
     // Direction = 0 means Parameters to Buffer (Load TX Buffer)
-    CANPtr^ := DWORD((ID shl 2) and $00001FFC);                                        // Setup the Standard ID
-    if IsExtended then
+    CANPtr^ := DWORD((Buffer.ID shl 2) and $00001FFC);                          // Setup the Standard ID
+    if Buffer.IsExtended then
       CANPtr^ := CANPtr^ or $0001;                                              // Setup if it is an extended ID
     Inc(CANPtr);                                                                // Move to the Extended ID
-    CANPtr^ := DWORD(ID shr 17);                                                // put EID 6..17 into bits 0..11
+    CANPtr^ := DWORD(Buffer.ID shr 17);                                                // put EID 6..17 into bits 0..11
     Inc(CANPtr);                                                                // Move to the DLC and the rest of the EID
-    CANPtr^ := DWORD((ID shr 1) and $0000FC00);                                 // Put EID 0..5 into bits 10..15
-    CANPtr^ := CANPtr^ or (Word( DataCount) and $000F);                           // Put Data Length
+    CANPtr^ := DWORD((Buffer.ID shr 1) and $0000FC00);                                 // Put EID 0..5 into bits 10..15
+    CANPtr^ := CANPtr^ or (Word( Buffer.DataCount) and $000F);                           // Put Data Length
     Inc(CANPtr);                                                                // Move to Byte 1 and Byte 2
-    CANPtr^ := DataBytes[0] or (DataBytes[1] shl 8);
+    CANPtr^ := Buffer.DataBytes[0] or (Buffer.DataBytes[1] shl 8);
     Inc(CANPtr);                                                                // Move to Byte 3 and Byte 4
-    CANPtr^ := DataBytes[2] or (DataBytes[3] shl 8);
+    CANPtr^ := Buffer.DataBytes[2] or (Buffer.DataBytes[3] shl 8);
     Inc(CANPtr);                                                                // Move to Byte 5 and Byte 6
-    CANPtr^ := DataBytes[4] or (DataBytes[5] shl 8);
+    CANPtr^ := Buffer.DataBytes[4] or (Buffer.DataBytes[5] shl 8);
     Inc(CANPtr);                                                                // Move to Byte 7 and Byte 8
-    CANPtr^ := DataBytes[6] or (DataBytes[7] shl 8);
+    CANPtr^ := Buffer.DataBytes[6] or (Buffer.DataBytes[7] shl 8);
     Inc(CANPtr);
     CANPtr^ := Priority;                                                        // Last Byte not used in TX so save the Priority there
   end else
   begin
     // Direction <> 0 then Buffer to Parameters (Read RX Buffer)
-    IsStandardID := CANPtr^ and $0001 <> 0;
-    ID := ((DWORD( CANPtr^ shr 2)) and $000007FF);                              // Get the Standard ID
+    Buffer.IsExtended := CANPtr^ and $0001 <> 0;
+    Buffer.ID := ((DWORD( CANPtr^ shr 2)) and $000007FF);                              // Get the Standard ID
     Inc(CANPtr);                                                                // Move to the Extended ID Register
-    ID := ID or (DWORD(CANPtr^ shr 17) and $1FFF03FF);
+    Buffer.ID := Buffer.ID or (DWORD(CANPtr^ shl 17) and $1FFF03FF);
     Inc(CANPtr);
-    ID := ID or (DWORD(CANPtr^ shl 1) and $0000FC00);
-    if IsStandardID then
-      ID := ID and $000007FF;
-    DataCount := CANPtr^ and $000F;
+    Buffer.ID := Buffer.ID or (DWORD(CANPtr^ shl 1) and $0001F800);
+    if Buffer.IsExtended then
+      Buffer.ID := Buffer.ID and $000007FF;
+    Buffer.DataCount := CANPtr^ and $000F;
     Inc(CANPtr);                                                                  // Move to C1RXnB1
-    DataBytes[0] := CANPtr^;
-    DataBytes[1] := CANPtr^ shr 8;
+    Buffer.DataBytes[0] := CANPtr^;
+    Buffer.DataBytes[1] := CANPtr^ shr 8;
     Inc(CANPtr);                                                                  // Move to C1RXnB2
-    DataBytes[2] := CANPtr^;
-    DataBytes[3] := CANPtr^ shr 8;
+    Buffer.DataBytes[2] := CANPtr^;
+    Buffer.DataBytes[3] := CANPtr^ shr 8;
     Inc(CANPtr);                                                                  // Move to C1RXnB3
-    DataBytes[4] := CANPtr^;
-    DataBytes[5] := CANPtr^ shr 8;
+    Buffer.DataBytes[4] := CANPtr^;
+    Buffer.DataBytes[5] := CANPtr^ shr 8;
     Inc(CANPtr);                                                                  // Move to C1RXnB4
-    DataBytes[6] := CANPtr^;
-    DataBytes[7] := CANPtr^ shr 8;
+    Buffer.DataBytes[6] := CANPtr^;
+    Buffer.DataBytes[7] := CANPtr^ shr 8;
     Inc(CANPtr);                                                                  // Move to C1RXnCON
-    CANPtr^ := CANPtr^ and $FF7F;                                                 // Clear the RXFUL flag
   end
 end;
 
@@ -167,29 +214,28 @@ end;
 //
 // *****************************************************************************
 {$IFDEF dsPIC30}
-procedure dsPIC30_Style_TX_Buffer(CANPtr: ^Word; var ID: DWord; DataCount: Byte; var DataBytes: TCAN_DataBytes; Priority: Byte; IsExtended: Boolean);
+procedure dsPIC30_Style_TX_Buffer(CANPtr: ^Word; var Buffer: TCANBuffer; Priority: Byte);
 begin
-  CANPtr^ := ((ID shl 5) and $0000F800);                                      // Setup the Standard ID
-  CANPtr^ := CANPtr^ or ((ID shl 2) and $00001FFC);
-  if IsExtended then
-    CANPtr^ := CANPtr^ or $00000001;                                          // Setup if it is an extended ID
-  Inc(CANPtr);                                                                // Move to the Extended ID
-  CANPtr^ := (ID shr 13) or $0000F000;
-  CANPtr^ := CANPtr^ or ((ID shr 17) or $000000FF);
-  Inc(CANPtr);                                                                // Move to the DLC and the rest of the EID
-  CANPtr^ := ((ID shr 1) and $0000FC00);                                      // Put EID 0..5 into bits 10..15
-  CANPtr^ := CANPtr^ or DataCount;                                            // Put Data Length
-  Inc(CANPtr);                                                                // Move to Byte 1 and Byte 2
-  CANPtr^ := Word( DataBytes[0]);
-  Inc(CANPtr);                                                                // Move to Byte 3 and Byte 4
-  CANPtr^ := Word( DataBytes[2]);
-  Inc(CANPtr);                                                                // Move to Byte 5 and Byte 6
-  CANPtr^ := Word( DataBytes[4]);
-  Inc(CANPtr);                                                                // Move to Byte 7 and Byte 8
-  CANPtr^ := Word( DataBytes[6]);
+  CANPtr^ := ((Buffer.ID shl 5) and $0000F800);                                 // Setup the Standard ID
+  CANPtr^ := CANPtr^ or ((Buffer.ID shl 2) and $000000FC);
+  if Buffer.IsExtended then
+    CANPtr^ := CANPtr^ or $00000001;                                            // Setup if it is an extended ID
+  Inc(CANPtr);                                                                  // Move to the Extended ID
+  CANPtr^ := DWORD( (Buffer.ID shr 13) and $0000F000);
+  CANPtr^ := CANPtr^ or ((Buffer.ID shr 17) and $000000FF);
+  Inc(CANPtr);                                                                  // Move to the DLC and the rest of the EID
+  CANPtr^ := ((Buffer.ID shr 1) and $0000FC00);                                 // Put EID 0..5 into bits 10..15
+  CANPtr^ := CANPtr^ or Buffer.DataCount;                                       // Put Data Length
+  Inc(CANPtr);                                                                  // Move to Byte 1 and Byte 2
+  CANPtr^ := Buffer.DataBytes[0] or Buffer.DataBytes[1] shl 8;
+  Inc(CANPtr);                                                                  // Move to Byte 3 and Byte 4
+  CANPtr^ := Buffer.DataBytes[2] or Buffer.DataBytes[3] shl 8;
+  Inc(CANPtr);                                                                  // Move to Byte 5 and Byte 6
+  CANPtr^ := Buffer.DataBytes[4] or Buffer.DataBytes[5] shl 8;
+  Inc(CANPtr);                                                                  // Move to Byte 7 and Byte 8
+  CANPtr^ := Buffer.DataBytes[6] or Buffer.DataBytes[7] shl 8;
   Inc(CANPtr);
-  CANPtr^ := Priority;                                                        // Last Byte not used in TX so save the Priority there
-
+  CANPtr^ := Priority;                                                          // Last Byte not used in TX so save the Priority there
 end;
 {$ENDIF}
 
@@ -200,9 +246,10 @@ end;
 //     Returns: True if the return parameters are valid (i.e. there was something to read in the List
 //
 //     Description:   Loads the passed paramters with the next Buffer Data in the FIFO list
+//                    ~260 Cycles to complete for the dsPIC33 and dsPIC30
 //
 // *****************************************************************************
-function CANStorage_ReadReceiverBuffer(List: PCANRawBufferList; var ID: DWord; var DataCount: Byte; var DataBytes: TCAN_DataBytes; IsExtended: Boolean): Boolean;
+function CANStorage_ReadReceiverBuffer(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 var
   Tail: PCANRawBuffer;
 begin
@@ -211,7 +258,7 @@ begin
   if Tail <> nil then
   begin
     Result := True;
-    dsPIC33_DMA_Style_Buffer(0, @(Tail^.SID), ID, DataCount, DataBytes, 0, IsExtended);   // dsPIC33 and the dsPIC30 are the same format for RX Buffers
+    dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_READ, @(Tail^.SID), Buffer, 0);   // dsPIC33 and the dsPIC30 are the same format for RX Buffers
   end
 end;
 
@@ -222,9 +269,11 @@ end;
 //     Returns: True if the parameters were loaded into the FIFO buffers
 //
 //     Description:   Loads the passed paramters into the next empty Buffer FIFO list
+//                    ~260 Cycles to complete for the dsPIC33
+//                    ~340 Cycles to complete for the dsPIC30
 //
 // *****************************************************************************
-function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; ID: DWord; DataCount: Byte; var DataBytes: TCAN_DataBytes; Priority: Byte; IsExtended: Boolean): Boolean;
+function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; var Buffer: TCANBuffer; Priority: Word): Boolean;
 var
   Head: PCANRawBuffer;
 begin
@@ -233,14 +282,9 @@ begin
   if Result then
   begin
     // Data Structure is different between dsPIC30 and dsPIC33
-    {$IFDEF dsPIC33}
-    dsPIC33_DMA_Style_Buffer(0, @(Head^.SID), ID, DataCount, DataBytes, Priority, IsExtended);
-    {$ELSE}
-    {$IFDEF dsPIC30}
-    dsPIC30_Style_TX_Buffer(@(Head^.SID), ID, DataCount, DataBytes, Priority, IsExtended);
-    {$ELSE}     
-    Error; //ERROR:  You must define either dsPIC33 or dsPIC30 in your options file
-    {$ENDIF} {$ENDIF}
+    {$IFDEF dsPIC33} dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_WRITE, @(Head^.SID), Buffer, Priority); {$ELSE}
+    {$IFDEF dsPIC30} dsPIC30_Style_TX_Buffer(@(Head^.SID), Buffer, Priority); {$ELSE}
+    Error; (*ERROR:  You must define either dsPIC33 or dsPIC30 in your options file*) {$ENDIF} {$ENDIF}
     List^.HeadPtr := Head;                                                      // Mark the new head as full AFTER it is
   end;
 end;

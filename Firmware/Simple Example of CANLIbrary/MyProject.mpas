@@ -1,0 +1,142 @@
+program MyProject;
+
+{$I Options.inc}
+
+{ Declarations section }
+uses
+  CANStorage,
+  dsPIC33_DMA,
+  dsPIC33_CAN;
+
+var
+  BufferArray: array[6] of TCANRawBuffer;
+  BufferList: TCANRawBufferList;
+  ID: DWORD;
+  DataCount: Byte;
+  DataBytes: TCAN_DataBytes;
+  Priority: Byte;
+  IsExtended: Boolean;
+  CANBuffer: TCANBuffer;
+  
+procedure c1(); iv IVT_ADDR_C1RXRDYINTERRUPT; ics ICS_AUTO;
+begin
+end;
+
+procedure c2(); iv IVT_ADDR_C1INTERRUPT; ics ICS_AUTO;
+begin
+end;
+
+procedure c3(); iv IVT_ADDR_C1TXREQINTERRUPT; ics ICS_AUTO;
+begin
+end;
+
+var
+  Rslt: Word; volatile;
+
+begin
+
+{  dsPIC33_CAN_SetFilter(0, $0AAAAAAA, True);
+  dsPIC33_CAN_SetFilter(15, $FFFFFFFF, True);
+  dsPIC33_CAN_SetMask(0, $FFFFFFFF, True);
+  dsPIC33_CAN_SetMask(2, $FFFFFFFF, True);
+  
+  C1FMSKSEL1 := $FFFF;
+  C1FMSKSEL2 := $FFFF;
+  dsPIC33_CAN_AssociateFilterWithMask(0, 0);
+  dsPIC33_CAN_AssociateFilterWithMask(15, 2);
+  dsPIC33_CAN_AssociateFilterWithMask(7, 1);
+  
+  C1BUFPNT1 := $FFFF;
+  C1BUFPNT2 := $FFFF;
+  C1BUFPNT3 := $FFFF;
+  C1BUFPNT4 := $FFFF;
+  dsPIC33_CAN_RegisterBufferWithFilter(0, 0);
+  dsPIC33_CAN_RegisterBufferWithFilter(1, 2);
+  dsPIC33_CAN_RegisterBufferWithFilter(2, 3);
+  dsPIC33_CAN_RegisterBufferWithFilter(3, 4);
+  dsPIC33_CAN_RegisterBufferWithFilter(4, 5);
+  dsPIC33_CAN_RegisterBufferWithFilter(5, 6);
+  dsPIC33_CAN_RegisterBufferWithFilter(6, 7);
+  dsPIC33_CAN_RegisterBufferWithFilter(7, 8);
+  dsPIC33_CAN_RegisterBufferWithFilter(8, 9);
+  dsPIC33_CAN_RegisterBufferWithFilter(9, 10);
+  dsPIC33_CAN_RegisterBufferWithFilter(10, 11);
+  dsPIC33_CAN_RegisterBufferWithFilter(11, 12); }
+  
+  dsPIC33_CAN_SetBufferAsTransmitter(0, True);
+  dsPIC33_CAN_SetBufferAsTransmitter(3, True);
+  dsPIC33_CAN_SetBufferAsTransmitter(6, True);
+
+  dsPIC33_CAN_SetTransmitterPriority(0, 0);
+  dsPIC33_CAN_SetTransmitterPriority(3, 2);
+  dsPIC33_CAN_SetTransmitterPriority(6, 3);
+  
+  dsPIC33_CAN_RequestTransmit(0);
+  dsPIC33_CAN_RequestTransmit(3);
+  dsPIC33_CAN_RequestTransmit(7);
+  
+  WIN_bit := 0;
+  C1RXFUL1 := $0000;
+  C1RXFUL2 := $AAAA;
+  
+  Rslt := dsPIC33_CAN_RX_Full(0);
+  Rslt := dsPIC33_CAN_RX_Full(1);
+  Rslt := dsPIC33_CAN_RX_Full(2);
+  Rslt := dsPIC33_CAN_RX_Full(3);
+  Rslt := dsPIC33_CAN_RX_Full(4);
+  Rslt := dsPIC33_CAN_RX_Full(5);
+  Rslt := dsPIC33_CAN_RX_Full(6);
+  Rslt := dsPIC33_CAN_RX_Full(7);
+  Rslt := dsPIC33_CAN_RX_Full(8);
+  Rslt := dsPIC33_CAN_RX_Full(9);
+  Rslt := dsPIC33_CAN_RX_Full(10);
+  Rslt := dsPIC33_CAN_RX_Full(11);
+  Rslt := dsPIC33_CAN_RX_Full(12);
+  Rslt := dsPIC33_CAN_RX_Full(13);
+  Rslt := dsPIC33_CAN_RX_Full(14);
+
+  Rslt := dsPIC33_CAN_RX_Full(16);
+  Rslt := dsPIC33_CAN_RX_Full(17);
+  Rslt := dsPIC33_CAN_RX_Full(30);
+  Rslt := dsPIC33_CAN_RX_Full(31);
+  
+  
+  dsPIC33_DMA_Enable(0, True);
+  dsPIC33_DMA_Enable(5, True);
+  dsPIC33_DMA_Enable(7, True);
+  
+  
+
+  CANBuffer.ID := $1FFFFFFF;
+  CANBuffer.DataCount := 8;
+  CANBuffer.DataBytes[0] := $01;
+  CANBuffer.DataBytes[1] := $02;
+  CANBuffer.DataBytes[2] := $03;
+  CANBuffer.DataBytes[3] := $04;
+  CANBuffer.DataBytes[4] := $05;
+  CANBuffer.DataBytes[5] := $06;
+  CANBuffer.DataBytes[6] := $07;
+  CANBuffer.DataBytes[7] := $08;
+  CANBuffer.IsExtended := True;
+  
+  CANStorage_LoadTransmitterBuffer(@BufferList, CANBuffer, 4);
+  
+  CANBuffer.ID := $0;
+  CANBuffer.DataCount := 0;
+  CANBuffer.DataBytes[0] := $0;
+  CANBuffer.DataBytes[1] := $0;
+  CANBuffer.DataBytes[2] := $0;
+  CANBuffer.DataBytes[3] := $0;
+  CANBuffer.DataBytes[4] := $0;
+  CANBuffer.DataBytes[5] := $0;
+  CANBuffer.DataBytes[6] := $0;
+  CANBuffer.DataBytes[7] := $0;
+  Priority := 0;
+  CANBuffer.IsExtended := False;
+  
+  BufferList.TailPtr := BufferList.HeadPtr;
+  
+  CANStorage_ReadReceiverBuffer(@BufferList, CANBuffer);
+
+  { Main program }
+end.
