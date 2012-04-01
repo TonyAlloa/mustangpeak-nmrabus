@@ -59,31 +59,8 @@ type
 function CANStorage_LoadTransmitterBuffer(List: PCANRawBufferList; var Buffer: TCANBuffer; Priority: Word): Boolean;
 function CANStorage_ReadReceiverBuffer(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 procedure CANStorage_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; LastBufferPtr: PCANRawBuffer);
-function CANStorage_InitTransmit(ListPtr: PCANRawBufferList): Boolean;
-  
-implementation
 
-// *****************************************************************************
-//  procedure CANStorage_InitTransmit;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description: Transfers the message from the queue to the CAN bus
-// *****************************************************************************
-function CANStorage_InitTransmit(ListPtr: PCANRawBufferList): Boolean;
-begin
-  Result := False;
-  {$IFDEF dsPIC33} 
-    // Setup Priority, TXREQ, and align DMA/CAN Module to the Buffer.  IF there is not a transmit in progress that will call the interrupt and auto load the next buffer
-  {$ELSE}
-  {$IFDEF dsPIC30} 
-   // Setup Priority, TXREQ, and align DMA/CAN Module to the Buffer.  IF there is not a transmit in progress that will call the interrupt and auto load the next buffer
-  {$ELSE}
-    Error; (*ERROR:  You must define either dsPIC33 or dsPIC30 in your options file*)
-  {$ENDIF} {$ENDIF}
-end;
+implementation
 
 // *****************************************************************************
 //  procedure CANStorage_InitializeList;
@@ -118,11 +95,10 @@ end;
 function NextHead(List: PCANRawBufferList): PCANRawBuffer;
 begin
   Result := List^.HeadPtr;                                                      // Take the current head
-  Inc(Result); //:= Result + Sizeof(TCANRawBuffer);                                     // Increment it to the next item
   if Result > List^.BufferEndPtr then                                           // Wrap it if necessary
     Result := @List^.Buffers^[0];
-  if Result = List^.TailPtr then                                                // If the new Head = Tail then the list is full
-    Result := PCANRawBuffer( nil);
+ // if Result = List^.TailPtr then                                                // If the new Head = Tail then the list is full
+ //   Result := PCANRawBuffer( nil);
 end;
 
 // *****************************************************************************

@@ -2,13 +2,19 @@ unit dsPIC33_DMA;
 
 const
   ADDRESS_MODE_REG_INDIRECT_POST_INCREMENT    = 0;
-  ADDRESS_MODE_REG_INDIRECT_NO_POST_INCREMENT = 2;
-  ADDRESS_MODE_PERIPHERAL_INDIRECT            = 3;
+  ADDRESS_MODE_REG_INDIRECT_NO_POST_INCREMENT = 1;
+  ADDRESS_MODE_PERIPHERAL_INDIRECT            = 2;
   
   OPERATING_MODE_CONTINIOUS                   = 0;
   OPERATING_MODE_ONESHOT                      = 1;
   OPERATING_MODE_CONTINIOUS_PINGPONG          = 2;
   OPERATING_MODE_ONESHOT_PINGPONG             = 3;
+  
+  DATASIZE_BYTE                               = 0;
+  DATASIZE_WORD                               = 1;
+  
+  DIRECTION_RAM_TO_PERIPHERAL                 = 0;
+  DIRECTION_PERIPHERAL_TO_RAM                 = 1;
   
   IRQ_INT0_EXTERNAL                    = 0;
   IRQ_IC1_INPUT_CAPTURE                = 1;
@@ -39,13 +45,13 @@ const
   
 
 procedure dsPIC33_DMA_Enable(ChannelNumber: Word; Enable: Boolean);
-procedure dsPIC33_DMA_DataSize(ChannelNumber: Word; IsByte: Boolean);
-procedure dsPIC33_DMA_Direction(ChannelNumber: Word; RAM_To_Peripheral: Boolean);
+procedure dsPIC33_DMA_DataSize(ChannelNumber: Word; _Size: Word);               // See DATASIZE_xxxx constants
+procedure dsPIC33_DMA_Direction(ChannelNumber: Word; Direction: Word);          // See DIRECTION_xxxx constants
 procedure dsPIC33_DMA_HalfBlockTransferInterrupt(ChannelNumber: Word; HalfBlockInterrupt: Boolean);
 procedure dsPIC33_DMA_NullWrite(ChannelNumber: Word; Enable: Boolean);
 procedure dsPIC33_DMA_AddressMode(ChannelNumber: Word; Mode: Word);             // See ADDRESS_MODE_xxxx constants
 procedure dsPIC33_DMA_OperatingMode(ChannelNumber: Word; Mode: Word);           // See OPERATING_MODE_xxxx constants
-procedure dsPIC33_DMA_InterruptSelect(ChannelNumber: Word; IRQ_Select: Word);  // See IRQ_xxxx constants
+procedure dsPIC33_DMA_InterruptSelect(ChannelNumber: Word; IRQ_Select: Word);   // See IRQ_xxxx constants
 procedure dsPIC33_DMA_ManualDMATransfer(ChannelNumber: Word; Manual: Boolean);
 procedure dsPIC33_DMA_AddressOffsetA(ChannelNumber: Word; Offset: Word);
 procedure dsPIC33_DMA_AddressOffsetB(ChannelNumber: Word; Offset: Word);
@@ -77,23 +83,23 @@ begin
     RegPtr^.CHEN := 0
 end;
 
-procedure dsPIC33_DMA_DataSize(ChannelNumber: Word; IsByte: Boolean);
+procedure dsPIC33_DMA_DataSize(ChannelNumber: Word; _Size: Word);
 var
   RegPtr: ^Word;
 begin
   RegPtr := MapToChannelReg(ChannelNumber, @DMA0CON);
-  if IsByte then
+  if _Size = DATASIZE_BYTE then
     RegPtr^.SIZE := 1
   else
     RegPtr^.SIZE := 0
 end;
 
-procedure dsPIC33_DMA_Direction(ChannelNumber: Word; RAM_To_Peripheral: Boolean);
+procedure dsPIC33_DMA_Direction(ChannelNumber: Word; Direction: Word);
 var
   RegPtr: ^Word;
 begin
   RegPtr := MapToChannelReg(ChannelNumber, @DMA0CON);
-  if RAM_To_Peripheral then
+  if Direction = DIRECTION_RAM_TO_PERIPHERAL then
     RegPtr^.DIR_ := 1
   else
     RegPtr^.DIR_ := 0

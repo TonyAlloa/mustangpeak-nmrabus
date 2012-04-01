@@ -2,11 +2,7 @@ unit MCU_Setup_dsPIC33FJ256GP710A;
 
 uses
   Throttle_driver,
-  CAN_Data,
-  NodeIDs,
-  ECAN_Defs,
-  NMRABusDefines,
-  NMRABus;
+  NodeIDs;
 
 {$I Options.inc}
 
@@ -21,80 +17,9 @@ const
   procedure MCU_Setup_Initialize;
 
 var
-  LockCANList: PLockListFunc;
-  UnLockCANList: PUnLockListFunc;
-  LockNMRABusList: PLockListFunc;
-  UnLockNMRABusList: PUnLockListFunc;
-  SignalTransmitOnCANLayerFunc: PSignalTransmitOnCANLayerFunc;
-  SignalTransmitOnNMRALayerFunc: PSignalTransmitOnNMRALayerFunc;
-
   PinChangeState: Word;
 
 implementation
-
-// ****************************************************************************
-// procedure UnlockListCAN
-//
-//  Description:
-//
-// ****************************************************************************
-procedure SignalTransmitOnLayerFunc;
-begin
-  TBIF_bit := 1;  // Will this work????
-  C1IF_bit := 1;
-end;
-
-// ****************************************************************************
-// procedure LockListNMRABus
-//
-//  Description:
-//
-// ****************************************************************************
-procedure LockListNMRABus;
-begin
-  TBIE_bit := 0;                                                                // TX Interrupt Disable
-  RBIE_bit := 0;                                                                // RX Interrupt Disable
-end;
-
-// ****************************************************************************
-// procedure UnlockListNMRABus
-//
-//  Description:
-//
-// ****************************************************************************
-procedure UnlockListNMRABus;
-begin
-  TBIE_bit := 1;                                                                // TX Interrupt Enable
-  RBIE_bit := 1;                                                                // RX Interrupt Enable
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
-    SignalTransmitOnLayerFunc                                                   // Set Transmit Done Flag to start the Transmit Engine
-end;
-
-// ****************************************************************************
-// procedure LockListCAN
-//
-//  Description:
-//
-// ****************************************************************************
-procedure LockListCAN;
-begin
-  TBIE_bit := 0;                                                                // TX Interrupt Disable
-  RBIE_bit := 0;                                                                // RX Interrupt Disable
-end;
-
-// ****************************************************************************
-// procedure UnlockListCAN
-//
-//  Description:
-//
-// ****************************************************************************
-procedure UnlockListCAN;
-begin
-  TBIE_bit := 1;                                                                // TX Interrupt Enable
-  RBIE_bit := 1;                                                                // RX Interrupt Enable
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
-    SignalTransmitOnLayerFunc                                                   // Set Transmit Done Flag to start the Transmit Engine
-end;
 
 procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 begin
@@ -110,13 +35,6 @@ begin
 
   PinChangeState := 0;
   
-  LockCANList := @LockListCAN;
-  UnLockCANList := @UnLockListCAN;
-  LockNMRABusList := @LockListNMRABus;
-  UnLockNMRABusList := @UnLockListNMRABus;
-  SignalTransmitOnCANLayerFunc := @SignalTransmitOnLayerFunc;
-  SignalTransmitOnNMRALayerFunc := @SignalTransmitOnLayerFunc;
-
   {$IFDEF UART_ENABLE}
   // Initialize UART
   UART1_Init(115200);                       // Initialize UART module a
@@ -135,27 +53,6 @@ begin
   SPI1IP_1_bit := 0;
   SPI1IP_2_bit := 0;
   SPIEN_bit := 1;    // Enable the SPI
-
-  ECAN1DmaChannelInit(0, 1, Word( @ECAN1RxTxRAMBuffer));                        // init dma channel 0 for dma to ECAN peripheral transfer   TX
-  ECAN1DmaChannelInit(2, 0, Word( @ECAN1RxTxRAMBuffer));                        // init dma channel 2 for ECAN peripheral to dma transfer   RX
-  ECAN1Initialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _ECAN_CONFIG_SAMPLE_THRICE and _ECAN_CONFIG_PHSEG2_PRG_ON and _ECAN_CONFIG_XTD_MSG);   // Initialize external CANSPI module
-  ECAN1SetBufferSize(ECAN1RAMBUFFERSIZE);                                       // set number of rx+tx buffers in DMA RAM
-  ECAN1SelectTxBuffers(0x0003);                                                 // select transmit buffers 0x0003 = buffers 0 and 1 are transmit buffers (0 = CAN Layer, 1 = NMRA Layer)
-  ECAN1SetOperationMode(_ECAN_MODE_CONFIG, 0xFF);                               // set CONFIGURATION mode
-  ECAN1SetMask(_ECAN_MASK_0, LongInt($08000000), _ECAN_CONFIG_MATCH_MSG_TYPE and _ECAN_CONFIG_XTD_MSG);   // Filter on bit 27 to distinguish between a CAN Layer and NMRA Layer packet
-  ECAN1SetFilter(_ECAN_FILTER_0, LongInt($00000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_2, _ECAN_CONFIG_XTD_MSG);   // Filter 0 is set to filter on bit 27 (MASK 0) if it a "0" (CAN Layer).  Buffer 0-1 are TX buffers so start with RX_Buffer_2.
-  ECAN1SetFilter(_ECAN_FILTER_1, LongInt($08000000), _ECAN_MASK_0, _ECAN_RX_BUFFER_3, _ECAN_CONFIG_XTD_MSG);   // Filter 1 is set to filter on bit 27 (MASK 0) if it a "1" (NMRA Layer).  Buffer 0-1 are TX buffers so start with RX_Buffer_2.
-  ECAN1SetOperationMode(_ECAN_MODE_NORMAL,0xFF);                                // set NORMAL mode
-  WIN_bit := 0;                                                                 // Set Bank to access Interrupt Bits
-  TBIF_bit := 0;                                                                // TX Interrupt ag Reset
-  RBIF_bit := 0;                                                                // RX Interrupt Flag Reset
-  TBIE_bit := 1;                                                                // TX Interrupt Enable
-  RBIE_bit := 1;                                                                // RX Interrupt Enable
-  C1IP_0_bit := 0;
-  C1IP_1_bit := 0;
-  C1IP_2_bit := 1;                                                              // Interrupt Priority Level of 4
-  C1IF_bit := 0;                                                                // Clear the CAN 1 Interrupt Flag
-  C1IE_bit := 1;                                                                // Enable CAN 1 Event Interrupts (not Rx Ready or TX Complete Interrupts
 
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
   T2IP_1_bit := 1;

@@ -18,231 +18,303 @@
 
 program Throttle_main;
 
+uses
+  CANStorage,
+  dsPIC33_CAN,
+  dsPIC33_DMA;
+
 const
   ID_1st : DWord = $08002F4F;          // TESTING ONLY
   ID_2nd : DWord = $08000003;          // TESTING ONLY
-
-procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT;
-begin
-  WIN_bit := 0;                                                                 // Access the correct Bank
-  C1IF_bit := 0;
-  while (C1VEC and $007F) <> $0040 do
-  begin
   
-  LATG3_bit := 1;
-  
-  
-    case (C1VEC and $007F) of
-      0: begin
-           // TRB0 Buffer Transmit Finished (CAN Layer)
-           TBIF_bit := 0;                                                       // TX Interrupt Flag Reset
-           HandleTransmitCompleteOnCANLayerPacket;
-         end;
-      1: begin
-           // TRB1 Buffer Transmit Finished (NMRA Layer)
-           TBIF_bit := 0;                                                       // TX Interrupt Flag Reset
-           HandleTransmitCompleteOnNMRALayerPacket;                             //
-         end;
-      2: begin
-           // TRB1 Buffer Received Data (CAN Layer)
-           RBIF_bit := 0;                                                       // RX Interrupt Flag Reset
-           HandlePacketReceivedOnCANLayer;
-         end;
-      3: begin
-           // TRB2 Buffer Received Data (NMRA Layer)
-           RBIF_bit := 0;                                                       // RX Interrupt Flag Reset
-           HandlePacketReceivedOnNMRABusLayer;
-         end;
-    end
-  end;
-end;
-
 var
-  GetUniqueIDFunc: PGetUniqueIDFunc;
-
-  Can_Init_Flags, Can_Send_Flags, Can_Rcv_Flags : word; // can flags
-  Rx_Data_Len  : word;                                  // received data length in bytes
-  RxTx_Data    : array[8] of byte;                      // can rx/tx data buffer
-  Msg_Rcvd, Cnt     : word;                                  // reception flag
-  Rx_ID        : longint;
-  s1: array[0..4] of Char;
-  Packet: TCAN_Packet;
-
-// ****************************************************************************
-// procedure UniqueID
-//
-//  Description:   Callback from NMRABus to load the 48 Bit Unique ID
-//
-// ****************************************************************************
-procedure UniqueID(var HiID, LoID: DWord);
+  s1: array[0..64] of Char;
+  IntCount, IntCountX: Word;
+  TX_Buffer: Word; absolute $7800;
+  TXRawBufferArray: TCANRawBufferArray; absolute $7800;
+  TXList: TCANRawBufferList;
+  TXBuffer: TCANBuffer;
+  
+procedure WriteTXBuffer;
 begin
-  LoID := MUSTANGPEAK_TFT_THROTTLE_ID_0_LO;
-  HiID := MUSTANGPEAK_ID_0_HI;
-end;
-
-// ****************************************************************************
-// procedure SignalTransmitOnLayerFunc
-//
-//  Description:   Callback from NMRABus
-//
-// ****************************************************************************
-
-var
-  BufferArray: array[6] of TCANRawBuffer;
-  TXBuffer: TCANRawBufferList;
-  ID: DWORD;
-  DataCount: Byte;
-  DataBytes: TCAN_DataBytes;
-  Priority: Byte;
-  IsExtended: Boolean;
-
-begin
-  CANStorage_InitializeList(@TXBuffer, @BufferArray, @BufferArray[5]);
-  
-  ID := $1FFFFFFF;
-  DataCount := 8;
-  DataBytes[0] := $01;
-  DataBytes[1] := $02;
-  DataBytes[2] := $03;
-  DataBytes[3] := $04;
-  DataBytes[4] := $05;
-  DataBytes[5] := $06;
-  DataBytes[6] := $07;
-  DataBytes[7] := $08;
-  Priority := 4;
-  IsExtended := True;
-  CANStorage_LoadTransmitterBuffer(@TXBuffer, ID, DataCount, DataBytes, Priority, IsExtended);
-  
-  ID := $00000000;
-  DataCount := 0;
-  DataBytes[0] := $00;
-  DataBytes[1] := $00;
-  DataBytes[2] := $00;
-  DataBytes[3] := $00;
-  DataBytes[4] := $00;
-  DataBytes[5] := $00;
-  DataBytes[6] := $00;
-  DataBytes[7] := $00;
-  Priority := 0;
-  IsExtended := False;
-  
-//  Tail does not work here.....
-  
-  CANStorage_ReadReceiverBuffer(@TXBuffer, ID, DataCount, DataBytes, IsExtended);
-
-  GetUniqueIDFunc := @UniqueID;                                                 // Callback to access the Node's Unique ID
-
-  MCU_Setup_Initialize;
-  NMRABus_Initialize;
-  Start_TP();
-  
-  
-  Can_Rcv_Flags  := 0;
-  Cnt := 0;
-  
-{  WordToHex(DMA0CON, s1);
+  WordToHex(TXList.Buffers^[0].SID, s1); 
+  s1 := 'SID: ' + s1 ;
   strcpy(ButtonRoundF18.Caption, s1);
   DrawRoundButton(@ButtonRoundF18);
-  
-  WordToHex(DMA2CON, s1);
+
+  WordToHex(TXList.Buffers^[0].EID, s1); 
+  s1 := 'EID: ' + s1 ;
   strcpy(ButtonRoundF19.Caption, s1);
   DrawRoundButton(@ButtonRoundF19);
-  
-  WordToHex(DMA0REQ, s1);
+
+  WordToHex(TXList.Buffers^[0].EID_DLC, s1); 
+   s1 := 'EID_DLC: ' + s1 ;
   strcpy(ButtonRoundF20.Caption, s1);
   DrawRoundButton(@ButtonRoundF20);
-  
-  WordToHex(DMA0STA, s1);
+
+  WordToHex(TXList.Buffers^[0].Byte0_1, s1); 
+  s1 := 'Byte0_1: ' + s1 ;
   strcpy(ButtonRoundF21.Caption, s1);
   DrawRoundButton(@ButtonRoundF21);
-  
-  WordToHex(DMA0STB, s1);
+
+  WordToHex(TXList.Buffers^[0].Byte2_3, s1); 
+  s1 := 'Byte2_3: ' + s1 ;
   strcpy(ButtonRoundF22.Caption, s1);
   DrawRoundButton(@ButtonRoundF22);
-  
-  WordToHex(DMA0PAD, s1);
+
+  WordToHex(TXList.Buffers^[0].Byte4_5, s1); 
+  s1 := 'Byte4_5: ' + s1 ;
   strcpy(ButtonRoundF23.Caption, s1);
   DrawRoundButton(@ButtonRoundF23);
-  
-  WordToHex(DMA2PAD, s1);
+
+  WordToHex(TXList.Buffers^[0].Byte6_7, s1);  
+  s1 := 'Byte4_5: ' + s1 ;
   strcpy(ButtonRoundF24.Caption, s1);
   DrawRoundButton(@ButtonRoundF24);
+end;
 
-  WordToHex(DMA0CNT, s1);
-  strcpy(ButtonRoundF25.Caption, s1);
-  DrawRoundButton(@ButtonRoundF25); }
-  
- // DMA2PAD := DMA2PAD + $100;
-  
-  WordToHex(DMA2STA, s1);
-  strcpy(ButtonRoundF18.Caption, 'DMA2STA: ' + s1);
-  DrawRoundButton(@ButtonRoundF18);
-  WordToHex(DMA2PAD, s1);
-  strcpy(ButtonRoundF19.Caption, 'DMA2PAD: ' + s1);
-  DrawRoundButton(@ButtonRoundF19);
-  
-  ECAN1RxTxRAMBuffer[0].CxTRBnSID := 0;
-  ECAN1RxTxRAMBuffer[1].CxTRBnSID := 0;
-  ECAN1RxTxRAMBuffer[2].CxTRBnSID := 0;
-  ECAN1RxTxRAMBuffer[3].CxTRBnSID := 0;
-  
-  
-while true do
+procedure WriteDMAInfo;
 begin
+  WordToHex(DMA0CON, s1); 
+  s1 := 'DMA0CON: ' + s1 ;
+  strcpy(ButtonRoundF18.Caption, s1);
+  DrawRoundButton(@ButtonRoundF18);
 
+  WordToHex(DMA0REQ, s1);   
+  s1 := 'DMA0REQ: ' + s1 ;
+  strcpy(ButtonRoundF19.Caption, s1);
+  DrawRoundButton(@ButtonRoundF19);
 
-  WordToHex(ECAN1RxTxRAMBuffer[0].CxTRBnSID, s1);
+  WordToHex(DMA0STA, s1); 
+  s1 := 'DMA0STA: ' + s1 ;
+  strcpy(ButtonRoundF20.Caption, s1);
+  DrawRoundButton(@ButtonRoundF20);
+
+  WordToHex(DMA0STB, s1); 
+  s1 := 'DMA0STB: ' + s1 ;
+  strcpy(ButtonRoundF21.Caption, s1);
+  DrawRoundButton(@ButtonRoundF21);
+
+  WordToHex(DMA0PAD, s1); 
+  s1 := 'DMA0PAD: ' + s1 ;
+  strcpy(ButtonRoundF22.Caption, s1);
+  DrawRoundButton(@ButtonRoundF22);
+
+  WordToHex(DMA0CNT, s1); 
+  s1 := 'DMA0CNT: ' + s1 ;
   strcpy(ButtonRoundF23.Caption, s1);
   DrawRoundButton(@ButtonRoundF23);
-  
-  WordToHex(ECAN1RxTxRAMBuffer[1].CxTRBnSID, s1);
+
+  WordToHex(DSADR, s1);
+  s1 := 'DSADR: ' + s1 ;
   strcpy(ButtonRoundF24.Caption, s1);
   DrawRoundButton(@ButtonRoundF24);
   
-  WordToHex(ECAN1RxTxRAMBuffer[2].CxTRBnSID, s1);
+  WordToHex(DMACS0, s1);
+  s1 := 'DMACS0: ' + s1 ;
   strcpy(ButtonRoundF25.Caption, s1);
   DrawRoundButton(@ButtonRoundF25);
   
-  WordToHex(ECAN1RxTxRAMBuffer[3].CxTRBnSID, s1);
+  WordToHex(DMACS1, s1);
+  s1 := 'DMACS1: ' + s1;
   strcpy(ButtonRoundF26.Caption, s1);
   DrawRoundButton(@ButtonRoundF26);
-  
-  if CAN_Data_RxNextPacketNMRABusLayer(Packet) then
+end;
+
+procedure WriteCANInfo;
+begin
+  WordToHex(C1CFG1, s1);
+  s1 := 'C1CFG1: ' + s1 ;
+  strcpy(ButtonRoundF18.Caption, s1);
+  DrawRoundButton(@ButtonRoundF18);
+
+  WordToHex(C1CFG2, s1);
+  s1 := 'C1CFG2: ' + s1 ;
+  strcpy(ButtonRoundF19.Caption, s1);
+  DrawRoundButton(@ButtonRoundF19);
+
+  WordToHex(C1FEN1, s1);
+  s1 := 'C1FEN1: ' + s1 ;
+  strcpy(ButtonRoundF20.Caption, s1);
+  DrawRoundButton(@ButtonRoundF20);
+
+  WordToHex(C1FMSKSEL1, s1);
+  s1 := 'C1FMSKSEL1: ' + s1 ;
+  strcpy(ButtonRoundF21.Caption, s1);
+  DrawRoundButton(@ButtonRoundF21);
+
+  WordToHex(C1FMSKSEL2, s1);
+  s1 := 'C1FMSKSEL2: ' + s1 ;
+  strcpy(ButtonRoundF22.Caption, s1);
+  DrawRoundButton(@ButtonRoundF22);
+
+  WIN_Bit := 0;
+  WordToHex(C1FCTRL, s1);
+  s1 := 'C1FCTRL: ' + s1 ;
+  strcpy(ButtonRoundF23.Caption, s1);
+  DrawRoundButton(@ButtonRoundF23);
+
+  WIN_Bit := 0;
+  WordToHex(C1FIFO, s1);
+  s1 := 'C1FIFO: ' + s1 ;
+  strcpy(ButtonRoundF24.Caption, s1);
+  DrawRoundButton(@ButtonRoundF24);
+
+  WordToHex(C1CTRL1, s1);
+  s1 := 'C1CTRL1: ' + s1 ;
+  strcpy(ButtonRoundF25.Caption, s1);
+  DrawRoundButton(@ButtonRoundF25);
+
+  WordToHex(C1CTRL2, s1);
+  s1 := 'C1CTRL2: ' + s1;
+  strcpy(ButtonRoundF26.Caption, s1);
+  DrawRoundButton(@ButtonRoundF26);
+end;
+
+procedure WriteCAN_TX_Info;
+begin
+  WordToHex(C1TR01CON, s1);
+  s1 := 'C1TR01CON: ' + s1 ;
+  strcpy(ButtonRoundF18.Caption, s1);
+  DrawRoundButton(@ButtonRoundF18);
+
+  WordToHex(C1TR23CON, s1);
+  s1 := 'C1TR23CON: ' + s1 ;
+  strcpy(ButtonRoundF19.Caption, s1);
+  DrawRoundButton(@ButtonRoundF19);
+
+  WordToHex(C1TR45CON, s1);
+  s1 := 'C1TR45CON: ' + s1 ;
+  strcpy(ButtonRoundF20.Caption, s1);
+  DrawRoundButton(@ButtonRoundF20);
+
+  WordToHex(C1TR67CON, s1);
+  s1 := 'C1TR671CON: ' + s1 ;
+  strcpy(ButtonRoundF21.Caption, s1);
+  DrawRoundButton(@ButtonRoundF21);
+
+  WordToHex(C1EC, s1);
+  s1 := 'C1EC: ' + s1 ;
+  strcpy(ButtonRoundF22.Caption, s1);
+  DrawRoundButton(@ButtonRoundF22);
+
+  WordToHex(C1RXD, s1);
+  s1 := 'C1RXD: ' + s1 ;
+  strcpy(ButtonRoundF23.Caption, s1);
+  DrawRoundButton(@ButtonRoundF23);
+
+  WIN_Bit := 0;
+  WordToHex(C1TXD, s1);
+  s1 := 'C1TXD: ' + s1 ;
+  strcpy(ButtonRoundF24.Caption, s1);
+  DrawRoundButton(@ButtonRoundF24);
+
+{  WordToHex(C1CTRL1, s1);
+  s1 := 'C1CTRL1: ' + s1 ;
+  strcpy(ButtonRoundF25.Caption, s1);
+  DrawRoundButton(@ButtonRoundF25);
+
+  WordToHex(C1CTRL2, s1);
+  s1 := 'C1CTRL2: ' + s1;
+  strcpy(ButtonRoundF26.Caption, s1);
+  DrawRoundButton(@ButtonRoundF26);    }
+end;
+
+procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT;
+begin
+  Inc(IntCount);
+  dsPIC33_CAN_GlobalInterruptFlagCAN_Event(True);
+  // WIN_bit := 0;                                                              // If not using the dsPIC33_CAN_xxx functions don't forget to set the correct bank to access C1VEC
+  while dsPIC33_CAN_InterruptCode <> ICODE_NO_INTERRUPT do
   begin
+    case dsPIC33_CAN_InterruptCode of
+      ICODE_TRB0: begin
+           // Setup as a TX Buffer so should have reset the Transmit Buffer Interrupt Flag (TBIF)
+           dsPIC33_CAN_InterruptFlagTXBuffer(True)                              // TX Interrupt Flag Reset
+         end;
+    end
   end;
 end;
 
-  NMRABus_Connect;
-  while (TRUE) do
+begin
+  IntCount := 0;
+  IntCountX := 0;
+  MCU_Setup_Initialize;
+  CANStorage_InitializeList(@TXList, @TXRawBufferArray, @TXRawBufferArray[0]);  // Overlays DMA RAM and is one Buffer Array long (8 Bytes)
+  
+  Start_TP();
+
+  dsPIC33_CAN_EnterConfigMode;                                                  // Place the module in Configuration Mode
+  dsPIC33_CAN_SetBaud(CAN_SWJ-1, CAN_BRP-1, CAN_PHASESEG_2-1, CAN_PHASESEG_1-1, CAN_PROP_SEG-1, True); // Setup the Baud Rate for 125kHz with a 64Mhz Clock
+  dsPIC33_CAN_SetDMA_RAM_StartAddress($7800);                                   // Setup the Starting Address of the DMA RAM for the dsPIC33FJ256GP710A
+  dsPIC33_CAN_SetBufferSize(32);                                                // Setup for 32 CAN Buffers in the DMA RAM
+  dsPIC33_CAN_HardwareFIFO_SetStartBuffer(16);                                  // FIFO start at Buffer 16
+  dsPIC33_CAN_SetBufferAsTransmitter(0, True);                                  // Setup Buffer 0 as a Transmit Buffer
+  dsPIC33_CAN_EnableFilter($0000);                                              // Disable all RX Filters
+  dsPIC33_CAN_EnterNormalMode;                                                  // Place the module in Normal Mode
+  
+  dsPIC33_DMA_Enable(0, True);                                                  // Enabled DMA Channel 0
+  dsPIC33_DMA_DataSize(0, DATASIZE_WORD);                                       // DMA Data Size is a Word
+  dsPIC33_DMA_Direction(0, DIRECTION_RAM_TO_PERIPHERAL);                        // Transmit move data from RAM to the Module
+  dsPIC33_DMA_AddressMode(0, ADDRESS_MODE_PERIPHERAL_INDIRECT);                 // Use the Peripheral Addressing for the Buffers (temp)
+  dsPIC33_DMA_OperatingMode(0, OPERATING_MODE_CONTINIOUS);                      // Continious Mode (as apposed to one shot)
+  dsPIC33_DMA_ManualDMATransfer(0, False);                                      // Automatic DMA Transfers
+  dsPIC33_DMA_PeripheralAddress(0, @C1TXD);                                     // Assign the DMA Channel to the Transmit Register of the CAN module
+  dsPIC33_DMA_TransferCount(0, 8);                                              // Transfer 8 Words
+  dsPIC33_DMA_AddressOffsetA(0, 0);                                             // Address Offset from the DAM RAM Start Address is 0
+  dsPIC33_DMA_AddressOffsetB(0, 0);                                             // Address Offset from the DAM RAM Start Address is 0
+  
+  
+  dsPIC33_CAN_TXBufferInterrupt(True);                                          // Enable the TX Done Interrupt
+  dsPIC33_CAN_GlobalInterruptCAN_EventPriority(6);                              // CAN Event Interrupt has a priority of 6 out of 7
+  dsPIC33_CAN_GlobalInterruptCAN_Event(True);                                   // Enable the CAN Event Interrupt
+  
+
+  TXList.Buffers^[0].SID := 0;
+  TXList.Buffers^[0].EID := 0;
+  TXList.Buffers^[0].EID_DLC := 0;
+  TXList.Buffers^[0].Byte0_1 := 0;
+  TXList.Buffers^[0].Byte2_3 := 0;
+  TXList.Buffers^[0].Byte4_5 := 0;
+  TXList.Buffers^[0].Byte6_7 := 0;
+
+  TXBuffer.ID := $1FFFFFFF;
+  TXBuffer.DataCount := 8;
+  TXBuffer.DataBytes[0] := 1;
+  TXBuffer.DataBytes[1] := 2;
+  TXBuffer.DataBytes[2] := 3;
+  TXBuffer.DataBytes[3] := 4;
+  TXBuffer.DataBytes[4] := 5;
+  TXBuffer.DataBytes[5] := 6;
+  TXBuffer.DataBytes[6] := 7;
+  TXBuffer.DataBytes[7] := 8;
+  TXBuffer.IsExtended := True;
+  CANStorage_LoadTransmitterBuffer(@TXList, TXBuffer, 0);
+  
+  
+ // WriteTXBuffer;
+ //WriteDMAInfo;
+// WriteCANInfo;
+ WriteCAN_TX_Info;
+
+  while true do
   begin
     Check_TP();
-    
-    if not NMRABus_Connected then
+  //  if IntCount <> IntCountX then
     begin
-      NMRABusUtilities_RecreateAliasID;
-      NMRABus_Connect;
-    end;
-    
-    if NMRABus_Connected then
-    begin
-      while NMRABus_Connected do
-      begin
-        HandleLoPriorityReceivedCANLayerPackets;
-        HandleLoPriorityReceivedNMRABusLayerPackets;
+      WordToStr(IntCount, s1);
+      strcpy(ButtonRoundF26.Caption, s1);
+      s1 := 'IntCnt: ' + s1 ;
+      DrawRoundButton(@ButtonRoundF26);
+      IntCountX := IntCount;
+      
+      dsPIC33_CAN_RequestTransmit(0);
+      WriteCAN_TX_Info;
+      Delay_ms(1000);
+      WriteCAN_TX_Info;
+      Delay_ms(1000);
 
-        if CAN_Data_RxNextPacketNMRABusLayer(Packet) then
-        begin
-          if Packet.Header = ID_1st then                                          // Message was received (interrupt) if it is ours then ...
-          begin
-            PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
-            Inc(Packet.Bytes[0]);
-            Delay_ms(1000);
-            CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-            CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
-          end
-        end
-      end
-    end
+    end;
   end;
 
 end.
