@@ -32,9 +32,9 @@ const
   IRQ_UART2_TX                         = 31;
   IRQ_SPI2                             = 33;
   IRQ_ECAN1_RX_DATA_READY              = 34;
-  IRQ_ECAN1_TX_DATA_READY              = 55;
+  IRQ_ECAN2_RX_DATA_READY              = 55;
   IRQ_DCI_CODEC_TRANSFER_DONE          = 60;
-  IRQ_ECAN2_RX_DATA_READY              = 70;
+  IRQ_ECAN1_TX_DATA_READY              = 70;
   IRQ_ECAN2_TX_DATA_READY              = 71;
   
   // Current Register for Ping Pong mode, see dsPIC33_DMA_CurrentPingPongRegister

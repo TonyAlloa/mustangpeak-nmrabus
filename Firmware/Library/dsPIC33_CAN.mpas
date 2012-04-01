@@ -43,11 +43,19 @@ const
   ICODE_RB30               = 30;        // RX Only
   ICODE_RB31               = 31;        // RX Only
 
+// *****************************************************************************
+// Initialization Functions
+// *****************************************************************************
 procedure dsPIC33_CAN_EnterConfigMode;
 procedure dsPIC33_CAN_EnterNormalMode;
 procedure dsPIC33_CAN_AbortPendingTransmissions;
 procedure dsPIC33_CAN_SetBaud(SWJ, BRP, SEG2PH, SEG1PH, PRSEG: Word; Sample3Times: Boolean);
 procedure dsPIC33_CAN_SetDMA_RAM_StartAddress(StartAddress: Word);
+// *****************************************************************************
+
+// *****************************************************************************
+// Receive Filter and Mask Functions
+// *****************************************************************************
 // Filter Creation
 procedure dsPIC33_CAN_EnableFilter(FilterMask: Word);
 procedure dsPIC33_CAN_SetFilter(FilterNumber: Byte; Filter: DWord; ExtendedOnly: Boolean);
@@ -55,15 +63,34 @@ procedure dsPIC33_CAN_SetFilter(FilterNumber: Byte; Filter: DWord; ExtendedOnly:
 procedure dsPIC33_CAN_SetMask(MaskNumber: Byte; Mask: DWord; ExtendedOnly: Boolean);
 // Filter to Mask Assignments
 procedure dsPIC33_CAN_AssociateFilterWithMask(FilterNumber, MaskNumber: Word);
+// *****************************************************************************
+
+// *****************************************************************************
 // RAM Buffer Functions
+// *****************************************************************************
 procedure dsPIC33_CAN_SetBufferSize(Size: Word);
 procedure dsPIC33_CAN_RegisterBufferWithFilter(FilterNumber, BufferNumber: Word);
+// *****************************************************************************
+
+// *****************************************************************************
 // Perphial Hardware FIFO Functions
+// *****************************************************************************
 procedure dsPIC33_CAN_HardwareFIFO_SetFilter(FilterNumber: Word);
 function dsPIC33_CAN_HardwareFIFO_GetCurrentBuffer: Word;
 function dsPIC33_CAN_HardwareFIFO_GetNextBuffer: Word;
 procedure dsPIC33_CAN_HardwareFIFO_SetStartBuffer(BufferNumber: Word);
-// Perphial Interrupt Functions that fire the IVT_ADDR_CxINTERRUPT interrupt
+// *****************************************************************************
+
+// *****************************************************************************
+// CAN Event Interrupt Functions
+//   Interrupt has separate maskable triggers including TX, RX, Overflow, FIFO
+//   Almost Full, Error, Bus Wakeup and Invalid Message.  The Flags are broken into
+//   Sofware Restable Flags and error flags that are autoreset when the error is cleared
+//   It also includes a Code to allow the software to quickly run through a
+//   prioritized list of interupts that both have the Enable and Triggered Flag
+//   set (CAN_InterruptCode, CAN_InterruptCodeWithFilterHit).
+// *****************************************************************************
+// Perphial Interrupt Functions that fire the IVT_ADDR_CxINTERRUPT (CAN Event) interrupt
 procedure dsPIC33_CAN_InvalidMessageInterrupt(Enable: Boolean);
 procedure dsPIC33_CAN_BusWakeUpInterrupt(Enable: Boolean);
 procedure dsPIC33_CAN_ErrorInterrupt(Enable: Boolean);
@@ -71,13 +98,14 @@ procedure dsPIC33_CAN_FIFO_AlmostFullInterrupt(Enable: Boolean);
 procedure dsPIC33_CAN_RXBufferOverflowInterrupt(Enable: Boolean);
 procedure dsPIC33_CAN_RXBufferInterrupt(Enable: Boolean);                       // For the CAN Event RX Interrupt not the RX Ready Interrupt
 procedure dsPIC33_CAN_TXBufferInterrupt(Enable: Boolean);                       // For the CAN Event TX Interrupt not the TX Done Interrupt
-// Perphial Interrupt Functions that return the state of the IVT_ADDR_CxINTERRUPT interrupt
+// Error State Interrupt Flags
 function dsPIC33_CAN_InterruptFlagTXInErrorStateBusOff: Boolean;
 function dsPIC33_CAN_InterruptFlagTXInErrorStateBusPassive: Boolean;
 function dsPIC33_CAN_InterruptFlagRXInErrorBusPassive: Boolean;
 function dsPIC33_CAN_InterruptFlagTXInErrorStateWarning: Boolean;
 function dsPIC33_CAN_InterruptFlagRXInErrorStateWarning: Boolean;
 function dsPIC33_CAN_InterruptFlagTXOrRXInErrorStateWarning: Boolean;
+// Sofware Resetable Interrupts Flags
 function dsPIC33_CAN_InterruptFlagInvalidMessage(DoReset: Boolean): Boolean;
 function dsPIC33_CAN_InterruptFlagBusWakeupActivity(DoReset: Boolean): Boolean;
 function dsPIC33_CAN_InterruptFlagError(DoReset: Boolean): Boolean;
@@ -88,26 +116,42 @@ function dsPIC33_CAN_InterruptFlagTxBuffer(DoReset: Boolean): Boolean;
 // Jump table access to Interrupt Flags (short cut to test if the interrupt type is enabled and flag is set)
 function dsPIC33_CAN_InterruptCode: Word;
 procedure dsPIC33_CAN_InterruptCodeWithFilterHit(var IntCode, FilterHit: Word);
-// Global Interrupt Flags
-procedure dsPIC33_CAN_GlobalInterruptCAN_Event(Enable: Boolean);                // CAN Event Interrupt
+// Event Interrupt Functions
+procedure dsPIC33_CAN_GlobalInterruptCAN_Event(Enable: Boolean);
 function dsPIC33_CAN_GlobalInterruptFlagCAN_Event(DoReset: Boolean): Boolean;
 procedure dsPIC33_CAN_GlobalInterruptCAN_EventPriority(Priority: Word);
-procedure dsPIC33_CAN_GlobalInterruptCAN_ReceiveData(Enable: Boolean);          // CAN RX Data Interrupt (DMA Driven)
-function dsPIC33_CAN_GlobalInterruptFlagCAN_ReceiveData(DoReset: Boolean): Boolean;
-procedure dsPIC33_CAN_GlobalInterruptCAN_ReceiveDataPriority(Priority: Word);
-procedure dsPIC33_CAN_GlobalInterruptCAN_TransmitData(Enable: Boolean);         // CAN TX Data Interrupt (DMA Driven)
-function dsPIC33_CAN_GlobalInterruptFlagCAN_TransmitData(DoReset: Boolean): Boolean;
-procedure dsPIC33_CAN_GlobalInterruptCAN_TransmitDataPriority(Priority: Word);
-// Transmit Functions
+// *****************************************************************************
+
+// *****************************************************************************
+// CAN Misc Interrupt Functions
+// *****************************************************************************
+ // CAN RX Ready Interrupt Functions
+procedure dsPIC33_CAN_GlobalInterruptCAN_RX_Ready(Enable: Boolean);
+function dsPIC33_CAN_GlobalInterruptFlagCAN_RX_Ready(DoReset: Boolean): Boolean;
+procedure dsPIC33_CAN_GlobalInterruptCAN_RX_ReadyPriority(Priority: Word);
+// CAN TX Request Interrupt Functions
+procedure dsPIC33_CAN_GlobalInterruptCAN_TX_Request(Enable: Boolean);
+function dsPIC33_CAN_GlobalInterruptFlagCAN_TX_Request(DoReset: Boolean): Boolean;
+procedure dsPIC33_CAN_GlobalInterruptCAN_TX_RequestPriority(Priority: Word);
+// *****************************************************************************
+
+// *****************************************************************************
+// CAN Transmitter Functions
+// *****************************************************************************
 procedure dsPIC33_CAN_SetBufferAsTransmitter(BufferNumber: Word; DoSet: Boolean);
 procedure dsPIC33_CAN_SetTransmitterPriority(BufferNumber: Word; Priority: Word);
 procedure dsPIC33_CAN_RequestTransmit(BufferNumber: Word);
 function dsPIC33_CAN_TX_Aborted(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_TX_ArbitrationLost(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_TX_ErrorDetected(BufferNumber: Word): Boolean;
-// Receive Functions
+// *****************************************************************************
+
+// *****************************************************************************
+// CAN Receive Functions
+// *****************************************************************************
 function dsPIC33_CAN_RX_Full(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_RX_Overflow(BufferNumber: Word): Boolean;
+// *****************************************************************************
 
 {$ENDIF}
 
@@ -450,7 +494,7 @@ begin
     C1IE_bit := 0;
 end;
 
-procedure dsPIC33_CAN_GlobalInterruptCAN_ReceiveData(Enable: Boolean);
+procedure dsPIC33_CAN_GlobalInterruptCAN_RX_Ready(Enable: Boolean);
 begin
   if Enable then
     C1RXIE_bit := 1
@@ -458,7 +502,7 @@ begin
     C1RXIE_bit := 0;
 end;
 
-procedure dsPIC33_CAN_GlobalInterruptCAN_TransmitData(Enable: Boolean);
+procedure dsPIC33_CAN_GlobalInterruptCAN_TX_Request(Enable: Boolean);
 begin
   if Enable then
     C1RXIE_bit := 1
@@ -483,7 +527,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure dsPIC33_CAN_GlobalInterruptFlagCAN_ReceiveData;
+//  procedure dsPIC33_CAN_GlobalInterruptFlagCAN_RX_Ready;
 //
 //  Parameters: DoReset:  Resets the flag it true
 //
@@ -494,14 +538,14 @@ end;
 //                This is mainly for accessing the CAN Module RX and TX Buffers
 //                directly without using DMA or any of the built in Buffer handling
 // *****************************************************************************
-function dsPIC33_CAN_GlobalInterruptFlagCAN_ReceiveData(DoReset: Boolean): Boolean;
+function dsPIC33_CAN_GlobalInterruptFlagCAN_RX_Ready(DoReset: Boolean): Boolean;
 begin
   Result := C1RXIF_bit = 1;
   if DoReset then C1RXIF_Bit := 0
 end;
 
 // *****************************************************************************
-//  procedure dsPIC33_CAN_GlobalInterruptFlagCAN_TransmitData;
+//  procedure dsPIC33_CAN_GlobalInterruptFlagCAN_TX_Request;
 //
 //  Parameters: DoReset:  Resets the flag it true
 //
@@ -512,7 +556,7 @@ end;
 //                This is mainly for accessing the CAN Module RX and TX Buffers
 //                directly without using DMA or any of the built in Buffer handling
 // *****************************************************************************
-function dsPIC33_CAN_GlobalInterruptFlagCAN_TransmitData(DoReset: Boolean): Boolean;
+function dsPIC33_CAN_GlobalInterruptFlagCAN_TX_Request(DoReset: Boolean): Boolean;
 begin
    Result := C1TXIF_bit = 1;
   if DoReset then C1TXIF_Bit := 0
@@ -535,7 +579,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure dsPIC33_CAN_GlobalInterruptCAN_ReceiveDataPriority;
+//  procedure dsPIC33_CAN_GlobalInterruptCAN_RX_ReadyPriority;
 //
 //  Parameters: DoReset:  Resets the flag it true
 //
@@ -546,7 +590,7 @@ end;
 //                This is mainly for accessing the CAN Module RX and TX Buffers
 //                directly without using DMA or any of the built in Buffer handling
 // *****************************************************************************
-procedure dsPIC33_CAN_GlobalInterruptCAN_ReceiveDataPriority(Priority: Word);
+procedure dsPIC33_CAN_GlobalInterruptCAN_RX_ReadyPriority(Priority: Word);
 begin
   C1RXIP_0_bit := Priority.0;
   C1RXIP_1_bit := Priority.1;
@@ -554,7 +598,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure dsPIC33_CAN_GlobalInterruptCAN_TransmitDataPriority;
+//  procedure dsPIC33_CAN_GlobalInterruptCAN_TX_RequestPriority;
 //
 //  Parameters: DoReset:  Resets the flag it true
 //
@@ -565,7 +609,7 @@ end;
 //                This is mainly for accessing the CAN Module RX and TX Buffers
 //                directly without using DMA or any of the built in Buffer handling
 // *****************************************************************************
-procedure dsPIC33_CAN_GlobalInterruptCAN_TransmitDataPriority(Priority: Word);
+procedure dsPIC33_CAN_GlobalInterruptCAN_TX_RequestPriority(Priority: Word);
 begin
   C1TXIP_0_bit := Priority.0;
   C1TXIP_1_bit := Priority.1;

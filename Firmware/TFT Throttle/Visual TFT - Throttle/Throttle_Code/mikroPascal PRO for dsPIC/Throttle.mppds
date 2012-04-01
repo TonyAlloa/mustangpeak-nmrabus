@@ -33,14 +33,13 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=7
+Count=6
 File0=MCU_Setup_dsPIC33FJ256GP710A.mpas
 File1=..\..\..\..\Library\NodeIDs.mpas
 File2=Throttle_main.mpas
 File3=..\..\..\..\Library\dsPIC33_CAN.mpas
 File4=..\..\..\..\Library\dsPIC33_DMA.mpas
 File5=..\..\..\..\Library\CANStorage.mpas
-File6=..\..\..\..\..\..\..\..\..\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\P33FJ256GP710A.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -72,5 +71,4 @@ File7=Conversions
 File8=ECAN
 [EXPANDED NODES]
 Node1=Sources
-Node2=Output Files
-Count=2
+Count=1

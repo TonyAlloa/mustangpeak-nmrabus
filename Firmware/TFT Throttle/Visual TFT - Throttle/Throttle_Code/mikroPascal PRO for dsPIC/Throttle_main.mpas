@@ -35,6 +35,7 @@ var
   TXList: TCANRawBufferList;
   TXBuffer: TCANBuffer;
   
+
 procedure WriteTXBuffer;
 begin
   WordToHex(TXList.Buffers^[0].SID, s1); 
@@ -217,10 +218,10 @@ begin
   WordToHex(C1CTRL2, s1);
   s1 := 'C1CTRL2: ' + s1;
   strcpy(ButtonRoundF26.Caption, s1);
-  DrawRoundButton(@ButtonRoundF26);    }
+  DrawRoundButton(@ButtonRoundF26);   }
 end;
 
-procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT;
+procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT; ics ICS_AUTO;
 begin
   Inc(IntCount);
   dsPIC33_CAN_GlobalInterruptFlagCAN_Event(True);
@@ -235,6 +236,19 @@ begin
     end
   end;
 end;
+
+procedure C1_RX_RDY_INT(); iv IVT_ADDR_C1RXRDYINTERRUPT; ics ICS_AUTO;
+begin
+  Inc(IntCount);
+  dsPIC33_CAN_GlobalInterruptFlagCAN_RX_Ready(True);                         // Reset the Flag
+end;
+
+procedure C1_TX_REQ_INT(); iv IVT_ADDR_C1TXREQINTERRUPT; ics ICS_AUTO;
+begin
+  Inc(IntCount);
+  dsPIC33_CAN_GlobalInterruptFlagCAN_TX_Request(True);                        // Reset the Flag
+end;
+
 
 begin
   IntCount := 0;
@@ -253,21 +267,29 @@ begin
   dsPIC33_CAN_EnableFilter($0000);                                              // Disable all RX Filters
   dsPIC33_CAN_EnterNormalMode;                                                  // Place the module in Normal Mode
   
-  dsPIC33_DMA_Enable(0, True);                                                  // Enabled DMA Channel 0
   dsPIC33_DMA_DataSize(0, DATASIZE_WORD);                                       // DMA Data Size is a Word
   dsPIC33_DMA_Direction(0, DIRECTION_RAM_TO_PERIPHERAL);                        // Transmit move data from RAM to the Module
   dsPIC33_DMA_AddressMode(0, ADDRESS_MODE_PERIPHERAL_INDIRECT);                 // Use the Peripheral Addressing for the Buffers (temp)
   dsPIC33_DMA_OperatingMode(0, OPERATING_MODE_CONTINIOUS);                      // Continious Mode (as apposed to one shot)
   dsPIC33_DMA_ManualDMATransfer(0, False);                                      // Automatic DMA Transfers
   dsPIC33_DMA_PeripheralAddress(0, @C1TXD);                                     // Assign the DMA Channel to the Transmit Register of the CAN module
+  dsPIC33_DMA_InterruptSelect(0, IRQ_ECAN1_TX_DATA_READY);                      // Assign the DMA Channel to the ECAN 1 TX
   dsPIC33_DMA_TransferCount(0, 8);                                              // Transfer 8 Words
   dsPIC33_DMA_AddressOffsetA(0, 0);                                             // Address Offset from the DAM RAM Start Address is 0
   dsPIC33_DMA_AddressOffsetB(0, 0);                                             // Address Offset from the DAM RAM Start Address is 0
+  dsPIC33_DMA_Enable(0, True);                                                  // Enabled DMA Channel 0
   
   
-  dsPIC33_CAN_TXBufferInterrupt(True);                                          // Enable the TX Done Interrupt
+  dsPIC33_CAN_TXBufferInterrupt(True);                                          // Enable the TX Done Event Interrupt
+  
+  dsPIC33_CAN_GlobalInterruptCAN_TX_RequestPriority(5);
+  dsPIC33_CAN_GlobalInterruptCAN_TX_Request(True);
+  
   dsPIC33_CAN_GlobalInterruptCAN_EventPriority(6);                              // CAN Event Interrupt has a priority of 6 out of 7
   dsPIC33_CAN_GlobalInterruptCAN_Event(True);                                   // Enable the CAN Event Interrupt
+  
+
+  
   
 
   TXList.Buffers^[0].SID := 0;
@@ -293,9 +315,9 @@ begin
   
   
  // WriteTXBuffer;
- //WriteDMAInfo;
+ WriteDMAInfo;
 // WriteCANInfo;
- WriteCAN_TX_Info;
+ //WriteCAN_TX_Info;
 
   while true do
   begin
@@ -309,9 +331,9 @@ begin
       IntCountX := IntCount;
       
       dsPIC33_CAN_RequestTransmit(0);
-      WriteCAN_TX_Info;
+   //   WriteCAN_TX_Info;
       Delay_ms(1000);
-      WriteCAN_TX_Info;
+   //   WriteCAN_TX_Info;
       Delay_ms(1000);
 
     end;
