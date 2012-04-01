@@ -1,4 +1,20 @@
 unit dsPIC33_CAN;
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-04-01:   1.0.0.0 Created
+//
+// * Description:
+//    Implements an easy to use interface into the dsPIC33 ECAN Module Registers
+//
+// ******************************************************************************
 
 {$I Options.inc}
 

@@ -1,4 +1,24 @@
 unit CANStorage;
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-04-01:   1.0.0.0 Created
+//
+// * Description:
+//    Implements a FIFO data structure that can be overlayed onto DSPRAM and DMA transfers
+//    for the ECAN Peripheral or overlayed in normal RAM to add FIFO data structures
+//    for the dsPIC30 CAN Peripheral.
+//    It also implements functions to convert a easy to use CAN data struture (TCANBuffer) into
+//    the SID, EID, DLC, ect bit formats needed for the CAN Modules (TCANRAWBuffer)
+//
+// ******************************************************************************
 
 {$I Options.inc}
 

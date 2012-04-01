@@ -27,11 +27,12 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=4
+Count=5
 File0=MyProject.mpas
 File1=..\Library\CANStorage.mpas
 File2=..\Library\dsPIC33_CAN.mpas
 File3=..\Library\dsPIC33_DMA.mpas
+File4=..\Library\_25AAxxxx.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -40,11 +41,15 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=4
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Simple Example of CANLIbrary\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Count=8
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Simple Example of CANLIbrary\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Simple Example of CANLIbrary\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path7=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
 [HEADER_PATH]
 Count=0
 [HEADERS]
