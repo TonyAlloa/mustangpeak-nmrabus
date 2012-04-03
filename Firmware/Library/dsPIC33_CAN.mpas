@@ -12,7 +12,9 @@ unit dsPIC33_CAN;
 //     2012-04-01:   1.0.0.0 Created
 //
 // * Description:
-//    Implements an easy to use interface into the dsPIC33 ECAN Module Registers
+//                Implements an easy to use interface into the dsPIC33 ECAN Module Registers
+//                It is fast, no.  Is it efficient, no.  Is it easy to experiment with to try to
+//                understand how this module works, YES
 //
 // ******************************************************************************
 
@@ -73,7 +75,7 @@ procedure dsPIC33_CAN_SetDMA_RAM_StartAddress(StartAddress: Word);
 // Receive Filter and Mask Functions
 // *****************************************************************************
 // Filter Creation
-procedure dsPIC33_CAN_EnableFilter(FilterMask: Word);
+procedure dsPIC33_CAN_EnableDisableRXFilters(FilterMask: Word);
 procedure dsPIC33_CAN_SetFilter(FilterNumber: Byte; Filter: DWord; ExtendedOnly: Boolean);
 // Mask Creation
 procedure dsPIC33_CAN_SetMask(MaskNumber: Byte; Mask: DWord; ExtendedOnly: Boolean);
@@ -460,12 +462,29 @@ begin
    ManipulateTXBit(BufferNumber, TX_REQUEST_BIT, True);
 end;
 
-
+// *****************************************************************************
+//  procedure dsPIC33_CAN_RX_Full;
+//
+//  Parameters:   BufferNumber: The Buffer Index is to be checked for a RX Full (0..31)
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
 function dsPIC33_CAN_RX_Full(BufferNumber: Word): Boolean;
 begin
   Result := ReadRXBit(@C1RXFUL1, BufferNumber);
 end;
 
+// *****************************************************************************
+//  procedure dsPIC33_CAN_RX_Overflow;
+//
+//  Parameters:   BufferNumber: The Buffer Index is to be checked for a RX Overflow (0..31)
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
 function dsPIC33_CAN_RX_Overflow(BufferNumber: Word): Boolean;
 begin
   Result := ReadRXBit(@C1RXOVF1, BufferNumber);
@@ -496,7 +515,7 @@ end;
 // *****************************************************************************
 //  procedure dsPIC33_CAN_GlobalInterruptCAN_Event;
 //
-//  Parameters: Enabled:  Enables or Disables the overal CAN Event Interrupt
+//  Parameters: Enabled:  Enables or Disables the CAN Event Interrupt
 //
 //  Result:
 //
@@ -510,6 +529,15 @@ begin
     C1IE_bit := 0;
 end;
 
+// *****************************************************************************
+//  procedure dsPIC33_CAN_GlobalInterruptCAN_RX_Ready;
+//
+//  Parameters: Enabled:  Enables or Disables the CAN RX Ready Interrupt
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
 procedure dsPIC33_CAN_GlobalInterruptCAN_RX_Ready(Enable: Boolean);
 begin
   if Enable then
@@ -518,6 +546,15 @@ begin
     C1RXIE_bit := 0;
 end;
 
+// *****************************************************************************
+//  procedure dsPIC33_CAN_GlobalInterruptCAN_TX_Request;
+//
+//  Parameters: Enabled:  Enables or Disables the CAN TX Request Interrupt
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
 procedure dsPIC33_CAN_GlobalInterruptCAN_TX_Request(Enable: Boolean);
 begin
   if Enable then
@@ -1163,7 +1200,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure dsPIC33_CAN_EnableFilter;
+//  procedure dsPIC33_CAN_EnableDisableRXFilters;
 //
 //  Parameters: FilterMask: Set bit to "1" to enable Filter (0..15)
 //
@@ -1171,7 +1208,7 @@ end;
 //
 //  Description:  Bits 0..15 = Filters 0..15, Set to "1" to enable "0" to disable
 // *****************************************************************************
-procedure dsPIC33_CAN_EnableFilter(FilterMask: Word);
+procedure dsPIC33_CAN_EnableDisableRXFilters(FilterMask: Word);
 begin
   C1FEN1 := FilterMask
 end;

@@ -12,14 +12,26 @@ unit dsPIC33_DMA;
 //     2012-04-01:   1.0.0.0 Created
 //
 // * Description:
-//    Implements an easy to use interface into the dsPIC33 DMA Registers
+//    Implements an easy to use interface into the dsPIC33 DMA Registers.  It is
+//    fast, no.  Is it efficient, no.  Is it easy to experiment with to try to
+//    understand how this module works, YES
 //
 // ******************************************************************************
 
 const
-  ADDRESS_MODE_REG_INDIRECT_POST_INCREMENT    = 0;
-  ADDRESS_MODE_REG_INDIRECT_NO_POST_INCREMENT = 1;
-  ADDRESS_MODE_PERIPHERAL_INDIRECT            = 2;
+  ADDRESS_MODE_REG_INDIRECT_POST_INCREMENT    = 0;                              // The datasheet says this: The user application determines the latest DPSRAM transfer address offset by 
+                                                                                // reading the DPSRAM Start Address Offset register. However, the contents of this register are not modified 
+                                                                                // by the DMA controller."  Well that is ONLY TRUE IF AND ONLY IF the correct number of Words are transfered
+                                                                                // via the dsPIC33_DMA_TransferCount, read the nodes in this function definition for more details.
+                                                                                // Also in this Mode DMA_AddressOffsetA and DMA_AddressOffsetB appear to be mapped to the same address, changing
+                                                                                // one changes the other.  This may be true for anything other than Ping-Pong Mode.
+  ADDRESS_MODE_REG_INDIRECT_NO_POST_INCREMENT = 1;                              // In the CAN Module this mode only moves one word at a time and the software much trap the DMA interrupt
+                                                                                // and increment the Address Offset (A or B) on Word at a time.  Useless....
+  ADDRESS_MODE_PERIPHERAL_INDIRECT            = 2;                              // In the CAN Module this contains a bug in many versions of the silicon that only allows one Transmit Buffer
+                                                                                // (0 only) or the SID from Buffer 0 will be used in other Transmit buffers.
+                                                                                // Also in some silicon if a TX with higer priority is sent from Buffer 1 a lower priority message in Buffer 0 may
+                                                                                // not get sent.... Useless....
+                                                                                // Basically the ECAN module is a piece of crap......
   
   OPERATING_MODE_CONTINIOUS                   = 0;
   OPERATING_MODE_ONESHOT                      = 1;
@@ -72,7 +84,7 @@ procedure dsPIC33_DMA_ManualDMATransfer(ChannelNumber: Word; Manual: Boolean);
 procedure dsPIC33_DMA_AddressOffsetA(ChannelNumber: Word; Offset: Word);
 procedure dsPIC33_DMA_AddressOffsetB(ChannelNumber: Word; Offset: Word);
 procedure dsPIC33_DMA_PeripheralAddress(ChannelNumber: Word; Address: Word);
-procedure dsPIC33_DMA_TransferCount(ChannelNumber: Word; Count: Word);          // 0 Counts!  An 8 Bit transfer = 7 in this register
+procedure dsPIC33_DMA_TransferCount(ChannelNumber: Word; Count: Word);
 function dsPIC33_DMA_MostRecentRAM_Address: Word;
 function dsPIC33_DMA_PeripheralWriteCollisionDetected(ChannelNumber: Word): Boolean;
 function dsPIC33_DMA_DSPRAMWriteCollisionDetected(ChannelNumber: Word): Boolean;
@@ -357,10 +369,24 @@ end;
 //
 //  Result:
 //
-//  Description: NOTE:  This is zero indexed so 0 counts as one transfer. This
-//                      function accounts for that so if you need 8 Words moved
-//                      in Word Size then pass an 8 to this function.  It will offset
-//                      it by 1 to account for the 0 counting as a data transfer
+//  Description: NOTE:  If running in Register Indirect with Post-Increment and in TX mode then be careful.  
+//                      The documentation states "When the DMA data transfer takes place, the 
+//                      DPSRAM Address does not increment to the next location"
+//                      Which is ONLY TRUE if you pass in THE EXACT NUMBER OF WORDS THAT WILL ACTUALLY
+//                      BE TRANSMITTED.  What that means is you MUST look at the DLC Byte Count and set
+//                      the minimum number of Words needed to transfer the SID, EID, DLC, and the number
+//                      of bytes (rounded up to words) that will be sent based on the DLC. If you don't the
+//                      Address Offset will be not be left in the original state, it will be incremented
+//                      the the delta between what is passed to the function and the number of words that
+//                      actually NEEDED to be transfered by DMA as defined the by the value in DLC.
+//                      If you pass the same value as for a RX then the DPSRAM Address
+//                      will increment to an incorrect value... For a RX Channel you must pass an 8 
+//                      (so Register will have a 7 per the datasheet) TBD that this is true
+//
+//                      If running in Peripheral Indirect mode then the offset MUST be on an even Byte Boundry
+//                      as well as the correct number of LSB "0"s based on the Address Offset.  See the datasheet
+//                      for more information.  This mode does not need the TransferCount modified depending on DLC
+//                      in software but it has other issues (see the notes under ADDRESS_MODE_PERIPHERAL_INDIRECT constant
 // *****************************************************************************
 procedure dsPIC33_DMA_TransferCount(ChannelNumber: Word; Count: Word);
 var

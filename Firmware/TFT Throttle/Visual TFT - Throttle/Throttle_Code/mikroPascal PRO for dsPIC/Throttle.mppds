@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=Throttle_main.mpas
+Value=..\..\..\..\Library\dsPIC33_CAN.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -16,7 +16,7 @@ Value=0
 [HEAP_SIZE]
 Value=2000
 [FILES]
-Count=10
+Count=11
 File0=Throttle_main.mpas
 File1=Throttle_objects.mpas
 File2=Throttle_driver.mpas
@@ -27,6 +27,7 @@ File6=..\..\..\..\Library\NodeIDs.mpas
 File7=..\..\..\..\Library\dsPIC33_DMA.mpas
 File8=..\..\..\..\Library\dsPIC33_CAN.mpas
 File9=..\..\..\..\Library\CANStorage.mpas
+File10=ECan_Defs.mpas
 [BINARIES]
 Count=0
 [IMAGES]
@@ -71,4 +72,5 @@ File7=Conversions
 File8=ECAN
 [EXPANDED NODES]
 Node1=Sources
-Count=1
+Node2=Output Files
+Count=2
