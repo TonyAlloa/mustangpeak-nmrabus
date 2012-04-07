@@ -96,7 +96,7 @@ type TCLabel = record
   OnPressPtr           : ^TOnEventPtr;
 end; code; far;
 
-type TBox = record
+type TCBox = record
   OwnerScreenAddress   : ^byte;
   Order                : byte;
   Left                 : word;
@@ -119,7 +119,7 @@ type TBox = record
   OnDownPtr            : ^TOnEventPtr;
   OnClickPtr           : ^TOnEventPtr;
   OnPressPtr           : ^TOnEventPtr;
-end;
+end; code; far;
 
 type TLine = record
   OwnerScreenAddress   : ^byte;
@@ -146,8 +146,8 @@ type TScreen = record
   Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;
   CLabels                    : ^ const code far ^TCLabel;
-  BoxesCount                 : word;
-  Boxes                      : ^ const code far ^TBox;
+  CBoxesCount                : word;
+  CBoxes                     : ^ const code far ^TCBox;
   LinesCount                 : word;
   Lines                      : ^ const code far ^TLine;
 end;

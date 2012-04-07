@@ -379,6 +379,17 @@ end;
 //                      Address Offset will be not be left in the original state, it will be incremented
 //                      the the delta between what is passed to the function and the number of words that
 //                      actually NEEDED to be transfered by DMA as defined the by the value in DLC.
+//
+//                      Also note that if it is a Standard ID it will by one less than the Extended ID
+//                      as defined by the errata sheet of the dsPIC33FJ64MC204... but with the
+//                      REAL definition of the bits in the first 3 words this is not possible...
+//                      TEST: This is not true for the dsPIC33FJ256FJ710A you must still account for the
+//                      three first words, SID, EID, DCL.  So does this mean that the bit pattern
+//                      for the dsPIC33FJ64MC204 actually matches the datasheet and this is true
+//                      for that part?  I don't know.  I do know that Microchip has given flat wrong
+//                      information out through tech support on the CAN module so I don't trust what
+//                      they say as it is not clear they know how the module works.
+//
 //                      If you pass the same value as for a RX then the DPSRAM Address
 //                      will increment to an incorrect value... For a RX Channel you must pass an 8 
 //                      (so Register will have a 7 per the datasheet) TBD that this is true

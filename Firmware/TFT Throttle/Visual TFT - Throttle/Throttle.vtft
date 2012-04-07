@@ -158,7 +158,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box1: TDgrBox
@@ -181,7 +181,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -223,7 +223,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object ButtonPrev: TDgrButton
@@ -436,7 +436,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Label20: TDgrLabel
@@ -901,7 +901,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box5: TDgrBox
@@ -924,7 +924,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -966,7 +966,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box6: TDgrBox
@@ -1031,7 +1031,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Button1: TDgrButton
@@ -1236,6 +1236,7 @@ object TatDiagram
   TopRuler.GridColor = clBlack
   Zoom = 129
   BorderColor = clGray
+  VertScrollBar.Position = 165
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
   ActiveLayers = 31
@@ -1309,7 +1310,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -1351,7 +1352,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box13: TDgrBox
@@ -1416,7 +1417,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box15: TDgrBox
@@ -1481,7 +1482,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object LabelSpeed: TDgrLabel
@@ -2002,6 +2003,8 @@ object TatDiagram
     Layer = 1
     LayerName = 'LayerUI'
     Transparency = 0
+    OnDown = 'ButtonRound12Down'
+    OnClick = 'ButtonRound12Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
@@ -5123,7 +5126,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box11: TDgrBox
@@ -5146,7 +5149,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -5188,7 +5191,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box12: TDgrBox
@@ -5253,7 +5256,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Button5: TDgrButton
@@ -6178,7 +6181,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box8: TDgrBox
@@ -6201,7 +6204,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -6243,7 +6246,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Box9: TDgrBox
@@ -6308,7 +6311,7 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = False
+    Static_ = True
     Collapsed = False
   end
   object Button3: TDgrButton
@@ -6482,7 +6485,7 @@ SCREEN_SECTION
 		ScreenGridColor=clBlack
 
 	ScreenName=ScreenThrottle
-		CurrentLayer=4
+		CurrentLayer=0
 		StartScreen=True
 		StaticScreen=False
 		ScreenColor=clGray
@@ -6509,7 +6512,7 @@ SCREEN_SECTION
 		ScreenGridColor=clBlack
 
 	ScreenCount=5
-	ActiveScreen=ScreenThrottle
+	ActiveScreen=Screen3
 
 SCREEN_SECTION_END
 

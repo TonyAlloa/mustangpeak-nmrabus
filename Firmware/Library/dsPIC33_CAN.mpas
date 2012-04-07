@@ -18,6 +18,9 @@ unit dsPIC33_CAN;
 //
 // ******************************************************************************
 
+uses
+  CANStorage;
+  
 {$I Options.inc}
 
 {$IFDEF dsPIC33}
@@ -68,7 +71,6 @@ procedure dsPIC33_CAN_EnterConfigMode;
 procedure dsPIC33_CAN_EnterNormalMode;
 procedure dsPIC33_CAN_AbortPendingTransmissions;
 procedure dsPIC33_CAN_SetBaud(SWJ, BRP, SEG2PH, SEG1PH, PRSEG: Word; Sample3Times: Boolean);
-procedure dsPIC33_CAN_SetDMA_RAM_StartAddress(StartAddress: Word);
 // *****************************************************************************
 
 // *****************************************************************************
@@ -87,6 +89,7 @@ procedure dsPIC33_CAN_AssociateFilterWithMask(FilterNumber, MaskNumber: Word);
 // RAM Buffer Functions
 // *****************************************************************************
 procedure dsPIC33_CAN_SetBufferSize(Size: Word);
+function dsPIC33_CAN_CalculateBufferSizeForRegAddressWithAutoIncrement(Buffer: PCANRawBuffer): Word;
 procedure dsPIC33_CAN_RegisterBufferWithFilter(FilterNumber, BufferNumber: Word);
 // *****************************************************************************
 
@@ -176,9 +179,6 @@ function dsPIC33_CAN_RX_Overflow(BufferNumber: Word): Boolean;
 implementation
 
 {$IFDEF dsPIC33}
-
-var
-  _DMA_RAM_Start: Word;     // Start of the DMA RAM for the device used.  See the dsPIC33_CAN_SetDMA_RAM_StartAddress function for access
 
 // *****************************************************************************
 //  procedure SetWindowSelectBit;
@@ -453,7 +453,9 @@ end;
 //                Buffer 0 work correctly as a transmitter.  What would happen is
 //                The SID/EID of Buffer 0 would be used as the CAN ID for Buffers 1-7
 //                Look at the parts errata sheet to see if this bug still exists
-//                in the device being used
+//                in the device being used. This appeared to be only a problem
+//                if using the Peripheral Addressing Mode.  It was claimed to not
+//                be a problem in Register Indirect modes...
 // *****************************************************************************
 procedure dsPIC33_CAN_RequestTransmit(BufferNumber: Word);
 const
@@ -1008,6 +1010,39 @@ begin
   end;
 end;
 
+// *****************************************************************************
+//  procedure dsPIC33_CAN_SetBufferSize;
+//
+//  Parameters: Buffer:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function dsPIC33_CAN_CalculateBufferSizeForRegAddressWithAutoIncrement(Buffer: PCANRawBuffer): Word;
+var
+  ByteCount: Word;
+begin
+  if Buffer^.Word0 and $0001 = 0 then
+  begin
+    Result := 2;
+    ByteCount := Buffer^.Word1 and $000F;
+  end else
+  begin
+    Result := 3;
+    ByteCount := Buffer^.Word2 and $000F;
+  end;
+
+  if ByteCount > 5 then
+    Result := Result + 4
+  else if ByteCount > 3 then
+    Result := Result + 3
+  else if ByteCount > 1 then
+    Result := Result + 2
+  else
+    Result := Result + 1;
+end;
+
 //  procedure dsPIC33_CAN_HardwareFIFO_SetFilter;
 //
 //  Parameters: FilterNumber:  Filter (0..15) to point to the Hardware FIFO Buffer
@@ -1236,22 +1271,6 @@ begin
   C1CFG2 := PRSEG or (SEG1PH shl 3) or (SEG2PH shl 8) or PROGRAMMABLE_SEG2PHTS;
   if Sample3Times then
     C1CFG2 := C1CFG2 or SAMPLE_3_TIMES
-end;
-
-// *****************************************************************************
-//  procedure dsPIC33_CAN_SetDMA_RAM_StartAddress;
-//
-//  Parameters: StartAddress:  Start address for the special RAM used by the DMA
-//
-//  Result:
-//
-//  Description:  for larger dsPIC33 parts this is 0x7800
-//                for smaller parts is is 0x4000 check the datasheet for the
-//                part being used....
-// *****************************************************************************
-procedure dsPIC33_CAN_SetDMA_RAM_StartAddress(StartAddress: Word);
-begin
-  _DMA_RAM_Start := StartAddress;
 end;
 
 // *****************************************************************************

@@ -2,30 +2,32 @@ unit Throttle_events_code;
 
 uses Throttle_objects, Throttle_resources;
 
+procedure ButtonRound12Down();
+procedure ButtonRound12Click();
 //--------------------- Externals ---------------------//
-var Box2 : TBox; external;
-var Box1 : TBox; external;
+const Box2 : TCBox; code; far; external;
+const Box1 : TCBox; code; far; external;
 var ButtonPrev : TButton; external;
 var ButtonPrev_Caption : string[4]; external;
 var ButtonNext : TButton; external;
 var ButtonNext_Caption : string[4]; external;
-var Box3 : TBox; external;
+const Box3 : TCBox; code; far; external;
 const Label20 : TCLabel; code; far; external;
 const Label21 : TCLabel; code; far; external;
 var LabelReceived : TLabel; external;
 var LabelReceived_Caption : string[12]; external;
 var LabelTransmitted : TLabel; external;
 var LabelTransmitted_Caption : string[12]; external;
-var Box4 : TBox; external;
-var Box5 : TBox; external;
-var Box6 : TBox; external;
+const Box4 : TCBox; code; far; external;
+const Box5 : TCBox; code; far; external;
+const Box6 : TCBox; code; far; external;
 var Button1 : TButton; external;
 var Button1_Caption : string[4]; external;
 var Button2 : TButton; external;
 var Button2_Caption : string[4]; external;
-var Box14 : TBox; external;
-var Box13 : TBox; external;
-var Box15 : TBox; external;
+const Box14 : TCBox; code; far; external;
+const Box13 : TCBox; code; far; external;
+const Box15 : TCBox; code; far; external;
 const LabelSpeed : TCLabel; code; far; external;
 var LabelAddress : TLabel; external;
 var LabelAddress_Caption : string[7]; external;
@@ -103,9 +105,9 @@ var ButtonRound10 : TButton_Round; external;
 var ButtonRound10_Caption : string[16]; external;
 var ButtonRound11 : TButton_Round; external;
 var ButtonRound11_Caption : string[16]; external;
-var Box10 : TBox; external;
-var Box11 : TBox; external;
-var Box12 : TBox; external;
+const Box10 : TCBox; code; far; external;
+const Box11 : TCBox; code; far; external;
+const Box12 : TCBox; code; far; external;
 var Button5 : TButton; external;
 var Button5_Caption : string[7]; external;
 var Button6 : TButton; external;
@@ -124,9 +126,9 @@ var ButtonRound19 : TButton_Round; external;
 var ButtonRound19_Caption : string[36]; external;
 var ButtonRound21 : TButton_Round; external;
 var ButtonRound21_Caption : string[17]; external;
-var Box7 : TBox; external;
-var Box8 : TBox; external;
-var Box9 : TBox; external;
+const Box7 : TCBox; code; far; external;
+const Box8 : TCBox; code; far; external;
+const Box9 : TCBox; code; far; external;
 var Button3 : TButton; external;
 var Button3_Caption : string[4]; external;
 var Button4 : TButton; external;
@@ -141,17 +143,12 @@ procedure DrawButton(Abutton : ^TButton); external;
 procedure DrawRoundButton(Around_button : ^TButton_Round); external;
 procedure DrawLabel(ALabel : ^TLabel); external;
 procedure DrawCLabel(ALabel : ^TCLabel); external;
-procedure DrawBox(ABox : ^TBox); external;
+procedure DrawCBox(ABox : ^TCBox); external;
 procedure DrawLine(Aline : ^TLine); external;
 //----------------- End of Externals ------------------//
 
 //-------------- User code declarations ---------------//
-const
-  MAX_PAGE_INDEX = 10;
 
-var
-  PageIndex,
-  CurrentPage: Integer;
 
 //-------------- End of User code declarations --------//
 
@@ -159,8 +156,21 @@ implementation
 
 //--------------------- User code ---------------------//
 
+
+
 //----------------- End of User code ------------------//
 
 // Event Handlers
+
+
+procedure ButtonRound12Click();
+begin
+  LATG3_bit := not LATG3_bit;
+end;
+
+procedure ButtonRound12Down();
+begin
+//  LATG3_bit := not LATG3_bit;
+end;
 
 end.

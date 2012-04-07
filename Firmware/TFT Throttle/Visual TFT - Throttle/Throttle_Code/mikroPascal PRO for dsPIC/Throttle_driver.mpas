@@ -4,6 +4,8 @@ uses Throttle_objects, Throttle_resources;
 
 /////////////////////////
 // External Declarations
+procedure ButtonRound12Down(); external;
+procedure ButtonRound12Click(); external;
 /////////////////////////
 
 procedure DrawScreen(aScreen : ^TScreen);
@@ -14,7 +16,7 @@ procedure DrawButton(Abutton : ^TButton);
 procedure DrawRoundButton(Around_button : ^TButton_Round);
 procedure DrawLabel(ALabel : ^TLabel);
 procedure DrawCLabel(ALabel : ^TCLabel);
-procedure DrawBox(ABox : ^TBox);
+procedure DrawCBox(ABox : ^TCBox);
 procedure DrawLine(Aline : ^TLine);
 
 
@@ -70,9 +72,9 @@ var
     local_clabel : ^TCLabel;
     exec_clabel : ^TCLabel;
     clabel_order : short;
-    local_box : ^TBox;
-    exec_box : ^TBox;
-    box_order : short;
+    local_cbox : ^TCBox;
+    exec_cbox : ^TCBox;
+    cbox_order : short;
 
 
 
@@ -82,18 +84,90 @@ var CurrentScreen : ^ TScreen;
 const Screen1_Buttons  : array[2] of ^TButton; code; far; forward;
 const Screen1_Labels  : array[2] of ^TLabel; code; far; forward;
 const Screen1_CLabels  : array[2] of ^TCLabel; code; far; forward;
-const Screen1_Boxes  : array[3] of ^TBox; code; far; forward;
+const Screen1_CBoxes  : array[3] of ^TCBox; code; far; forward;
 
 var Screen_CAN           : TScreen;
-var Box2 : TBox;
-var Box1 : TBox;
+    const Box2 : TCBox = 
+         (
+         @Screen_CAN           , //   Box2.OwnerScreen
+         0                     , //   Box2.Order           
+         0                     , //   Box2.Left           
+         285                   , //   Box2.Top             
+         240                   , //   Box2.Width           
+         34                    , //   Box2.Height          
+         1                     , //   Box2.Pen_Width       
+         0x0000                , //   Box2.Pen_Color       
+         1                     , //   Box2.Visible         
+         0                     , //   Box2.Active          
+         1                     , //   Box2.Transparent     
+         1                     , //   Box2.Gradient        
+         0                     , //   Box2.Gradient_Orientation    
+         0xFFFF                , //   Box2.Gradient_Start_Color    
+         0xC618                , //   Box2.Gradient_End_Color      
+         0xC618                , //   Box2.Color           
+         1                     , //   Box2.PressColEnabled 
+         0x8410                , //   Box2.Press_Color     
+         0                     ,//    Box2.OnUpPtr
+         0                     ,//    Box2.OnDownPtr
+         0                     ,//    Box2.OnClickPtr
+         0                      //    Box2.OnPressPtr
+         ); code; far;
+    const Box1 : TCBox = 
+         (
+         @Screen_CAN           , //   Box1.OwnerScreen
+         1                     , //   Box1.Order           
+         0                     , //   Box1.Left           
+         0                     , //   Box1.Top             
+         240                   , //   Box1.Width           
+         258                   , //   Box1.Height          
+         1                     , //   Box1.Pen_Width       
+         0x0000                , //   Box1.Pen_Color       
+         1                     , //   Box1.Visible         
+         0                     , //   Box1.Active          
+         1                     , //   Box1.Transparent     
+         1                     , //   Box1.Gradient        
+         0                     , //   Box1.Gradient_Orientation    
+         0xC618                , //   Box1.Gradient_Orientation    
+         0xFFFF                , //   Box1.Gradient_End_Color    
+         0xC618                , //   Box1.Color           
+         1                     , //   Box1.PressColEnabled 
+         0x8410                , //   Box1.Press_Color     
+         0                     ,//    Box1.OnUpPtr
+         0                     ,//    Box1.OnDownPtr
+         0                     ,//    Box1.OnClickPtr
+         0                      //    Box1.OnPressPtr
+         ); code; far;
 var ButtonPrev : TButton;
     ButtonPrev_Caption : string[5];
 
 var ButtonNext : TButton;
     ButtonNext_Caption : string[5];
 
-var Box3 : TBox;
+    const Box3 : TCBox = 
+         (
+         @Screen_CAN           , //   Box3.OwnerScreen
+         4                     , //   Box3.Order           
+         0                     , //   Box3.Left           
+         259                   , //   Box3.Top             
+         240                   , //   Box3.Width           
+         26                    , //   Box3.Height          
+         1                     , //   Box3.Pen_Width       
+         0x0000                , //   Box3.Pen_Color       
+         1                     , //   Box3.Visible         
+         0                     , //   Box3.Active          
+         1                     , //   Box3.Transparent     
+         1                     , //   Box3.Gradient        
+         0                     , //   Box3.Gradient_Orientation    
+         0xFFFF                , //   Box3.Gradient_Start_Color    
+         0xC618                , //   Box3.Gradient_End_Color      
+         0xC618                , //   Box3.Color           
+         1                     , //   Box3.PressColEnabled 
+         0x8410                , //   Box3.Press_Color     
+         0                     ,//    Box3.OnUpPtr
+         0                     ,//    Box3.OnDownPtr
+         0                     ,//    Box3.OnClickPtr
+         0                      //    Box3.OnPressPtr
+         ); code; far;
     const Label20_Caption : string[10] = 'Received:'; code; far;
     const Label20 : TCLabel = 
          (
@@ -155,7 +229,7 @@ var LabelTransmitted : TLabel;
          @Label20,             
          @Label21              
          ); code; far;
-      const Screen1_Boxes  : array[3] of ^TBox =
+      const Screen1_CBoxes  : array[3] of ^TCBox =
          (
          @Box2,                
          @Box1,                
@@ -164,12 +238,84 @@ var LabelTransmitted : TLabel;
 
 
 const Screen2_Buttons  : array[2] of ^TButton; code; far; forward;
-const Screen2_Boxes  : array[3] of ^TBox; code; far; forward;
+const Screen2_CBoxes  : array[3] of ^TCBox; code; far; forward;
 
 var ScreenTemplate           : TScreen;
-var Box4 : TBox;
-var Box5 : TBox;
-var Box6 : TBox;
+    const Box4 : TCBox = 
+         (
+         @ScreenTemplate       , //   Box4.OwnerScreen
+         0                     , //   Box4.Order           
+         0                     , //   Box4.Left           
+         285                   , //   Box4.Top             
+         240                   , //   Box4.Width           
+         34                    , //   Box4.Height          
+         1                     , //   Box4.Pen_Width       
+         0x0000                , //   Box4.Pen_Color       
+         1                     , //   Box4.Visible         
+         0                     , //   Box4.Active          
+         1                     , //   Box4.Transparent     
+         1                     , //   Box4.Gradient        
+         0                     , //   Box4.Gradient_Orientation    
+         0xFFFF                , //   Box4.Gradient_Start_Color    
+         0xC618                , //   Box4.Gradient_End_Color      
+         0xC618                , //   Box4.Color           
+         1                     , //   Box4.PressColEnabled 
+         0x8410                , //   Box4.Press_Color     
+         0                     ,//    Box4.OnUpPtr
+         0                     ,//    Box4.OnDownPtr
+         0                     ,//    Box4.OnClickPtr
+         0                      //    Box4.OnPressPtr
+         ); code; far;
+    const Box5 : TCBox = 
+         (
+         @ScreenTemplate       , //   Box5.OwnerScreen
+         1                     , //   Box5.Order           
+         0                     , //   Box5.Left           
+         0                     , //   Box5.Top             
+         240                   , //   Box5.Width           
+         258                   , //   Box5.Height          
+         1                     , //   Box5.Pen_Width       
+         0x0000                , //   Box5.Pen_Color       
+         1                     , //   Box5.Visible         
+         0                     , //   Box5.Active          
+         1                     , //   Box5.Transparent     
+         1                     , //   Box5.Gradient        
+         0                     , //   Box5.Gradient_Orientation    
+         0xC618                , //   Box5.Gradient_Orientation    
+         0xFFFF                , //   Box5.Gradient_End_Color    
+         0xC618                , //   Box5.Color           
+         1                     , //   Box5.PressColEnabled 
+         0x8410                , //   Box5.Press_Color     
+         0                     ,//    Box5.OnUpPtr
+         0                     ,//    Box5.OnDownPtr
+         0                     ,//    Box5.OnClickPtr
+         0                      //    Box5.OnPressPtr
+         ); code; far;
+    const Box6 : TCBox = 
+         (
+         @ScreenTemplate       , //   Box6.OwnerScreen
+         2                     , //   Box6.Order           
+         0                     , //   Box6.Left           
+         259                   , //   Box6.Top             
+         240                   , //   Box6.Width           
+         26                    , //   Box6.Height          
+         1                     , //   Box6.Pen_Width       
+         0x0000                , //   Box6.Pen_Color       
+         1                     , //   Box6.Visible         
+         0                     , //   Box6.Active          
+         1                     , //   Box6.Transparent     
+         1                     , //   Box6.Gradient        
+         0                     , //   Box6.Gradient_Orientation    
+         0xFFFF                , //   Box6.Gradient_Start_Color    
+         0xC618                , //   Box6.Gradient_End_Color      
+         0xC618                , //   Box6.Color           
+         1                     , //   Box6.PressColEnabled 
+         0x8410                , //   Box6.Press_Color     
+         0                     ,//    Box6.OnUpPtr
+         0                     ,//    Box6.OnDownPtr
+         0                     ,//    Box6.OnClickPtr
+         0                      //    Box6.OnPressPtr
+         ); code; far;
 var Button1 : TButton;
     Button1_Caption : string[5];
 
@@ -181,7 +327,7 @@ var Button2 : TButton;
          @Button1,             
          @Button2              
          ); code; far;
-      const Screen2_Boxes  : array[3] of ^TBox =
+      const Screen2_CBoxes  : array[3] of ^TCBox =
          (
          @Box4,                
          @Box5,                
@@ -193,13 +339,85 @@ const Screen3_Buttons  : array[3] of ^TButton; code; far; forward;
 const Screen3_Buttons_Round  : array[33] of ^TButton_Round; code; far; forward;
 const Screen3_Labels  : array[1] of ^TLabel; code; far; forward;
 const Screen3_CLabels  : array[1] of ^TCLabel; code; far; forward;
-const Screen3_Boxes  : array[3] of ^TBox; code; far; forward;
+const Screen3_CBoxes  : array[3] of ^TCBox; code; far; forward;
 const Screen3_Lines  : array[2] of ^TLine; code; far; forward;
 
 var ScreenThrottle           : TScreen;
-var Box14 : TBox;
-var Box13 : TBox;
-var Box15 : TBox;
+    const Box14 : TCBox = 
+         (
+         @ScreenThrottle       , //   Box14.OwnerScreen
+         0                     , //   Box14.Order           
+         0                     , //   Box14.Left           
+         0                     , //   Box14.Top             
+         240                   , //   Box14.Width           
+         258                   , //   Box14.Height          
+         1                     , //   Box14.Pen_Width       
+         0x0000                , //   Box14.Pen_Color       
+         1                     , //   Box14.Visible         
+         0                     , //   Box14.Active          
+         1                     , //   Box14.Transparent     
+         1                     , //   Box14.Gradient        
+         0                     , //   Box14.Gradient_Orientation    
+         0xC618                , //   Box14.Gradient_Orientation    
+         0xFFFF                , //   Box14.Gradient_End_Color    
+         0xC618                , //   Box14.Color           
+         1                     , //   Box14.PressColEnabled 
+         0x8410                , //   Box14.Press_Color     
+         0                     ,//    Box14.OnUpPtr
+         0                     ,//    Box14.OnDownPtr
+         0                     ,//    Box14.OnClickPtr
+         0                      //    Box14.OnPressPtr
+         ); code; far;
+    const Box13 : TCBox = 
+         (
+         @ScreenThrottle       , //   Box13.OwnerScreen
+         1                     , //   Box13.Order           
+         0                     , //   Box13.Left           
+         285                   , //   Box13.Top             
+         240                   , //   Box13.Width           
+         34                    , //   Box13.Height          
+         1                     , //   Box13.Pen_Width       
+         0x0000                , //   Box13.Pen_Color       
+         1                     , //   Box13.Visible         
+         0                     , //   Box13.Active          
+         1                     , //   Box13.Transparent     
+         1                     , //   Box13.Gradient        
+         0                     , //   Box13.Gradient_Orientation    
+         0xFFFF                , //   Box13.Gradient_Start_Color    
+         0xC618                , //   Box13.Gradient_End_Color      
+         0xC618                , //   Box13.Color           
+         1                     , //   Box13.PressColEnabled 
+         0x8410                , //   Box13.Press_Color     
+         0                     ,//    Box13.OnUpPtr
+         0                     ,//    Box13.OnDownPtr
+         0                     ,//    Box13.OnClickPtr
+         0                      //    Box13.OnPressPtr
+         ); code; far;
+    const Box15 : TCBox = 
+         (
+         @ScreenThrottle       , //   Box15.OwnerScreen
+         2                     , //   Box15.Order           
+         0                     , //   Box15.Left           
+         259                   , //   Box15.Top             
+         240                   , //   Box15.Width           
+         26                    , //   Box15.Height          
+         1                     , //   Box15.Pen_Width       
+         0x0000                , //   Box15.Pen_Color       
+         1                     , //   Box15.Visible         
+         0                     , //   Box15.Active          
+         1                     , //   Box15.Transparent     
+         1                     , //   Box15.Gradient        
+         0                     , //   Box15.Gradient_Orientation    
+         0xFFFF                , //   Box15.Gradient_Start_Color    
+         0xC618                , //   Box15.Gradient_End_Color      
+         0xC618                , //   Box15.Color           
+         1                     , //   Box15.PressColEnabled 
+         0x8410                , //   Box15.Press_Color     
+         0                     ,//    Box15.OnUpPtr
+         0                     ,//    Box15.OnDownPtr
+         0                     ,//    Box15.OnClickPtr
+         0                      //    Box15.OnPressPtr
+         ); code; far;
     const LabelSpeed_Caption : string[6] = 'Speed'; code; far;
     const LabelSpeed : TCLabel = 
          (
@@ -383,7 +601,7 @@ var ButtonRound11 : TButton_Round;
          (
          @LabelSpeed           
          ); code; far;
-      const Screen3_Boxes  : array[3] of ^TBox =
+      const Screen3_CBoxes  : array[3] of ^TCBox =
          (
          @Box14,               
          @Box13,               
@@ -399,12 +617,84 @@ var ButtonRound11 : TButton_Round;
 const Screen4_Buttons  : array[2] of ^TButton; code; far; forward;
 const Screen4_Buttons_Round  : array[6] of ^TButton_Round; code; far; forward;
 const Screen4_Labels  : array[1] of ^TLabel; code; far; forward;
-const Screen4_Boxes  : array[3] of ^TBox; code; far; forward;
+const Screen4_CBoxes  : array[3] of ^TCBox; code; far; forward;
 
 var ScreenConsists           : TScreen;
-var Box10 : TBox;
-var Box11 : TBox;
-var Box12 : TBox;
+    const Box10 : TCBox = 
+         (
+         @ScreenConsists       , //   Box10.OwnerScreen
+         0                     , //   Box10.Order           
+         0                     , //   Box10.Left           
+         285                   , //   Box10.Top             
+         240                   , //   Box10.Width           
+         34                    , //   Box10.Height          
+         1                     , //   Box10.Pen_Width       
+         0x0000                , //   Box10.Pen_Color       
+         1                     , //   Box10.Visible         
+         0                     , //   Box10.Active          
+         1                     , //   Box10.Transparent     
+         1                     , //   Box10.Gradient        
+         0                     , //   Box10.Gradient_Orientation    
+         0xFFFF                , //   Box10.Gradient_Start_Color    
+         0xC618                , //   Box10.Gradient_End_Color      
+         0xC618                , //   Box10.Color           
+         1                     , //   Box10.PressColEnabled 
+         0x8410                , //   Box10.Press_Color     
+         0                     ,//    Box10.OnUpPtr
+         0                     ,//    Box10.OnDownPtr
+         0                     ,//    Box10.OnClickPtr
+         0                      //    Box10.OnPressPtr
+         ); code; far;
+    const Box11 : TCBox = 
+         (
+         @ScreenConsists       , //   Box11.OwnerScreen
+         1                     , //   Box11.Order           
+         0                     , //   Box11.Left           
+         0                     , //   Box11.Top             
+         240                   , //   Box11.Width           
+         258                   , //   Box11.Height          
+         1                     , //   Box11.Pen_Width       
+         0x0000                , //   Box11.Pen_Color       
+         1                     , //   Box11.Visible         
+         0                     , //   Box11.Active          
+         1                     , //   Box11.Transparent     
+         1                     , //   Box11.Gradient        
+         0                     , //   Box11.Gradient_Orientation    
+         0xC618                , //   Box11.Gradient_Orientation    
+         0xFFFF                , //   Box11.Gradient_End_Color    
+         0xC618                , //   Box11.Color           
+         1                     , //   Box11.PressColEnabled 
+         0x8410                , //   Box11.Press_Color     
+         0                     ,//    Box11.OnUpPtr
+         0                     ,//    Box11.OnDownPtr
+         0                     ,//    Box11.OnClickPtr
+         0                      //    Box11.OnPressPtr
+         ); code; far;
+    const Box12 : TCBox = 
+         (
+         @ScreenConsists       , //   Box12.OwnerScreen
+         2                     , //   Box12.Order           
+         0                     , //   Box12.Left           
+         259                   , //   Box12.Top             
+         240                   , //   Box12.Width           
+         26                    , //   Box12.Height          
+         1                     , //   Box12.Pen_Width       
+         0x0000                , //   Box12.Pen_Color       
+         1                     , //   Box12.Visible         
+         0                     , //   Box12.Active          
+         1                     , //   Box12.Transparent     
+         1                     , //   Box12.Gradient        
+         0                     , //   Box12.Gradient_Orientation    
+         0xFFFF                , //   Box12.Gradient_Start_Color    
+         0xC618                , //   Box12.Gradient_End_Color      
+         0xC618                , //   Box12.Color           
+         1                     , //   Box12.PressColEnabled 
+         0x8410                , //   Box12.Press_Color     
+         0                     ,//    Box12.OnUpPtr
+         0                     ,//    Box12.OnDownPtr
+         0                     ,//    Box12.OnClickPtr
+         0                      //    Box12.OnPressPtr
+         ); code; far;
 var Button5 : TButton;
     Button5_Caption : string[8];
 
@@ -450,7 +740,7 @@ var ButtonRound21 : TButton_Round;
          (
          @Label1               
          ); code; far;
-      const Screen4_Boxes  : array[3] of ^TBox =
+      const Screen4_CBoxes  : array[3] of ^TCBox =
          (
          @Box10,               
          @Box11,               
@@ -459,12 +749,84 @@ var ButtonRound21 : TButton_Round;
 
 
 const Screen5_Buttons  : array[2] of ^TButton; code; far; forward;
-const Screen5_Boxes  : array[3] of ^TBox; code; far; forward;
+const Screen5_CBoxes  : array[3] of ^TCBox; code; far; forward;
 
 var Screen3           : TScreen;
-var Box7 : TBox;
-var Box8 : TBox;
-var Box9 : TBox;
+    const Box7 : TCBox = 
+         (
+         @Screen3              , //   Box7.OwnerScreen
+         0                     , //   Box7.Order           
+         0                     , //   Box7.Left           
+         285                   , //   Box7.Top             
+         240                   , //   Box7.Width           
+         34                    , //   Box7.Height          
+         1                     , //   Box7.Pen_Width       
+         0x0000                , //   Box7.Pen_Color       
+         1                     , //   Box7.Visible         
+         0                     , //   Box7.Active          
+         1                     , //   Box7.Transparent     
+         1                     , //   Box7.Gradient        
+         0                     , //   Box7.Gradient_Orientation    
+         0xFFFF                , //   Box7.Gradient_Start_Color    
+         0xC618                , //   Box7.Gradient_End_Color      
+         0xC618                , //   Box7.Color           
+         1                     , //   Box7.PressColEnabled 
+         0x8410                , //   Box7.Press_Color     
+         0                     ,//    Box7.OnUpPtr
+         0                     ,//    Box7.OnDownPtr
+         0                     ,//    Box7.OnClickPtr
+         0                      //    Box7.OnPressPtr
+         ); code; far;
+    const Box8 : TCBox = 
+         (
+         @Screen3              , //   Box8.OwnerScreen
+         1                     , //   Box8.Order           
+         0                     , //   Box8.Left           
+         0                     , //   Box8.Top             
+         240                   , //   Box8.Width           
+         258                   , //   Box8.Height          
+         1                     , //   Box8.Pen_Width       
+         0x0000                , //   Box8.Pen_Color       
+         1                     , //   Box8.Visible         
+         0                     , //   Box8.Active          
+         1                     , //   Box8.Transparent     
+         1                     , //   Box8.Gradient        
+         0                     , //   Box8.Gradient_Orientation    
+         0xC618                , //   Box8.Gradient_Orientation    
+         0xFFFF                , //   Box8.Gradient_End_Color    
+         0xC618                , //   Box8.Color           
+         1                     , //   Box8.PressColEnabled 
+         0x8410                , //   Box8.Press_Color     
+         0                     ,//    Box8.OnUpPtr
+         0                     ,//    Box8.OnDownPtr
+         0                     ,//    Box8.OnClickPtr
+         0                      //    Box8.OnPressPtr
+         ); code; far;
+    const Box9 : TCBox = 
+         (
+         @Screen3              , //   Box9.OwnerScreen
+         2                     , //   Box9.Order           
+         0                     , //   Box9.Left           
+         259                   , //   Box9.Top             
+         240                   , //   Box9.Width           
+         26                    , //   Box9.Height          
+         1                     , //   Box9.Pen_Width       
+         0x0000                , //   Box9.Pen_Color       
+         1                     , //   Box9.Visible         
+         0                     , //   Box9.Active          
+         1                     , //   Box9.Transparent     
+         1                     , //   Box9.Gradient        
+         0                     , //   Box9.Gradient_Orientation    
+         0xFFFF                , //   Box9.Gradient_Start_Color    
+         0xC618                , //   Box9.Gradient_End_Color      
+         0xC618                , //   Box9.Color           
+         1                     , //   Box9.PressColEnabled 
+         0x8410                , //   Box9.Press_Color     
+         0                     ,//    Box9.OnUpPtr
+         0                     ,//    Box9.OnDownPtr
+         0                     ,//    Box9.OnClickPtr
+         0                      //    Box9.OnPressPtr
+         ); code; far;
 var Button3 : TButton;
     Button3_Caption : string[5];
 
@@ -476,7 +838,7 @@ var Button4 : TButton;
          @Button3,             
          @Button4              
          ); code; far;
-      const Screen5_Boxes  : array[3] of ^TBox =
+      const Screen5_CBoxes  : array[3] of ^TCBox =
          (
          @Box7,                
          @Box8,                
@@ -581,8 +943,8 @@ procedure InitializeObjects();    // static
     Screen_CAN.Labels                    := @Screen1_Labels;
     Screen_CAN.CLabelsCount               := 2;
     Screen_CAN.CLabels                    := @Screen1_CLabels;
-    Screen_CAN.BoxesCount                := 3;
-    Screen_CAN.Boxes                     := @Screen1_Boxes;
+    Screen_CAN.CBoxesCount                := 3;
+    Screen_CAN.CBoxes                     := @Screen1_CBoxes;
     Screen_CAN.LinesCount                := 0;
     Screen_CAN.ObjectsCount              := 9;
 
@@ -594,8 +956,8 @@ procedure InitializeObjects();    // static
     ScreenTemplate.Buttons_RoundCount        := 0;
     ScreenTemplate.LabelsCount               := 0;
     ScreenTemplate.CLabelsCount               := 0;
-    ScreenTemplate.BoxesCount                := 3;
-    ScreenTemplate.Boxes                     := @Screen2_Boxes;
+    ScreenTemplate.CBoxesCount                := 3;
+    ScreenTemplate.CBoxes                     := @Screen2_CBoxes;
     ScreenTemplate.LinesCount                := 0;
     ScreenTemplate.ObjectsCount              := 5;
 
@@ -610,8 +972,8 @@ procedure InitializeObjects();    // static
     ScreenThrottle.Labels                    := @Screen3_Labels;
     ScreenThrottle.CLabelsCount               := 1;
     ScreenThrottle.CLabels                    := @Screen3_CLabels;
-    ScreenThrottle.BoxesCount                := 3;
-    ScreenThrottle.Boxes                     := @Screen3_Boxes;
+    ScreenThrottle.CBoxesCount                := 3;
+    ScreenThrottle.CBoxes                     := @Screen3_CBoxes;
     ScreenThrottle.LinesCount                := 2;
     ScreenThrottle.Lines                     := @Screen3_Lines;
     ScreenThrottle.ObjectsCount              := 43;
@@ -626,8 +988,8 @@ procedure InitializeObjects();    // static
     ScreenConsists.LabelsCount               := 1;
     ScreenConsists.Labels                    := @Screen4_Labels;
     ScreenConsists.CLabelsCount               := 0;
-    ScreenConsists.BoxesCount                := 3;
-    ScreenConsists.Boxes                     := @Screen4_Boxes;
+    ScreenConsists.CBoxesCount                := 3;
+    ScreenConsists.CBoxes                     := @Screen4_CBoxes;
     ScreenConsists.LinesCount                := 0;
     ScreenConsists.ObjectsCount              := 12;
 
@@ -639,57 +1001,11 @@ procedure InitializeObjects();    // static
     Screen3.Buttons_RoundCount        := 0;
     Screen3.LabelsCount               := 0;
     Screen3.CLabelsCount               := 0;
-    Screen3.BoxesCount                := 3;
-    Screen3.Boxes                     := @Screen5_Boxes;
+    Screen3.CBoxesCount                := 3;
+    Screen3.CBoxes                     := @Screen5_CBoxes;
     Screen3.LinesCount                := 0;
     Screen3.ObjectsCount              := 5;
 
-
-    Box2.OwnerScreenAddress  := @Screen_CAN;
-    Box2.Order               := 0;
-    Box2.Left                := 0;
-    Box2.Top                 := 285;
-    Box2.Width               := 240;
-    Box2.Height              := 34;
-    Box2.Pen_Width           := 1;
-    Box2.Pen_Color           := 0x0000;
-    Box2.Visible             := 1;
-    Box2.Active              := 0;
-    Box2.Transparent         := 1;
-    Box2.Gradient            := 1;
-    Box2.Gradient_Orientation := 0;
-    Box2.Gradient_Start_Color := 0xFFFF;
-    Box2.Gradient_End_Color  := 0xC618;
-    Box2.Color               := 0xC618;
-    Box2.PressColEnabled := 1;
-    Box2.Press_Color         := 0x8410;
-    Box2.OnUpPtr             := 0;
-    Box2.OnDownPtr           := 0;
-    Box2.OnClickPtr          := 0;
-    Box2.OnPressPtr          := 0;
-
-    Box1.OwnerScreenAddress  := @Screen_CAN;
-    Box1.Order               := 1;
-    Box1.Left                := 0;
-    Box1.Top                 := 0;
-    Box1.Width               := 240;
-    Box1.Height              := 258;
-    Box1.Pen_Width           := 1;
-    Box1.Pen_Color           := 0x0000;
-    Box1.Visible             := 1;
-    Box1.Active              := 1;
-    Box1.Transparent         := 1;
-    Box1.Gradient            := 1;
-    Box1.Gradient_Orientation := 0;
-    Box1.Gradient_Start_Color := 0xC618;
-    Box1.Gradient_End_Color  := 0xFFFF;
-    Box1.Color               := 0xC618;
-    Box1.PressColEnabled := 1;
-    Box1.Press_Color         := 0x8410;
-    Box1.OnUpPtr             := 0;
-    Box1.OnDownPtr           := 0;
-    Box1.OnClickPtr          := 0;
-    Box1.OnPressPtr          := 0;
 
     ButtonPrev.OwnerScreenAddress  := @Screen_CAN;
     ButtonPrev.Order               := 2;
@@ -745,29 +1061,6 @@ procedure InitializeObjects();    // static
     ButtonNext.OnClickPtr          := 0;
     ButtonNext.OnPressPtr          := 0;
 
-    Box3.OwnerScreenAddress  := @Screen_CAN;
-    Box3.Order               := 4;
-    Box3.Left                := 0;
-    Box3.Top                 := 259;
-    Box3.Width               := 240;
-    Box3.Height              := 26;
-    Box3.Pen_Width           := 1;
-    Box3.Pen_Color           := 0x0000;
-    Box3.Visible             := 1;
-    Box3.Active              := 0;
-    Box3.Transparent         := 1;
-    Box3.Gradient            := 1;
-    Box3.Gradient_Orientation := 0;
-    Box3.Gradient_Start_Color := 0xFFFF;
-    Box3.Gradient_End_Color  := 0xC618;
-    Box3.Color               := 0xC618;
-    Box3.PressColEnabled := 1;
-    Box3.Press_Color         := 0x8410;
-    Box3.OnUpPtr             := 0;
-    Box3.OnDownPtr           := 0;
-    Box3.OnClickPtr          := 0;
-    Box3.OnPressPtr          := 0;
-
     LabelReceived.OwnerScreenAddress  := @Screen_CAN;
     LabelReceived.Order               := 7;
     LabelReceived.Left                := 62;
@@ -801,75 +1094,6 @@ procedure InitializeObjects();    // static
     LabelTransmitted.OnDownPtr           := 0;
     LabelTransmitted.OnClickPtr          := 0;
     LabelTransmitted.OnPressPtr          := 0;
-
-    Box4.OwnerScreenAddress  := @ScreenTemplate;
-    Box4.Order               := 0;
-    Box4.Left                := 0;
-    Box4.Top                 := 285;
-    Box4.Width               := 240;
-    Box4.Height              := 34;
-    Box4.Pen_Width           := 1;
-    Box4.Pen_Color           := 0x0000;
-    Box4.Visible             := 1;
-    Box4.Active              := 0;
-    Box4.Transparent         := 1;
-    Box4.Gradient            := 1;
-    Box4.Gradient_Orientation := 0;
-    Box4.Gradient_Start_Color := 0xFFFF;
-    Box4.Gradient_End_Color  := 0xC618;
-    Box4.Color               := 0xC618;
-    Box4.PressColEnabled := 1;
-    Box4.Press_Color         := 0x8410;
-    Box4.OnUpPtr             := 0;
-    Box4.OnDownPtr           := 0;
-    Box4.OnClickPtr          := 0;
-    Box4.OnPressPtr          := 0;
-
-    Box5.OwnerScreenAddress  := @ScreenTemplate;
-    Box5.Order               := 1;
-    Box5.Left                := 0;
-    Box5.Top                 := 0;
-    Box5.Width               := 240;
-    Box5.Height              := 258;
-    Box5.Pen_Width           := 1;
-    Box5.Pen_Color           := 0x0000;
-    Box5.Visible             := 1;
-    Box5.Active              := 1;
-    Box5.Transparent         := 1;
-    Box5.Gradient            := 1;
-    Box5.Gradient_Orientation := 0;
-    Box5.Gradient_Start_Color := 0xC618;
-    Box5.Gradient_End_Color  := 0xFFFF;
-    Box5.Color               := 0xC618;
-    Box5.PressColEnabled := 1;
-    Box5.Press_Color         := 0x8410;
-    Box5.OnUpPtr             := 0;
-    Box5.OnDownPtr           := 0;
-    Box5.OnClickPtr          := 0;
-    Box5.OnPressPtr          := 0;
-
-    Box6.OwnerScreenAddress  := @ScreenTemplate;
-    Box6.Order               := 2;
-    Box6.Left                := 0;
-    Box6.Top                 := 259;
-    Box6.Width               := 240;
-    Box6.Height              := 26;
-    Box6.Pen_Width           := 1;
-    Box6.Pen_Color           := 0x0000;
-    Box6.Visible             := 1;
-    Box6.Active              := 0;
-    Box6.Transparent         := 1;
-    Box6.Gradient            := 1;
-    Box6.Gradient_Orientation := 0;
-    Box6.Gradient_Start_Color := 0xFFFF;
-    Box6.Gradient_End_Color  := 0xC618;
-    Box6.Color               := 0xC618;
-    Box6.PressColEnabled := 1;
-    Box6.Press_Color         := 0x8410;
-    Box6.OnUpPtr             := 0;
-    Box6.OnDownPtr           := 0;
-    Box6.OnClickPtr          := 0;
-    Box6.OnPressPtr          := 0;
 
     Button1.OwnerScreenAddress  := @ScreenTemplate;
     Button1.Order               := 3;
@@ -924,75 +1148,6 @@ procedure InitializeObjects();    // static
     Button2.OnDownPtr           := 0;
     Button2.OnClickPtr          := 0;
     Button2.OnPressPtr          := 0;
-
-    Box14.OwnerScreenAddress  := @ScreenThrottle;
-    Box14.Order               := 0;
-    Box14.Left                := 0;
-    Box14.Top                 := 0;
-    Box14.Width               := 240;
-    Box14.Height              := 258;
-    Box14.Pen_Width           := 1;
-    Box14.Pen_Color           := 0x0000;
-    Box14.Visible             := 1;
-    Box14.Active              := 1;
-    Box14.Transparent         := 1;
-    Box14.Gradient            := 1;
-    Box14.Gradient_Orientation := 0;
-    Box14.Gradient_Start_Color := 0xC618;
-    Box14.Gradient_End_Color  := 0xFFFF;
-    Box14.Color               := 0xC618;
-    Box14.PressColEnabled := 1;
-    Box14.Press_Color         := 0x8410;
-    Box14.OnUpPtr             := 0;
-    Box14.OnDownPtr           := 0;
-    Box14.OnClickPtr          := 0;
-    Box14.OnPressPtr          := 0;
-
-    Box13.OwnerScreenAddress  := @ScreenThrottle;
-    Box13.Order               := 1;
-    Box13.Left                := 0;
-    Box13.Top                 := 285;
-    Box13.Width               := 240;
-    Box13.Height              := 34;
-    Box13.Pen_Width           := 1;
-    Box13.Pen_Color           := 0x0000;
-    Box13.Visible             := 1;
-    Box13.Active              := 0;
-    Box13.Transparent         := 1;
-    Box13.Gradient            := 1;
-    Box13.Gradient_Orientation := 0;
-    Box13.Gradient_Start_Color := 0xFFFF;
-    Box13.Gradient_End_Color  := 0xC618;
-    Box13.Color               := 0xC618;
-    Box13.PressColEnabled := 1;
-    Box13.Press_Color         := 0x8410;
-    Box13.OnUpPtr             := 0;
-    Box13.OnDownPtr           := 0;
-    Box13.OnClickPtr          := 0;
-    Box13.OnPressPtr          := 0;
-
-    Box15.OwnerScreenAddress  := @ScreenThrottle;
-    Box15.Order               := 2;
-    Box15.Left                := 0;
-    Box15.Top                 := 259;
-    Box15.Width               := 240;
-    Box15.Height              := 26;
-    Box15.Pen_Width           := 1;
-    Box15.Pen_Color           := 0x0000;
-    Box15.Visible             := 1;
-    Box15.Active              := 0;
-    Box15.Transparent         := 1;
-    Box15.Gradient            := 1;
-    Box15.Gradient_Orientation := 0;
-    Box15.Gradient_Start_Color := 0xFFFF;
-    Box15.Gradient_End_Color  := 0xC618;
-    Box15.Color               := 0xC618;
-    Box15.PressColEnabled := 1;
-    Box15.Press_Color         := 0x8410;
-    Box15.OnUpPtr             := 0;
-    Box15.OnDownPtr           := 0;
-    Box15.OnClickPtr          := 0;
-    Box15.OnPressPtr          := 0;
 
     LabelAddress.OwnerScreenAddress  := @ScreenThrottle;
     LabelAddress.Order               := 4;
@@ -1108,8 +1263,8 @@ procedure InitializeObjects();    // static
     ButtonRound12.Color               := 0xC618;
     ButtonRound12.Press_Color         := 0x8410;
     ButtonRound12.OnUpPtr             := 0;
-    ButtonRound12.OnDownPtr           := 0;
-    ButtonRound12.OnClickPtr          := 0;
+    ButtonRound12.OnDownPtr           := @ButtonRound12Down;
+    ButtonRound12.OnClickPtr          := @ButtonRound12Click;
     ButtonRound12.OnPressPtr          := 0;
 
     ButtonRound13.OwnerScreenAddress  := @ScreenThrottle;
@@ -2003,75 +2158,6 @@ procedure InitializeObjects();    // static
     ButtonRound11.OnClickPtr          := 0;
     ButtonRound11.OnPressPtr          := 0;
 
-    Box10.OwnerScreenAddress  := @ScreenConsists;
-    Box10.Order               := 0;
-    Box10.Left                := 0;
-    Box10.Top                 := 285;
-    Box10.Width               := 240;
-    Box10.Height              := 34;
-    Box10.Pen_Width           := 1;
-    Box10.Pen_Color           := 0x0000;
-    Box10.Visible             := 1;
-    Box10.Active              := 0;
-    Box10.Transparent         := 1;
-    Box10.Gradient            := 1;
-    Box10.Gradient_Orientation := 0;
-    Box10.Gradient_Start_Color := 0xFFFF;
-    Box10.Gradient_End_Color  := 0xC618;
-    Box10.Color               := 0xC618;
-    Box10.PressColEnabled := 1;
-    Box10.Press_Color         := 0x8410;
-    Box10.OnUpPtr             := 0;
-    Box10.OnDownPtr           := 0;
-    Box10.OnClickPtr          := 0;
-    Box10.OnPressPtr          := 0;
-
-    Box11.OwnerScreenAddress  := @ScreenConsists;
-    Box11.Order               := 1;
-    Box11.Left                := 0;
-    Box11.Top                 := 0;
-    Box11.Width               := 240;
-    Box11.Height              := 258;
-    Box11.Pen_Width           := 1;
-    Box11.Pen_Color           := 0x0000;
-    Box11.Visible             := 1;
-    Box11.Active              := 1;
-    Box11.Transparent         := 1;
-    Box11.Gradient            := 1;
-    Box11.Gradient_Orientation := 0;
-    Box11.Gradient_Start_Color := 0xC618;
-    Box11.Gradient_End_Color  := 0xFFFF;
-    Box11.Color               := 0xC618;
-    Box11.PressColEnabled := 1;
-    Box11.Press_Color         := 0x8410;
-    Box11.OnUpPtr             := 0;
-    Box11.OnDownPtr           := 0;
-    Box11.OnClickPtr          := 0;
-    Box11.OnPressPtr          := 0;
-
-    Box12.OwnerScreenAddress  := @ScreenConsists;
-    Box12.Order               := 2;
-    Box12.Left                := 0;
-    Box12.Top                 := 259;
-    Box12.Width               := 240;
-    Box12.Height              := 26;
-    Box12.Pen_Width           := 1;
-    Box12.Pen_Color           := 0x0000;
-    Box12.Visible             := 1;
-    Box12.Active              := 0;
-    Box12.Transparent         := 1;
-    Box12.Gradient            := 1;
-    Box12.Gradient_Orientation := 0;
-    Box12.Gradient_Start_Color := 0xFFFF;
-    Box12.Gradient_End_Color  := 0xC618;
-    Box12.Color               := 0xC618;
-    Box12.PressColEnabled := 1;
-    Box12.Press_Color         := 0x8410;
-    Box12.OnUpPtr             := 0;
-    Box12.OnDownPtr           := 0;
-    Box12.OnClickPtr          := 0;
-    Box12.OnPressPtr          := 0;
-
     Button5.OwnerScreenAddress  := @ScreenConsists;
     Button5.Order               := 3;
     Button5.Left                := 3;
@@ -2305,75 +2391,6 @@ procedure InitializeObjects();    // static
     ButtonRound21.OnClickPtr          := 0;
     ButtonRound21.OnPressPtr          := 0;
 
-    Box7.OwnerScreenAddress  := @Screen3;
-    Box7.Order               := 0;
-    Box7.Left                := 0;
-    Box7.Top                 := 285;
-    Box7.Width               := 240;
-    Box7.Height              := 34;
-    Box7.Pen_Width           := 1;
-    Box7.Pen_Color           := 0x0000;
-    Box7.Visible             := 1;
-    Box7.Active              := 0;
-    Box7.Transparent         := 1;
-    Box7.Gradient            := 1;
-    Box7.Gradient_Orientation := 0;
-    Box7.Gradient_Start_Color := 0xFFFF;
-    Box7.Gradient_End_Color  := 0xC618;
-    Box7.Color               := 0xC618;
-    Box7.PressColEnabled := 1;
-    Box7.Press_Color         := 0x8410;
-    Box7.OnUpPtr             := 0;
-    Box7.OnDownPtr           := 0;
-    Box7.OnClickPtr          := 0;
-    Box7.OnPressPtr          := 0;
-
-    Box8.OwnerScreenAddress  := @Screen3;
-    Box8.Order               := 1;
-    Box8.Left                := 0;
-    Box8.Top                 := 0;
-    Box8.Width               := 240;
-    Box8.Height              := 258;
-    Box8.Pen_Width           := 1;
-    Box8.Pen_Color           := 0x0000;
-    Box8.Visible             := 1;
-    Box8.Active              := 1;
-    Box8.Transparent         := 1;
-    Box8.Gradient            := 1;
-    Box8.Gradient_Orientation := 0;
-    Box8.Gradient_Start_Color := 0xC618;
-    Box8.Gradient_End_Color  := 0xFFFF;
-    Box8.Color               := 0xC618;
-    Box8.PressColEnabled := 1;
-    Box8.Press_Color         := 0x8410;
-    Box8.OnUpPtr             := 0;
-    Box8.OnDownPtr           := 0;
-    Box8.OnClickPtr          := 0;
-    Box8.OnPressPtr          := 0;
-
-    Box9.OwnerScreenAddress  := @Screen3;
-    Box9.Order               := 2;
-    Box9.Left                := 0;
-    Box9.Top                 := 259;
-    Box9.Width               := 240;
-    Box9.Height              := 26;
-    Box9.Pen_Width           := 1;
-    Box9.Pen_Color           := 0x0000;
-    Box9.Visible             := 1;
-    Box9.Active              := 0;
-    Box9.Transparent         := 1;
-    Box9.Gradient            := 1;
-    Box9.Gradient_Orientation := 0;
-    Box9.Gradient_Start_Color := 0xFFFF;
-    Box9.Gradient_End_Color  := 0xC618;
-    Box9.Color               := 0xC618;
-    Box9.PressColEnabled := 1;
-    Box9.Press_Color         := 0x8410;
-    Box9.OnUpPtr             := 0;
-    Box9.OnDownPtr           := 0;
-    Box9.OnClickPtr          := 0;
-    Box9.OnPressPtr          := 0;
-
     Button3.OwnerScreenAddress  := @Screen3;
     Button3.Order               := 3;
     Button3.Left                := 3;
@@ -2466,10 +2483,10 @@ var objPtr : ^ const code far ^TCLabel;
     Result := objPtr^;
   end;
 
-function GetBox (index : byte) : ^TBox; // static
-var objPtr : ^ const code far ^TBox;
+function GetCBox (index : byte) : ^TCBox; // static
+var objPtr : ^ const code far ^TCBox;
   begin
-    objPtr := CurrentScreen^.Boxes + index;
+    objPtr := CurrentScreen^.CBoxes + index;
     Result := objPtr^;
   end;
 function GetLine (index : byte) : ^TLine; // static
@@ -2564,7 +2581,7 @@ var x_pos, y_pos : integer;
       end;
   end;
 
-procedure DrawBox(ABox : ^TBox);
+procedure DrawCBox(ABox : ^TCBox);
   begin
     if (ABox^.Visible = 1) then
       begin
@@ -2599,8 +2616,8 @@ var label_idx : byte;
     local_label : ^TLabel;
 var clabel_idx : byte;
     local_clabel : ^TCLabel;
-var box_idx : byte;
-    local_box : ^TBox;
+var cbox_idx : byte;
+    local_cbox : ^TCBox;
 var line_idx : byte;
     local_line : ^TLine;
 var save_bled, save_bled_direction : byte;
@@ -2612,7 +2629,7 @@ var save_bled, save_bled_direction : byte;
     round_button_idx := 0;
     label_idx := 0;
     clabel_idx := 0;
-    box_idx := 0;
+    cbox_idx := 0;
     line_idx := 0;
     CurrentScreen := aScreen;
 
@@ -2682,14 +2699,14 @@ var save_bled, save_bled_direction : byte;
             end
         end;
 
-      if (box_idx < CurrentScreen^.BoxesCount) then
+      if (cbox_idx < CurrentScreen^.CBoxesCount) then
         begin
-          local_box := GetBox(box_idx);
-          if (order = local_box^.Order) then
+          local_cbox := GetCBox(cbox_idx);
+          if (order = local_cbox^.Order) then
             begin
-              Inc(box_idx);
+              Inc(cbox_idx);
               Inc(order);
-              DrawBox(local_box);
+              DrawCBox(local_cbox);
             end
         end;
 
@@ -2714,7 +2731,7 @@ var counter : integer;
     round_button_order  := -1;
     label_order         := -1;
     clabel_order        := -1;
-    box_order           := -1;
+    cbox_order          := -1;
     //  Buttons
     counter := CurrentScreen^.ButtonsCount;
     for _object_count := 0 to counter - 1 do
@@ -2771,17 +2788,17 @@ var counter : integer;
             end;
       end;
 
-    //  Boxes
-    counter := CurrentScreen^.BoxesCount;
+    //  CBoxes
+    counter := CurrentScreen^.CBoxesCount;
     for _object_count := 0 to counter - 1 do
       begin
-        local_box := GetBox(_object_count);
-        if (local_box^.Active = 1) then
-          if (IsInsideObject(X, Y, local_box^.Left, local_box^.Top,
-                             local_box^.Width, local_box^.Height) = 1) then
+        local_cbox := GetCBox(_object_count);
+        if (local_cbox^.Active = 1) then
+          if (IsInsideObject(X, Y, local_cbox^.Left, local_cbox^.Top,
+                             local_cbox^.Width, local_cbox^.Height) = 1) then
             begin
-              box_order := local_box^.Order;
-              exec_box := local_box;
+              cbox_order := local_cbox^.Order;
+              exec_cbox := local_cbox;
             end;
       end;
 
@@ -2794,8 +2811,8 @@ var counter : integer;
       _object_count := label_order;
     if (clabel_order >  _object_count ) then
       _object_count := clabel_order;
-    if (box_order >  _object_count ) then
-      _object_count := box_order;
+    if (cbox_order >  _object_count ) then
+      _object_count := cbox_order;
   end;
 
 
@@ -2805,7 +2822,7 @@ procedure Process_TP_Press( X : word; Y : word); // static
     exec_round_button   := 0;
     exec_label          := 0;
     exec_clabel         := 0;
-    exec_box            := 0;
+    exec_cbox           := 0;
 
     Get_Object(X, Y);
 
@@ -2844,11 +2861,11 @@ procedure Process_TP_Press( X : word; Y : word); // static
                 exit;
               end;
 
-        if (_object_count = box_order) then
-          if (exec_box^.Active = 1) then
-            if (exec_box^.OnPressPtr <> 0) then
+        if (_object_count = cbox_order) then
+          if (exec_cbox^.Active = 1) then
+            if (exec_cbox^.OnPressPtr <> 0) then
               begin
-                exec_box^.OnPressPtr^();
+                exec_cbox^.OnPressPtr^();
                 exit;
               end;
 
@@ -2880,13 +2897,13 @@ procedure Process_TP_Up( X : word; Y : word); // static
                   end;
               end;
           end;
-      // Box
-      6 : begin
+      // CBox
+      14 : begin
             if (PressedObject <> 0) then
               begin
-                exec_box := ^TBox(PressedObject);
-                if ((exec_box^.PressColEnabled = 1) and (exec_box^.OwnerScreenAddress = ^byte(CurrentScreen))) then
-                    DrawBox(exec_box);
+                exec_cbox := ^TCBox(PressedObject);
+                if ((exec_cbox^.PressColEnabled = 1) and (exec_cbox^.OwnerScreenAddress = ^byte(CurrentScreen))) then
+                    DrawCBox(exec_cbox);
               end;
           end;
     end;
@@ -2962,16 +2979,16 @@ procedure Process_TP_Up( X : word; Y : word); // static
               end;
           end;
 
-        // Boxes
-        if (_object_count = box_order) then
+        // CBoxes
+        if (_object_count = cbox_order) then
           begin
-            if (exec_box^.Active = 1) then
+            if (exec_cbox^.Active = 1) then
               begin
-                if (exec_box^.OnUpPtr <> 0) then
-                  exec_box^.OnUpPtr();
-                if PressedObject = TPointer(exec_box) then
-                  if (exec_box^.OnClickPtr <> 0) then
-                    exec_box^.OnClickPtr^();
+                if (exec_cbox^.OnUpPtr <> 0) then
+                  exec_cbox^.OnUpPtr();
+                if PressedObject = TPointer(exec_cbox) then
+                  if (exec_cbox^.OnClickPtr <> 0) then
+                    exec_cbox^.OnClickPtr^();
                 PressedObject := 0;
                 PressedObjectType := -1;
                 exit;
@@ -2990,7 +3007,7 @@ procedure Process_TP_Down( X : word; Y : word); // static
     exec_round_button   := 0;
     exec_label          := 0;
     exec_clabel         := 0;
-    exec_box            := 0;
+    exec_cbox           := 0;
 
     Get_Object(X, Y);
 
@@ -3054,19 +3071,19 @@ procedure Process_TP_Down( X : word; Y : word); // static
                 end;
             end;
 
-        if (_object_count = box_order) then
-          if (exec_box^.Active = 1) then
+        if (_object_count = cbox_order) then
+          if (exec_cbox^.Active = 1) then
             begin
-              if (exec_box^.PressColEnabled = 1) then
+              if (exec_cbox^.PressColEnabled = 1) then
                 begin
                   object_pressed := 1;
-                  DrawBox(exec_box);
+                  DrawCBox(exec_cbox);
                 end;
-              PressedObject := TPointer(exec_box);
-              PressedObjectType := 6;
-              if (exec_box^.OnDownPtr <> 0) then
+              PressedObject := TPointer(exec_cbox);
+              PressedObjectType := 14;
+              if (exec_cbox^.OnDownPtr <> 0) then
                 begin
-                  exec_box^.OnDownPtr^();
+                  exec_cbox^.OnDownPtr^();
                   exit;
                 end;
             end;

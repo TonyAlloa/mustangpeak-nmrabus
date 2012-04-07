@@ -19,58 +19,70 @@
 program Throttle_main;
 
 uses
+  Throttle_events_code,
   CANStorage,
   dsPIC33_CAN,
   dsPIC33_DMA;
-
-const
-  ID_1st : DWord = $08002F4F;          // TESTING ONLY
-  ID_2nd : DWord = $08000003;          // TESTING ONLY
   
 var
   s1: array[0..64] of Char;
-  IntCount, IntCountX: Word;
-  TX_Buffer: Word; absolute $7800;
-  TXRawBufferArray: TCANRawBufferArray; absolute $7800;
-  TXList: TCANRawBufferList;
   
-  TXBuffer: TCANBuffer;
+  TX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7800;         // There are 10 - 8 Word Buffer in this Array = 160 Bytes
+  TX_CANLayer_List: TCANRawBufferList;
   
+procedure LoadBuffer(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean);
+var
+  Buffer: TCANBuffer;
+begin
+  Buffer.ID := ID;
+  Buffer.DataCount := ByteCount;
+  Buffer.DataBytes[0] := Byte0;
+  Buffer.DataBytes[1] := Byte1;
+  Buffer.DataBytes[2] := Byte2;
+  Buffer.DataBytes[3] := Byte3;
+  Buffer.DataBytes[4] := Byte4;
+  Buffer.DataBytes[5] := Byte5;
+  Buffer.DataBytes[6] := Byte6;
+  Buffer.DataBytes[7] := Byte7;
+  Buffer.IsExtended := IsExtended;
+  CANStorage_WriteToList(List, Buffer)
+end;
+
 
 procedure WriteTXBuffer;
 begin
-  WordToHex(TXList.Buffers^[0].SID, s1); 
-  s1 := 'SID: ' + s1 ;
+  WordToHex(TX_CANLayer_List.Buffers^[0].Word0, s1);
+  s1 := 'Word0: ' + s1 ;
   strcpy(ButtonRoundF18.Caption, s1);
   DrawRoundButton(@ButtonRoundF18);
 
-  WordToHex(TXList.Buffers^[0].EID, s1); 
-  s1 := 'EID: ' + s1 ;
+  WordToHex(TX_CANLayer_List.Buffers^[0].Word1, s1);
+  s1 := 'Word1: ' + s1 ;
   strcpy(ButtonRoundF19.Caption, s1);
   DrawRoundButton(@ButtonRoundF19);
 
-  WordToHex(TXList.Buffers^[0].EID_DLC, s1); 
-   s1 := 'EID_DLC: ' + s1 ;
+  WordToHex(TX_CANLayer_List.Buffers^[0].Word2, s1);
+   s1 := 'Word2: ' + s1 ;
   strcpy(ButtonRoundF20.Caption, s1);
   DrawRoundButton(@ButtonRoundF20);
 
-  WordToHex(TXList.Buffers^[0].Byte0_1, s1); 
-  s1 := 'Byte0_1: ' + s1 ;
+  WordToHex(TX_CANLayer_List.Buffers^[0].Word3, s1);
+  s1 := 'Word3: ' + s1 ;
   strcpy(ButtonRoundF21.Caption, s1);
   DrawRoundButton(@ButtonRoundF21);
 
-  WordToHex(TXList.Buffers^[0].Byte2_3, s1); 
-  s1 := 'Byte2_3: ' + s1 ;
+  WordToHex(TX_CANLayer_List.Buffers^[0].Word4, s1);
+  s1 := 'Word4: ' + s1 ;
   strcpy(ButtonRoundF22.Caption, s1);
   DrawRoundButton(@ButtonRoundF22);
 
-  WordToHex(TXList.Buffers^[0].Byte4_5, s1); 
-  s1 := 'Byte4_5: ' + s1 ;
+  WordToHex(TX_CANLayer_List.Buffers^[0].Word5, s1);
+  s1 := 'Word5: ' + s1 ;
   strcpy(ButtonRoundF23.Caption, s1);
   DrawRoundButton(@ButtonRoundF23);
 
-  WordToHex(TXList.Buffers^[0].Byte6_7, s1);  
-  s1 := 'Byte4_5: ' + s1 ;
+  WordToHex(TX_CANLayer_List.Buffers^[0].Word6, s1);
+  s1 := 'Word6: ' + s1 ;
   strcpy(ButtonRoundF24.Caption, s1);
   DrawRoundButton(@ButtonRoundF24);
 end;
@@ -210,21 +222,12 @@ begin
   s1 := 'C1TXD: ' + s1 ;
   strcpy(ButtonRoundF24.Caption, s1);
   DrawRoundButton(@ButtonRoundF24);
-
-{  WordToHex(C1CTRL1, s1);
-  s1 := 'C1CTRL1: ' + s1 ;
-  strcpy(ButtonRoundF25.Caption, s1);
-  DrawRoundButton(@ButtonRoundF25);
-
-  WordToHex(C1CTRL2, s1);
-  s1 := 'C1CTRL2: ' + s1;
-  strcpy(ButtonRoundF26.Caption, s1);
-  DrawRoundButton(@ButtonRoundF26);   }
 end;
 
 procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT; ics ICS_AUTO;
+var
+  Next: PCANRawBuffer;
 begin
-  Inc(IntCount);
   dsPIC33_CAN_GlobalInterruptFlagCAN_Event(True);
   // WIN_bit := 0;                                                              // If not using the dsPIC33_CAN_xxx functions don't forget to set the correct bank to access C1VEC
   while dsPIC33_CAN_InterruptCode <> ICODE_NO_INTERRUPT do
@@ -232,169 +235,74 @@ begin
     case dsPIC33_CAN_InterruptCode of
       ICODE_TRB0: begin
            // Setup as a TX Buffer so should have reset the Transmit Buffer Interrupt Flag (TBIF)
-           dsPIC33_CAN_InterruptFlagTXBuffer(True)                              // TX Interrupt Flag Reset
+           dsPIC33_CAN_InterruptFlagTXBuffer(True);                              // TX Interrupt Flag Reset
+           
+           CANStorage_ReleaseFirstFullBuffer(@TX_CANLayer_List);                          // Release the Buffer that was just sent
+           Next := CANStorage_FirstFullBuffer(@TX_CANLayer_List);                         // Grab the Next in the List to send
+           if Next <> nil then
+           begin
+             dsPIC33_DMA_AddressOffsetA(0, Next);                               // Address Offset from the DAM RAM Start Address is 0
+             dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateBufferSizeForRegAddressWithAutoIncrement(Next)); // Calculate the number of Words that Transmitter needs to send in Register Mode with Auto Increment
+             dsPIC33_CAN_RequestTransmit(0);
+           end
          end;
     end
   end;
 end;
 
-procedure C1_RX_RDY_INT(); iv IVT_ADDR_C1RXRDYINTERRUPT; ics ICS_AUTO;
 begin
-  Inc(IntCount);
-  dsPIC33_CAN_GlobalInterruptFlagCAN_RX_Ready(True);                         // Reset the Flag
-end;
-
-procedure C1_TX_REQ_INT(); iv IVT_ADDR_C1TXREQINTERRUPT; ics ICS_AUTO;
-begin
-  Inc(IntCount);
-  dsPIC33_CAN_GlobalInterruptFlagCAN_TX_Request(True);                        // Reset the Flag
-end;
-
-var
-  Last: ^TCANRawBuffer;
-begin
-  IntCount := 0;
-  IntCountX := 0;
   MCU_Setup_Initialize;
-  Last := @TXRawBufferArray[0] + 3;  // Last is already a TCANRawBuffer so the compiler knows the size already and increments the point accordingly
-  CANStorage_InitializeList(@TXList, @TXRawBufferArray, Last);  // Overlays DMA RAM and is one Buffer Array long (8 Bytes)
+  CANStorage_InitializeList(@TX_CANLayer_List, @TX_CANLayer_RawBufferArray, 10);            // Overlays DMA RAM and is 10 Buffer Array long (8 Bytes)
 
   Start_TP();
 
   dsPIC33_CAN_EnterConfigMode;                                                  // Place the module in Configuration Mode
-  dsPIC33_CAN_SetBaud(CAN_SWJ-1, CAN_BRP-1, CAN_PHASESEG_2-1, CAN_PHASESEG_1-1, CAN_PROP_SEG-1, True); // Setup the Baud Rate for 125kHz with a 64Mhz Clock
-  dsPIC33_CAN_SetDMA_RAM_StartAddress($7800);                                   // Setup the Starting Address of the DMA RAM for the dsPIC33FJ256GP710A
-  dsPIC33_CAN_SetBufferSize(32);                                                // Setup for 32 CAN Buffers in the DMA RAM
-  dsPIC33_CAN_HardwareFIFO_SetStartBuffer(16);                                  // FIFO start at Buffer 16
+  dsPIC33_CAN_SetBaud(CAN_SWJ, CAN_BRP, CAN_PHASESEG_2, CAN_PHASESEG_1, CAN_PROP_SEG, True); // Setup the Baud Rate for 125kHz with a 64Mhz Clock
   dsPIC33_CAN_SetBufferAsTransmitter(0, True);                                  // Setup Buffer 0 as a Transmit Buffer
+  dsPIC33_CAN_SetBufferAsTransmitter(1, True);                                  // Setup Buffer 1 as a Transmit Buffer
   dsPIC33_CAN_EnableDisableRXFilters($0000);                                    // Disable all RX Filters
   dsPIC33_CAN_EnterNormalMode;                                                  // Place the module in Normal Mode
-  
+
   dsPIC33_DMA_DataSize(0, DATASIZE_WORD);                                       // DMA Data Size is a Word
   dsPIC33_DMA_Direction(0, DIRECTION_RAM_TO_PERIPHERAL);                        // Transmit move data from RAM to the Module
-  
- // dsPIC33_DMA_AddressMode(0, ADDRESS_MODE_REG_INDIRECT_POST_INCREMENT);
-  
-//  dsPIC33_DMA_AddressMode(0, ADDRESS_MODE_REG_INDIRECT_NO_POST_INCREMENT);
-
-  dsPIC33_DMA_AddressMode(0, ADDRESS_MODE_PERIPHERAL_INDIRECT);               // Use the Peripheral Addressing for the Buffers (temp)
-  
+  dsPIC33_DMA_AddressMode(0, ADDRESS_MODE_REG_INDIRECT_POST_INCREMENT);         // Don't use the buggy Perpherial Addressing Mode
   dsPIC33_DMA_OperatingMode(0, OPERATING_MODE_CONTINIOUS);                      // Continious Mode (as apposed to one shot)
   dsPIC33_DMA_ManualDMATransfer(0, False);                                      // Automatic DMA Transfers
   dsPIC33_DMA_PeripheralAddress(0, @C1TXD);                                     // Assign the DMA Channel to the Transmit Register of the CAN module
   dsPIC33_DMA_InterruptSelect(0, IRQ_ECAN1_TX_DATA_READY);                      // Assign the DMA Channel to the ECAN 1 TX to Trigger the Transfer
-  dsPIC33_DMA_TransferCount(0, 7);                                              // Read notes in the function definition about this
-  dsPIC33_DMA_AddressOffsetA(0, 0);                                             // Address Offset from the DAM RAM Start Address is 0
-  dsPIC33_DMA_AddressOffsetB(0, 0);                                             // Address Offset from the DAM RAM Start Address is 0
-  dsPIC33_DMA_Enable(0, True);                                                  // Enabled DMA Channel 0
-  
+  dsPIC33_DMA_Enable(0, True);                                                  // Enable DMA Channel 0
   
   dsPIC33_CAN_TXBufferInterrupt(True);                                          // Enable the TX Done Event Interrupt
   
-  dsPIC33_CAN_GlobalInterruptCAN_TX_RequestPriority(5);
-  dsPIC33_CAN_GlobalInterruptCAN_TX_Request(True);
-  
   dsPIC33_CAN_GlobalInterruptCAN_EventPriority(6);                              // CAN Event Interrupt has a priority of 6 out of 7
   dsPIC33_CAN_GlobalInterruptCAN_Event(True);                                   // Enable the CAN Event Interrupt
-  
 
-
-  
-
-  TXList.Buffers^[0].SID := 0;
-  TXList.Buffers^[0].EID := 0;
-  TXList.Buffers^[0].EID_DLC := 0;
-  TXList.Buffers^[0].Byte0_1 := 0;
-  TXList.Buffers^[0].Byte2_3 := 0;
-  TXList.Buffers^[0].Byte4_5 := 0;
-  TXList.Buffers^[0].Byte6_7 := 0;
-  
-  WordToHex(TXList.Buffers^[0].SID, s1);
-  s1 := 'SID: ' + s1 ;
-  strcpy(ButtonRoundF18.Caption, s1);
-  DrawRoundButton(@ButtonRoundF18);
-
-  WordToHex(TXList.Buffers^[0].EID, s1);
-  s1 := 'EID: ' + s1 ;
-  strcpy(ButtonRoundF19.Caption, s1);
-  DrawRoundButton(@ButtonRoundF19);
-
-  TXBuffer.ID := $1FFFFFFF;
-  TXBuffer.DataCount := 1;
-  TXBuffer.DataBytes[0] := 1;
-  TXBuffer.DataBytes[1] := 2;
-  TXBuffer.DataBytes[2] := 3;
-  TXBuffer.DataBytes[3] := 4;
-  TXBuffer.DataBytes[4] := 5;
-  TXBuffer.DataBytes[5] := 6;
-  TXBuffer.DataBytes[6] := 7;
-  TXBuffer.DataBytes[7] := 8;
-  TXBuffer.IsExtended := True;
-  CANStorage_LoadTransmitterBuffer(@TXList, TXBuffer, 0);
-  TXBuffer.ID := $0001F800;
-  CANStorage_LoadTransmitterBuffer(@TXList, TXBuffer, 0);
-  TXBuffer.ID := $1ABCDEF2;
-  CANStorage_LoadTransmitterBuffer(@TXList, TXBuffer, 0);
-  TXBuffer.ID := $00000004;
-  CANStorage_LoadTransmitterBuffer(@TXList, TXBuffer, 0);
-
-//  ECAN1Initialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _ECAN_CONFIG_PHSEG2_PRG_ON and _ECAN_CONFIG_SAMPLE_ONCE and _ECAN_CONFIG_XTD_MSG and _ECAN_CONFIG_MATCH_MSG_TYPE);
- // ECAN1Write(TXBuffer.ID, TXBuffer.DataBytes, 8, _ECAN_TX_PRIORITY_0 and _ECAN_TX_XTD_FRAME);
-  
+  LoadBuffer(@TX_CANLayer_List, $00000010, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBuffer(@TX_CANLayer_List, $00000009, 7, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBuffer(@TX_CANLayer_List, $00000008, 6, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBuffer(@TX_CANLayer_List, $00000007, 5, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBuffer(@TX_CANLayer_List, $00000006, 4, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBuffer(@TX_CANLayer_List, $00000005, 3, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBuffer(@TX_CANLayer_List, $00000004, 2, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBuffer(@TX_CANLayer_List, $00000003, 1, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBuffer(@TX_CANLayer_List, $00000002, 0, 1, 2, 3, 4, 5, 6, 7, 8, True);
 
   WriteTXBuffer;
  //WriteDMAInfo;
 // WriteCANInfo;
  //WriteCAN_TX_Info;
-
- WriteDMAInfo;
- Delay_ms(5000);
- // dsPIC33_DMA_TransferCount needs to be dynamically changed to the true transmitter word count taking into account DLC
- dsPIC33_CAN_RequestTransmit(0);
- Delay_us(10000);                    // Wait for the Transmit to end
- dsPIC33_DMA_AddressOffsetA(0, @TXRawBufferArray[0] + 1);                                             // Address Offset from the DAM RAM Start Address is 0
- WriteDMAInfo;
- Delay_ms(5000);
- // dsPIC33_DMA_TransferCount needs to be dynamically changed to the true transmitter word count taking into account DLC
- dsPIC33_CAN_RequestTransmit(0);
- Delay_us(10000);                    // Wait for the Transmit to end
- dsPIC33_DMA_AddressOffsetA(0, @TXRawBufferArray[0] + 2);                                             // Address Offset from the DAM RAM Start Address is 0
- WriteDMAInfo;
- Delay_ms(5000);
- // dsPIC33_DMA_TransferCount needs to be dynamically changed to the true transmitter word count taking into account DLC
- dsPIC33_CAN_RequestTransmit(0);
- Delay_us(10000);                    // Wait for the Transmit to end
- dsPIC33_DMA_AddressOffsetA(0, @TXRawBufferArray[0] + 3);                                             // Address Offset from the DAM RAM Start Address is 0
- WriteDMAInfo;
- Delay_ms(5000);
- // dsPIC33_DMA_TransferCount needs to be dynamically changed to the true transmitter word count taking into account DLC
- dsPIC33_CAN_RequestTransmit(0);
- WriteDMAInfo;
+ 
+  if TX_CANLayer_List.Count > 0 then
+  begin
+    dsPIC33_DMA_AddressOffsetA(0, CANStorage_FirstFullBuffer(@TX_CANLayer_List));                                    // Address Offset from the DAM RAM Start Address is 0
+    dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateBufferSizeForRegAddressWithAutoIncrement(CANStorage_FirstFullBuffer(@TX_CANLayer_List)));
+    dsPIC33_CAN_RequestTransmit(0);
+  end;
 
   while true do
   begin
     Check_TP();
-    
-  //  if IntCount <> IntCountX then
-    begin
-   {   WordToStr(IntCount, s1);
-      strcpy(ButtonRoundF26.Caption, s1);
-      s1 := 'IntCnt: ' + s1 ;
-      DrawRoundButton(@ButtonRoundF26);   }
-      IntCountX := IntCount;
-      
-      Delay_ms(5000);
-      
-   //   WriteDMAInfo;
 
-      
-    //  dsPIC33_CAN_RequestTransmit(0);
-      
-      Delay_ms(5000);
-      
-   //   WriteDMAInfo;
-      
-    end;
   end;
 
 end.
