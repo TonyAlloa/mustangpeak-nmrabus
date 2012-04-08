@@ -21,6 +21,20 @@ unit CANStorage;
 // ******************************************************************************
 
 {$I Options.inc}
+  { ***************************************************************************
+   Create a CANStorage.inc file in the application directory and add the following lines :
+
+   // START ***************************************************************************
+   //Set the lenght of the CAN DMA Buffer to the length of ALL
+   //CAN Buffer arrays added together (All TX and All RX Buffers defined for the application)
+
+   const
+     LEN_OF_ALL_CAN_DMA_BUFFERS = 10;   << Replace the 10 with the number actually used in application
+   // END ***************************************************************************
+
+   ***************************************************************************  }
+   
+{$I CANStorage.inc}
 
 const
   CAN_DIRECTION_READ = 1;
@@ -64,7 +78,19 @@ const
   RAWBUFFERSIZE = SizeOf(TCANRawBuffer);
   
 type
-  TCANRawBufferArray = array[0..20] of TCANRawBuffer;
+  { ***************************************************************************
+   Create a CANStorage.inc file in the application directory and add the following lines :
+
+   // START ***************************************************************************
+   //Set the lenght of the CAN DMA Buffer to the length of ALL
+   //CAN Buffer arrays added together (All TX and All RX Buffers defined for the application)
+   
+   const
+     LEN_OF_ALL_CAN_DMA_BUFFERS = 10;   << Replace the 10 with the number actually used in application
+   // END ***************************************************************************
+     
+   ***************************************************************************  }
+  TCANRawBufferArray = array[0..LEN_OF_ALL_CAN_DMA_BUFFERS] of TCANRawBuffer;
   PCANRawBufferArray = ^TCANRawBufferArray;
   
   TCANRawBufferList = record
@@ -77,13 +103,45 @@ type
   PCANRawBufferList = ^TCANRawBufferList;
   
 
+
 function CANStorage_WriteToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 function CANStorage_ReadFromList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 procedure CANStorage_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; ListLength: Byte);
 function CANStorage_FirstFullBuffer(List: PCANRawBufferList): PCANRawBuffer;
 procedure CANStorage_ReleaseFirstFullBuffer(List: PCANRawBufferList);
+procedure LoadBufferAndWriteToList(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean);
+function CANStorage_FirstEmptyBuffer(List: PCANRawBufferList): PCANRawBuffer;
 
 implementation
+
+// *****************************************************************************
+//  procedure LoadBufferAndWriteToList;
+//
+//  Parameters: ListPtr        : Pointer to the FIFO buffer Lists
+//              BufferArrayPtr : Pointer to the first item in the RawBufferArray
+//              LasterBuffer   : Pointer to the last item in the RawBufferArray
+//
+//  Result:
+//
+//  Description: Stores the passed Buffer Information into the CAN Storage Buffer in the passed list
+// *****************************************************************************
+procedure LoadBufferAndWriteToList(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean);
+var
+  Buffer: TCANBuffer;
+begin
+  Buffer.ID := ID;
+  Buffer.DataCount := ByteCount;
+  Buffer.DataBytes[0] := Byte0;
+  Buffer.DataBytes[1] := Byte1;
+  Buffer.DataBytes[2] := Byte2;
+  Buffer.DataBytes[3] := Byte3;
+  Buffer.DataBytes[4] := Byte4;
+  Buffer.DataBytes[5] := Byte5;
+  Buffer.DataBytes[6] := Byte6;
+  Buffer.DataBytes[7] := Byte7;
+  Buffer.IsExtended := IsExtended;
+  CANStorage_WriteToList(List, Buffer)
+end;
 
 // *****************************************************************************
 //  procedure CANStorage_InitializeList;
@@ -103,6 +161,20 @@ begin
   ListPtr^.Head := @BufferArrayPtr^[0];
   ListPtr^.Tail := @BufferArrayPtr^[0];
   ListPtr^.Count := 0;
+end;
+
+// *****************************************************************************
+//  function CANStorage_FirstEmptyBuffer
+//     Parameters:  List: List to work on
+//
+//     Returns: Pointer to the Current Tail if there is Data available, else nil
+//
+//     Description:   Returns the Buffer ready to be read from the Buffer
+//
+// *****************************************************************************
+function CANStorage_FirstEmptyBuffer(List: PCANRawBufferList): PCANRawBuffer;
+begin
+  Result := List^.Head                                                        // Take the current Head....  FOR NOW
 end;
 
 // *****************************************************************************
@@ -262,11 +334,14 @@ procedure CANStorage_ReleaseFirstFullBuffer(List: PCANRawBufferList);
 var
   Tail: PCANRawBuffer;
 begin
-  Tail := CANStorage_FirstFullBuffer(List);
-  Inc(Tail);                                                                  // Increase it the size of a TCANRawBuffer
-  if Tail > (@List^.Buffers^[0] + Size) then                                  // Wrap it if necessary
-    Tail := @List^.Buffers^[0];
-  List^.Tail := Tail;
+  if List^.Count > 1 then                                                       // Don't let the tail get ahead of the head on an empty list
+  begin
+    Tail := CANStorage_FirstFullBuffer(List);
+    Inc(Tail);                                                                  // Increase it the size of a TCANRawBuffer
+    if Tail > (@List^.Buffers^[0] + Size) then                                  // Wrap it if necessary
+      Tail := @List^.Buffers^[0];
+    List^.Tail := Tail;
+  end;
   Dec(List^.Count);
 end;
 

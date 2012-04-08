@@ -1236,7 +1236,6 @@ object TatDiagram
   TopRuler.GridColor = clBlack
   Zoom = 129
   BorderColor = clGray
-  VertScrollBar.Position = 165
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
   ActiveLayers = 31
@@ -6485,7 +6484,7 @@ SCREEN_SECTION
 		ScreenGridColor=clBlack
 
 	ScreenName=ScreenThrottle
-		CurrentLayer=0
+		CurrentLayer=1
 		StartScreen=True
 		StaticScreen=False
 		ScreenColor=clGray
@@ -6512,7 +6511,7 @@ SCREEN_SECTION
 		ScreenGridColor=clBlack
 
 	ScreenCount=5
-	ActiveScreen=Screen3
+	ActiveScreen=ScreenThrottle
 
 SCREEN_SECTION_END
 

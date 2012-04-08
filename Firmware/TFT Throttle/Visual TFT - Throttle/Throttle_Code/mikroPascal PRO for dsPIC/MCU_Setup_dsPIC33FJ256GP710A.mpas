@@ -2,6 +2,7 @@ unit MCU_Setup_dsPIC33FJ256GP710A;
 
 uses
   Throttle_driver,
+  CANStorage,
   NodeIDs;
 
 {$I Options.inc}
@@ -18,6 +19,19 @@ const
 
 var
   PinChangeState: Word;
+ 
+  TX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7800;               // There are 10 - 8 Word Buffer in this Array = 160 Bytes
+  TX_CANLayer_List: TCANRawBufferList;
+  
+  TX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $78A0;           // There are 10 - 8 Word Buffer in this Array = 160 Bytes
+  TX_NMRABusLayer_List: TCANRawBufferList;
+  
+  RX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7940;               // There are 10 - 8 Word Buffer in this Array = 160 Bytes
+  RX_CANLayer_List: TCANRawBufferList;
+
+  RX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $79E0;           // There are 10 - 8 Word Buffer in this Array = 160 Bytes
+  RX_NMRABusLayer_List: TCANRawBufferList;
+  
 
 implementation
 

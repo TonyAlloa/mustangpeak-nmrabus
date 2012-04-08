@@ -63,6 +63,17 @@ const
   ICODE_RB29               = 29;        // RX Only
   ICODE_RB30               = 30;        // RX Only
   ICODE_RB31               = 31;        // RX Only
+  
+const
+  CES_TRANSMITTING = $0001;
+
+type
+  TCAN_Engine = record
+    State: Word;                            // See the CES_xxx constants
+    TransmittingList: PCANRawBufferList;    // List that has an item being transmitted
+  end;
+  
+procedure dsPIC33_CAN_Initialize;
 
 // *****************************************************************************
 // Initialization Functions
@@ -89,7 +100,7 @@ procedure dsPIC33_CAN_AssociateFilterWithMask(FilterNumber, MaskNumber: Word);
 // RAM Buffer Functions
 // *****************************************************************************
 procedure dsPIC33_CAN_SetBufferSize(Size: Word);
-function dsPIC33_CAN_CalculateBufferSizeForRegAddressWithAutoIncrement(Buffer: PCANRawBuffer): Word;
+function dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(Buffer: PCANRawBuffer): Word;
 procedure dsPIC33_CAN_RegisterBufferWithFilter(FilterNumber, BufferNumber: Word);
 // *****************************************************************************
 
@@ -165,18 +176,27 @@ procedure dsPIC33_CAN_RequestTransmit(BufferNumber: Word);
 function dsPIC33_CAN_TX_Aborted(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_TX_ArbitrationLost(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_TX_ErrorDetected(BufferNumber: Word): Boolean;
+function dsPIC33_CAN_EngineTransmitting: Boolean;
 // *****************************************************************************
 
 // *****************************************************************************
 // CAN Receive Functions
 // *****************************************************************************
-function dsPIC33_CAN_RX_Full(BufferNumber: Word): Boolean;
-function dsPIC33_CAN_RX_Overflow(BufferNumber: Word): Boolean;
+function dsPIC33_CAN_RX_Full(BufferNumber: Word; Clear: Boolean): Boolean;
+function dsPIC33_CAN_RX_Overflow(BufferNumber: Word; Clear: Boolean): Boolean;
 // *****************************************************************************
 
 {$ENDIF}
 
+var
+  CAN_Engine: TCAN_Engine;
+
 implementation
+
+procedure dsPIC33_CAN_Initialize;
+begin
+  CAN_Engine.State := 0;
+end;
 
 {$IFDEF dsPIC33}
 
@@ -328,7 +348,7 @@ end;
 //
 //  Description:  Assumes 32 Individual Bits in 2 consecutive 16 bit registers (CxRXFUL1, CxRXFUL2 or CxRXOVF1, CxRXOVF2 are the main reason)
 // *****************************************************************************
-function ReadRXBit(RegPtr: ^Word; BufferNumber: Word): Boolean;
+function ReadRXBit(RegPtr: ^Word; BufferNumber: Word; Clear: Boolean): Boolean;
 var
   Offset: Word;
 begin
@@ -338,7 +358,24 @@ begin
   Offset := BufferNumber;
   if Offset > 15 then
     Offset := Offset - 16; // Convert to the Bit Offset
-  Result := RegPtr^.Offset = 1
+  Result := RegPtr^.Offset = 1;
+  if Clear then
+    RegPtr^.Offset := 0
+end;
+
+
+// *****************************************************************************
+//  procedure dsPIC33_CAN_EngineTransmitting;
+//
+//  Parameters:
+//
+//  Result:    True if there is a message being transmitted
+//
+//  Description:
+// *****************************************************************************
+function dsPIC33_CAN_EngineTransmitting: Boolean;
+begin
+  Result := CAN_Engine.State and CES_TRANSMITTING <> 0
 end;
 
 // *****************************************************************************
@@ -462,6 +499,7 @@ const
    TX_REQUEST_BIT = 3;
 begin
    ManipulateTXBit(BufferNumber, TX_REQUEST_BIT, True);
+   CAN_Engine.State := CAN_ENGINE.State or CES_TRANSMITTING;
 end;
 
 // *****************************************************************************
@@ -473,9 +511,9 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function dsPIC33_CAN_RX_Full(BufferNumber: Word): Boolean;
+function dsPIC33_CAN_RX_Full(BufferNumber: Word; Clear: Boolean): Boolean;
 begin
-  Result := ReadRXBit(@C1RXFUL1, BufferNumber);
+  Result := ReadRXBit(@C1RXFUL1, BufferNumber, Clear);
 end;
 
 // *****************************************************************************
@@ -487,9 +525,9 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function dsPIC33_CAN_RX_Overflow(BufferNumber: Word): Boolean;
+function dsPIC33_CAN_RX_Overflow(BufferNumber: Word; Clear: Boolean): Boolean;
 begin
-  Result := ReadRXBit(@C1RXOVF1, BufferNumber);
+  Result := ReadRXBit(@C1RXOVF1, BufferNumber, Clear);
 end;
 
 
@@ -1011,7 +1049,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure dsPIC33_CAN_SetBufferSize;
+//  procedure dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement;
 //
 //  Parameters: Buffer:
 //
@@ -1019,7 +1057,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function dsPIC33_CAN_CalculateBufferSizeForRegAddressWithAutoIncrement(Buffer: PCANRawBuffer): Word;
+function dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(Buffer: PCANRawBuffer): Word;
 var
   ByteCount: Word;
 begin

@@ -1,6 +1,6 @@
 unit Throttle_events_code;
 
-uses Throttle_objects, Throttle_resources;
+uses Throttle_objects, Throttle_resources, dsPIC33_CAN, dsPIC33_DMA, CANStorage, MCU_Setup_dsPIC33FJ256GP710A;
 
 procedure ButtonRound12Down();
 procedure ButtonRound12Click();
@@ -155,7 +155,11 @@ procedure DrawLine(Aline : ^TLine); external;
 implementation
 
 //--------------------- User code ---------------------//
+  {
+  
+dsPIC33_CAN, dsPIC33_DMA, CANStorage, MCU_Setup_dsPIC33FJ256GP710A
 
+   }
 
 
 //----------------- End of User code ------------------//
@@ -166,6 +170,26 @@ implementation
 procedure ButtonRound12Click();
 begin
   LATG3_bit := not LATG3_bit;
+
+  
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000010, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000009, 7, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000008, 6, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000007, 5, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000006, 4, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000005, 3, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000004, 2, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000003, 1, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  LoadBufferAndWriteToList(@TX_CANLayer_List, $00000002, 0, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  
+  dsPIC33_CAN_TXBufferInterrupt(False);
+  if CAN_Engine.State and CES_TRANSMITTING = 0 then
+  begin
+    dsPIC33_DMA_AddressOffsetA(0, CANStorage_FirstFullBuffer(@TX_CANLayer_List));
+    dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(CANStorage_FirstFullBuffer(@TX_CANLayer_List)));
+    dsPIC33_CAN_RequestTransmit(0);
+  end;
+  dsPIC33_CAN_TXBufferInterrupt(True);
 end;
 
 procedure ButtonRound12Down();
