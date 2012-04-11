@@ -26,10 +26,12 @@ var
   TX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $78A0;           // There are 10 - 8 Word Buffer in this Array = 160 Bytes
   TX_NMRABusLayer_List: TCANRawBufferList;
   
-  RX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7940;               // There are 10 - 8 Word Buffer in this Array = 160 Bytes
+  RX_Funnel_RawBufferArray: TCanRawBufferArray; absolute $7940;                 // Recieve buffer for all filters.  The software moves the data to the right list
+  
+  RX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7950;               // There are 10 - 8 Word Buffer in this Array = 160 Bytes
   RX_CANLayer_List: TCANRawBufferList;
 
-  RX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $79E0;           // There are 10 - 8 Word Buffer in this Array = 160 Bytes
+  RX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $79F0;           // There are 10 - 8 Word Buffer in this Array = 160 Bytes
   RX_NMRABusLayer_List: TCANRawBufferList;
   
 
@@ -41,6 +43,9 @@ begin
 end;
 
 procedure MCU_Setup_Initialize;
+var
+  i: Integer;
+  WordPtr: ^Word;
 begin
   ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
   
@@ -48,6 +53,13 @@ begin
   TRISG3_bit := 0;
 
   PinChangeState := 0;
+  
+  WordPtr := $7800;
+  for i := 0 to 319 do
+  begin
+    WordPtr^ := $0000;
+    Inc(WordPtr);
+  end;
   
   {$IFDEF UART_ENABLE}
   // Initialize UART

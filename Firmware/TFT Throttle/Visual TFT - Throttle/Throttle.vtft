@@ -1236,6 +1236,7 @@ object TatDiagram
   TopRuler.GridColor = clBlack
   Zoom = 129
   BorderColor = clGray
+  VertScrollBar.Position = 165
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
   ActiveLayers = 31
@@ -1838,6 +1839,7 @@ object TatDiagram
     Layer = 1
     LayerName = 'LayerUI'
     Transparency = 0
+    OnClick = 'Button9Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
@@ -1912,6 +1914,7 @@ object TatDiagram
     Layer = 1
     LayerName = 'LayerUI'
     Transparency = 0
+    OnClick = 'Button7Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
@@ -1923,7 +1926,7 @@ object TatDiagram
   object ButtonRound12: TDgrButtonRound
     Tag = 1
     Left = 318.000000000000000000
-    Top = 106.000000000000000000
+    Top = 104.000000000000000000
     Width = 144.000000000000000000
     Height = 148.000000000000000000
     Brush.Style = bsClear
@@ -2002,7 +2005,6 @@ object TatDiagram
     Layer = 1
     LayerName = 'LayerUI'
     Transparency = 0
-    OnDown = 'ButtonRound12Down'
     OnClick = 'ButtonRound12Click'
     GradientBackup = False
     PressColor = clBlack
@@ -2094,6 +2096,7 @@ object TatDiagram
     Layer = 1
     LayerName = 'LayerUI'
     Transparency = 0
+    OnClick = 'ButtonRound13Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
@@ -4040,7 +4043,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4130,7 +4133,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4220,7 +4223,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4310,7 +4313,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4400,7 +4403,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4490,7 +4493,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4580,7 +4583,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4670,7 +4673,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4760,7 +4763,7 @@ object TatDiagram
     MinHeight = 30
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 16
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 'Double click on Round button to add handler.'
@@ -4869,6 +4872,7 @@ object TatDiagram
     Layer = 1
     LayerName = 'LayerUI'
     Transparency = 0
+    OnClick = 'ButtonRound10Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
@@ -4959,6 +4963,7 @@ object TatDiagram
     Layer = 1
     LayerName = 'LayerUI'
     Transparency = 0
+    OnClick = 'ButtonRound11Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True

@@ -229,7 +229,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure SetFilterMaskBitsSID;
+//  procedure SetFilterMaskBits;
 //
 //  Parameters: RegPtr      : Pointer to the Register to modify
 //              Filter      : Filter or Mask bits
@@ -238,29 +238,19 @@ end;
 //  Result:
 //
 //  Description: Internal function that set the Standard ID in the lower word for the Filter and Mask
+//               Again the Documentation is WRONG:
+//
+//                                     This is the correct bit pattern.
+//  Datasheet defined SID - Word 0     |EID-17|EID-16|EID-15|EID-14|EID-13|EID-12|EID-11|EID-10|EID-9 |EID-8 |EID-7 |  U   |EXEID |  U   |EID-6 |EID-5 |
+//  Datasheet defined EID - Word 1     |EID-4 |EID-3 |EID-2 |EID-1 |EID-0 |SID-10|SID-9 |SID-8 |SID-7 |SID-6 |SID-5 |SID-4 |SID-3 |SID-2 |SID-1 |SID-0 |
 // *****************************************************************************
-procedure SetFilterMaskBitsSID(RegPtr: ^Word; Filter: DWord; ExtendedOnly: Boolean);
+procedure SetFilterMaskBits(RegPtrSID, RegPtrEID: ^Word; Filter: DWord; ExtendedOnly: Boolean);
 begin
-  RegPtr^ := DWord( Filter shl 5);
-  RegPtr^ := RegPtr^ or DWord( Filter shr 27);
+  RegPtrEID^ := Filter;                                               // Setup SID and EID 0..4
+  RegPtrSID^ := DWord(Filter shr 16) and $0003;                       // Setup EID 5..6 and clear the upper 14 bits
+  RegPtrSID^ := RegPtrSID^ or (DWord(Filter shr 13) and $FFE0);       // Set up EID 7..17
   if ExtendedOnly then
-    RegPtr^ := RegPtr^ or $0008;
-end;
-
-// *****************************************************************************
-//  procedure SetFilterMaskBitsEID;
-//
-//  Parameters: RegPtr      : Pointer to the Register to modify
-//              Filter      : Filter or Mask bits
-//              ExtendedOnly: Sets the EID bit in the filter or mask
-//
-//  Result:
-//
-//  Description: Internal function that set the Extended ID in the upper word for the Filter and Mask
-// *****************************************************************************
-procedure SetFilterMaskBitsEID(RegPtr: ^Word; Filter: DWord);
-begin
-  RegPtr^ :=  Filter shr 11
+    RegPtrSID^ := RegPtrSID^ or $0008;
 end;
 
 // *****************************************************************************
@@ -513,6 +503,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_RX_Full(BufferNumber: Word; Clear: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := ReadRXBit(@C1RXFUL1, BufferNumber, Clear);
 end;
 
@@ -527,6 +518,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_RX_Overflow(BufferNumber: Word; Clear: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := ReadRXBit(@C1RXOVF1, BufferNumber, Clear);
 end;
 
@@ -633,6 +625,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_GlobalInterruptFlagCAN_RX_Ready(DoReset: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := C1RXIF_bit = 1;
   if DoReset then C1RXIF_Bit := 0
 end;
@@ -651,7 +644,8 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_GlobalInterruptFlagCAN_TX_Request(DoReset: Boolean): Boolean;
 begin
-   Result := C1TXIF_bit = 1;
+  ClearWindowSelectBit;
+  Result := C1TXIF_bit = 1;
   if DoReset then C1TXIF_Bit := 0
 end;
 
@@ -725,6 +719,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptCode: Word;
 begin
+  ClearWindowSelectBit;
   Result := C1VEC and $007F
 end;
 
@@ -739,6 +734,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagTXInErrorStateBusOff: Boolean;
 begin
+  ClearWindowSelectBit;
   Result := TXBO_bit = 1;
 end;
 
@@ -798,6 +794,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagRXInErrorStateWarning: Boolean;
 begin
+  ClearWindowSelectBit;
   Result := RXWAR_bit = 1;
 end;
 
@@ -812,6 +809,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagTXOrRXInErrorStateWarning: Boolean;
 begin
+  ClearWindowSelectBit;
   Result := EWARN_bit = 1;
 end;
 
@@ -826,6 +824,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagInvalidMessage(DoReset: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := IVRIF_bit = 1;
   if DoReset then IVRIF_bit := 0;
 end;
@@ -841,6 +840,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagBusWakeupActivity(DoReset: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := WAKIF_bit = 1;
   if DoReset then WAKIF_bit := 0;
 end;
@@ -856,6 +856,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagError(DoReset: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := ERRIF_bit = 1;
   if DoReset then ERRIF_bit := 0;
 end;
@@ -871,6 +872,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagFIFO_AlmostFull(DoReset: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := FIFOIF_bit = 1;
   if DoReset then FIFOIF_bit := 0;
 end;
@@ -886,6 +888,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagRXBufferOverflow(DoReset: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := RBOVIF_bit = 1;
   if DoReset then RBOVIF_bit := 0;
 end;
@@ -901,6 +904,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagRXBuffer(DoReset: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := RBIF_bit = 1;
   if DoReset then RBIF_bit := 0;
 end;
@@ -916,6 +920,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_InterruptFlagTXBuffer(DoReset: Boolean): Boolean;
 begin
+  ClearWindowSelectBit;
   Result := TBIF_bit = 1;
   if DoReset then TBIF_bit := 0;
 end;
@@ -932,6 +937,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_InvalidMessageInterrupt(Enable: Boolean);
 begin
+  ClearWindowSelectBit;
   if Enable then IVRIE_bit := 1 else IVRIE_bit := 0
 end;
 
@@ -946,6 +952,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_BusWakeUpInterrupt(Enable: Boolean);
 begin
+  ClearWindowSelectBit;
   if Enable then WAKIE_bit := 1 else WAKIE_bit := 0
 end;
 
@@ -960,6 +967,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_ErrorInterrupt(Enable: Boolean);
 begin
+  ClearWindowSelectBit;
   if Enable then ERRIE_bit := 1 else ERRIE_bit := 0
 end;
 
@@ -974,6 +982,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_FIFO_AlmostFullInterrupt(Enable: Boolean);
 begin
+  ClearWindowSelectBit;
   if Enable then FIFOIE_bit := 1 else FIFOIE_bit := 0
 end;
 
@@ -988,6 +997,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_RXBufferOverflowInterrupt(Enable: Boolean);
 begin
+  ClearWindowSelectBit;
   if Enable then RBOVIE_bit := 1 else RBOVIE_bit := 0
 end;
 
@@ -1002,6 +1012,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_RXBufferInterrupt(Enable: Boolean);
 begin
+  ClearWindowSelectBit;
   if Enable then RBIE_bit := 1 else RBIE_bit := 0
 end;
 
@@ -1016,6 +1027,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_TXBufferInterrupt(Enable: Boolean);
 begin
+  ClearWindowSelectBit;
   if Enable then TBIE_bit := 1 else TBIE_bit := 0
 end;
 
@@ -1037,6 +1049,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_SetBufferSize(Size: Word);
 begin
+  ClearWindowSelectBit;
   C1FCTRL := C1FCTRL and $1FFF;  // Clear the bottom bits which = 4 Buffers reserved
   case Size of
     6: C1FCTRL :=  C1FCTRL or $2000;   // 6 Buffers
@@ -1111,6 +1124,7 @@ end;
 // *****************************************************************************
 procedure dsPIC33_CAN_HardwareFIFO_SetStartBuffer(StartBuffer: Word);
 begin
+  ClearWindowSelectBit;
   C1FCTRL := (C1FCTRL and $FFE0) or StartBuffer
 end;
 
@@ -1127,6 +1141,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_HardwareFIFO_GetCurrentBuffer: Word;
 begin
+  ClearWindowSelectBit;
   Result := (C1FIFO shr 8) and $0007
 end;
 
@@ -1144,6 +1159,7 @@ end;
 // *****************************************************************************
 function dsPIC33_CAN_HardwareFIFO_GetNextBuffer: Word;
 begin
+  ClearWindowSelectBit;
   Result := C1FIFO and $001F;
 end;
 
@@ -1240,8 +1256,7 @@ begin
     EIDRegPtr := @C1RXF0EID + (FilterNumber * 2);   // Increases by Word not bytes so 2 not 4
 
     ValidateCAN_ID(Filter);
-    SetFilterMaskBitsSID(SIDRegPtr, Filter, ExtendedOnly);
-    SetFilterMaskBitsEID(EIDRegPtr, Filter);
+    SetFilterMaskBits(SIDRegPtr, EIDRegPtr, Filter, ExtendedOnly);
   end
 end;
 
@@ -1267,8 +1282,7 @@ begin
     EIDRegPtr := @C1RXM0EID + (MaskNumber * 2);   // Increases by Word not bytes so 2 not 4
 
     ValidateCAN_ID(Mask);
-    SetFilterMaskBitsSID(SIDRegPtr, Mask, ExtendedOnly);
-    SetFilterMaskBitsEID(EIDRegPtr, Mask);
+    SetFilterMaskBits(SIDRegPtr, EIDRegPtr, Mask, ExtendedOnly);
   end
 end;
 

@@ -4,8 +4,12 @@ uses Throttle_objects, Throttle_resources;
 
 /////////////////////////
 // External Declarations
-procedure ButtonRound12Down(); external;
+procedure Button9Click(); external;
+procedure Button7Click(); external;
 procedure ButtonRound12Click(); external;
+procedure ButtonRound13Click(); external;
+procedure ButtonRound10Click(); external;
+procedure ButtonRound11Click(); external;
 /////////////////////////
 
 procedure DrawScreen(aScreen : ^TScreen);
@@ -519,31 +523,31 @@ var ButtonRoundF17 : TButton_Round;
     ButtonRoundF17_Caption : string[17];
 
 var ButtonRoundF18 : TButton_Round;
-    ButtonRoundF18_Caption : string[17];
+    ButtonRoundF18_Caption : string[33];
 
 var ButtonRoundF19 : TButton_Round;
-    ButtonRoundF19_Caption : string[17];
+    ButtonRoundF19_Caption : string[33];
 
 var ButtonRoundF20 : TButton_Round;
-    ButtonRoundF20_Caption : string[17];
+    ButtonRoundF20_Caption : string[33];
 
 var ButtonRoundF21 : TButton_Round;
-    ButtonRoundF21_Caption : string[17];
+    ButtonRoundF21_Caption : string[33];
 
 var ButtonRoundF22 : TButton_Round;
-    ButtonRoundF22_Caption : string[17];
+    ButtonRoundF22_Caption : string[33];
 
 var ButtonRoundF23 : TButton_Round;
-    ButtonRoundF23_Caption : string[17];
+    ButtonRoundF23_Caption : string[33];
 
 var ButtonRoundF24 : TButton_Round;
-    ButtonRoundF24_Caption : string[17];
+    ButtonRoundF24_Caption : string[33];
 
 var ButtonRoundF25 : TButton_Round;
-    ButtonRoundF25_Caption : string[17];
+    ButtonRoundF25_Caption : string[33];
 
 var ButtonRoundF26 : TButton_Round;
-    ButtonRoundF26_Caption : string[17];
+    ButtonRoundF26_Caption : string[33];
 
 var ButtonRound10 : TButton_Round;
     ButtonRound10_Caption : string[17];
@@ -1210,7 +1214,7 @@ procedure InitializeObjects();    // static
     Button9.Press_Color         := 0xC618;
     Button9.OnUpPtr             := 0;
     Button9.OnDownPtr           := 0;
-    Button9.OnClickPtr          := 0;
+    Button9.OnClickPtr          := @Button9Click;
     Button9.OnPressPtr          := 0;
 
     Button7.OwnerScreenAddress  := @ScreenThrottle;
@@ -1237,13 +1241,13 @@ procedure InitializeObjects();    // static
     Button7.Press_Color         := 0xC618;
     Button7.OnUpPtr             := 0;
     Button7.OnDownPtr           := 0;
-    Button7.OnClickPtr          := 0;
+    Button7.OnClickPtr          := @Button7Click;
     Button7.OnPressPtr          := 0;
 
     ButtonRound12.OwnerScreenAddress  := @ScreenThrottle;
     ButtonRound12.Order               := 9;
     ButtonRound12.Left                := 159;
-    ButtonRound12.Top                 := 53;
+    ButtonRound12.Top                 := 52;
     ButtonRound12.Width               := 72;
     ButtonRound12.Height              := 74;
     ButtonRound12.Pen_Width           := 1;
@@ -1263,7 +1267,7 @@ procedure InitializeObjects();    // static
     ButtonRound12.Color               := 0xC618;
     ButtonRound12.Press_Color         := 0x8410;
     ButtonRound12.OnUpPtr             := 0;
-    ButtonRound12.OnDownPtr           := @ButtonRound12Down;
+    ButtonRound12.OnDownPtr           := 0;
     ButtonRound12.OnClickPtr          := @ButtonRound12Click;
     ButtonRound12.OnPressPtr          := 0;
 
@@ -1291,7 +1295,7 @@ procedure InitializeObjects();    // static
     ButtonRound13.Press_Color         := 0x8410;
     ButtonRound13.OnUpPtr             := 0;
     ButtonRound13.OnDownPtr           := 0;
-    ButtonRound13.OnClickPtr          := 0;
+    ButtonRound13.OnClickPtr          := @ButtonRound13Click;
     ButtonRound13.OnPressPtr          := 0;
 
     ButtonRound14.OwnerScreenAddress  := @ScreenThrottle;
@@ -2128,7 +2132,7 @@ procedure InitializeObjects();    // static
     ButtonRound10.Press_Color         := 0x8410;
     ButtonRound10.OnUpPtr             := 0;
     ButtonRound10.OnDownPtr           := 0;
-    ButtonRound10.OnClickPtr          := 0;
+    ButtonRound10.OnClickPtr          := @ButtonRound10Click;
     ButtonRound10.OnPressPtr          := 0;
 
     ButtonRound11.OwnerScreenAddress  := @ScreenThrottle;
@@ -2155,7 +2159,7 @@ procedure InitializeObjects();    // static
     ButtonRound11.Press_Color         := 0x8410;
     ButtonRound11.OnUpPtr             := 0;
     ButtonRound11.OnDownPtr           := 0;
-    ButtonRound11.OnClickPtr          := 0;
+    ButtonRound11.OnClickPtr          := @ButtonRound11Click;
     ButtonRound11.OnPressPtr          := 0;
 
     Button5.OwnerScreenAddress  := @ScreenConsists;
