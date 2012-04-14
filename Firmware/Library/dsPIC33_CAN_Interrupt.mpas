@@ -1,0 +1,131 @@
+unit dsPIC33_CAN_Interrupt;
+
+uses
+  MCU_Setup_dsPIC33FJ256GP710A,
+  CAN_Storage,
+  dsPIC33_CAN,
+  dsPIC33_DMA;
+  
+procedure dsPIC33_CAN_Interrupt_StartCANMessageEngine;
+
+implementation
+
+// ****************************************************************************
+// procedure LoadCAN_EngineWithPendingTransmitList;
+//
+// Loads the highest priority list with a message pending or nil if all are empty
+// The result is stored in the CAN_Engine.TransmittingList so withing the interrupt
+// we can remove this item from the list.
+// For more (or less) priority buffer transmit lists edit this function and
+// add/intialize more TCANRawBufferLists
+//
+// ****************************************************************************
+procedure LoadCAN_EngineWithPendingTransmitList;
+begin
+   if TX_CANLayer_List.Count > 0 then
+    CAN_Engine.TransmittingList := @TX_CANLayer_List                            // Highest Priority List
+  else
+  if TX_NMRABusLayer_List.Count > 0 then                                        // Least Priority List
+    CAN_Engine.TransmittingList := @TX_NMRABusLayer_List
+  else
+    CAN_Engine.TransmittingList := PCANRawBufferList( nil)
+end;
+
+// ****************************************************************************
+// function StartTransmission: Boolean;
+//
+// Starts the transmission if there are no current transmits in procress
+//
+// ****************************************************************************
+function StartTransmission: Boolean;
+var
+  NextBuffer: PCANRawBuffer;
+begin
+  Result := False;
+  LoadCAN_EngineWithPendingTransmitList;                                        // Pick the highest Priority List to send next
+  if CAN_Engine.TransmittingList <> nil then
+  begin
+    NextBuffer := CANStorage_Tail(CAN_Engine.TransmittingList);                 // Get a pointer to the Buffer to transmit
+    if NextBuffer <> nil then                                                   // If there is something to send then send it
+    begin
+      TX_Main_RawBufferArray[0] := NextBuffer^;                                 // Copy the buffer info into the Transmit Registers
+      dsPIC33_DMA_AddressOffsetA(0, Word( @TX_Main_RawBufferArray));            // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
+      dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[0])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
+      dsPIC33_CAN_RequestTransmit(0);                                           // Set the Flag to start the transmission
+      CANStorage_IncTail(CAN_Engine.TransmittingList);                          // Release the Buffer from the List
+      Result := True;
+    end
+  end
+end;
+
+// ****************************************************************************
+// procedure dsPIC33_CAN_Interrupt_StartCANMessageEngine;
+//
+// Starts the transmitter engine if there are no current transmits in procress
+//
+// ****************************************************************************
+procedure dsPIC33_CAN_Interrupt_StartCANMessageEngine;
+begin
+  // Can't let the interrupt be called "right after" we make the comparison to see if the list is empty.
+  // That would be a race condition that may not start the next message from being sent.  By
+  // shutting off the interrupt we can be guarenteed that the interrupt can't not be called
+  // during our comparison and any newly added messages will get sent
+  dsPIC33_CAN_TXBufferInterrupt(False);
+
+  // If the CAN_Engine is not transmitting we need to start the transmission of any
+  // messages in the buffer list.  If it is already running then the interrupt that
+  // is called after the current message is finished will auto load any new messages
+  if not dsPIC33_CAN_EngineTransmitting then
+    StartTransmission;
+
+  // Re-enable the Transmit interrupt
+  dsPIC33_CAN_TXBufferInterrupt(True);
+end;
+
+
+procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT; ics ICS_AUTO;
+var
+  Next: PCANRawBuffer;
+  TargetList: PCANRawBufferList;
+begin
+  dsPIC33_CAN_GlobalInterruptFlagCAN_Event(True);                              // Reset the Global CAN Event Interrupt Flag
+
+  while dsPIC33_CAN_InterruptCode <> ICODE_NO_INTERRUPT do                      // Use the Interrupt Code to decode the Events that are both Enabled and Flags are set
+  begin
+    case dsPIC33_CAN_InterruptCode of
+      ICODE_TRB0 :
+      begin
+        dsPIC33_CAN_InterruptFlagTXBuffer(True);                                // TX Interrupt Flag Reset
+        if not StartTransmission then
+        begin
+          CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
+          CAN_Engine.TransmittingList := PCANRawBufferList( nil)
+        end
+      end;
+      ICODE_TRB1 :
+      begin
+        // CAN Layer Reception
+        dsPIC33_CAN_InterruptFlagRXBuffer(True);                                // RX Interrupt Flag Reset
+
+        if RX_Main_RawBufferArray[0].Word7 = 0 then                           // Test what Filter passed the message and filter to the correct List
+          TargetList := @RX_CANLayer_List
+        else
+          TargetList := @RX_NMRABusLayer_List;
+
+        Next := CANStorage_Head(TargetList);
+        if Next <> nil then
+        begin
+          Next^ := RX_Main_RawBufferArray[0];
+          CANStorage_IncHead(TargetList);
+        end else
+        begin
+            // Have overrun problem
+        end;
+        dsPIC33_DMA_AddressOffsetA(1, @RX_Main_RawBufferArray[0]);            // Point the Receive Buffer Offset
+        dsPIC33_CAN_RX_Full(1, True);                                           // Reset the Full Flag
+      end;
+    end
+  end;
+end;
+
+end.

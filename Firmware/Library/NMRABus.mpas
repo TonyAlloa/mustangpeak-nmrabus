@@ -19,38 +19,39 @@ unit NMRABus;
 uses
   NMRABusDefines,
   NMRABusUtilities,
-  CAN_Data;
+  CAN_Storage;
   
 {$I Options.inc}
 
 type
   TGetUniqueIDFunc = procedure(var Hi, Lo: DWord);
   PGetUniqueIDFunc = ^TGetUniqueIDFunc;
-  TSignalTransmitOnCANLayerFunc = procedure();
+{  TSignalTransmitOnCANLayerFunc = procedure();
   PSignalTransmitOnCANLayerFunc = ^TSignalTransmitOnCANLayerFunc;
   TSignalTransmitOnNMRALayerFunc = procedure();
-  PSignalTransmitOnNMRALayerFunc = ^TSignalTransmitOnNMRALayerFunc;
+  PSignalTransmitOnNMRALayerFunc = ^TSignalTransmitOnNMRALayerFunc;   }
   
 var
   GetUniqueIDFunc: PGetUniqueIDFunc; external;
-  SignalTransmitOnCANLayerFunc: PSignalTransmitOnCANLayerFunc; external;
-  SignalTransmitOnNMRALayerFunc: PSignalTransmitOnNMRALayerFunc; external;
+ // SignalTransmitOnCANLayerFunc: PSignalTransmitOnCANLayerFunc; external;
+ // SignalTransmitOnNMRALayerFunc: PSignalTransmitOnNMRALayerFunc; external;
+  
+  Transmit_CANLayer_List: PCANRawBufferList; external;
+  Transmit_NMRABusLayer_List: PCANRawBufferList; external;
+  Receive_CANLayer_List: PCANRawBufferList; external;
+  Receive_NMRABusLayer_List: PCANRawBufferList; external;
 
   procedure NMRABus_Connect;
   function NMRABus_Connected: Boolean;
   procedure NMRABus_Disconnect;
   procedure NMRABus_Initialize;
   procedure NMRABus_GlobalTimer;
-  procedure NMRABus_WaitForTransmitToFinish;
-  procedure NMRABus_WaitForTransmitToStart;
-  
+
   procedure HandleTransmitCompleteOnNMRALayerPacket;
   procedure HandlePacketReceivedOnNMRABusLayer;
   procedure HandleTransmitCompleteOnCANLayerPacket;
   procedure HandlePacketReceivedOnCANLayer;
   procedure HandleCANError;
-  procedure CANReadRXBuffer(Buffer: Byte; var ID: DWord; var DataCount: Byte; var DataBytes: TCANData; var IsExtended: Boolean);
-  procedure CANWriteTXBuffer(Buffer: Byte; ID: DWord; DataCount: Byte; var DataBytes: TCANData; IsExtended: Boolean; Priority: Byte);
   procedure HandleLoPriorityReceivedNMRABusLayerPackets;
   procedure HandleLoPriorityReceivedCANLayerPackets;
 
@@ -70,7 +71,6 @@ procedure NMRABus_Initialize;
 begin
   NMRABus.State := 0;
   NMRABus.Interrupt_State := 0;
-  NMRABus.ReceivedMessages := 0;
   GetUniqueIDFunc(NMRABus.Node_ID[1], NMRABus.Node_ID[0]);
   NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Node_ID[0];
   NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Node_ID[1];
@@ -104,53 +104,6 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure NMRABus_WaitForTransmitToFinish
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure NMRABus_WaitForTransmitToFinish;
-begin
-  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER <> 0 do;
-end;
-
-// *****************************************************************************
-//  procedure NMRABus_WaitForTransmitToFinish
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure NMRABus_WaitForTransmitToStart;
-begin
-  while NMRABus.Interrupt_State and BSI_TRANSMITTING_ANY_LAYER = 0 do;
-end;
-
-// *****************************************************************************
-//  function SendAndWaitForCheckIDPacket
-//     Parameters:
-//     Returns:
-//
-//     Description:  Returns True if all went well, False if the Alias is already
-//                   used
-//
-// *****************************************************************************
-function SendAndWaitForCheckIDPacket(MessageType: DWord): Boolean;
-var
-  Packet: TCAN_Packet;
-begin
-  Result := True;
-  NMRABusUtilities_CreateCANControlFramePacket(MessageType, @Packet);                    // Load the high priority transmitter buffer = 14us
-  CAN_Data_TxListAddCANLayerThroughLockedList(@Packet);                         // 150us
-  NMRABus_WaitForTransmitToStart;
-  NMRABus_WaitForTransmitToFinish;
-  Result := NMRABus.ReceivedMessages and BRM_RID = 0;                           // Set in the CAN Rx Interrupt
-end;
-
-// *****************************************************************************
 //  function NMRABus_Connect
 //     Parameters:
 //     Returns:
@@ -167,7 +120,6 @@ begin
   begin
     // The interrupt is looking for problems
   end;
-  Result := NMRABus.ReceivedMessages and BRM_RID = 0;                           // Set in the CAN Rx Interrupt
 end;
 
 // *****************************************************************************
@@ -180,13 +132,16 @@ end;
 // *****************************************************************************
 procedure NMRABus_Connect;
 var
-  Packet: TCAN_Packet;
+  Packet: TCANBuffer;
 begin
-  CAN_Data_Flush_Lists;                                                         // Flush any pending packets
+  CANStorage_FlushList(Transmit_CANLayer_List);                                      // Flush any pending packets
+  CANStorage_FlushList(Receive_CANLayer_List);
+  while CANStorage_Transmitting do;                                             // Wait for the last transmited packet
   Delay_ms(10);
-  NMRABus_WaitForTransmitToFinish;                                              // Allow all pending CAN Controller messages to clear
+ { NMRABus_WaitForTransmitToFinish;                                              // Allow all pending CAN Controller messages to clear
   NMRABus.State := NMRABus.State and not BS_PERMITED;                           // Not permitted until we successfully get through this log in series
-  NMRABus.ReceivedMessages := NMRABus.ReceivedMessages and not BRM_RID;         // Clear the Reserve ID Flag so we can monitor it to see if we get a reply to our login
+  
+
   if SendAndWaitForCheckIDPacket(FT_CID0) then
     if SendAndWaitForCheckIDPacket(FT_CID1) then
       if SendAndWaitForCheckIDPacket(FT_CID2) then
@@ -200,7 +155,7 @@ begin
               NMRABus_WaitForTransmitToStart;
               NMRABus_WaitForTransmitToFinish;
               NMRABus.State := NMRABus.State or BS_INITIALIZED;
-            end;
+            end;     }
 end;
 
 
@@ -225,14 +180,14 @@ end;
 // ****************************************************************************
 procedure HandleTransmitCompleteOnNMRALayerPacket;
 var
-  Packet: TCAN_Packet;
+  Packet: PCANBuffer;
 begin
-  if CAN_Data_TxNextPacketNMRABusLayer(Packet) then
+ { if CAN_Data_TxNextPacketNMRABusLayer(Packet) then
   begin
     NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_NMRABUS_LAYER;
     CANWriteTXBuffer(CAN_TX_1, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
   end else
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_NMRABUS_LAYER;
+    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_NMRABUS_LAYER;     }
 end;
 
 // ****************************************************************************
@@ -245,13 +200,13 @@ end;
 // ****************************************************************************
 procedure HandlePacketReceivedOnNMRABusLayer;
 var
-  Packet: TCAN_Packet;
+  Packet: TCANBuffer;
 begin
-  CANReadRXBuffer(CAN_RX_1, Packet.Header, Packet.Count, Packet.Bytes, Packet.ExtendedID);         // Flags AutoReset
+{  CANReadRXBuffer(CAN_RX_1, Packet.Header, Packet.Count, Packet.Bytes, Packet.ExtendedID);         // Flags AutoReset
   if not CAN_Data_RxListAddNMRABusLayer(@Packet) then                                              // Queue the Packet into the circular recieve list
   begin
     // Buffer Overrun......
-  end
+  end     }
 end;
 
 // ****************************************************************************
@@ -262,14 +217,14 @@ end;
 // ****************************************************************************
 procedure HandleTransmitCompleteOnCANLayerPacket;
 var
-  Packet: TCAN_Packet;
+  Packet: TCANBuffer;
 begin
-  if CAN_Data_TxNextPacketCANLayer(Packet) then                                 // Is there a CAN Level Packet in the list ready to be transmitted?
+ { if CAN_Data_TxNextPacketCANLayer(Packet) then                                 // Is there a CAN Level Packet in the list ready to be transmitted?
   begin
     NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_CAN_LAYER;
     CANWriteTXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission, 52.25us
   end else
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_CAN_LAYER;
+    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_CAN_LAYER; }
 end;
 
 // ****************************************************************************
@@ -281,21 +236,15 @@ end;
 // ****************************************************************************
 procedure HandlePacketReceivedOnCANLayer;
 var
-  RxPacket, TxPacket: TCAN_Packet;
+  RxPacket, TxPacket: TCANBuffer;
 begin
-  CANReadRXBuffer(CAN_RX_0, RxPacket.Header, RxPacket.Count, RxPacket.Bytes, RxPacket.ExtendedID);
+ { CANReadRXBuffer(CAN_RX_0, RxPacket.Header, RxPacket.Count, RxPacket.Bytes, RxPacket.ExtendedID);
 
   if NMRABusUtilities_EqualAliasID(RxPacket.Header and $00000FFF) then                   // Is the Alias equal to ours?
   begin
-    if RxPacket.Header and FT_RID = FT_RID then                                 // Reserve ID
-      NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_RID;
 
     if RxPacket.Header and FT_CID_MASK <> 0 then                                // If it is a CID message then force node to try again for an Alias
     begin
-      if RxPacket.Header and FT_CID0 = FT_CID0 then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_CID0;
-      if RxPacket.Header and FT_CID1 = FT_CID1 then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_CID1;
-      if RxPacket.Header and FT_CID2 = FT_CID2 then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_CID2;
-      if RxPacket.Header and FT_CID3 = FT_CID3 then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_CID3;
       NMRABusUtilities_CreateCANControlFramePacket(FT_RID, @TxPacket);
       CAN_Data_TxListAddCANLayerThroughLockedList(@TxPacket);
     end else
@@ -311,7 +260,7 @@ begin
   end else
   begin
     CAN_Data_RxListAddCANLayer(@RxPacket);                                   // Low priority Packet queue and and handle it in the main loop
-  end
+  end   }
 end;
 
 // ****************************************************************************
@@ -339,9 +288,9 @@ end;
 // ****************************************************************************
 procedure HandleLoPriorityReceivedNMRABusLayerPackets;
 var
-  RxPacket, TxPacket: TCAN_Packet;
+  RxPacket, TxPacket: TCANBuffer;
 begin
-  TxPacket.Header := 0;
+ { TxPacket.Header := 0;
   if CAN_Data_RxNextPacketNMRABusLayer(RxPacket) then
   begin
     TxPacket.Header := 0;
@@ -352,7 +301,7 @@ begin
     if RxPacket.Header and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST then
     begin
     end
-  end;
+  end;   }
 end;
 
 // ****************************************************************************
@@ -364,16 +313,14 @@ end;
 // ****************************************************************************
 procedure HandleLoPriorityReceivedCANLayerPackets;
 var
-  RxPacket, TxPacket: TCAN_Packet;
+  RxPacket, TxPacket: TCANBuffer;
   NodeID: TNodeID;
   SendPacket: Boolean;
 begin
-  if CAN_Data_RxNextPacketCANLayer(RxPacket) then                               // Do we have a CAN received message waiting to be handled?
+ { if CAN_Data_RxNextPacketCANLayer(RxPacket) then                               // Do we have a CAN received message waiting to be handled?
   begin
     if RxPacket.Header and FT_AMD = FT_AMD then                                 // Alias Map Definition Message
     begin
-      if RxPacket.Header and FT_RID = FT_RID then 
-        NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_RID;
       NMRABusUtilities_PacketBytesToNodeID(@RxPacket, NodeID);
       if NMRABusUtilities_EqualNodeID(NodeID) then                                       // Is the 48 Bit node ID equal to ours?
       begin
@@ -390,8 +337,6 @@ begin
     begin
       if NMRABus_Connected then
       begin
-        if RxPacket.Header and FT_AME = FT_AME then 
-          NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_AME;
         SendPacket := True;
         if RxPacket.Count > 0 then
         begin
@@ -416,118 +361,7 @@ begin
 
     if (TxPacket.Header <> 0) and (NMRABus.State and BSI_TRANSMITTING_CAN_LAYER = 0) then // If a CAN Packet is transmitting the Tx Done flag will be called anyway so we don't have to set this in that case
       SignalTransmitOnCANLayerFunc()                                                            // Set Transmit Done Flag to start the Transmit Engine
-  end
-end;
-
-// ****************************************************************************
-// procedure CANReadRXBuffer
-//
-// parameters:
-//     Buffer:        TX Buffer to use.  See CAN_RX_n constants
-//     Header:        The SID and EID for the CAN header
-//     DataCount:     Number of Data Bytes
-//     DataBytes:     Bytes to send
-//     IsExtended:    If the Header is a Standard or Extended
-//
-//  Description:  16us
-//
-// ****************************************************************************
-procedure CANReadRXBuffer(Buffer: Byte; var Header: DWord; var DataCount: Byte; var DataBytes: TCANData; var IsExtended: Boolean);
-var
-  CANPtr: ^Word;
-  SID, EID: DWORD;
-begin
- {$IFDEF dsPIC33}
- 
- {$ELSE}
-  case Buffer of
-    0: CANPtr := @C1RX0SID;
-    1: CANPtr := @C1RX1SID;
-  end;
-  SID := ((DWORD( CANPtr^ shr 2)) and $000007FF);                               // Get the Standard ID
-  IsExtended := CANPtr^ and $0001 <> 0;
-  Inc(CANPtr);                                                                  // Move to the RXnEID Register
-  if IsExtended then
-  begin
-    EID := ((DWORD( CANPtr^) shl 6) and $0003FFC0);                             // Pull out the info from the RXnEID
-    Inc(CANPtr);                                                                // Move to the RXnDLC Register
-    EID := EID or (DWORD( CANPtr^) shr 10);                                     // Pull out the rest of the Extended ID
-  end else
-    Inc(CANPtr);                                                                // Move to the RXnDLC Register
-  Header := (SID shl 18) or EID;                                                // Build the EID
-  DataCount := CANPtr^ and $000F;
-  Inc(CANPtr);                                                                  // Move to C1RXnB1
-  DataBytes[0] := CANPtr^;
-  DataBytes[1] := CANPtr^ shr 8;
-  Inc(CANPtr);                                                                  // Move to C1RXnB2
-  DataBytes[2] := CANPtr^;
-  DataBytes[3] := CANPtr^ shr 8;
-  Inc(CANPtr);                                                                  // Move to C1RXnB3
-  DataBytes[4] := CANPtr^;
-  DataBytes[5] := CANPtr^ shr 8;
-  Inc(CANPtr);                                                                  // Move to C1RXnB4
-  DataBytes[6] := CANPtr^;
-  DataBytes[7] := CANPtr^ shr 8;
-  Inc(CANPtr);                                                                  // Move to C1RXnCON
-  CANPtr^ := CANPtr^ and $FF7F;                                                 // Clear the RXFUL flag
-  {$ENDIF}
-end;
-
-// ****************************************************************************
-// procedure CANWriteTXBuffer
-//
-// parameters:
-//     Buffer:        TX Buffer to use.  See CAN_TX_n constants
-//     Header:        The SID and EID for the CAN header
-//     DataCount:     Number of Data Bytes
-//     DataBytes:     Bytes to send
-//     IsExtended:    If the Header is a Standard or Extended
-//     Priority:      Transmit Priority.  See CAN_TX_PRIORITY_n constants
-//
-//  Description:  16us
-//
-// ****************************************************************************
-procedure CANWriteTXBuffer(Buffer: Byte; Header: DWord; DataCount: Byte; var DataBytes: TCANData; IsExtended: Boolean; Priority: Byte);
-var
-  CANPtr: ^Word;
-  SID, EID: DWORD;
-begin
- {$IFDEF dsPIC33}
-
- {$ELSE}
-  SID := (Header and $1FFC0000) shr 18;
-  EID := Header and $0003FFFF;
-
-  case Buffer of
-    0: CANPtr := @C1TX0SID;
-    1: CANPtr := @C1TX1SID;
-    2: CANPtr := @C1TX2SID;
-  end;
-  CANPtr^ := ((SID shl 2) and $00FC) or ((SID shl 5) and $F800);
-  if IsExtended then
-  begin
-    CANPtr^ := CANPtr^ or $0001;
-    Inc(CANPtr);                                                                // Move to C1TXnEID
-    CANPtr^ := ((EID shr 6) and $00FF) or ((EID shr 2) and $F000);
-    Inc(CANPtr);                                                                // Move to the RXnDLC Register
-    CANPtr^ := ((EID shl 10) and $FC00);
-  end else
-  begin
-    Inc(CANPtr);                                                                // Move to C1TXnEID
-    Inc(CANPtr);                                                                // Move to the RXnDLC Register
-  end;
-  CANPtr^ := (CANPtr^ and $FF87) or (WORD( DataCount) shl 3);
-  Inc(CANPtr);                                                                  // Move to C1TXnB1
-  CANPtr^ := DataBytes[0] or (DataBytes[1] shl 8);
-  Inc(CANPtr);                                                                  // Move to C1TXnB2
-  CANPtr^ := DataBytes[2] or (DataBytes[3] shl 8);
-  Inc(CANPtr);                                                                  // Move to C1TXnB3
-  CANPtr^ := DataBytes[4] or (DataBytes[5] shl 8);
-  Inc(CANPtr);                                                                  // Move to C1TXnB4
-  CANPtr^ := DataBytes[6] or (DataBytes[7] shl 8);
-  Inc(CANPtr);                                                                  // Move to C1TXnCON
-  CANPtr^ := (CANPtr^ and $FFFC) or Priority or $0008;                          // Set Priority and Set TXREQ to start transmit
- {$ENDIF}
+  end     }
 end;
 
 end.

@@ -57,18 +57,6 @@ const
   BS_PERMITED          = $01;    // CAN Frame Layer is permitted (Node ID's resolved with bus)
   BS_INITIALIZED       = $02;    // Message Layer has sent its first Initialize Complete Message
 
-  BSI_TRANSMITTING_CAN_LAYER      = $01;     // The CAN Transmit engine is placing a CAN Layer packet on the Bus
-  BSI_TRANSMITTING_NMRABUS_LAYER  = $02;     // The CAN Transmit engine is placing a NRMABus Layer packet on the Bus
-  BSI_TRANSMITTING_ANY_LAYER      =  BSI_TRANSMITTING_CAN_LAYER or BSI_TRANSMITTING_NMRABUS_LAYER;
-
-  BRM_CID0                        = $0001;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
-  BRM_CID1                        = $0002;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
-  BRM_CID2                        = $0004;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
-  BRM_CID3                        = $0008;   // Received a Check ID Frame with the Most Significant Bits (Variable Field= 7)
-  BRM_RID                         = $0010;   // Received a Reserve ID Frame
-  BRM_AMD                         = $0020;   // Received a Alias Map Definition Frame
-  BRM_AME                         = $0040;   // Received a Alias Mapping Enquiry Frame
-  BRM_AMR                         = $0080;   // Received a Alias Map Reset Frame
 
 type
   TNodeID = array[0..1] of DWORD;    // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
@@ -82,7 +70,6 @@ type
     BusLoginCount: Integer;          // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
     State: Word;                     // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
     Interrupt_State: Byte;           // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
-    ReceivedMessages: Word;          // Allows tracking what messages have been received.  Use the BRM_xxxx flags.  The user may clear these states and wait until it is set but be aware they may set in the interrupts
   end;
   
 var

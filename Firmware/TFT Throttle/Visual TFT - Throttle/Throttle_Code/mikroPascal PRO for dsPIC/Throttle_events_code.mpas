@@ -1,6 +1,6 @@
 unit Throttle_events_code;
 
-uses Throttle_objects, Throttle_resources, dsPIC33_CAN, dsPIC33_DMA, CANStorage, MCU_Setup_dsPIC33FJ256GP710A;
+uses Throttle_objects, Throttle_resources, dsPIC33_CAN, dsPIC33_DMA, CAN_Storage, MCU_Setup_dsPIC33FJ256GP710A;
 
 procedure Button9Click();
 procedure Button7Click();
@@ -168,7 +168,7 @@ implementation
 //--------------------- User code ---------------------//
   {
   
-uses Throttle_objects, Throttle_resources, dsPIC33_CAN, dsPIC33_DMA, CANStorage, MCU_Setup_dsPIC33FJ256GP710A;
+uses Throttle_objects, Throttle_resources, dsPIC33_CAN, dsPIC33_DMA, CAN_Storage, MCU_Setup_dsPIC33FJ256GP710A;
 
    }
    

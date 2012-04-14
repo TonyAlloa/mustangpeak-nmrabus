@@ -4,13 +4,13 @@ unit NMRABusUtilities;
 
 uses
   NMRABusDefines,
-  CAN_Data;
+  CAN_Storage;
 
 
-procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCAN_Packet);
-procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCAN_Packet);
-procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCAN_Packet);
-procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCAN_Packet; var NodeID: TNodeID);
+procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer);
+procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
+procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
+procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID);
 function NMRABusUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
 function NMRABusUtilities_EqualAliasID(AliasID: Word): Boolean;
 procedure NMRABusUtilities_LoadNodeID(var NodeID: TNodeID; Upper, Lower: DWORD);
@@ -30,15 +30,15 @@ implementation
 //     Description:
 //
 // *****************************************************************************
-procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCAN_Packet);
+procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer);
 begin
-  Packet^.Count := 6;
-  Packet^.Bytes[0] := NMRABus.Node_ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
-  Packet^.Bytes[1] := NMRABus.Node_ID[1] shr 8;
-  Packet^.Bytes[2] := NMRABus.Node_ID[1];
-  Packet^.Bytes[3] := NMRABus.Node_ID[0] shr 16;
-  Packet^.Bytes[4] := NMRABus.Node_ID[0] shr 8;
-  Packet^.Bytes[5] := NMRABus.Node_ID[0];
+  Packet^.DataCount := 6;
+  Packet^.DataBytes[0] := NMRABus.Node_ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
+  Packet^.DataBytes[1] := NMRABus.Node_ID[1] shr 8;
+  Packet^.DataBytes[2] := NMRABus.Node_ID[1];
+  Packet^.DataBytes[3] := NMRABus.Node_ID[0] shr 16;
+  Packet^.DataBytes[4] := NMRABus.Node_ID[0] shr 8;
+  Packet^.DataBytes[5] := NMRABus.Node_ID[0];
 end;
 
 // *****************************************************************************
@@ -49,15 +49,15 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCAN_Packet);
+procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
 begin
-  Packet^.Count := 0;
-  Packet^.ExtendedID := True;
-  Packet^.Header := $10000000 or VariableField or NMRABus.Node_Alias_ID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
-  if VariableField = FT_CID0 then Packet^.Header := Packet^.Header or (NMRABus.Node_ID[1] and $00FFF000) else
-  if VariableField = FT_CID1 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
-  if VariableField = FT_CID2 then Packet^.Header := Packet^.Header or (NMRABus.Node_ID[0] and $00FFF000) else
-  if VariableField = FT_CID3 then Packet^.Header := Packet^.Header or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
+  Packet^.DataCount := 0;
+  Packet^.IsExtended := True;
+  Packet^.ID := $10000000 or VariableField or NMRABus.Node_Alias_ID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
+  if VariableField = FT_CID0 then Packet^.ID := Packet^.ID or (NMRABus.Node_ID[1] and $00FFF000) else
+  if VariableField = FT_CID1 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
+  if VariableField = FT_CID2 then Packet^.ID := Packet^.ID or (NMRABus.Node_ID[0] and $00FFF000) else
+  if VariableField = FT_CID3 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
 
   if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
     NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
@@ -71,13 +71,13 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCAN_Packet);
+procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
 begin
-  Packet^.Count := 0;
-  Packet^.ExtendedID := True;
+  Packet^.DataCount := 0;
+  Packet^.IsExtended := True;
   if DestinationAliasID <> 0 then 
-    Packet^.Header := Packet^.Header or (DestinationAliasID shl 12);
-  Packet^.Header := $10000000 or VariableField or NMRABus.Node_Alias_ID;
+    Packet^.ID := Packet^.ID or (DestinationAliasID shl 12);
+  Packet^.ID := $10000000 or VariableField or NMRABus.Node_Alias_ID;
 
   if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
     NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
@@ -92,14 +92,14 @@ end;
 //  Requires that the packet contains a valid NodeID in the bytes.
 //
 // *****************************************************************************
-procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCAN_Packet; var NodeID: TNodeID);
+procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID);
 begin
-  NodeID[0] := Packet^.Bytes[0];
-  NodeID[0] := NodeID[0] or Packet^.Bytes[1] shl 8;
-  NodeID[0] := NodeID[0] or Packet^.Bytes[2] shl 16;
-  NodeID[1] := Packet^.Bytes[3];
-  NodeID[1] := NodeID[1] or Packet^.Bytes[4] shl 8;
-  NodeID[1] := NodeID[1] or Packet^.Bytes[5] shl 16;
+  NodeID[0] := Packet^.DataBytes[0];
+  NodeID[0] := NodeID[0] or Packet^.DataBytes[1] shl 8;
+  NodeID[0] := NodeID[0] or Packet^.DataBytes[2] shl 16;
+  NodeID[1] := Packet^.DataBytes[3];
+  NodeID[1] := NodeID[1] or Packet^.DataBytes[4] shl 8;
+  NodeID[1] := NodeID[1] or Packet^.DataBytes[5] shl 16;
 end;
 
 // *****************************************************************************
