@@ -80,7 +80,6 @@ const
 type
   TCAN_Engine = record
     State: Word;                            // See the CES_xxx constants
-    TransmittingList: PCANRawBufferList;    // List that has an item being transmitted
   end;
   
 

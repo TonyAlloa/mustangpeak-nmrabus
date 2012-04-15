@@ -165,7 +165,6 @@ procedure dsPIC33_CAN_RequestTransmit(BufferNumber: Word);
 function dsPIC33_CAN_TX_Aborted(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_TX_ArbitrationLost(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_TX_ErrorDetected(BufferNumber: Word): Boolean;
-function dsPIC33_CAN_EngineTransmitting: Boolean;
 // *****************************************************************************
 
 // *****************************************************************************
@@ -176,11 +175,11 @@ function dsPIC33_CAN_RX_Overflow(BufferNumber: Word; Clear: Boolean): Boolean;
 // *****************************************************************************
 
 // *****************************************************************************
-// CAN FIFO Buffer Access
+// CAN FIFO Buffer Access, these are exported through the "external" modifier
 // *****************************************************************************
-function dsPIC33_AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
-function dsPIC33_AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
-function dsPIC33_ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
+function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
+function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
+function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 // *****************************************************************************
 
 implementation
@@ -250,14 +249,13 @@ begin
       Buffer.ID := CANPtr^ and $1FFC;
       Buffer.ID := Buffer.ID shl 16;
       Inc(CANPtr);                                                              // Word 1
-      Buffer.ID := Buffer.ID or DWORD((CANPtr^ and $0FFF) shl 11);
+      Buffer.ID := Buffer.ID or DWORD((CANPtr^ and $0FFF) shl 6);
       Inc(CANPtr);
-      Buffer.ID := Buffer.ID or DWORD((CANPtr^ and $FC00) shr 5);               // Word 2
+      Buffer.ID := Buffer.ID or DWORD((CANPtr^ and $FC00) shr 10);               // Word 2
     end else
     begin
       Buffer.ID := (CANPtr^ and $1FFC) shr 2;                                   // Word 0
       Inc(CANPtr);                                                              // Word 1
-      Inc(CANPtr);                                                              // Word 2
     end;
     Buffer.DataCount := CANPtr^ and $000F;                                      // Word 2
     Inc(CANPtr);                                                                // Move to C1RXnB1
@@ -277,7 +275,7 @@ begin
 end;
 
 // *****************************************************************************
-//  function dsPIC33_AddToList
+//  function AddToList
 //     Parameters:
 //
 //     Returns: True if the parameters were loaded into the FIFO buffers, else the buffers were full
@@ -286,7 +284,7 @@ end;
 //                    ~260 Cycles to complete for the dsPIC33
 //
 // *****************************************************************************
-function dsPIC33_AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
+function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 var
   Head: PCANRawBuffer;
 begin
@@ -301,7 +299,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure dsPIC33_AddToListByParameter;
+//  procedure AddToListByParameter;
 //
 //  Parameters: List           : Pointer to the FIFO buffer List to operation on
 //
@@ -309,7 +307,7 @@ end;
 //
 //  Description: Stores the passed Buffer Information into the CAN Storage Buffer in the passed list
 // *****************************************************************************
-function dsPIC33_AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
+function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
 var
   Buffer: TCANBuffer;
 begin
@@ -324,11 +322,11 @@ begin
   Buffer.DataBytes[6] := Byte6;
   Buffer.DataBytes[7] := Byte7;
   Buffer.IsExtended := IsExtended;
-  Result := dsPIC33_AddToList(List, Buffer)
+  Result := AddToList(List, Buffer)
 end;
 
 // *****************************************************************************
-//  function dsPIC33_ExtractFromList
+//  function ExtractFromList
 //     Parameters:
 //
 //     Returns: True if the return parameters are valid (i.e. there was something to read in the List
@@ -337,7 +335,7 @@ end;
 //                    ~260 Cycles to complete for the dsPIC33 and dsPIC30
 //
 // *****************************************************************************
-function dsPIC33_ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
+function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 var
   Tail: PCANRawBuffer;
 begin
@@ -505,20 +503,6 @@ begin
     RegPtr^.Offset := 0
 end;
 
-
-// *****************************************************************************
-//  procedure dsPIC33_CAN_EngineTransmitting;
-//
-//  Parameters:
-//
-//  Result:    True if there is a message being transmitted
-//
-//  Description:
-// *****************************************************************************
-function dsPIC33_CAN_EngineTransmitting: Boolean;
-begin
-  Result := CAN_Engine.State and CES_TRANSMITTING <> 0
-end;
 
 // *****************************************************************************
 //  procedure dsPIC33_CAN_TX_Aborted;

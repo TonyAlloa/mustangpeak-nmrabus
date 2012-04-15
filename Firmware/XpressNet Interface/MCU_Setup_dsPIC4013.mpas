@@ -1,7 +1,6 @@
 unit MCU_Setup_dsPIC4013;
 
 uses
-  CAN_Data,
   NMRABus;
 
 {$I Options.inc}
@@ -17,66 +16,9 @@ const
   procedure MCU_Setup_Initialize;
 
 var
-  LockCANList: PLockListFunc;
-  UnLockCANList: PUnLockListFunc;
-  LockNMRABusList: PLockListFunc;
-  UnLockNMRABusList: PUnLockListFunc;
-
   PinChangeState: Word;
 
 implementation
-
-// ****************************************************************************
-// procedure LockListNMRABus
-//
-//  Description:
-//
-// ****************************************************************************
-procedure LockListNMRABus;
-begin
-  TXB1IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
-  RXB1IE_bit := 0;
-end;
-
-// ****************************************************************************
-// procedure UnlockListNMRABus
-//
-//  Description:
-//
-// ****************************************************************************
-procedure UnlockListNMRABus;
-begin
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
-    TXB1IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
-  TXB1IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
-  RXB1IE_bit := 1;
-end;
-
-// ****************************************************************************
-// procedure LockListCAN
-//
-//  Description:
-//
-// ****************************************************************************
-procedure LockListCAN;
-begin
-  TXB0IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
-  RXB0IE_bit := 0;
-end;
-
-// ****************************************************************************
-// procedure UnlockListCAN
-//
-//  Description:
-//
-// ****************************************************************************
-procedure UnlockListCAN;
-begin
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then
-    TXB0IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
-  TXB0IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
-  RXB0IE_bit := 1;
-end;
 
 procedure MCU_Setup_Initialize;
 begin
@@ -139,11 +81,6 @@ begin
   CNIP_2_bit := 1;
   CN17IE_bit := 1;          // RF4 (CN17) set for interrupt
   CNIE_bit := 1;            // Enable the Interrupt for Pin Change
-
-  LockCANList := @LockListCAN;
-  UnLockCANList := @UnLockListCAN;
-  LockNMRABusList := @LockListNMRABus;
-  UnLockNMRABusList := @UnLockListNMRABus;
 
   PinChangeState := PORTF;
 

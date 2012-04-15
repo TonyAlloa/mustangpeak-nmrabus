@@ -25,16 +25,16 @@ var
   RX_Main_RawBufferArray: TCanRawBufferArray; absolute $7800;                   // Recieve buffer for all filters.  The software moves the data to the right list
   TX_Main_RawBufferArray: TCanRawBufferArray; absolute $7810;                   // Transmit buffer for all filters.  The software pulls the data to the right list
  
-  TX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7820;               // There are 6 - 8 Word Buffer in this Array = 160 Bytes
+  TX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7820;               // There are 6 - 8 Word Buffer in this Array =  Bytes
   TX_CANLayer_List: TCANRawBufferList;
   
-  TX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $7880;           // There are 6 - 8 Word Buffer in this Array = 160 Bytes
+  TX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $7880;           // There are 6 - 8 Word Buffer in this Array =  Bytes
   TX_NMRABusLayer_List: TCANRawBufferList;
   
-  RX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $78E0;               // There are 4 - 8 Word Buffer in this Array = 160 Bytes
+  RX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $78E0;               // There are 4 - 8 Word Buffer in this Array =  Bytes
   RX_CANLayer_List: TCANRawBufferList;
 
-  RX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $7920;           // There are 4 - 8 Word Buffer in this Array = 160 Bytes
+  RX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $7920;           // There are 4 - 8 Word Buffer in this Array =  Bytes
   RX_NMRABusLayer_List: TCANRawBufferList;
                                                           // $7950 Last Index
 const
@@ -44,16 +44,19 @@ type
   TDummy = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;                    // Define a "dummy" array that overlays the above structures so the compiler
                                                                                 // can keep track of the memory and we can address the buffers as a normal array
                                                                                 // to initialize them
-  
+
+// external for NMRABus.mpas
+procedure GetUniqueIDFunc(var HiID, LoID: DWord);
 
 implementation
 
 var
   Dummy: TDummy; absolute $7800;
 
-procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
+procedure GetUniqueIDFunc(var HiID, LoID: DWord);
 begin
-  T2IF_bit := 0;  // Reset the Flag
+  HiID := MUSTANGPEAK_ID_0_HI;
+  LoID := MUSTANGPEAK_TFT_THROTTLE_ID_0_LO;
 end;
 
 procedure MCU_Setup_Initialize;
@@ -153,7 +156,7 @@ begin
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
   T2IP_1_bit := 1;
   T2IP_2_bit := 0;
-  PR2 := 20000;             // Clock ticks every 50ns * 20000 = 1ms interrupts
+  PR2 := 32000;             // Clock ticks every 31.25ns * 32000 = 1ms interrupts
   T2IF_bit := 0;            // Clear T2IF
   T2IE_bit := 1;            // Enable the Interrupt
   TON_T2CON_bit := 1;       // Turn on

@@ -28,93 +28,83 @@ uses
   NMRABus;
   
 var
-  s1, s2: array[0..64] of Char;
-  Update: Boolean;
-  
-var
-  xx,
   CANLayerCount,
   NMRABusLayerCount: Word;
   
-procedure UniqueID(var HiID, LoID: DWord);
+procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 begin
-  HiID := MUSTANGPEAK_ID_0_HI;
-  LoID := MUSTANGPEAK_TFT_THROTTLE_ID_0_LO;
+  // 1ms Timer
+  T2IF_bit := 0;  // Reset the Flag
+  NMRABus_GlobalTimer;
 end;
 
+procedure NMRABusPacketHandler(CANBuffer: PCANBuffer);
 begin
-  NMRABus.GetUniqueIDFunc := @UniqueID;
+  // Handle the message here
+end;
   
- // Transmit_CANLayer_List := @TX_CANLayer_List;
-  //Transmit_NMRABusLayer_List := @TX_NMRABusLayer_List;
- // Receive_CANLayer_List := @RX_CANLayer_List;
- // Receive_NMRABusLayer_List := @RX_NMRABusLayer_List;
-  
+begin
+
   MCU_Setup_Initialize;
   CANStorage_Initialize;
   dsPIC33_CAN_Initialize;
   NMRABus_Initialize;
 
   Start_TP();
-
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000010, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000009, 7, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000008, 6, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000007, 5, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000006, 4, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000005, 3, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000004, 2, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000003, 1, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000002, 0, 1, 2, 3, 4, 5, 6, 7, 8, True);
   
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000001, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000000, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  {
+
+  AddToListByParameter(@TX_CANLayer_List, $00000010, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000009, 7, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000008, 6, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000007, 5, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000006, 4, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000005, 3, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000004, 2, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000003, 1, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000002, 0, 1, 2, 3, 4, 5, 6, 7, 8, True);
   
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000001, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_CANLayer_List, $00000000, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000001, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000000, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  
+  AddToListByParameter(@TX_CANLayer_List, $00000001, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_CANLayer_List, $00000000, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
   
 
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 7, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 6, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 5, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 4, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 3, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 2, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 1, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  dsPIC33_AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 0, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 7, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 6, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 5, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 4, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 3, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 2, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 1, 1, 2, 3, 4, 5, 6, 7, 8, True);
+  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 0, 1, 2, 3, 4, 5, 6, 7, 8, True);
 
 
 
-  dsPIC33_CAN_Interrupt_StartCANMessageEngine;
+  StartCANMessageEngine();                }
 
-  xx := 0;
-  CANLayerCount := 0;
-  NMRABusLayerCount := 0;
- // WriteBufferInfo;
- 
-  Update := False;
+
  // Base := $79E0;
   Base := $7800;
   //Base := $7800;
   Offset := 0;
   ECAN_RegPage := 0;
   DMA_RegPage := 0;
- 
+  TX_List := @TX_CANLayer_List;
+  
+  NMRABus_Connect;
   while true do
   begin
     Check_TP();
-    Inc(xx);
-    if Update then
+    if not NMRABus_Permitted then
     begin
-   //   WriteBuffer(Base + (Offset*8), Offset);
-   //   Update := False
+      NMRABusUtilities_RecreateAliasID;
+      NMRABus_Connect;
     end;
-    
-    if xx mod 1000 = 0 then
-    begin
 
-    end
+    HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
   end;
 
 end.

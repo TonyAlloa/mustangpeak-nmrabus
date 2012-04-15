@@ -8,6 +8,7 @@ procedure Button9Click(); external;
 procedure Button7Click(); external;
 procedure ButtonRound12Click(); external;
 procedure ButtonRound13Click(); external;
+procedure ButtonRound1Click(); external;
 procedure ButtonRound10Click(); external;
 procedure ButtonRound11Click(); external;
 /////////////////////////
@@ -1349,7 +1350,7 @@ procedure InitializeObjects();    // static
     ButtonRound1.Press_Color         := 0x8410;
     ButtonRound1.OnUpPtr             := 0;
     ButtonRound1.OnDownPtr           := 0;
-    ButtonRound1.OnClickPtr          := 0;
+    ButtonRound1.OnClickPtr          := @ButtonRound1Click;
     ButtonRound1.OnPressPtr          := 0;
 
     ButtonAddress.OwnerScreenAddress  := @ScreenThrottle;

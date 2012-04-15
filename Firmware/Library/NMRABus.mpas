@@ -24,40 +24,313 @@ uses
 {$I Options.inc}
 
 type
-  TGetUniqueIDFunc = procedure(var Hi, Lo: DWord);
-  PGetUniqueIDFunc = ^TGetUniqueIDFunc;
-{  TSignalTransmitOnCANLayerFunc = procedure();
-  PSignalTransmitOnCANLayerFunc = ^TSignalTransmitOnCANLayerFunc;
-  TSignalTransmitOnNMRALayerFunc = procedure();
-  PSignalTransmitOnNMRALayerFunc = ^TSignalTransmitOnNMRALayerFunc;   }
-  
-var
-  GetUniqueIDFunc: PGetUniqueIDFunc; external;
- // SignalTransmitOnCANLayerFunc: PSignalTransmitOnCANLayerFunc; external;
- // SignalTransmitOnNMRALayerFunc: PSignalTransmitOnNMRALayerFunc; external;
-  
-  Transmit_CANLayer_List: PCANRawBufferList; external;
-  Transmit_NMRABusLayer_List: PCANRawBufferList; external;
-  Receive_CANLayer_List: PCANRawBufferList; external;
-  Receive_NMRABusLayer_List: PCANRawBufferList; external;
+  TNMRABusPacketHandlerFunc = procedure(CANBuffer: PCANBuffer);
+  PNMRABusPacketHandlerFunc = ^TNMRABusPacketHandlerFunc;
+
 
   procedure NMRABus_Connect;
-  function NMRABus_Connected: Boolean;
+  function NMRABus_Permitted: Boolean;
   procedure NMRABus_Disconnect;
   procedure NMRABus_Initialize;
   procedure NMRABus_GlobalTimer;
+  procedure HandlePacketReceivedOnNMRABusLayer(NMRABusPacketHandler: PNMRABusPacketHandlerFunc);
 
-  procedure HandleTransmitCompleteOnNMRALayerPacket;
-  procedure HandlePacketReceivedOnNMRABusLayer;
-  procedure HandleTransmitCompleteOnCANLayerPacket;
-  procedure HandlePacketReceivedOnCANLayer;
-  procedure HandleCANError;
-  procedure HandleLoPriorityReceivedNMRABusLayerPackets;
-  procedure HandleLoPriorityReceivedCANLayerPackets;
 
+  // callbacks from the CAN interrupts used in the xxxxx_CAN_Interrupt.mpas units
+  procedure ReceivedOnFilter0;
+  procedure ReceivedOnFilter1;
+  procedure ReceivedOnFilter2;
+  procedure ReceivedOnFilter3;
+  procedure ReceivedOnFilter4;
+  procedure ReceivedOnFilter5;
+  procedure ReceivedOnFilter6;
+  function PendingTransmitList: PCANRawBufferList;
+
+
+  // defined in the dsPICxx_CAN.mpas file
+  function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;  external;
+  function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean; external;
+  function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean; external;
   
+  // defined in the dsPICxx_CAN_Interrupt.mpas file
+  procedure StartCANMessageEngine; external;
+  
+  // defined in the user program
+  procedure GetUniqueIDFunc(var HiID, LoID: DWord); external;
+  
+  // defined in the user program
+var
+  TX_CANLayer_List: TCANRawBufferList; external;
+  TX_NMRABusLayer_List: TCANRawBufferList; external;
+  RX_CANLayer_List: TCANRawBufferList; external;
+  RX_NMRABusLayer_List: TCANRawBufferList; external;
+  RX_Main_RawBufferArray: TCanRawBufferArray; external;
+  TX_Main_RawBufferArray: TCanRawBufferArray; external;
 
 implementation
+
+// *****************************************************************************
+//  procedure FlushLists
+//     Parameters:
+//     Returns:
+//
+//     Description: Clears the lists
+//
+// *****************************************************************************
+procedure FlushLists;
+begin
+  CANStorage_FlushList(@TX_CANLayer_List);                                      // Flush any pending packets
+  CANStorage_FlushList(@TX_NMRABusLayer_List);
+  CANStorage_FlushList(@RX_CANLayer_List);                                      // Flush any pending packets
+  CANStorage_FlushList(@RX_NMRABusLayer_List);
+end;
+
+// ****************************************************************************
+// procedure HandlePacketReceivedOnCANLayer
+//
+//  Description:
+//                 All CAN Layer messages are high priority and are dealt with immediately
+//
+// ****************************************************************************
+procedure HandlePacketReceivedOnCANLayer;
+var
+  CANBuffer: TCANBuffer;
+  NodeID: TNodeID;
+begin
+  while ExtractFromList(@RX_CANLayer_List, CANBuffer) do                        // Pull all the Received Messages out (should be only one)
+  begin
+    if CANBuffer.ID and FT_AMD = FT_AMD then                                    // Alias Map Definition Message
+    begin
+      NMRABusUtilities_PacketBytesToNodeID(@CANBuffer, NodeID);
+      if NMRABusUtilities_EqualNodeID(NodeID) then                              // Is the 48 Bit node ID equal to ours?
+      begin                                                                     // Big error, there are duplicate 48 Bit ID on the bus
+        if NMRABus_Permitted then
+        begin
+          // TODO
+          // Send PCER Message with Duplicate Node ID Detected (Optional), Go Offline (Optional)
+        end else
+        begin
+          // TODO
+          // User Defined Action
+        end
+      end;
+    end else
+    if NMRABusUtilities_EqualAliasID(CANBuffer.ID and $00000FFF) then           // Is the 12 Bit Alias equal to ours?
+    begin
+      if (CANBuffer.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer.ID and FT_CID_MASK >= FT_CID6) then // If it is a CID message then force calling node to try again for an Alias this one is ours
+      begin
+        NMRABusUtilities_CreateCANControlFramePacket(FT_RID, @CANBuffer);
+        AddToList(@TX_CANLayer_List, CANBuffer);
+        StartCANMessageEngine;
+      end else
+      begin
+        if NMRABus_Permitted then                                               // Detected a duplicate Alias, we need to shut down and restart with a fresh Alais ID
+        begin
+          FlushLists();                                                         // Clear any queued packets
+          NMRABus_Disconnect;                                                   // Take the node off line
+          NMRABusUtilities_CreateCANControlFramePacket(FT_AMR, @CANBuffer);     // Send an Alias Map Reset
+          AddToList(@TX_CANLayer_List, CANBuffer);
+          StartCANMessageEngine;
+        end
+      end
+    end else
+    begin
+      if NMRABus_Permitted then
+      begin
+        if CANBuffer.ID and FT_AME = FT_AME then                                // Alias Mapping Enquiry
+        begin
+          if CANBuffer.DataCount > 0 then
+          begin                                                                 // The Data contain a valid 48 Bit ID to compare with?
+            NMRABusUtilities_PacketBytesToNodeID(@CANBuffer, NodeID);           // Extract the 48 Bit ID
+            if NMRABusUtilities_EqualNodeID(NodeID) then
+            begin                                                               // The 48 Bit node ID is equal to ours
+              NMRABusUtilities_CreateCANControlFramePacket(FT_AMD, @CANBuffer); // Send an Alias Map Definition
+              StartCANMessageEngine;
+            end
+          end else
+          begin                                                                 // No Data so just send the AMD
+            NMRABusUtilities_CreateCANControlFramePacket(FT_AMD, @CANBuffer);   // Send an Alias Map Definition
+            StartCANMessageEngine;
+          end
+        end
+      end
+    end
+  end;
+end;
+
+// ****************************************************************************
+// procedure HandlePacketReceivedOnNMRABusLayer
+//
+//  Description:
+//                 All NMRABus Layer messages are low priority and placed in the List for
+//     handling in the main message loop
+//
+// ****************************************************************************
+procedure HandlePacketReceivedOnNMRABusLayer(NMRABusPacketHandler: PNMRABusPacketHandlerFunc);
+var
+  CANBuffer: TCANBuffer;
+  Alias: Word;
+begin
+  if ExtractFromList(@RX_NMRABusLayer_List, CANBuffer) then                     // Pull next Received Messages out
+  begin
+    if CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST then
+    begin
+      Alias := NMRABusUtilities_ExtractDestinationAlias(@CANBuffer);
+      if NMRABusUtilities_EqualAliasID(Alias) then
+      begin
+        NMRABusUtilities_CreateNMRABusMessagePacket(FT_VERIFIED_NODE_ID_NUMBER, 0, @CANBuffer);
+        StartCANMessageEngine;
+      end;
+    end else
+    if CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_NO_DEST = FT_VERIFY_NODE_ID_NUMBER_NO_DEST then
+    begin
+      NMRABusUtilities_CreateNMRABusMessagePacket(FT_VERIFIED_NODE_ID_NUMBER, 0, @CANBuffer);
+      StartCANMessageEngine;
+    end
+  end
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter0
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 0 which is defined
+//                  as any NMRABus level message (bit 26 = 0)
+//
+// *****************************************************************************
+procedure ReceivedOnFilter0;
+var
+  Next: PCANRawBuffer;
+begin
+  Next := CANStorage_Head(@RX_CANLayer_List);
+  if Next <> nil then
+  begin
+    Next^ := RX_Main_RawBufferArray[0];
+    CANStorage_IncHead(@RX_CANLayer_List);
+    HandlePacketReceivedOnCANLayer
+  end else
+  begin
+      // Have overrun problem
+  end;
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter1
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 1 which is defined
+//                  as any NMRABus level message (bit 26 = 1)
+//
+// *****************************************************************************
+procedure ReceivedOnFilter1;
+var
+  Next: PCANRawBuffer;
+begin 
+  Next := CANStorage_Head(@RX_NMRABusLayer_List);
+  if Next <> nil then
+  begin
+    Next^ := RX_Main_RawBufferArray[0];
+    CANStorage_IncHead(@RX_NMRABusLayer_List);
+  end else
+  begin
+      // Have overrun problem
+  end;
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter2
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 2
+//
+// *****************************************************************************
+procedure ReceivedOnFilter2;
+begin
+  // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter3
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 3
+//
+// *****************************************************************************
+procedure ReceivedOnFilter3;
+begin
+  // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter4
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 4
+//
+// *****************************************************************************
+procedure ReceivedOnFilter4;
+begin
+  // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter5
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 5
+//
+// *****************************************************************************
+procedure ReceivedOnFilter5;
+begin
+  // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter6
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 6
+//
+// *****************************************************************************
+procedure ReceivedOnFilter6;
+begin
+  // Not used for NMRABus
+end;
+
+// ****************************************************************************
+// procedure PendingTransmitList;
+//
+// Loads the highest priority list with a message pending or nil if all are empty
+// The result is stored in the CAN_Engine.TransmittingList so withing the interrupt
+// we can remove this item from the list.
+// For more (or less) priority buffer transmit lists edit this function and
+// add/intialize more TCANRawBufferLists
+//
+// ****************************************************************************
+function PendingTransmitList: PCANRawBufferList;
+begin
+   if TX_CANLayer_List.Count > 0 then
+    Result := @TX_CANLayer_List                                                 // Highest Priority List
+  else
+  if TX_NMRABusLayer_List.Count > 0 then                                        // Least Priority List
+    Result := @TX_NMRABusLayer_List
+  else
+    Result := PCANRawBufferList( nil)
+end;
 
 // *****************************************************************************
 //  procedure NMRABus_Initialize
@@ -78,14 +351,14 @@ begin
 end;
 
 // *****************************************************************************
-//  function NMRABus_Connected
+//  function NMRABus_Permitted
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-function NMRABus_Connected: Boolean;
+function NMRABus_Permitted: Boolean;
 begin
   Result := NMRABus.State and BS_PERMITED <> 0
 end;
@@ -108,54 +381,53 @@ end;
 //     Parameters:
 //     Returns:
 //
-//     Description:  Returns True if all went well, False if the Alias is already
-//                   used
-//
-// *****************************************************************************
-function BusLogoutTimeout: Boolean;
-begin
-  Result := True;
-  NMRABus.BusLoginCount := 0;
-  while NMRABus.BusLoginCount < MAX_BUS_LOGIN_TIMEOUT do
-  begin
-    // The interrupt is looking for problems
-  end;
-end;
-
-// *****************************************************************************
-//  function NMRABus_Connect
-//     Parameters:
-//     Returns:
-//
 //     Description:
 //
 // *****************************************************************************
 procedure NMRABus_Connect;
 var
-  Packet: TCANBuffer;
+  Buffer: TCANBuffer;
+  DuplicateCID: Boolean;
 begin
-  CANStorage_FlushList(Transmit_CANLayer_List);                                      // Flush any pending packets
-  CANStorage_FlushList(Receive_CANLayer_List);
+  FlushLists;
   while CANStorage_Transmitting do;                                             // Wait for the last transmited packet
   Delay_ms(10);
- { NMRABus_WaitForTransmitToFinish;                                              // Allow all pending CAN Controller messages to clear
-  NMRABus.State := NMRABus.State and not BS_PERMITED;                           // Not permitted until we successfully get through this log in series
-  
-
-  if SendAndWaitForCheckIDPacket(FT_CID0) then
-    if SendAndWaitForCheckIDPacket(FT_CID1) then
-      if SendAndWaitForCheckIDPacket(FT_CID2) then
-        if SendAndWaitForCheckIDPacket(FT_CID3) then                            // Queue up the Check ID Messages in the Transmit Buffer for the CAN Layer
-          if BusLogoutTimeout then
-            if SendAndWaitForCheckIDPacket(FT_AMD) then
-            begin
-              NMRABus.State := NMRABus.State or BS_PERMITED;
-              NMRABusUtilities_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Packet);
-              CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
-              NMRABus_WaitForTransmitToStart;
-              NMRABus_WaitForTransmitToFinish;
-              NMRABus.State := NMRABus.State or BS_INITIALIZED;
-            end;     }
+  NMRABusUtilities_CreateCANControlFramePacket(FT_CID0, @Buffer);               // Queue up
+  AddToList(@TX_CANLayer_List, Buffer);
+  NMRABusUtilities_CreateCANControlFramePacket(FT_CID1, @Buffer);
+  AddToList(@TX_CANLayer_List, Buffer);
+  NMRABusUtilities_CreateCANControlFramePacket(FT_CID2, @Buffer);
+  AddToList(@TX_CANLayer_List, Buffer);
+  NMRABusUtilities_CreateCANControlFramePacket(FT_CID3, @Buffer);
+  AddToList(@TX_CANLayer_List, Buffer);
+  StartCANMessageEngine();
+  DuplicateCID := False;
+  while CANStorage_Transmitting and not DuplicateCID do
+  begin
+    if ExtractFromList(@RX_CANLayer_List, Buffer) then
+      DuplicateCID := NMRABusUtilities_EqualAliasID(Buffer.ID and $00000FFF) and (Buffer.ID and FT_RID = FT_RID);
+  end;
+  if not DuplicateCID then
+  begin
+    NMRABus.BusLoginCount := 0;
+    while NMRABus.BusLoginCount < MAX_BUS_LOGIN_TIMEOUT do
+    begin
+      if ExtractFromList(@RX_CANLayer_List, Buffer) then
+        DuplicateCID := NMRABusUtilities_EqualAliasID(Buffer.ID and $00000FFF) and (Buffer.ID and FT_RID = FT_RID);
+    end;
+    
+    if not DuplicateCID then
+    begin
+      NMRABus.State := NMRABus.State or BS_PERMITED;
+      NMRABusUtilities_CreateCANControlFramePacket(FT_AMD, @Buffer);
+      AddToList(@TX_CANLayer_List, Buffer);
+      NMRABusUtilities_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Buffer);
+      AddToList(@TX_NMRABusLayer_List, Buffer);
+      StartCANMessageEngine();
+      while CANStorage_Transmitting do;                                         // Just wait
+      NMRABus.State := NMRABus.State or BS_INITIALIZED;
+    end;
+  end;
 end;
 
 
@@ -170,198 +442,6 @@ end;
 procedure NMRABus_Disconnect;
 begin
   NMRABus.State := NMRABus.State and not BS_PERMITED;
-end;
-
-// ****************************************************************************
-// procedure HandleTransmitCompleteOnNMRALayerPacket
-//
-//  Description:
-//
-// ****************************************************************************
-procedure HandleTransmitCompleteOnNMRALayerPacket;
-var
-  Packet: PCANBuffer;
-begin
- { if CAN_Data_TxNextPacketNMRABusLayer(Packet) then
-  begin
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_NMRABUS_LAYER;
-    CANWriteTXBuffer(CAN_TX_1, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_0);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission
-  end else
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_NMRABUS_LAYER;     }
-end;
-
-// ****************************************************************************
-// procedure HandlePacketReceivedOnNMRABusLayer
-//
-//  Description:
-//                 All NMRABus Layer messages are low priority and placed in the List for
-//     handling in the main message loop
-//
-// ****************************************************************************
-procedure HandlePacketReceivedOnNMRABusLayer;
-var
-  Packet: TCANBuffer;
-begin
-{  CANReadRXBuffer(CAN_RX_1, Packet.Header, Packet.Count, Packet.Bytes, Packet.ExtendedID);         // Flags AutoReset
-  if not CAN_Data_RxListAddNMRABusLayer(@Packet) then                                              // Queue the Packet into the circular recieve list
-  begin
-    // Buffer Overrun......
-  end     }
-end;
-
-// ****************************************************************************
-// procedure HandleTransmitCompleteOnCANLayerPacket
-//
-//  Description:
-//
-// ****************************************************************************
-procedure HandleTransmitCompleteOnCANLayerPacket;
-var
-  Packet: TCANBuffer;
-begin
- { if CAN_Data_TxNextPacketCANLayer(Packet) then                                 // Is there a CAN Level Packet in the list ready to be transmitted?
-  begin
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State or BSI_TRANSMITTING_CAN_LAYER;
-    CANWriteTXBuffer(CAN_TX_0, Packet.Header, Packet.Count, Packet.Bytes, True, CAN_TX_PRIORITY_1);   // Yes, so move it into the CAN transmtter buffer, this also set the TXREQ flag to allow the transmission, 52.25us
-  end else
-    NMRABus.Interrupt_State := NMRABus.Interrupt_State and not BSI_TRANSMITTING_CAN_LAYER; }
-end;
-
-// ****************************************************************************
-// procedure HandlePacketReceivedOnCANLayer
-//
-//  Description:
-//                 All CAN Layer messages are high priority and are dealt with immediately
-//
-// ****************************************************************************
-procedure HandlePacketReceivedOnCANLayer;
-var
-  RxPacket, TxPacket: TCANBuffer;
-begin
- { CANReadRXBuffer(CAN_RX_0, RxPacket.Header, RxPacket.Count, RxPacket.Bytes, RxPacket.ExtendedID);
-
-  if NMRABusUtilities_EqualAliasID(RxPacket.Header and $00000FFF) then                   // Is the Alias equal to ours?
-  begin
-
-    if RxPacket.Header and FT_CID_MASK <> 0 then                                // If it is a CID message then force node to try again for an Alias
-    begin
-      NMRABusUtilities_CreateCANControlFramePacket(FT_RID, @TxPacket);
-      CAN_Data_TxListAddCANLayerThroughLockedList(@TxPacket);
-    end else
-    begin
-      if NMRABus_Connected then                                                 // Detected a duplicate Alias, we need to shut down and restart with a fresh Alais ID
-      begin
-        CAN_Data_Flush_Lists;                                                   // Clear any queued packets
-        NMRABus_Disconnect;                                                     // Take the node off line
-        NMRABusUtilities_CreateCANControlFramePacket(FT_AMR, @TxPacket);                 // Send an Alias Map Reset
-        CAN_Data_TxListAddCANLayerThroughLockedList(@TxPacket);
-      end
-    end
-  end else
-  begin
-    CAN_Data_RxListAddCANLayer(@RxPacket);                                   // Low priority Packet queue and and handle it in the main loop
-  end   }
-end;
-
-// ****************************************************************************
-// procedure HandlePacketReceivedOnCANLayer
-//
-//  Description:
-//                 All CAN Layer messages are high priority and are dealt with immediately
-//
-// ****************************************************************************
-procedure HandleCANError;
-begin
-  ERRIF_bit := 0;
-  if NMRABus.State and BS_PERMITED = 0 then                                     // Only look during the time the node is attempting to log onto the bus (Inhibited) and become Permitted
-  begin
-
-  end
-end;
-
-// ****************************************************************************
-// procedure HandleLoPriorityReceivedNMRABusLayerPackets
-//
-//  Description:
-//                 All CAN Layer messages are high priority and are dealt with immediately
-//
-// ****************************************************************************
-procedure HandleLoPriorityReceivedNMRABusLayerPackets;
-var
-  RxPacket, TxPacket: TCANBuffer;
-begin
- { TxPacket.Header := 0;
-  if CAN_Data_RxNextPacketNMRABusLayer(RxPacket) then
-  begin
-    TxPacket.Header := 0;
- //   EqualAliasIDTest(@RxPacket, @TxPacket);
-
-    /// what to do here??????
-
-    if RxPacket.Header and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST then
-    begin
-    end
-  end;   }
-end;
-
-// ****************************************************************************
-// procedure HandleLoPriorityReceivedCANLayerPackets
-//
-//  Description:
-//
-//
-// ****************************************************************************
-procedure HandleLoPriorityReceivedCANLayerPackets;
-var
-  RxPacket, TxPacket: TCANBuffer;
-  NodeID: TNodeID;
-  SendPacket: Boolean;
-begin
- { if CAN_Data_RxNextPacketCANLayer(RxPacket) then                               // Do we have a CAN received message waiting to be handled?
-  begin
-    if RxPacket.Header and FT_AMD = FT_AMD then                                 // Alias Map Definition Message
-    begin
-      NMRABusUtilities_PacketBytesToNodeID(@RxPacket, NodeID);
-      if NMRABusUtilities_EqualNodeID(NodeID) then                                       // Is the 48 Bit node ID equal to ours?
-      begin
-        if NMRABus_Connected then
-        begin
-          // Send PCER Message with Duplicate Node ID Detected (Optional), Go Offline (Optional)
-        end else
-        begin
-          // User Defined Action
-        end
-      end;
-    end else
-    if RxPacket.Header and FT_AME = FT_AME then                                // Alias Mapping Enquiry
-    begin
-      if NMRABus_Connected then
-      begin
-        SendPacket := True;
-        if RxPacket.Count > 0 then
-        begin
-          NMRABusUtilities_PacketBytesToNodeID(@RxPacket, NodeID);
-          SendPacket := NMRABusUtilities_EqualNodeID(NodeID)                             // Is the 48 Bit node ID equal to ours?
-        end ;
-        if SendPacket then
-        begin
-          NMRABusUtilities_CreateCANControlFramePacket(FT_AMD, @TxPacket);               // Send an Alias Map Definition
-          CAN_Data_TxListAddCANLayerThroughLockedList(@TxPacket);
-        end
-      end
-    end else
-    if RxPacket.Header and FT_AMD = FT_AMD then                                // Alias Map Definition
-    begin
-      if RxPacket.Header and FT_AMD = FT_AMD then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_AMD;
-    end else
-    if RxPacket.Header and FT_AMR = FT_AMR then                                // Alias Map Reset
-    begin
-      if RxPacket.Header and FT_AMR = FT_AMR then NMRABus.ReceivedMessages := NMRABus.ReceivedMessages or BRM_AMD;
-    end;
-
-    if (TxPacket.Header <> 0) and (NMRABus.State and BSI_TRANSMITTING_CAN_LAYER = 0) then // If a CAN Packet is transmitting the Tx Done flag will be called anyway so we don't have to set this in that case
-      SignalTransmitOnCANLayerFunc()                                                            // Set Transmit Done Flag to start the Transmit Engine
-  end     }
 end;
 
 end.

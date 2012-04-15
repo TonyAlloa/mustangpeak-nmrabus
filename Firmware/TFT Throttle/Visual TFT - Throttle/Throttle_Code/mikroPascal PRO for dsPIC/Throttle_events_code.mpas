@@ -6,6 +6,7 @@ procedure Button9Click();
 procedure Button7Click();
 procedure ButtonRound12Click();
 procedure ButtonRound13Click();
+procedure ButtonRound1Click();
 procedure ButtonRound10Click();
 procedure ButtonRound11Click();
 //--------------------- Externals ---------------------//
@@ -156,6 +157,7 @@ procedure DrawLine(Aline : ^TLine); external;
 var
   Base: ^Word;
   Offset, ECAN_RegPage, DMA_RegPage: Integer;
+  TX_List: PCANRawBufferList;
   
 procedure WriteCANModuleRegisters(Offset: Word);
 procedure WriteBuffer(WordPtr: ^Word; BufferID: Integer);
@@ -929,6 +931,25 @@ begin
     end
 end;
 
+procedure PrintTXListCount;
+var
+  s1: array[0..64] of char;
+begin
+  WordToHex(TX_List^.Count, s1);
+  if TX_List = @TX_CANLayer_List then
+  begin
+    s1 := 'CAN: ' + s1 ;
+    TX_List := @TX_NMRABusLayer_List;
+  end else
+  begin
+    s1 := 'Bus: ' + s1 ;
+    TX_List := @TX_CANLayer_List;
+  end;
+  strcpy(ButtonRound1.Caption, s1);
+  DrawRoundButton(@ButtonRound1);
+end;
+  
+
 //----------------- End of User code ------------------//
 
 // Event Handlers
@@ -981,6 +1002,11 @@ begin
   if DMA_RegPage > 4 then
     DMA_RegPage := 0;
   WriteDMAModuleRegisters(DMA_RegPage);
+end;
+
+procedure ButtonRound1Click();
+begin
+  PrintTXListCount
 end;
 
 end.

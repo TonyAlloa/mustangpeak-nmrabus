@@ -10,6 +10,7 @@ uses
 procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer);
 procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
 procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
+function NMRABusUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
 procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID);
 function NMRABusUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
 function NMRABusUtilities_EqualAliasID(AliasID: Word): Boolean;
@@ -81,6 +82,21 @@ begin
 
   if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
     NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
+end;
+
+// *****************************************************************************
+//  function NMRABusUtilities_ExtractDestinationAlias
+//     Parameters:
+//     Returns:
+//
+//     Description: Extracts the Destination ID packed in the ID if it is available
+//
+// *****************************************************************************
+function NMRABusUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
+begin
+  Result := 0;
+  if Packet^.ID and MASK_DEST_ALIAS_FORMAT = MASK_DEST_ALIAS_FORMAT then
+    Result := DWord( (Packet^.ID and MASK_DEST_ALIAS) shr 12)
 end;
 
 // *****************************************************************************

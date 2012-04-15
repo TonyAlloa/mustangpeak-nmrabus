@@ -32,6 +32,11 @@ const
   FT_CID1                           = $06000000;  // 2rd 12 Bits of 48 bit Node ID
   FT_CID2                           = $05000000;  // 3nd 12 Bits of 48 bit Node ID
   FT_CID3                           = $04000000;  // Last 12 Bits of 48 bit Node ID
+  FT_CID4                           = $03000000;  // non-OpenLCB Protocol
+  FT_CID5                           = $02000000;  // non-OpenLCB Protocol
+  FT_CID6                           = $01000000;  // non-OpenLCB Protocol
+
+  
   FT_CID_MASK                       = $07000000;
   FT_RID                            = $00700000;  // Reserve ID
   FT_AMD                            = $00701000;  // Alias Map Definition
@@ -39,7 +44,7 @@ const
   FT_AMR                            = $00703000;  // Alias Map Reset Frame
 
 
-  FT_INITIALIZATION_COMPLETE        = $09017000;
+  FT_INITIALIZATION_COMPLETE        = $09087000;
   FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
   FT_VERIFY_NODE_ID_NUMBER_NO_DEST  = $080A7000;
   FT_VERIFIED_NODE_ID_NUMBER        = $080B7000;
@@ -52,6 +57,9 @@ const
   FT_DATAGRAM_LAST   = $0D;  // Last Frame of Datagram
   FT_DATAGRAM_SINGLE = $0E;  // Single Frame Datagram
   FT_STREAM          = $0F;  // Stream Data
+  
+  MASK_DEST_ALIAS_FORMAT = $06000000;  // Bits to see if the OpenLCB Format bits say it contains a Dest ID (110)
+  MASK_DEST_ALIAS        = $00FFF000;  // Masks out just the Destination Alias Address
 
   // NMRABus States
   BS_PERMITED          = $01;    // CAN Frame Layer is permitted (Node ID's resolved with bus)

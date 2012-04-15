@@ -1,15 +1,15 @@
-unit dsPIC33_CAN_Interrupt;
+unit dsPIC30_CAN_Interrupt;
 
 uses
-  MCU_Setup_dsPIC33FJ256GP710A,
+  MCU_Setup_dsPIC4013,
   CAN_Storage,
-  dsPIC33_CAN,
-  dsPIC33_DMA,
   NMRABus;
   
 procedure StartCANMessageEngine;                                                // Used to start a transmission cycle after a message is placed in a TX Buffer
 
 implementation
+
+
 
 // ****************************************************************************
 // function StartTransmission: Boolean;
@@ -30,9 +30,9 @@ begin
     if NextBuffer <> nil then                                                   // If there is something to send then send it
     begin
       TX_Main_RawBufferArray[0] := NextBuffer^;                                 // Copy the buffer info into the Transmit Registers
-      dsPIC33_DMA_AddressOffsetA(0, Word( @TX_Main_RawBufferArray));            // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
-      dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[0])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
-      dsPIC33_CAN_RequestTransmit(0);                                           // Set the Flag to start the transmission
+   //   dsPIC33_DMA_AddressOffsetA(0, Word( @TX_Main_RawBufferArray));            // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
+   //   dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[0])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
+    //  dsPIC33_CAN_RequestTransmit(0);                                           // Set the Flag to start the transmission
       CANStorage_IncTail(PendingList);                                          // Release the Buffer from the List
       Result := True;
     end
@@ -64,6 +64,36 @@ begin
 end;
 
 
+procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
+begin
+  C1IF_bit := 0;
+  while (C1CTRL and $000E) shr 1 > 0 do                                         // Use the ICODE flags to quickly figure out who is needing attention
+  begin
+    case (C1CTRL and $000E) shr 1 of
+      1: HandleCANError;                                                        // ERRIF and ERRIE are set
+      2: begin end;                                                             // TX2IF and TX2IE are set
+      3: begin
+           TXB1IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
+           HandleTransmitCompleteOnNMRALayerPacket;                               // TX1IF and TX1IE are set
+         end;
+      4: begin
+           TXB0IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
+           HandleTransmitCompleteOnCANLayerPacket;                              // TX0IF and TX0IE are set
+         end;
+      5: begin
+           RXB1IF_bit := 0;                                                     // Clear Receive Interrupt Flag
+           HandlePacketReceivedOnNMRABusLayer;                                  // RX1IF and RX1IE are set
+         end;
+      6: begin
+           RXB0IF_bit := 0;
+           HandlePacketReceivedOnCANLayer;                                        // RX0IF and RX0IE are set
+         end;
+      7: begin end;                                                             // WAKIF and WAKIE are set (wakeup)
+    end
+  end;
+end;
+
+{
 procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT; ics ICS_AUTO;
 var
   TargetList: PCANRawBufferList;
@@ -98,5 +128,6 @@ begin
     end
   end;
 end;
-
+      }
+      
 end.
