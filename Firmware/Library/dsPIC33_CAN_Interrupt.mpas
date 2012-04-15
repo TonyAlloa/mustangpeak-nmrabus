@@ -12,6 +12,27 @@ procedure StartCANMessageEngine;                                                
 implementation
 
 // ****************************************************************************
+// procedure PendingTransmitList;
+//
+// Loads the highest priority list with a message pending or nil if all are empty
+// The result is stored in the CAN_Engine.TransmittingList so withing the interrupt
+// we can remove this item from the list.
+// For more (or less) priority buffer transmit lists edit this function and
+// add/intialize more TCANRawBufferLists
+//
+// ****************************************************************************
+function PendingTransmitList: PCANRawBufferList;
+begin
+   if TX_CANLayer_List.Count > 0 then
+    Result := @TX_CANLayer_List                                                 // Highest Priority List
+  else
+  if TX_NMRABusLayer_List.Count > 0 then                                        // Least Priority List
+    Result := @TX_NMRABusLayer_List
+  else
+    Result := PCANRawBufferList( nil)
+end;
+
+// ****************************************************************************
 // function StartTransmission: Boolean;
 //
 // Starts the transmission if there are no current transmits in procress
@@ -34,6 +55,7 @@ begin
       dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[0])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
       dsPIC33_CAN_RequestTransmit(0);                                           // Set the Flag to start the transmission
       CANStorage_IncTail(PendingList);                                          // Release the Buffer from the List
+      CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
       Result := True;
     end
   end
@@ -84,13 +106,13 @@ begin
         // CAN Layer Reception
         dsPIC33_CAN_InterruptFlagRXBuffer(True);                                // RX Interrupt Flag Reset
         case Hi(RX_Main_RawBufferArray[0].Word7) of
-          0: ReceivedOnFilter0;
-          1: ReceivedOnFilter1;
-          2: ReceivedOnFilter2;
-          3: ReceivedOnFilter3;
-          4: ReceivedOnFilter4;
-          5: ReceivedOnFilter5;
-          6: ReceivedOnFilter6;
+          0: ReceivedOnFilter0(@RX_Main_RawBufferArray[0]);
+          1: ReceivedOnFilter1(@RX_Main_RawBufferArray[0]);
+          2: ReceivedOnFilter2(@RX_Main_RawBufferArray[0]);
+          3: ReceivedOnFilter3(@RX_Main_RawBufferArray[0]);
+          4: ReceivedOnFilter4(@RX_Main_RawBufferArray[0]);
+          5: ReceivedOnFilter5(@RX_Main_RawBufferArray[0]);
+          6: ReceivedOnFilter6(@RX_Main_RawBufferArray[0]);
         end;
         dsPIC33_DMA_AddressOffsetA(1, @RX_Main_RawBufferArray[0]);              // Point the Receive Buffer Offset
         dsPIC33_CAN_RX_Full(1, True);                                           // Reset the Full Flag

@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=Throttle_main.mpas
+Value=..\..\..\..\Library\dsPIC33_CAN_Interrupt.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -36,7 +36,7 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=9
+Count=10
 File0=Throttle_main.mpas
 File1=..\..\..\..\Library\NMRABus.mpas
 File2=Throttle_events_code.mpas
@@ -46,6 +46,7 @@ File5=..\..\..\..\Library\dsPIC33_CAN_Interrupt.mpas
 File6=MCU_Setup_dsPIC33FJ256GP710A.mpas
 File7=..\..\..\..\Library\NMRABusDefines.mpas
 File8=..\..\..\..\Library\NMRABusUtilities.mpas
+File9=..\..\..\..\Library\dsPIC30_CAN_Interrupt.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

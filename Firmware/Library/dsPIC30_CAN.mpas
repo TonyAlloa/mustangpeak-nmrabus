@@ -23,6 +23,16 @@ uses
   
 {$I Options.inc}
 
+const
+  ICODE_None    = 0;
+  ICODE_ERROR   = 1;
+  ICODE_TX2     = 2;
+  ICODE_TX1     = 3;
+  ICODE_TX0     = 4;
+  ICODE_RX1     = 5;
+  ICODE_RX0     = 6;
+  ICODE_WAKE    = 7;
+
 // *****************************************************************************
 // CAN FIFO Buffer Access, these are exported through the "external" modifier
 // *****************************************************************************
@@ -30,112 +40,89 @@ function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
 function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 // *****************************************************************************
-  
+ 
+procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
 
 
 implementation
 
-// ****************************************************************************
-// procedure CANReadRXBuffer
-//
-// parameters:
-//     Buffer:        TX Buffer to use.  See CAN_RX_n constants
-//     Header:        The SID and EID for the CAN header
-//     DataCount:     Number of Data Bytes
-//     DataBytes:     Bytes to send
-//     IsExtended:    If the Header is a Standard or Extended
-//
-//  Description:  16us
-//
-// ****************************************************************************
-procedure CANReadRXBuffer(Buffer: Byte; var Header: DWord; var DataCount: Byte; var DataBytes: TCAN_DataBytes; var IsExtended: Boolean);
-var
-  CANPtr: ^Word;
-  SID, EID: DWORD;
+procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
 begin
-  case Buffer of
-    0: CANPtr := @C1RX0SID;
-    1: CANPtr := @C1RX1SID;
-  end;
-  SID := ((DWORD( CANPtr^ shr 2)) and $000007FF);                               // Get the Standard ID
-  IsExtended := CANPtr^ and $0001 <> 0;
-  Inc(CANPtr);                                                                  // Move to the RXnEID Register
-  if IsExtended then
-  begin
-    EID := ((DWORD( CANPtr^) shl 6) and $0003FFC0);                             // Pull out the info from the RXnEID
-    Inc(CANPtr);                                                                // Move to the RXnDLC Register
-    EID := EID or (DWORD( CANPtr^) shr 10);                                     // Pull out the rest of the Extended ID
-  end else
-    Inc(CANPtr);                                                                // Move to the RXnDLC Register
-  Header := (SID shl 18) or EID;                                                // Build the EID
-  DataCount := CANPtr^ and $000F;
-  Inc(CANPtr);                                                                  // Move to C1RXnB1
-  DataBytes[0] := CANPtr^;
-  DataBytes[1] := CANPtr^ shr 8;
-  Inc(CANPtr);                                                                  // Move to C1RXnB2
-  DataBytes[2] := CANPtr^;
-  DataBytes[3] := CANPtr^ shr 8;
-  Inc(CANPtr);                                                                  // Move to C1RXnB3
-  DataBytes[4] := CANPtr^;
-  DataBytes[5] := CANPtr^ shr 8;
-  Inc(CANPtr);                                                                  // Move to C1RXnB4
-  DataBytes[6] := CANPtr^;
-  DataBytes[7] := CANPtr^ shr 8;
-  Inc(CANPtr);                                                                  // Move to C1RXnCON
-  CANPtr^ := CANPtr^ and $FF7F;                                                 // Clear the RXFUL flag
+  if Enable then
+    TXB0IE_bit := 1
+  else
+    TXB0IE_bit := 0
 end;
 
 // ****************************************************************************
-// procedure CANWriteTXBuffer
+// procedure dsPIC30_Style_Buffer
 //
 // parameters:
-//     Buffer:        TX Buffer to use.  See CAN_TX_n constants
-//     Header:        The SID and EID for the CAN header
-//     DataCount:     Number of Data Bytes
-//     DataBytes:     Bytes to send
-//     IsExtended:    If the Header is a Standard or Extended
-//     Priority:      Transmit Priority.  See CAN_TX_PRIORITY_n constants
 //
-//  Description:  16us
+//  Description:
 //
 // ****************************************************************************
-procedure CANWriteTXBuffer(Buffer: Byte; Header: DWord; DataCount: Byte; var DataBytes: TCAN_DataBytes; IsExtended: Boolean; Priority: Byte);
+procedure dsPIC30_Style_Buffer(Direction: Word; CANPtr: ^Word; var Buffer: TCANBuffer);
 var
-  CANPtr: ^Word;
   SID, EID: DWORD;
+  IsExtended: Boolean;
 begin
-  SID := (Header and $1FFC0000) shr 18;
-  EID := Header and $0003FFFF;
-
-  case Buffer of
-    0: CANPtr := @C1TX0SID;
-    1: CANPtr := @C1TX1SID;
-    2: CANPtr := @C1TX2SID;
-  end;
-  CANPtr^ := ((SID shl 2) and $00FC) or ((SID shl 5) and $F800);
-  if IsExtended then
+  if Direction = CAN_DIRECTION_WRITE then
   begin
-    CANPtr^ := CANPtr^ or $0001;
-    Inc(CANPtr);                                                                // Move to C1TXnEID
-    CANPtr^ := ((EID shr 6) and $00FF) or ((EID shr 2) and $F000);
-    Inc(CANPtr);                                                                // Move to the RXnDLC Register
-    CANPtr^ := ((EID shl 10) and $FC00);
+    SID := (Buffer.ID and $1FFC0000) shr 18;
+    EID := Buffer.ID and $0003FFFF;
+
+    CANPtr^ := ((SID shl 2) and $00FC) or ((SID shl 5) and $F800);
+    if Buffer.IsExtended then
+    begin
+      CANPtr^ := CANPtr^ or $0001;
+      Inc(CANPtr);                                                              // Move to C1TXnEID
+      CANPtr^ := ((EID shr 6) and $00FF) or ((EID shr 2) and $F000);
+      Inc(CANPtr);                                                              // Move to the RXnDLC Register
+      CANPtr^ := ((EID shl 10) and $FC00);
+    end else
+    begin
+      Inc(CANPtr);                                                              // Move to
+    end;
+    CANPtr^ := (CANPtr^ and $FF87) or (WORD( Buffer.DataCount) shl 3);
+    Inc(CANPtr);                                                                // Move to
+    CANPtr^ := Buffer.DataBytes[0] or (Buffer.DataBytes[1] shl 8);
+    Inc(CANPtr);                                                                // Move to
+    CANPtr^ := Buffer.DataBytes[2] or (Buffer.DataBytes[3] shl 8);
+    Inc(CANPtr);                                                                // Move to
+    CANPtr^ := Buffer.DataBytes[4] or (Buffer.DataBytes[5] shl 8);
+    Inc(CANPtr);                                                                // Move to
+    CANPtr^ := Buffer.DataBytes[6] or (Buffer.DataBytes[7] shl 8);
+    Inc(CANPtr);                                                                // Move to
+    CANPtr^ := (CANPtr^ and $FFFC);                                             // Set Priority to 0
   end else
   begin
-    Inc(CANPtr);                                                                // Move to C1TXnEID
-    Inc(CANPtr);                                                                // Move to the RXnDLC Register
-  end;
-  CANPtr^ := (CANPtr^ and $FF87) or (WORD( DataCount) shl 3);
-  Inc(CANPtr);                                                                  // Move to C1TXnB1
-  CANPtr^ := DataBytes[0] or (DataBytes[1] shl 8);
-  Inc(CANPtr);                                                                  // Move to C1TXnB2
-  CANPtr^ := DataBytes[2] or (DataBytes[3] shl 8);
-  Inc(CANPtr);                                                                  // Move to C1TXnB3
-  CANPtr^ := DataBytes[4] or (DataBytes[5] shl 8);
-  Inc(CANPtr);                                                                  // Move to C1TXnB4
-  CANPtr^ := DataBytes[6] or (DataBytes[7] shl 8);
-  Inc(CANPtr);                                                                  // Move to C1TXnCON
-  CANPtr^ := (CANPtr^ and $FFFC) or Priority or $0008;                          // Set Priority and Set TXREQ to start transmit
+    SID := ((DWORD( CANPtr^ shr 2)) and $000007FF);                             // Get the Standard ID
+    IsExtended := CANPtr^ and $0001 <> 0;
+    Inc(CANPtr);                                                                // Move to the RXnEID Register
+    if IsExtended then
+    begin
+      EID := ((DWORD( CANPtr^) shl 6) and $0003FFC0);                           // Pull out the info from the RXnEID
+      Inc(CANPtr);                                                              // Move to the RXnDLC Register
+      EID := EID or (DWORD( CANPtr^) shr 10);                                   // Pull out the rest of the Extended ID
+    end else
+      Inc(CANPtr);                                                              // Move to the RXnDLC Register
+    Buffer.ID := (SID shl 18) or EID;                                              // Build the EID
+    Buffer.DataCount := CANPtr^ and $000F;
+    Inc(CANPtr);                                                                // Move to C1RXnB1
+    Buffer.DataBytes[0] := CANPtr^;
+    Buffer.DataBytes[1] := CANPtr^ shr 8;
+    Inc(CANPtr);                                                                // Move to C1RXnB2
+    Buffer.DataBytes[2] := CANPtr^;
+    Buffer.DataBytes[3] := CANPtr^ shr 8;
+    Inc(CANPtr);                                                                // Move to C1RXnB3
+    Buffer.DataBytes[4] := CANPtr^;
+    Buffer.DataBytes[5] := CANPtr^ shr 8;
+    Inc(CANPtr);                                                                // Move to C1RXnB4
+    Buffer.DataBytes[6] := CANPtr^;
+    Buffer.DataBytes[7] := CANPtr^ shr 8;
+    Inc(CANPtr);                                                                // Move to C1RXnCON
+  end
 end;
 
 // *****************************************************************************
@@ -156,7 +143,7 @@ begin
   Head := CANStorage_Head(List);
   if Head <> PCANRawBuffer( nil) then
   begin
-  //  dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_WRITE, @(Head^.Word0), Buffer);
+    dsPIC30_Style_Buffer(CAN_DIRECTION_WRITE, @(Head^.Word0), Buffer);
     CANStorage_IncHead(List);
     Result := True
   end;
@@ -207,7 +194,7 @@ begin
   Tail := CANStorage_Tail(List);
   if Tail <> nil then
   begin
-  //  dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_READ, @Tail^.Word0, Buffer);         // dsPIC33 and the dsPIC30 are the same format for RX Buffers
+    dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @Tail^.Word0, Buffer);         // dsPIC33 and the dsPIC30 are the same format for RX Buffers
     CANStorage_IncTail(List);
     Result := True;
   end

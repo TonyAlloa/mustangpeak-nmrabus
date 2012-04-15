@@ -150,7 +150,7 @@ begin
   begin
     Result := List^.Head;                                                       // Take the current head
     Inc(Result);                                                                // Increase it the size of a TCANRawBuffer
-    if Result > (@List^.Buffers^[0] + Size) then                                // Wrap it if necessary
+    if Result > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
      Result := @List^.Buffers^[0];
   end
 end;
@@ -171,7 +171,7 @@ begin
   begin
     Result := List^.Tail;                                                       // Take the current head
     Inc(Result);                                                                // Increase it the size of a TCANRawBuffer
-    if Result > (@List^.Buffers^[0] + Size) then                                // Wrap it if necessary
+    if Result > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
      Result := @List^.Buffers^[0];
   end
 end;
@@ -229,7 +229,7 @@ begin
   begin
     Temp := List^.Head;
     Inc(Temp);                                                                // Increase it the size of a TCANRawBuffer
-    if Temp > (@List^.Buffers^[0] + Size) then                                // Wrap it if necessary
+    if Temp > (@List^.Buffers^[0] + List^.Size) then                          // Wrap it if necessary
      Temp := @List^.Buffers^[0];
     List^.Head := Temp;
     Result := True
@@ -255,7 +255,7 @@ begin
   begin
     Temp := List^.Tail;
     Inc(Temp);                                                                // Increase it the size of a TCANRawBuffer
-    if Temp > (@List^.Buffers^[0] + Size) then                                // Wrap it if necessary
+    if Temp > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
      Temp := @List^.Buffers^[0];
     List^.Tail := Temp;
     Result := True;

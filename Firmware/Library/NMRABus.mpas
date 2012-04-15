@@ -37,14 +37,13 @@ type
 
 
   // callbacks from the CAN interrupts used in the xxxxx_CAN_Interrupt.mpas units
-  procedure ReceivedOnFilter0;
-  procedure ReceivedOnFilter1;
-  procedure ReceivedOnFilter2;
-  procedure ReceivedOnFilter3;
-  procedure ReceivedOnFilter4;
-  procedure ReceivedOnFilter5;
-  procedure ReceivedOnFilter6;
-  function PendingTransmitList: PCANRawBufferList;
+  procedure ReceivedOnFilter0(RawBuffer: PCANRawBuffer);
+  procedure ReceivedOnFilter1(RawBuffer: PCANRawBuffer);
+  procedure ReceivedOnFilter2(RawBuffer: PCANRawBuffer);
+  procedure ReceivedOnFilter3(RawBuffer: PCANRawBuffer);
+  procedure ReceivedOnFilter4(RawBuffer: PCANRawBuffer);
+  procedure ReceivedOnFilter5(RawBuffer: PCANRawBuffer);
+  procedure ReceivedOnFilter6(RawBuffer: PCANRawBuffer);
 
 
   // defined in the dsPICxx_CAN.mpas file
@@ -200,14 +199,14 @@ end;
 //                  as any NMRABus level message (bit 26 = 0)
 //
 // *****************************************************************************
-procedure ReceivedOnFilter0;
+procedure ReceivedOnFilter0(RawBuffer: PCANRawBuffer);
 var
   Next: PCANRawBuffer;
 begin
   Next := CANStorage_Head(@RX_CANLayer_List);
   if Next <> nil then
   begin
-    Next^ := RX_Main_RawBufferArray[0];
+    Next^ := RawBuffer^;
     CANStorage_IncHead(@RX_CANLayer_List);
     HandlePacketReceivedOnCANLayer
   end else
@@ -226,14 +225,14 @@ end;
 //                  as any NMRABus level message (bit 26 = 1)
 //
 // *****************************************************************************
-procedure ReceivedOnFilter1;
+procedure ReceivedOnFilter1(RawBuffer: PCANRawBuffer);
 var
   Next: PCANRawBuffer;
 begin 
   Next := CANStorage_Head(@RX_NMRABusLayer_List);
   if Next <> nil then
   begin
-    Next^ := RX_Main_RawBufferArray[0];
+    Next^ := RawBuffer^;
     CANStorage_IncHead(@RX_NMRABusLayer_List);
   end else
   begin
@@ -250,7 +249,7 @@ end;
 //                  Called when a message passes Filter 2
 //
 // *****************************************************************************
-procedure ReceivedOnFilter2;
+procedure ReceivedOnFilter2(RawBuffer: PCANRawBuffer);
 begin
   // Not used for NMRABus
 end;
@@ -264,7 +263,7 @@ end;
 //                  Called when a message passes Filter 3
 //
 // *****************************************************************************
-procedure ReceivedOnFilter3;
+procedure ReceivedOnFilter3(RawBuffer: PCANRawBuffer);
 begin
   // Not used for NMRABus
 end;
@@ -278,7 +277,7 @@ end;
 //                  Called when a message passes Filter 4
 //
 // *****************************************************************************
-procedure ReceivedOnFilter4;
+procedure ReceivedOnFilter4(RawBuffer: PCANRawBuffer);
 begin
   // Not used for NMRABus
 end;
@@ -292,7 +291,7 @@ end;
 //                  Called when a message passes Filter 5
 //
 // *****************************************************************************
-procedure ReceivedOnFilter5;
+procedure ReceivedOnFilter5(RawBuffer: PCANRawBuffer);
 begin
   // Not used for NMRABus
 end;
@@ -306,30 +305,9 @@ end;
 //                  Called when a message passes Filter 6
 //
 // *****************************************************************************
-procedure ReceivedOnFilter6;
+procedure ReceivedOnFilter6(RawBuffer: PCANRawBuffer);
 begin
   // Not used for NMRABus
-end;
-
-// ****************************************************************************
-// procedure PendingTransmitList;
-//
-// Loads the highest priority list with a message pending or nil if all are empty
-// The result is stored in the CAN_Engine.TransmittingList so withing the interrupt
-// we can remove this item from the list.
-// For more (or less) priority buffer transmit lists edit this function and
-// add/intialize more TCANRawBufferLists
-//
-// ****************************************************************************
-function PendingTransmitList: PCANRawBufferList;
-begin
-   if TX_CANLayer_List.Count > 0 then
-    Result := @TX_CANLayer_List                                                 // Highest Priority List
-  else
-  if TX_NMRABusLayer_List.Count > 0 then                                        // Least Priority List
-    Result := @TX_NMRABusLayer_List
-  else
-    Result := PCANRawBufferList( nil)
 end;
 
 // *****************************************************************************
