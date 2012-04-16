@@ -2,7 +2,8 @@ unit MCU_Setup_dsPIC33FJ256GP710A;
 
 uses
   Throttle_driver,
-  CAN_Storage,
+  CANDefines,
+  CANBuffers,
   dsPIC33_CAN,
   dsPIC33_DMA,
   NodeIDs;
@@ -21,43 +22,8 @@ const
 
 var
   PinChangeState: Word;
-  
-  RX_Main_RawBufferArray: TCanRawBufferArray; absolute $7800;                   // Recieve buffer for all filters.  The software moves the data to the right list
-  TX_Main_RawBufferArray: TCanRawBufferArray; absolute $7810;                   // Transmit buffer for all filters.  The software pulls the data to the right list
- 
-  TX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7820;               // There are 6 - 8 Word Buffer in this Array =  Bytes
-  TX_CANLayer_List: TCANRawBufferList;
-  
-  TX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $7880;           // There are 6 - 8 Word Buffer in this Array =  Bytes
-  TX_NMRABusLayer_List: TCANRawBufferList;
-  
-  RX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $78E0;               // There are 4 - 8 Word Buffer in this Array =  Bytes
-  RX_CANLayer_List: TCANRawBufferList;
-
-  RX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $7920;           // There are 4 - 8 Word Buffer in this Array =  Bytes
-  RX_NMRABusLayer_List: TCANRawBufferList;
-                                                          // $7950 Last Index
-const
-  RAW_CAN_BUFFER_SIZE = 22;                                                     // There are 42 TCANRawBuffers defined in the above structures
-  
-type
-  TDummy = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;                    // Define a "dummy" array that overlays the above structures so the compiler
-                                                                                // can keep track of the memory and we can address the buffers as a normal array
-                                                                                // to initialize them
-
-// external for NMRABus.mpas
-procedure GetUniqueIDFunc(var HiID, LoID: DWord);
 
 implementation
-
-var
-  Dummy: TDummy; absolute $7800;
-
-procedure GetUniqueIDFunc(var HiID, LoID: DWord);
-begin
-  HiID := MUSTANGPEAK_ID_0_HI;
-  LoID := MUSTANGPEAK_TFT_THROTTLE_ID_0_LO;
-end;
 
 procedure MCU_Setup_Initialize;
 var
@@ -70,23 +36,6 @@ begin
   TRISG3_bit := 0;
 
   PinChangeState := 0;
-  
-  for i := 0 to RAW_CAN_BUFFER_SIZE-1 do
-  begin
-    Dummy[i].Word0 := 0;
-    Dummy[i].Word1 := 0;
-    Dummy[i].Word2 := 0;
-    Dummy[i].Word3 := 0;
-    Dummy[i].Word4 := 0;
-    Dummy[i].Word5 := 0;
-    Dummy[i].Word6 := 0;
-    Dummy[i].Word7 := 0;
-  end;
-  
-  CANStorage_InitializeList(@TX_CANLayer_List, @TX_CANLayer_RawBufferArray, 6);            // Overlays DMA RAM and is 6 Buffer Array long (8 Bytes)
-  CANStorage_InitializeList(@TX_NMRABusLayer_List, @TX_NMRABusLayer_RawBufferArray, 6);    // Overlays DMA RAM and is 6 Buffer Array long (8 Bytes)
-  CANStorage_InitializeList(@RX_CANLayer_List, @RX_CANLayer_RawBufferArray, 4);            // Overlays DMA RAM and is 4 Buffer Array long (8 Bytes)
-  CANStorage_InitializeList(@RX_NMRABusLayer_List, @RX_NMRABusLayer_RawBufferArray, 4);    // Overlays DMA RAM and is 4 Buffer Array long (8 Bytes)
   
   dsPIC33_CAN_EnterConfigMode;                                                  // Place the module in Configuration Mode
   // Setup the CAN Baud Rate

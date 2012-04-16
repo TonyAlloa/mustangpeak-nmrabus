@@ -4,7 +4,7 @@ unit NMRABusUtilities;
 
 uses
   NMRABusDefines,
-  CAN_Storage;
+  CANDefines;
 
 
 procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer);

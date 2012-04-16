@@ -19,7 +19,10 @@ unit dsPIC30_CAN;
 // ******************************************************************************
 
 uses
-  CAN_Storage;
+  CANDefines,
+  CANStorage,
+  CANBuffers,
+  NMRABus;
   
 {$I Options.inc}
 
@@ -42,9 +45,132 @@ function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boole
 // *****************************************************************************
  
 procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
+procedure dsPIC30_Style_Buffer(Direction: Word; CANPtr: ^Word; var Buffer: TCANBuffer);
+
+procedure StartCANMessageEngine;                                                // Used to start a transmission cycle after a message is placed in a TX Buffer
 
 
 implementation
+
+
+// ****************************************************************************
+// procedure PendingTransmitList;
+//
+// Loads the highest priority list with a message pending or nil if all are empty
+// The result is stored in the CAN_Engine.TransmittingList so withing the interrupt
+// we can remove this item from the list.
+// For more (or less) priority buffer transmit lists edit this function and
+// add/intialize more TCANRawBufferLists
+//
+// ****************************************************************************
+function PendingTransmitList: PCANRawBufferList;
+begin
+   if TX_CANLayer_List.Count > 0 then
+    Result := @TX_CANLayer_List                                                 // Highest Priority List
+  else
+  if TX_NMRABusLayer_List.Count > 0 then                                        // Least Priority List
+    Result := @TX_NMRABusLayer_List
+  else
+    Result := PCANRawBufferList( nil)
+end;
+
+
+// ****************************************************************************
+// function StartTransmission: Boolean;
+//
+// Starts the transmission if there are no current transmits in procress
+//
+// ****************************************************************************
+function StartTransmission: Boolean;
+var
+  NextBuffer: PCANRawBuffer;
+  PendingList: PCANRawBufferList;
+begin
+  Result := False;
+  PendingList := PendingTransmitList;
+  if PendingList <> PCANRawBufferList( nil) then                                // Pick the highest Priority List to send next
+  begin
+    NextBuffer := CANStorage_Tail(PendingList);                                 // Get a pointer to the Buffer to transmit
+    if NextBuffer <> nil then                                                   // If there is something to send then send it
+    begin
+      C1TX0SID := NextBuffer^.Word0;                                            // Copy the buffer info into the Transmit Registers
+      C1TX0EID := NextBuffer^.Word1;
+      C1TX0DLC := NextBuffer^.Word2;
+      C1TX0B1 := NextBuffer^.Word3;
+      C1TX0B2 := NextBuffer^.Word4;
+      C1TX0B3 := NextBuffer^.Word5;
+      C1TX0B4 := NextBuffer^.Word6;
+      TXREQ_C1TX0CON_bit := 1;                                                  // Set the Flag to start the transmission
+      CANStorage_IncTail(PendingList);                                          // Release the Buffer from the List
+      CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
+      Result := True;
+    end
+  end
+end;
+
+// ****************************************************************************
+// procedure StartCANMessageEngine;
+//
+// Starts the transmitter engine if there are no current transmits in procress
+//
+// ****************************************************************************
+procedure StartCANMessageEngine;
+begin
+  // Can't let the interrupt be called "right after" we make the comparison to see if the list is empty.
+  // That would be a race condition that may not start the next message from being sent.  By
+  // shutting off the interrupt we can be guarenteed that the interrupt can't not be called
+  // during our comparison and any newly added messages will get sent
+  dsPIC30_CAN_TXBufferInterrupt(False);
+
+  // If the CAN_Engine is not transmitting we need to start the transmission of any
+  // messages in the buffer list.  If it is already running then the interrupt that
+  // is called after the current message is finished will auto load any new messages
+  if CAN_Engine.State and CES_TRANSMITTING = 0 then
+    StartTransmission;
+
+  // Re-enable the Transmit interrupt
+  dsPIC30_CAN_TXBufferInterrupt(True);
+end;
+
+
+procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
+
+
+var Buffer: TCANRawBuffer;
+
+begin
+  C1IF_bit := 0;
+  while (C1CTRL and $000E) shr 1 > ICODE_None do                                // Use the ICODE flags to quickly figure out who is needing attention
+  begin
+    case (C1CTRL and $000E) shr 1 of
+      ICODE_None :
+        begin
+        end;
+      ICODE_ERROR : begin end;                                                  // Not used
+      ICODE_TX2   : begin end;                                                  // Not used
+      ICODE_TX1   : begin end;                                                  // Not used
+      ICODE_TX0   :
+        begin
+          TXB0IF_bit := 0;                                                      // Clear Transmitter Interrupt Flag
+          if not StartTransmission then
+            CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
+        end;
+      ICODE_RX1 :
+        begin
+          RXB1IF_bit := 0;                                                      // Clear Receive Interrupt Flag
+          ReceivedOnFilter1(PCANRawBuffer( @C1RX1SID));                         // NMRABus Layer
+          RXFUL_C1RX1CON_bit := 0;                                              // Reset the Full Flag
+        end;
+      ICODE_RX0 :
+        begin
+          RXB0IF_bit := 0;                                                      // Clear Receive Interrupt Flag
+          ReceivedOnFilter0(PCANRawBuffer( @C1RX0SID));                         // CAN Layer
+          RXFUL_C1RX0CON_bit := 0;                                              // Reset the Full Flag
+        end;
+      ICODE_WAKE  : begin end;                                                  // Not used
+    end;
+  end;
+end;
 
 procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
 begin
@@ -77,9 +203,9 @@ begin
     begin
       CANPtr^ := CANPtr^ or $0001;
       Inc(CANPtr);                                                              // Move to C1TXnEID
-      CANPtr^ := ((EID shr 6) and $00FF) or ((EID shr 2) and $F000);
+      CANPtr^ := (DWord(EID shr 6) and $00FF) or (DWord(EID shr 2) and $F000);
       Inc(CANPtr);                                                              // Move to the RXnDLC Register
-      CANPtr^ := ((EID shl 10) and $FC00);
+      CANPtr^ := (DWord(EID shl 10) and $FC00);
     end else
     begin
       Inc(CANPtr);                                                              // Move to
@@ -140,6 +266,7 @@ var
   Head: PCANRawBuffer;
 begin
   Result := False;
+  // Could wait until the buffer has space... BUT if this is called in a CAN interrupt then there will be dead lock.....
   Head := CANStorage_Head(List);
   if Head <> PCANRawBuffer( nil) then
   begin

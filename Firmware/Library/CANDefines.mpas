@@ -1,0 +1,84 @@
+unit CANDefines;
+
+const
+  CAN_DIRECTION_READ = 1;
+  CAN_DIRECTION_WRITE = 0;
+
+type
+  TCAN_DataBytes = array[8] of Byte;
+  PCAN_DataBytes = ^TCAN_DataBytes;
+
+  // ***************************************************************************
+  // CAN Message Buffers in raw form that can be loaded into the CAN controller
+  // registers
+  //   NOTE: For the dsPIC33 RX and TX are identical, for the dsPIC30 the bit
+  //         patterns are different between RX and TX
+  // ***************************************************************************
+  TCANRawBuffer = record
+    Word0    : Word;   // if Standard Message then SID else EID upper Bits
+    Word1    : Word;   // if Standard Message then Data Length Code else low bits of EID and upper bits of SID
+    Word2    : Word;   // if Standard Message then Data 0 and Data 1 else low bits of SID and Data Length Code
+    Word3    : Word;   // if Standard Message then Data 2 and Data 3 else Data 0 and Data 1
+    Word4    : Word;   // if Standard Message then Data 4 and Data 5 else Data 2 and Data 3
+    Word5    : Word;   // if Standard Message then Data 6 and Data 7 else Data 4 and Data 5
+    Word6    : Word;   // if Standard Message then, not used, else Data 6 and Data 7
+    Word7    : Word;   // dsPIC33 only, For TX not used for RX the Filter that passed the message
+  end;
+  PCANRawBuffer = ^TCANRawBuffer;
+
+ // ***************************************************************************
+  // CAN Message Buffers in user friendly form that can be easily maniuplated then
+  // loaded into the Raw CAN FIFOs
+  // ***************************************************************************
+  TCANBuffer = record
+    ID: DWord;
+    DataCount: Byte;
+    DataBytes: TCAN_DataBytes;
+    IsExtended: Boolean;
+  end;
+  PCANBuffer = ^TCANBuffer;
+
+type
+  TCANRawBufferArray = array[0..0] of TCANRawBuffer;                            // Allows any length array within the TCANRawBufferList
+  PCANRawBufferArray = ^TCANRawBufferArray;
+
+
+  TCANRawBufferList = record
+    Buffers: PCANRawBufferArray;                                                // Pointer to the TCANRawBuffer Array where the data is stored (Normal RAM or DMA RAM depending on device)
+    Size: Byte;                                                                 // Number of Buffers in the List
+    Head: PCANRawBuffer;                                                        // Points to the Next empty item in the list (may point to a used item if Count = Size so this comparison needs to be checked)
+    Tail: PCANRawBuffer;                                                        // Points to the first used item in the list
+    Count: Byte;                                                                // Number of Items in the List
+    MaxCount: Byte;                                                             // The max number of Buffers used in the list
+  end;
+  PCANRawBufferList = ^TCANRawBufferList;
+
+const
+  CES_TRANSMITTING = $0001;
+  
+procedure CANDefines_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; ListLength: Byte);
+
+implementation
+
+// *****************************************************************************
+//  procedure CANDefines_InitializeList;
+//
+//  Parameters: ListPtr        : Pointer to the FIFO buffer Lists
+//              BufferArrayPtr : Pointer to the first item in the RawBufferArray
+//              LasterBuffer   : Pointer to the last item in the RawBufferArray
+//
+//  Result:
+//
+//  Description: Initializes a FIFO Buffer Array
+// *****************************************************************************
+procedure CANDefines_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; ListLength: Byte);
+begin
+  ListPtr^.Buffers := BufferArrayPtr;
+  ListPtr^.Size := ListLength;
+  ListPtr^.Head := @BufferArrayPtr^[0];
+  ListPtr^.Tail := @BufferArrayPtr^[0];
+  ListPtr^.Count := 0;
+  ListPtr^.MaxCount := 0;
+end;
+
+end.

@@ -17,7 +17,7 @@
 unit NMRABusNodeItems;
 
 const
-  MAX_MOBILE_ITEM_COUNT           = 128;                                          // Number of Virtual Nodes (locomotives)
+  MAX_MOBILE_ITEM_COUNT           = 16;                                          // Number of Virtual Nodes (locomotives)
   
   MAX_FX                          = 32;                                         // 32 Bits
   MAX_FX_NAME_LEN                 = 16;                                         // 16 Bytes

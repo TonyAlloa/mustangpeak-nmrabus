@@ -29,20 +29,20 @@ program NMRABusCommandStation;
  
 uses
   NMRABus,
-  CAN_Data,
+  CANDefines,
+  CANStorage,
   MCU_Setup_dsPIC4013,
   _25AAxxxx,
   NMRABusDCC,
   NMRABusNodeItems,
+  NMRABusUtilities,
   NMRABusAddressSlots,
   NodeIDs;
   
 {$I Options.inc}
 
-// Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
 const
-  ID_1st : DWord = $08002F4F;          // TESTING ONLY
-  ID_2nd : DWord = $08000003;          // TESTING ONLY
+  LF = #13+#10;
 
 var
   // DCC SIGNAL PINS
@@ -57,43 +57,17 @@ var
   CS_Bank_0_Direction               : sbit at TRISB12_bit;
   CS_Bank_1_Direction               : sbit at TRISB12_bit;
 
-  GetUniqueIDFunc: PGetUniqueIDFunc;
-  SignalTransmitOnCANLayerFunc: PSignalTransmitOnCANLayerFunc;
-  SignalTransmitOnNMRALayerFunc: PSignalTransmitOnNMRALayerFunc;
-
 
 // ****************************************************************************
-// procedure UniqueID
+// procedure GetUniqueIDFunc
 //
 //  Description:   Callback from NMRABus to load the 48 Bit Unique ID
 //
 // ****************************************************************************
-procedure UniqueID(var HiID, LoID: DWord);
+procedure GetUniqueIDFunc(var HiID, LoID: DWord);
 begin
   LoID := MUSTANGPEAK_COMMANDSTATION_ID_0_LO;
   HiID := MUSTANGPEAK_ID_0_HI;
-end;
-
-// ****************************************************************************
-// procedure SignalTransmitOnCANLayer
-//
-//  Description:   Callback from NMRABus to start a CAN Message Transmit from the TX CAN Data Array
-//
-// ****************************************************************************
-procedure SignalTransmitOnCANLayer;
-begin
-  TXB0IF_bit := 1;
-end;
-
-// ****************************************************************************
-// procedure SignalTransmitOnNMRALayer
-//
-//  Description:   Callback from NMRABus to start a NMRA Message Transmit from the TX NMRA Data Array
-//
-// ****************************************************************************
-procedure SignalTransmitOnNMRALayer;
-begin
-  TXB1IF_bit := 1;
 end;
 
 
@@ -121,39 +95,45 @@ begin
   NMRABus_GlobalTimer;
 end;
 
-procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
-begin
-  C1IF_bit := 0;
-  while (C1CTRL and $000E) shr 1 > 0 do                                         // Use the ICODE flags to quickly figure out who is needing attention
-  begin
-    case (C1CTRL and $000E) shr 1 of
-      1: HandleCANError;                                                        // ERRIF and ERRIE are set
-      2: begin end;                                                             // TX2IF and TX2IE are set
-      3: begin
-           TXB1IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
-           HandleTransmitCompleteOnNMRALayerPacket;                               // TX1IF and TX1IE are set
-         end;
-      4: begin
-           TXB0IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
-           HandleTransmitCompleteOnCANLayerPacket;                              // TX0IF and TX0IE are set
-         end;
-      5: begin
-           RXB1IF_bit := 0;                                                     // Clear Receive Interrupt Flag
-           HandlePacketReceivedOnNMRABusLayer;                                  // RX1IF and RX1IE are set
-         end;
-      6: begin
-           RXB0IF_bit := 0;
-           HandlePacketReceivedOnCANLayer;                                        // RX0IF and RX0IE are set
-         end;
-      7: begin end;                                                             // WAKIF and WAKIE are set (wakeup)
-    end
-  end;
-end;
-
+{$IFDEF PINCHANGE_INTERRUPT_ENABLE}
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;         // 93us when a TransmitCompleteOnCANLayerPacket called with new Tx Packet waiting
 begin
   CNIF_bit := 0;     // Clear Flag
   PinChangeState := PORTF;
+end;
+{$ENDIF}
+
+procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+var
+  s1: array[64] of char;
+  s2: array[8] of char;
+  i: Integer;
+begin
+
+Exit;
+
+  LongIntToHex(CANBuffer^.ID, s2);
+  s1 := 'NMRA: ' + s2;
+  UART1_Write_Text(s1+LF);
+  
+  ByteToStr(CANBuffer^.DataCount, s2);
+  s1 := 'Count: ' + s2;
+  UART1_Write_Text(s1+LF);
+  
+  for i := 0 to CANBuffer^.DataCount-1 do
+  begin
+    ByteToStr(CANBuffer^.DataBytes[i], s2);
+    s1 := 'Byte: ' + s2;
+    UART1_Write_Text(s1+LF);
+  end;
+
+end;
+
+procedure CANBusPacketHook(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+// WARNING: THIS IS CALLED IN THE CONTEXT OF THE INTERRUPT AND CAN NOT BE LONGER THAN
+// IT TAKES TO RECEIVE THE NEXT CAN MESSAGE!!!!!!!!
+begin
+
 end;
 
 
@@ -162,8 +142,11 @@ end;
 // *******************
 
 var
-  Packet: TCAN_Packet;
+  Packet: TCANBuffer;
   DCC_Message: TDCCPacket;
+  Loop: DWord;
+  s1: array[8] of char;
+  s2: array[32] of char;
 begin
 
   Track_DCC_Out_Pin := 0;
@@ -171,61 +154,69 @@ begin
   Track_DCC_Out_Pin_Direction := 0;      // Output
   Track_DCC_Out_Pin_Bar_Direction := 0;  // Output
   
-  GetUniqueIDFunc := @UniqueID;                                                 // Callback to access the Node's Unique ID
-  SignalTransmitOnCANLayerFunc := @SignalTransmitOnCANLayer;
-  SignalTransmitOnNMRALayerFunc := @SignalTransmitOnNMRALayer;
-
   LATD0_bit := 0;         // Debugging output
   TRISD0_bit := 0;        // Debugging output
 
   _25AAxxxx_Initialize;
   NMRABusNodeItems_Initialize;
-  CAN_Data_Initialize;
+  CANStorage_Initialize;
   NMRABus_Initialize;
   MCU_Setup_Initialize;
   NMRA_DCC_Initialize;
   AddressSlots_Initialize;
+  
+  NMRABus_SetCANLayerReceiveHook(@CANBusPacketHook);
  
   UART1_Write_Text('Connecting'+LF);
+  
+  Loop := 0;
   NMRABus_Connect;
   while (TRUE) do
     begin
-      if not NMRABus_Connected then
+      if not NMRABus_Permitted then
       begin
         UART1_Write_Text('Reconnecting'+LF);
-        NMRABus_RecreateAliasID;
+        NMRABusUtilities_RecreateAliasID;
         NMRABus_Connect;
       end;
       
-      if NMRABus_Connected then
+      if NMRABus_Permitted then
       begin
         
         UART1_Write_Text('Connected'+LF);
 
         NMRA_DCC_Packet_Init;                                                   // Send the 20 Idle Packets per the NMRA Spec
         
-        CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-        CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
+        UART1_Write_Text('DCC Packets Done'+LF);
         
-        while NMRABus_Connected do
+        while NMRABus_Permitted do
         begin
-          HandleLoPriorityReceivedCANLayerPackets;
-          HandleLoPriorityReceivedNMRABusLayerPackets;
-        
-          if CAN_Data_RxNextPacketNMRABusLayer(Packet) then
+          HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
+          
+          if Loop mod 100000 = 0 then
           begin
-            if Packet.Header = ID_1st then                                          // Message was received (interrupt) if it is ours then ...
-            begin
-              PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
-              Inc(Packet.Bytes[0]);
-              Delay_ms(1000);
-              CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-              CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
-              
-              NMRA_DCC_LoadPacket(@DCC_Message, $FF, $FF, $FF, $FF, $FF, 5);
-              NMRA_DCC_QueuePacket(@Track, @DCC_Message, True);
-            end
-          end
+            ByteToStr(TX_CANLayer_List.MaxCount, s1);
+            s2 := 'CAN TX:  ';
+            s2 := s2 + s1;
+            UART1_Write_Text(s2 + LF);
+            
+            ByteToStr(RX_CANLayer_List.MaxCount, s1);
+            s2 := 'CAN RX:  ';
+            s2 := s2 + s1;
+            UART1_Write_Text(s2 + LF);
+            
+            ByteToStr(TX_NMRABUsLayer_List.MaxCount, s1);
+            s2 := 'NMRA TX: ';
+            s2 := s2 + s1;
+            UART1_Write_Text(s2 + LF);
+            
+            ByteToStr(RX_NMRABusLayer_List.MaxCount, s1);
+            s2 := 'NMRA RX: ';
+            s2 := s2 + s1;
+            UART1_Write_Text(s2 + LF);
+          end;
+          Inc(Loop);
+          
         end
       end
     end;

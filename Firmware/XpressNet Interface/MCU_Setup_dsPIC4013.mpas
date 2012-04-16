@@ -1,7 +1,8 @@
 unit MCU_Setup_dsPIC4013;
 
 uses
-  CAN_Storage,
+  CANStorage,
+  CANBuffers,
   NMRABus;
 
 {$I Options.inc}
@@ -13,60 +14,26 @@ const
   CAN_PHASESEG_2 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
   CAN_PROP_SEG   = 1;               // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
 
-
 procedure MCU_Setup_Initialize;
 
+{$IFDEF PINCHANGE_INTERRUPT_ENABLE}
 var
   PinChangeState: Word;
-  
-  TX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $0800;               // There are 6 - 8 Word Buffer in this Array =  Bytes
-  TX_CANLayer_List: TCANRawBufferList;
+{$ENDIF}
 
-  TX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $0860;           // There are 6 - 8 Word Buffer in this Array =  Bytes
-  TX_NMRABusLayer_List: TCANRawBufferList;
-
-  RX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $08C0;               // There are 4 - 8 Word Buffer in this Array =  Bytes
-  RX_CANLayer_List: TCANRawBufferList;
-
-  RX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $0900;           // There are 4 - 8 Word Buffer in this Array =  Bytes
-  RX_NMRABusLayer_List: TCANRawBufferList;
-                                                          // $0930 Last Index
-const
-  RAW_CAN_BUFFER_SIZE = 20;                                                     // There are 42 TCANRawBuffers defined in the above structures
-
-type
-  TDummy = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;                    // Define a "dummy" array that overlays the above structures so the compiler
-                                                                                // can keep track of the memory and we can address the buffers as a normal array
-                                                                                // to initialize them
 
 implementation
 
-var
-  Dummy: TDummy; absolute $0800;
-
 procedure MCU_Setup_Initialize;
-var
-  i: Integer;
 begin
   ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
 
+  {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
   PinChangeState := 0;
-  
-  for i := 0 to RAW_CAN_BUFFER_SIZE-1 do
-  begin
-    Dummy[i].Word0 := 0;
-    Dummy[i].Word1 := 0;
-    Dummy[i].Word2 := 0;
-    Dummy[i].Word3 := 0;
-    Dummy[i].Word4 := 0;
-    Dummy[i].Word5 := 0;
-    Dummy[i].Word6 := 0;
-    Dummy[i].Word7 := 0;
-  end;
-  CANStorage_InitializeList(@TX_CANLayer_List, @TX_CANLayer_RawBufferArray, 6);            // Overlays DMA RAM and is 6 Buffer Array long (8 Bytes)
-  CANStorage_InitializeList(@TX_NMRABusLayer_List, @TX_NMRABusLayer_RawBufferArray, 6);    // Overlays DMA RAM and is 6 Buffer Array long (8 Bytes)
-  CANStorage_InitializeList(@RX_CANLayer_List, @RX_CANLayer_RawBufferArray, 4);            // Overlays DMA RAM and is 4 Buffer Array long (8 Bytes)
-  CANStorage_InitializeList(@RX_NMRABusLayer_List, @RX_NMRABusLayer_RawBufferArray, 4);    // Overlays DMA RAM and is 4 Buffer Array long (8 Bytes)
+  {$ENDIF}
+
+  LATD0_bit := 0;
+  TRISD0_bit := 0; // Output
   
   CAN1Initialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _CAN_CONFIG_SAMPLE_THRICE and _CAN_CONFIG_PHSEG2_PRG_ON and _CAN_CONFIG_XTD_MSG);   // Initialize external CANSPI module
   CAN1SetOperationMode(_CAN_MODE_CONFIG, 0xFF);                                 // set CONFIGURATION mode
@@ -85,30 +52,6 @@ begin
  // ERRIF_bit := 1;                                                               // CAN Error Interrupt Enable
   C1IF_bit := 0;                                                                // Clear the CAN interrupt flag
   C1IE_bit := 1;                                                                // Enabled the CAN 1 interrupt
-  
-  {$IFDEF UART_ENABLE}
-  // Initialize UART
-  UART1_Init(115200);                       // Initialize UART module a
-  Delay_ms(100);                            // Wait for UART module to stabilize
-
-  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
-  {$ENDIF}
-
-  SPI1_Init();       // Initialize SPI1 module
-  SPIEN_bit := 0;    // Disable SPI
-  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
-  SPI1CON := SPI1CON or $0003 or $0018;  // Setup for 5 Mhz (with the CAN plug in boards)     $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
-  SPI1IF_bit := 0;   // Clear the Flag
-  SPI1IE_bit := 1;   // Enable SPI 1 Interrupts
-  SPI1IP_0_bit := 1; // Interrupt Priority of the SPI is 1 (001)
-  SPI1IP_1_bit := 0;
-  SPI1IP_2_bit := 0;
-  SPIEN_bit := 1;    // Enable the SPI
-
-  // Make sure on startup of the SPI I don't get into reentrant problems with the interrupts
-  // i.e. enabling the interrupts before we are done calling initilization SPI commands for the
-  // slaves.
-  
 
 
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
@@ -119,6 +62,31 @@ begin
   T2IE_bit := 1;            // Enable the Interrupt
   TON_T2CON_bit := 1;       // Turn on
 
+  {$IFDEF UART_ENABLE}
+  // Initialize UART
+  UART1_Init(115200);                       // Initialize UART module a
+  Delay_ms(100);                            // Wait for UART module to stabilize
+  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
+  {$ENDIF}
+
+  {$IFDEF SPI_ENABLE}
+  SPI1_Init();       // Initialize SPI1 module
+  SPIEN_bit := 0;    // Disable SPI
+  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
+  SPI1CON := SPI1CON or $0003 or $0018;  // Setup for 5 Mhz (with the CAN plug in boards)     $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
+  SPI1IF_bit := 0;   // Clear the Flag
+  SPI1IE_bit := 1;   // Enable SPI 1 Interrupts
+  SPI1IP_0_bit := 1; // Interrupt Priority of the SPI is 1 (001)
+  SPI1IP_1_bit := 0;
+  SPI1IP_2_bit := 0;
+  SPIEN_bit := 1;    // Enable the SPI
+  {$ENDIF}
+
+  // Make sure on startup of the SPI I don't get into reentrant problems with the interrupts
+  // i.e. enabling the interrupts before we are done calling initilization SPI commands for the
+  // slaves.
+
+  {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
   CNIF_bit := 0;            // Clear Flag
   CNIP_0_bit := 1;          // Interrupt Priority = 5
   CNIP_1_bit := 0;
@@ -127,7 +95,7 @@ begin
   CNIE_bit := 1;            // Enable the Interrupt for Pin Change
 
   PinChangeState := PORTF;
-
+  {$ENDIF}
 end;
 
 end.

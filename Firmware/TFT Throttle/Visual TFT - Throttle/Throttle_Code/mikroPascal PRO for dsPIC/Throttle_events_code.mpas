@@ -1,6 +1,6 @@
 unit Throttle_events_code;
 
-uses Throttle_objects, Throttle_resources, dsPIC33_CAN, dsPIC33_DMA, CAN_Storage, MCU_Setup_dsPIC33FJ256GP710A;
+uses Throttle_objects, Throttle_resources, CANDefines, CANBuffers;
 
 procedure Button9Click();
 procedure Button7Click();
@@ -154,6 +154,7 @@ procedure DrawLine(Aline : ^TLine); external;
 
 //-------------- User code declarations ---------------//
 
+
 var
   Base: ^Word;
   Offset, ECAN_RegPage, DMA_RegPage: Integer;
@@ -170,10 +171,10 @@ implementation
 //--------------------- User code ---------------------//
   {
   
-uses Throttle_objects, Throttle_resources, dsPIC33_CAN, dsPIC33_DMA, CAN_Storage, MCU_Setup_dsPIC33FJ256GP710A;
+uses Throttle_objects, Throttle_resources, CANDefines, CANBuffers;
 
    }
-   
+
 procedure WriteCANModuleRegisters(Offset: Word);
 var
   s1: array[0..32] of char;
@@ -948,7 +949,7 @@ begin
   strcpy(ButtonRound1.Caption, s1);
   DrawRoundButton(@ButtonRound1);
 end;
-  
+
 
 //----------------- End of User code ------------------//
 
@@ -957,56 +958,56 @@ end;
 
 procedure ButtonRound10Click();
 begin
-  Dec(Offset);
+ // Dec(Offset);
  // if Offset < 0 then
 //    Offset := 9;
-  WriteBuffer(Base + (Offset*8), Offset);
+//  WriteBuffer(Base + (Offset*8), Offset);
 end;
 
 procedure ButtonRound11Click();
 begin
-  Inc(Offset);
+ // Inc(Offset);
  // if Offset > 9 then
  //   Offset := 0;
-  WriteBuffer(Base + (Offset*8), Offset);
+ // WriteBuffer(Base + (Offset*8), Offset);
     
 end;
 
 procedure ButtonRound12Click();
 begin
-  Inc(ECAN_RegPage);
-  if ECAN_RegPage > 7 then
-    ECAN_RegPage := 0;
-  WriteCANModuleRegisters(ECAN_RegPage);
+ // Inc(ECAN_RegPage);
+ // if ECAN_RegPage > 7 then
+  //  ECAN_RegPage := 0;
+  //WriteCANModuleRegisters(ECAN_RegPage);
 end;
 
 procedure ButtonRound13Click();
 begin
- Dec(ECAN_RegPage);
-  if ECAN_RegPage < 0 then
-    ECAN_RegPage := 7;
-  WriteCANModuleRegisters(ECAN_RegPage);
+// Dec(ECAN_RegPage);
+//  if ECAN_RegPage < 0 then
+ //   ECAN_RegPage := 7;
+//  WriteCANModuleRegisters(ECAN_RegPage);
 end;
 
 procedure Button9Click();
 begin
-  Dec(DMA_RegPage);
-  if DMA_RegPage < 0 then
-    DMA_RegPage := 4;
-  WriteDMAModuleRegisters(DMA_RegPage);
+ // Dec(DMA_RegPage);
+ // if DMA_RegPage < 0 then
+  //  DMA_RegPage := 4;
+ // WriteDMAModuleRegisters(DMA_RegPage);
 end;
 
 procedure Button7Click();
 begin
-  Inc(DMA_RegPage);
-  if DMA_RegPage > 4 then
-    DMA_RegPage := 0;
-  WriteDMAModuleRegisters(DMA_RegPage);
+ // Inc(DMA_RegPage);
+ // if DMA_RegPage > 4 then
+  //  DMA_RegPage := 0;
+ // WriteDMAModuleRegisters(DMA_RegPage);
 end;
 
 procedure ButtonRound1Click();
 begin
-  PrintTXListCount
+ // PrintTXListCount
 end;
 
 end.

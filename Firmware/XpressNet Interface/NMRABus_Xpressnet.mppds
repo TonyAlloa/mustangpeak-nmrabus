@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\dsPIC30_CAN_Interrupt.mpas
+Value=..\Library\CANDefines\dsPIC30F4013\CANBuffers.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -18,38 +18,42 @@ Value=
 [FILES]
 Count=8
 File0=NMRABus_Xpressnet.mpas
-File1=..\Library\NMRABus.mpas
-File2=MCU_Setup_dsPIC4013.mpas
-File3=..\Library\NodeIDs.mpas
-File4=..\Library\dsPIC30_CAN.mpas
-File5=..\Library\CAN_Storage.mpas
-File6=..\Library\NMRABusUtilities.mpas
-File7=..\Library\dsPIC30_CAN_Interrupt.mpas
+File1=MCU_Setup_dsPIC4013.mpas
+File2=..\Library\NodeIDs.mpas
+File3=..\Library\dsPIC30_CAN.mpas
+File4=..\Library\NMRABus.mpas
+File5=..\Library\NMRABusUtilities.mpas
+File6=..\Library\CANStorage.mpas
+File7=..\Library\CANDefines\dsPIC30F4013\CANBuffers.mpas
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=6
+Count=7
 File0=NMRABus_Xpressnet.mpas
 File1=..\Library\NMRABus.mpas
-File2=MCU_Setup_dsPIC4013.mpas
-File3=..\Library\dsPIC30_CAN.mpas
-File4=..\Library\CAN_Storage.mpas
-File5=..\Library\dsPIC30_CAN_Interrupt.mpas
+File2=..\Library\NodeIDs.mpas
+File3=MCU_Setup_dsPIC4013.mpas
+File4=..\Library\dsPIC30_CAN.mpas
+File5=..\Library\CANStorage.mpas
+File6=..\Library\CANDefines\dsPIC30F4013\CANBuffers.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
 Count=0
 [OTHER_FILES]
-Count=0
+Count=1
+File0=Options.inc
 [SEARCH_PATH]
-Count=4
+Count=6
 Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
 Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
 Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
 [HEADER_PATH]
 Count=0
 [HEADERS]
@@ -64,4 +68,6 @@ File2=SPI
 File3=CAN
 [EXPANDED NODES]
 Node1=Sources
-Count=1
+Node2=Output Files
+Node3=Other Files
+Count=3

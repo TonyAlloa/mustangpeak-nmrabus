@@ -1,0 +1,78 @@
+unit CANBuffers;
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-04-01:   1.0.0.0 Created
+//
+// * Description:
+//                Implements an easy to use interface into the dsPIC33 ECAN Module Registers
+//                It is fast, no.  Is it efficient, no.  Is it easy to experiment with to try to
+//                understand how this module works, YES
+//
+// ******************************************************************************
+
+uses
+  CANDefines;
+  
+
+var
+  RX_Main_RawBufferArray: TCanRawBufferArray; absolute $7800;                   // Recieve buffer for all filters.  The software moves the data to the right list
+  TX_Main_RawBufferArray: TCanRawBufferArray; absolute $7810;                   // Transmit buffer for all filters.  The software pulls the data to the right list
+
+  TX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $7820;               // There are 6 - 8 Word Buffer in this Array =  Bytes
+  TX_CANLayer_List: TCANRawBufferList;
+
+  TX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $7880;           // There are 6 - 8 Word Buffer in this Array =  Bytes
+  TX_NMRABusLayer_List: TCANRawBufferList;
+
+  RX_CANLayer_RawBufferArray: TCANRawBufferArray; absolute $78E0;               // There are 4 - 8 Word Buffer in this Array =  Bytes
+  RX_CANLayer_List: TCANRawBufferList;
+
+  RX_NMRABusLayer_RawBufferArray: TCANRawBufferArray; absolute $7920;           // There are 4 - 8 Word Buffer in this Array =  Bytes
+  RX_NMRABusLayer_List: TCANRawBufferList;
+                                                          // $7950 Last Index
+const
+  RAW_CAN_BUFFER_SIZE = 22;                                                     // There are 42 TCANRawBuffers defined in the above structures
+
+type
+  TDummy = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;                    // Define a "dummy" array that overlays the above structures so the compiler
+                                                                                // can keep track of the memory and we can address the buffers as a normal array
+                                                                                // to initialize them
+
+procedure CANBuffers_Initialize;
+
+implementation
+
+  var
+    Dummy: TDummy; absolute $7800;
+    
+procedure CANBuffers_Initialize;
+var
+  i: Integer;
+begin
+  for i := 0 to RAW_CAN_BUFFER_SIZE-1 do
+  begin
+    Dummy[i].Word0 := 0;
+    Dummy[i].Word1 := 0;
+    Dummy[i].Word2 := 0;
+    Dummy[i].Word3 := 0;
+    Dummy[i].Word4 := 0;
+    Dummy[i].Word5 := 0;
+    Dummy[i].Word6 := 0;
+    Dummy[i].Word7 := 0;
+  end;
+
+  CANDefines_InitializeList(@TX_CANLayer_List, @TX_CANLayer_RawBufferArray, 6);            // Overlays DMA RAM and is 6 Buffer Array long (8 Bytes)
+  CANDefines_InitializeList(@TX_NMRABusLayer_List, @TX_NMRABusLayer_RawBufferArray, 6);    // Overlays DMA RAM and is 6 Buffer Array long (8 Bytes)
+  CANDefines_InitializeList(@RX_CANLayer_List, @RX_CANLayer_RawBufferArray, 4);            // Overlays DMA RAM and is 4 Buffer Array long (8 Bytes)
+  CANDefines_InitializeList(@RX_NMRABusLayer_List, @RX_NMRABusLayer_RawBufferArray, 4);    // Overlays DMA RAM and is 4 Buffer Array long (8 Bytes)
+end;
+
+end.

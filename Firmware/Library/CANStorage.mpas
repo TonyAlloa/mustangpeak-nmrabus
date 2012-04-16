@@ -1,0 +1,197 @@
+unit CAN_Storage;
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-04-01:   1.0.0.0 Created
+//
+// * Description:
+//    Implements a FIFO data structure that can be overlayed onto DSPRAM and DMA transfers
+//    for the ECAN Peripheral or overlayed in normal RAM to add FIFO data structures
+//    for the dsPIC33 CAN Peripheral.
+//    It also implements functions to convert a easy to use CAN data struture (TCANBuffer) into
+//    the SID, EID, DLC, ect bit formats needed for the CAN Modules (TCANRAWBuffer)
+//
+// ******************************************************************************
+
+uses
+  CANDefines,
+  CANBuffers;
+  
+{$I Options.inc}
+
+type
+  TCAN_Engine = record
+    State: Word;                            // See the CES_xxx constants
+  end;
+  
+
+procedure CANStorage_Initialize;
+function CANStorage_NextHead(List: PCANRawBufferList): PCANRawBuffer;
+function CANStorage_NextTail(List: PCANRawBufferList): PCANRawBuffer;
+function CANStorage_Head(List: PCANRawBufferList): PCANRawBuffer;
+function CANStorage_Tail(List: PCANRawBufferList): PCANRawBuffer;
+function CANStorage_IncHead(List: PCANRawBufferList): Boolean;
+function CANStorage_IncTail(List: PCANRawBufferList): Boolean;
+procedure CANStorage_FlushList(List: PCANRAwBufferList);
+function CANStorage_Transmitting: Boolean;
+
+var
+  CAN_Engine: TCAN_Engine;
+
+implementation
+
+procedure CANStorage_Initialize;
+begin
+  CANBuffers_Initialize;
+  CAN_Engine.State := 0;
+end;
+
+procedure CANStorage_FlushList(List: PCANRAwBufferList);
+begin
+  List^.Count := 0
+end;
+
+function CANStorage_Transmitting: Boolean;
+begin
+  Result := CAN_Engine.State and CES_TRANSMITTING <> 0
+end;
+
+// *****************************************************************************
+//  function CANStorage_NextHead;
+//
+//  Parameters: List            : Pointer to the Raw Buffer List to extract the Next Head for
+//
+//  Result:  Pointer to the TCANRawBuffer object that is at the next head of the list.  If the list is
+//           full and the next Head can not accessed it returns nil
+//
+//  Description:
+// *****************************************************************************
+function CANStorage_NextHead(List: PCANRawBufferList): PCANRawBuffer;
+begin
+  if List^.Count < List^.Size then
+  begin
+    Result := List^.Head;                                                       // Take the current head
+    Inc(Result);                                                                // Increase it the size of a TCANRawBuffer
+    if Result > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
+     Result := @List^.Buffers^[0];
+  end
+end;
+
+// *****************************************************************************
+//  function CANStorage_NextTail;
+//
+//  Parameters: List            : Pointer to the Raw Buffer List to extract the Next Tail for
+//
+//  Result:  Pointer to the TCANRawBuffer object that is at the next tail of the list, if there
+//           are filled buffers in the list.  If the list is empty it returns nil
+//
+//  Description:
+// *****************************************************************************
+function CANStorage_NextTail(List: PCANRawBufferList): PCANRawBuffer;
+begin
+  if List^.Count > 0 then
+  begin
+    Result := List^.Tail;                                                       // Take the current head
+    Inc(Result);                                                                // Increase it the size of a TCANRawBuffer
+    if Result > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
+     Result := @List^.Buffers^[0];
+  end
+end;
+
+
+// *****************************************************************************
+//  function CANStorage_Head;
+//
+//  Parameters: List            : Pointer to the Raw Buffer List to extract the Head for
+//
+//  Result:  Pointer to the TCANRawBuffer object that is at the head of the list
+//
+//  Description:
+// *****************************************************************************
+function CANStorage_Head(List: PCANRawBufferList): PCANRawBuffer;
+begin
+  if List^.Count < List^.Size then
+    Result := List^.Head
+  else
+    Result := PCANRawBuffer( nil)
+end;
+
+// *****************************************************************************
+//  function CANStorage_Head;
+//
+//  Parameters: List            : Pointer to the Raw Buffer List to extract the Head for
+//
+//  Result:  Pointer to the TCANRawBuffer object that is at the head of the list
+//
+//  Description:
+// *****************************************************************************
+function CANStorage_Tail(List: PCANRawBufferList): PCANRawBuffer;
+begin
+  if List^.Count > 0 then
+    Result := List^.Tail
+  else
+    Result := PCANRawBuffer( nil)
+end;
+
+// *****************************************************************************
+//  procedure CANStorage_IncHead;
+//
+//  Parameters: List            : Pointer to the Raw Buffer List to extract Increase the Head for
+//
+//  Result:  Returns True if the list is not full and the head pointer was increased
+//
+//  Description:
+// *****************************************************************************
+function CANStorage_IncHead(List: PCANRawBufferList): Boolean;
+var
+  Temp: PCANRawBuffer;
+begin
+  Result := False;
+  if List^.Count < List^.Size then
+  begin
+    Temp := List^.Head;
+    Inc(Temp);                                                                // Increase it the size of a TCANRawBuffer
+    if Temp > (@List^.Buffers^[0] + List^.Size) then                          // Wrap it if necessary
+     Temp := @List^.Buffers^[0];
+    List^.Head := Temp;
+    Result := True
+  end;
+  Inc(List^.Count);
+  if List^.Count > List^.MaxCount then
+    List^.MaxCount := List^.Count;
+end;
+
+// *****************************************************************************
+//  procedure CANStorage_IncTail;
+//
+//  Parameters: List            : Pointer to the Raw Buffer List to extract Increase the Tail for
+//
+//  Result:  Returns True if the list is not empty and the tail pointer was increased
+//
+//  Description:
+// *****************************************************************************
+function CANStorage_IncTail(List: PCANRawBufferList): Boolean;
+var
+  Temp: PCANRawBuffer;
+begin
+  Result := False;
+  if List^.Count > 0 then
+  begin
+    Temp := List^.Tail;
+    Inc(Temp);                                                                // Increase it the size of a TCANRawBuffer
+    if Temp > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
+     Temp := @List^.Buffers^[0];
+    List^.Tail := Temp;
+    Result := True;
+  end;
+  Dec(List^.Count)
+end;
+
+end.

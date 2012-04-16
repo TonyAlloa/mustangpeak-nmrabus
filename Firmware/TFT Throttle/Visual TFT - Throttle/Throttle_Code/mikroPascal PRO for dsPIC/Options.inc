@@ -5,4 +5,7 @@
 
 {.$DEFINE UART_ENABLE}                  // Adds/Removes all UART Code from the build
 
-{$DEFINE dsPIC33}
+{.$DEFINE PINCHANGE_INTERRUPT_ENABLE}   // Enables the Pin Change Interrupt
+
+{.$DEFINE SPI_ENABLE}                   // Enables the SPI Module
+

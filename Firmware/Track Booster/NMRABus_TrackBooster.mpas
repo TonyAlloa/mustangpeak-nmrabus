@@ -13,27 +13,21 @@ program NMRABus_TrackBooster;
 
 uses
   NMRABus,
-  CAN_Data,
+  NMRABusUtilities,
+  CANDefines,
+  CANStorage,
   MCU_Setup_dsPIC4013,
   NodeIDs;
 
 {$I Options.inc}
 
-const
-  ID_1st : DWord = $08002F4F;          // TESTING ONLY
-  ID_2nd : DWord = $08000003;          // TESTING ONLY
-
-var
-  GetUniqueID: PGetUniqueIDFunc;
-  
-
 // ****************************************************************************
-// procedure UniqueID
+// procedure GetUniqueIDFunc
 //
 //  Description:   Callback from NMRABus to load the 48 Bit Unique ID
 //
 // ****************************************************************************
-procedure UniqueID(var HiID, LoID: DWord);
+procedure GetUniqueIDFunc(var HiID, LoID: DWord);
 begin
   LoID := MUSTANGPEAK_TRACKBOOSTER_ID_0_LO;
   HiID := MUSTANGPEAK_ID_0_HI;
@@ -51,42 +45,15 @@ begin
   NMRABus_GlobalTimer;
 end;
 
-procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
-begin
-  C1IF_bit := 0;
-  while (C1CTRL and $000E) shr 1 > 0 do                                         // Use the ICODE flags to quickly figure out who is needing attention
-  begin
-    case (C1CTRL and $000E) shr 1 of
-      1: HandleCANError;                                                        // ERRIF and ERRIE are set
-      2: begin end;                                                             // TX2IF and TX2IE are set
-      3: begin
-           TXB1IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
-           HandleTransmitCompleteOnNMRALayerPacket;                               // TX1IF and TX1IE are set
-         end;
-      4: begin
-           TXB0IF_bit := 0;                                                     // Clear Transmitter Interrupt Flag
-           HandleTransmitCompleteOnCANLayerPacket;                              // TX0IF and TX0IE are set
-         end;
-      5: begin
-           RXB1IF_bit := 0;                                                     // Clear Receive Interrupt Flag
-           HandlePacketReceivedOnNMRABusLayer;                                  // RX1IF and RX1IE are set
-         end;
-      6: begin
-           RXB0IF_bit := 0;
-           HandlePacketReceivedOnCANLayer;                                        // RX0IF and RX0IE are set
-         end;
-      7: begin end;                                                             // WAKIF and WAKIE are set (wakeup)
-    end
-  end;
-end;
 
+{$IFDEF PINCHANGE_INTERRUPT_ENABLE}
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;         // 93us when a TransmitCompleteOnCANLayerPacket called with new Tx Packet waiting
 var
   Flags: Byte;
 begin
   CNIF_bit := 0;     // Clear Flag
   
-  LATD0_bit := not DCC_CMD_In;
+ LATD0_bit := not DCC_CMD_In;
   
   PWM_A_HI := 0;
   PWM_A_LO := 0;
@@ -105,55 +72,43 @@ begin
   
   PinChangeState := PORTF;
 end;
+{$ENDIF}
+
+procedure CANLayerReceiveHook(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+// WARNING: THIS IS CALLED IN THE CONTEXT OF THE INTERRUPT AND CAN NOT BE LONGER THAN
+// IT TAKES TO RECEIVE THE NEXT CAN MESSAGE!!!!!!!!
+begin
+
+end;
+
+procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+begin
+
+end;
 
 
 // *******************
 // MAIN LOOP
 // *******************
-
-var
-  Packet: TCAN_Packet;
 begin
-
-  GetUniqueID := @UniqueID;
-
-  TRISD0_bit := 0;
-  
-
-  CAN_Data_Initialize;
+  CANStorage_Initialize;
   NMRABus_Initialize;
   MCU_Setup_Initialize;
+
   NMRABus_Connect;
+  NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
   while (TRUE) do
     begin
-      if not NMRABus_Connected then
+      if not NMRABus_Permitted then
       begin
-        NMRABus_RecreateAliasID;
+        NMRABusUtilities_RecreateAliasID;
         NMRABus_Connect;
       end;
 
-      if NMRABus_Connected then
+
+      if NMRABus_Permitted then
       begin
-        CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-        CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
-
-        while NMRABus_Connected do
-        begin
-          HandleLoPriorityReceivedCANLayerPackets;
-          HandleLoPriorityReceivedNMRABusLayerPackets;
-
-          if CAN_Data_RxNextPacketNMRABusLayer(Packet) then
-          begin
-            if Packet.Header = ID_1st then                                          // Message was received (interrupt) if it is ours then ...
-            begin
-              PORTB := Packet.Bytes[0];                                             // id correct, output data at PORTB
-              Inc(Packet.Bytes[0]);
-              Delay_ms(1000);
-              CAN_Data_LoadPacket(@Packet, ID_2nd, 1, 0, 0, 0, 0, 0, 0, 0, Packet.Bytes[0], True);    // increment received data
-              CAN_Data_TxListAddNMRABusLayerThroughLockedList(@Packet);
-            end
-          end
-        end
+        HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler)
       end
     end;
 end.

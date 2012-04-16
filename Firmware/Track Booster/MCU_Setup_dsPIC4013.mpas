@@ -1,7 +1,7 @@
 unit MCU_Setup_dsPIC4013;
 
 uses
-  CAN_Data,
+  CANStorage,
   NMRABus;
 
 {$I Options.inc}
@@ -13,15 +13,14 @@ const
   CAN_PHASESEG_2 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
   CAN_PROP_SEG   = 1;               // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
 
+procedure MCU_Setup_Initialize;
 
-  procedure MCU_Setup_Initialize;
+{$IFDEF PINCHANGE_INTERRUPT_ENABLE}
+var
+  PinChangeState: Word;
+{$ENDIF}
 
 var
-  LockCANList: PLockListFunc;
-  UnLockCANList: PUnLockListFunc;
-  LockNMRABusList: PLockListFunc;
-  UnLockNMRABusList: PUnLockListFunc;
-  
   PWM_A_HI: sbit at LATD3_bit;
   PWM_A_LO: sbit at LATD1_bit;
   PWM_B_HI: sbit at LATD8_bit;
@@ -31,103 +30,23 @@ var
   PWM_A_LO_Direction: sbit at TRISD1_bit;
   PWM_B_HI_Direction: sbit at TRISD8_bit;
   PWM_B_LO_Direction: sbit at TRISD2_bit;
-  
+
   DCC_CMD_In: sbit at RB0_bit;
 
-  PinChangeState: Word;
 
 implementation
-
-// ****************************************************************************
-// procedure LockListNMRABus
-//
-//  Description:
-//
-// ****************************************************************************
-procedure LockListNMRABus;
-begin
-  TXB1IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
-  RXB1IE_bit := 0;
-end;
-
-// ****************************************************************************
-// procedure UnlockListNMRABus
-//
-//  Description:
-//
-// ****************************************************************************
-procedure UnlockListNMRABus;
-begin
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_NMRABus_LAYER = 0 then
-    TXB1IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
-  TXB1IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
-  RXB1IE_bit := 1;
-end;
-
-// ****************************************************************************
-// procedure LockListCAN
-//
-//  Description:
-//
-// ****************************************************************************
-procedure LockListCAN;
-begin
-  TXB0IE_bit := 0;                                                              // Disable Pin Change interrupt for CAN
-  RXB0IE_bit := 0;
-end;
-
-// ****************************************************************************
-// procedure UnlockListCAN
-//
-//  Description:
-//
-// ****************************************************************************
-procedure UnlockListCAN;
-begin
-  if NMRABus.Interrupt_State and BSI_TRANSMITTING_CAN_LAYER = 0 then
-    TXB0IF_bit := 1;                                                            // Set Transmit Done Flag to start the Transmit Engine
-  TXB0IE_bit := 1;                                                              // Enable Pin Change interrupt for CAN
-  RXB0IE_bit := 1;
-end;
 
 procedure MCU_Setup_Initialize;
 begin
   ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
-  
-  PWM_A_HI := 0;
-  PWM_A_LO := 0;
-  PWM_B_HI := 0;
-  PWM_B_LO := 0;
-  
-  PWM_A_HI_Direction := 0;
-  PWM_A_LO_Direction := 0;
-  PWM_B_HI_Direction := 0;
-  PWM_B_LO_Direction := 0;
-  
+
+  {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
   PinChangeState := 0;
-
-  {$IFDEF UART_ENABLE}
-  // Initialize UART
-  UART1_Init(115200);                       // Initialize UART module a
-  Delay_ms(100);                            // Wait for UART module to stabilize
-
-  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
   {$ENDIF}
 
-  SPI1_Init();       // Initialize SPI1 module
-  SPIEN_bit := 0;    // Disable SPI
-  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
-  SPI1CON := SPI1CON or $0003 or $0018;  // Setup for 5 Mhz (with the CAN plug in boards)     $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
-  SPI1IF_bit := 0;   // Clear the Flag
-  SPI1IE_bit := 1;   // Enable SPI 1 Interrupts
-  SPI1IP_0_bit := 1; // Interrupt Priority of the SPI is 1 (001)
-  SPI1IP_1_bit := 0;
-  SPI1IP_2_bit := 0;
-  SPIEN_bit := 1;    // Enable the SPI
-
-  // Make sure on startup of the SPI I don't get into reentrant problems with the interrupts
-  // i.e. enabling the interrupts before we are done calling initilization SPI commands for the
-  // slaves.
+  LATD0_bit := 0;
+  TRISD0_bit := 0; // Output
+  
   CAN1Initialize(CAN_SWJ, CAN_BRP, CAN_PHASESEG_1, CAN_PHASESEG_2, CAN_PROP_SEG, _CAN_CONFIG_SAMPLE_THRICE and _CAN_CONFIG_PHSEG2_PRG_ON and _CAN_CONFIG_XTD_MSG);   // Initialize external CANSPI module
   CAN1SetOperationMode(_CAN_MODE_CONFIG, 0xFF);                                 // set CONFIGURATION mode
   CANCKS_bit := 1;                                                              // Tcan = Tcy
@@ -139,13 +58,13 @@ begin
   C1IP_0_bit := 0;                                                              // Priority 6 right behind the DCC if this is a command station
   C1IP_1_bit := 1;
   C1IP_2_bit := 1;
-  TXB0IE_bit := 1;                                                              // CAN Layer Transmit Interrupt Enable
-  TXB1IE_bit := 1;                                                              // NMRABus Layer Transmit Interrupt Enable
+  TXB0IE_bit := 1;                                                              // Common Transmit Interrupt Enable
   RXB0IE_bit := 1;                                                              // CAN Layer Receive Interrupt Enable
   RXB1IE_bit := 1;                                                              // NMRABus Layer Receive Interrupt Enable
-  ERRIF_bit := 1;                                                               // CAN Error Interrupt Enable
+ // ERRIF_bit := 1;                                                               // CAN Error Interrupt Enable
   C1IF_bit := 0;                                                                // Clear the CAN interrupt flag
   C1IE_bit := 1;                                                                // Enabled the CAN 1 interrupt
+
 
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
   T2IP_1_bit := 1;
@@ -154,22 +73,51 @@ begin
   T2IF_bit := 0;            // Clear T2IF
   T2IE_bit := 1;            // Enable the Interrupt
   TON_T2CON_bit := 1;       // Turn on
+  
+  PWM_A_HI := 0;
+  PWM_A_LO := 0;
+  PWM_B_HI := 0;
+  PWM_B_LO := 0;
 
+  PWM_A_HI_Direction := 0;
+  PWM_A_LO_Direction := 0;
+  PWM_B_HI_Direction := 0;
+  PWM_B_LO_Direction := 0;
+
+  {$IFDEF UART_ENABLE}
+  // Initialize UART
+  UART1_Init(115200);                       // Initialize UART module a
+  Delay_ms(100);                            // Wait for UART module to stabilize
+  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
+  {$ENDIF}
+
+  {$IFDEF SPI_ENABLE}
+  SPI1_Init();       // Initialize SPI1 module
+  SPIEN_bit := 0;    // Disable SPI
+  SPI1CON := SPI1CON and $FFE0;  // Clear the prescaler bits
+  SPI1CON := SPI1CON or $0003 or $0018;  // Setup for 5 Mhz (with the CAN plug in boards)     $10=5Mhz, $14=6.67Mhz, $18 = 10Mhz
+  SPI1IF_bit := 0;   // Clear the Flag
+  SPI1IE_bit := 1;   // Enable SPI 1 Interrupts
+  SPI1IP_0_bit := 1; // Interrupt Priority of the SPI is 1 (001)
+  SPI1IP_1_bit := 0;
+  SPI1IP_2_bit := 0;
+  SPIEN_bit := 1;    // Enable the SPI
+  {$ENDIF}
+
+  // Make sure on startup of the SPI I don't get into reentrant problems with the interrupts
+  // i.e. enabling the interrupts before we are done calling initilization SPI commands for the
+  // slaves.
+
+  {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
   CNIF_bit := 0;            // Clear Flag
-  CNIP_0_bit := 1;          // Interrupt Priority = 7
-  CNIP_1_bit := 1;
+  CNIP_0_bit := 1;          // Interrupt Priority = 5
+  CNIP_1_bit := 0;
   CNIP_2_bit := 1;
-  CN2IE_bit := 1;           // CN2 RB0 - DCC In
-//  CN3IE_bit := 1;           // CN3 RB1 - Programming ACK
+  CN2IE_bit := 1;          // RB0 (CN2) set for interrupt
   CNIE_bit := 1;            // Enable the Interrupt for Pin Change
 
-  LockCANList := @LockListCAN;
-  UnLockCANList := @UnLockListCAN;
-  LockNMRABusList := @LockListNMRABus;
-  UnLockNMRABusList := @UnLockListNMRABus;
-
   PinChangeState := PORTF;
-
+  {$ENDIF}
 end;
 
 end.

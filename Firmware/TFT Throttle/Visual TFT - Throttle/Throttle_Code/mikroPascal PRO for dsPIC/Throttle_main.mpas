@@ -21,10 +21,7 @@ program Throttle_main;
 uses
   Throttle_events_code,
   MCU_Setup_dsPIC33FJ256GP710A,
-  CAN_Storage,
-  dsPIC33_CAN,
-  dsPIC33_DMA,
-  dsPIC33_CAN_Interrupt,
+  CANStorage,
   NMRABus;
   
 var
@@ -38,53 +35,26 @@ begin
   NMRABus_GlobalTimer;
 end;
 
-procedure NMRABusPacketHandler(CANBuffer: PCANBuffer);
+procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);
 begin
   // Handle the message here
 end;
+
+procedure GetUniqueIDFunc(var HiID, LoID: DWord);
+begin
+  HiID := MUSTANGPEAK_ID_0_HI;
+  LoID := MUSTANGPEAK_TFT_THROTTLE_ID_0_LO;
+end;
   
 begin
-
-  MCU_Setup_Initialize;
+  CANBuffers_Initialize;
   CANStorage_Initialize;
   dsPIC33_CAN_Initialize;
+  MCU_Setup_Initialize;
   NMRABus_Initialize;
 
   Start_TP();
   
-  {
-
-  AddToListByParameter(@TX_CANLayer_List, $00000010, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000009, 7, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000008, 6, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000007, 5, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000006, 4, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000005, 3, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000004, 2, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000003, 1, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000002, 0, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  
-  AddToListByParameter(@TX_CANLayer_List, $00000001, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000000, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  
-  AddToListByParameter(@TX_CANLayer_List, $00000001, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_CANLayer_List, $00000000, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  
-
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 8, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 7, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 6, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 5, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 4, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 3, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 2, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 1, 1, 2, 3, 4, 5, 6, 7, 8, True);
-  AddToListByParameter(@TX_NMRABusLayer_List, $1FFFFFFF, 0, 1, 2, 3, 4, 5, 6, 7, 8, True);
-
-
-
-  StartCANMessageEngine();                }
-
 
  // Base := $79E0;
   Base := $7800;
