@@ -89,7 +89,7 @@ begin
       
       if NMRABus_Permitted then
       begin
-        HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler)
+        HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
       end
     end;
 end.

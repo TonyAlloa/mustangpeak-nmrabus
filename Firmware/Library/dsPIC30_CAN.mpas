@@ -134,12 +134,13 @@ end;
 
 
 procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
-
-
-var Buffer: TCANRawBuffer;
-
+var 
+  Buffer: TCANRawBuffer;
 begin
   C1IF_bit := 0;
+
+  LATD0_bit := 1;
+
   while (C1CTRL and $000E) shr 1 > ICODE_None do                                // Use the ICODE flags to quickly figure out who is needing attention
   begin
     case (C1CTRL and $000E) shr 1 of
@@ -170,6 +171,9 @@ begin
       ICODE_WAKE  : begin end;                                                  // Not used
     end;
   end;
+  
+  LATD0_bit := 0;
+  
 end;
 
 procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);

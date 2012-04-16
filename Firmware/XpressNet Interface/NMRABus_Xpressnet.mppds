@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\CANDefines\dsPIC30F4013\CANBuffers.mpas
+Value=..\Library\dsPIC30_CAN.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -37,8 +37,8 @@ File1=..\Library\NMRABus.mpas
 File2=..\Library\NodeIDs.mpas
 File3=MCU_Setup_dsPIC4013.mpas
 File4=..\Library\dsPIC30_CAN.mpas
-File5=..\Library\CANStorage.mpas
-File6=..\Library\CANDefines\dsPIC30F4013\CANBuffers.mpas
+File5=..\Library\CANDefines\dsPIC30F4013\CANBuffers.mpas
+File6=..\Library\CANStorage.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -68,6 +68,5 @@ File2=SPI
 File3=CAN
 [EXPANDED NODES]
 Node1=Sources
-Node2=Output Files
-Node3=Other Files
-Count=3
+Node2=Other Files
+Count=2
