@@ -1,0 +1,94 @@
+unit dsPIC30_Traps;
+
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+
+//
+// *****************************************************************************
+
+{$I Options.inc}
+
+{$IFDEF ENABLE_TRAPS}
+  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP}
+  var
+    TrapFlagPin: sbit; sfr; external;
+  {$ENDIF}
+{$ENDIF}
+
+implementation
+
+{$IFDEF ENABLE_TRAPS}
+
+procedure Trap_OscillatorFail; iv IVT_ADDR_OSCILLATORFAIL;
+begin
+  asm
+ //   MOV [w15-36], w13
+ //   MOV w13, _Addr_Minus36
+  //  MOV [w15-34], w13
+  //  MOV w13, _Addr_Minus34
+ //   MOV [w15-32], w13
+ //   MOV w13, _Addr_Minus32
+  end;
+  OSCFAIL_bit := 0;
+  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(100); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
+  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do;{$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
+end;
+
+procedure Trap_AddressError; iv IVT_ADDR_ADDRESSERROR;
+begin
+  asm
+ //   MOV [w15-36], w13
+ //   MOV w13, _Addr_Minus36
+ //   MOV [w15-34], w13
+  //  MOV w13, _Addr_Minus34
+ //   MOV [w15-32], w13
+ //   MOV w13, _Addr_Minus32
+  end;
+  ADDRERR_bit := 0;
+  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(200); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
+  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do;{$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
+end;
+
+procedure Trap_StackError; iv IVT_ADDR_STACKERROR;
+begin
+  asm
+  //  MOV [w15-36], w13
+  //  MOV w13, _Addr_Minus36
+  //  MOV [w15-34], w13
+  //  MOV w13, _Addr_Minus34
+//    MOV [w15-32], w13
+//    MOV w13, _Addr_Minus32
+  end;
+  STKERR_bit := 0;
+  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(300); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
+  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do;{$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
+end;
+
+procedure Trap_MathError; iv IVT_ADDR_MATHERROR;
+begin
+  asm
+  //  MOV [w15-36], w13
+  //  MOV w13, _Addr_Minus36
+  //  MOV [w15-34], w13
+  //  MOV w13, _Addr_Minus34
+ //   MOV [w15-32], w13
+//    MOV w13, _Addr_Minus32
+  end;
+  MATHERR_bit := 0;
+  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(400); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
+  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do;{$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
+end;
+{$ENDIF}
+
+end.

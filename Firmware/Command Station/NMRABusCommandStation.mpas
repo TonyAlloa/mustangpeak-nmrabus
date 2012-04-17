@@ -1,3 +1,4 @@
+program NMRABusCommandStation;
 // ******************************************************************************
 //
 // * Copyright:
@@ -14,18 +15,6 @@
 //    Implements a NMRABus based Command Station
 //
 // ******************************************************************************
-program NMRABusCommandStation;
-
-{*
- * Project name:
-     NMRABusCommandStation
- * Copyright:
-     (c) Mustangpeak Software 2012
- * Revision History:
-     20120108:
-       - initial release;
- * Description:
- *}
  
 uses
   NMRABus,
@@ -37,6 +26,7 @@ uses
   NMRABusNodeItems,
   NMRABusUtilities,
   NMRABusAddressSlots,
+  dsPIC30_Traps,
   NodeIDs;
   
 {$I Options.inc}
@@ -77,6 +67,8 @@ end;
 
 procedure INTERRUPT_DCC_Timer(); iv IVT_ADDR_T1INTERRUPT;
 begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T1IF_bit := 0;                                                                // Clear the Flag
   
   Track_DCC_Out_Pin := Track.TX_Flags.TRANSMITTING_FLAG_DCC_PIN_BIT;
@@ -91,6 +83,8 @@ end;
 procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 1m
 begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
   NMRABus_GlobalTimer;
 end;
@@ -98,6 +92,8 @@ end;
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;         // 93us when a TransmitCompleteOnCANLayerPacket called with new Tx Packet waiting
 begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   CNIF_bit := 0;     // Clear Flag
   PinChangeState := PORTF;
 end;

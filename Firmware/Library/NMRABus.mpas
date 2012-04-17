@@ -1,3 +1,5 @@
+unit NMRABus;
+
 // ******************************************************************************
 //
 // * Copyright:
@@ -14,7 +16,7 @@
 //    Implements NMRABus specifications
 //
 // ******************************************************************************
-unit NMRABus;
+
 
 uses
   NMRABusDefines,
@@ -108,7 +110,7 @@ var
   CANBuffer: TCANBuffer;
   NodeID: TNodeID;
   DoDefault: Boolean;
-begin
+begin       
   while ExtractFromList(@RX_CANLayer_List, CANBuffer) do                        // Pull all the Received Messages out (should be only one)
   begin
     DoDefault := True;
@@ -190,6 +192,8 @@ var
   Alias: Word;
   DoDefault: Boolean;
 begin
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #4; end; {$ENDIF}
+  C1IE_bit := 0;
   if ExtractFromList(@RX_NMRABusLayer_List, CANBuffer) then                     // Pull next Received Messages out
   begin
     DoDefault := True;
@@ -211,7 +215,9 @@ begin
         StartCANMessageEngine;
       end
     end
-  end
+  end;
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #4; end; {$ENDIF}
+   C1IE_bit := 1;
 end;
 
 // *****************************************************************************
@@ -253,7 +259,7 @@ end;
 procedure ReceivedOnFilter1(RawBuffer: PCANRawBuffer);
 var
   Next: PCANRawBuffer;
-begin 
+begin
   Next := CANStorage_Head(@RX_NMRABusLayer_List);
   if Next <> nil then
   begin

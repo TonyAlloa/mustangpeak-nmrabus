@@ -1,14 +1,21 @@
 program NMRABus_Xpressnet;
-{*
- * Project name:
-     NMRABus_Xpressnet
- * Copyright:
-     (c) Mustangpeak Software 2012
- * Revision History:
-     20120108:
-       - initial release;
- * Description:
- *}
+
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+
+//
+// *****************************************************************************
 
 uses
   NMRABus,
@@ -16,6 +23,7 @@ uses
   MCU_Setup_dsPIC4013,
   CANDefines,
   CANStorage,
+  dsPIC30_Traps,
   NodeIDs;
 
 {$I Options.inc}
@@ -40,6 +48,8 @@ end;
 procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 1m
 begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
   NMRABus_GlobalTimer;
 end;
@@ -50,6 +60,8 @@ procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;         
 var
   Flags: Byte;
 begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   CNIF_bit := 0;     // Clear Flag
   PinChangeState := PORTF;
 end;

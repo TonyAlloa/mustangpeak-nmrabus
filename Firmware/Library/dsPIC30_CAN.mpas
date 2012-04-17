@@ -1,4 +1,5 @@
 unit dsPIC30_CAN;
+
 // ******************************************************************************
 //
 // * Copyright:
@@ -137,10 +138,9 @@ procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
 var 
   Buffer: TCANRawBuffer;
 begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   C1IF_bit := 0;
-
-  LATD0_bit := 1;
-
   while (C1CTRL and $000E) shr 1 > ICODE_None do                                // Use the ICODE flags to quickly figure out who is needing attention
   begin
     case (C1CTRL and $000E) shr 1 of
@@ -171,17 +171,19 @@ begin
       ICODE_WAKE  : begin end;                                                  // Not used
     end;
   end;
-  
-  LATD0_bit := 0;
-  
 end;
 
 procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
 begin
   if Enable then
+  begin
+     {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
     TXB0IE_bit := 1
-  else
+  end else
+  begin
+     {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
     TXB0IE_bit := 0
+  end
 end;
 
 // ****************************************************************************
@@ -325,7 +327,7 @@ begin
   Tail := CANStorage_Tail(List);
   if Tail <> nil then
   begin
-    dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @Tail^.Word0, Buffer);         // dsPIC33 and the dsPIC30 are the same format for RX Buffers
+    dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @(Tail^.Word0), Buffer);         // dsPIC33 and the dsPIC30 are the same format for RX Buffers
     CANStorage_IncTail(List);
     Result := True;
   end

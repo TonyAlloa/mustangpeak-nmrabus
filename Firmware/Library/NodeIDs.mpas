@@ -1,3 +1,5 @@
+unit NodeIDs;
+
 // ******************************************************************************
 //
 // * Copyright:
@@ -14,7 +16,7 @@
 //    Implements a NMRABus Unique IDs for various Mustangpeak Nodes
 //
 // ******************************************************************************
-unit NodeIDs;
+
 
 // Mustangpeak NMRANet allocated ID's  $05, $01, $01, $01, $07, $xx
 const

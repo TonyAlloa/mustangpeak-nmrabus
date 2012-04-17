@@ -1,4 +1,5 @@
 unit CAN_Storage;
+
 // ******************************************************************************
 //
 // * Copyright:
@@ -33,8 +34,6 @@ type
   
 
 procedure CANStorage_Initialize;
-function CANStorage_NextHead(List: PCANRawBufferList): PCANRawBuffer;
-function CANStorage_NextTail(List: PCANRawBufferList): PCANRawBuffer;
 function CANStorage_Head(List: PCANRawBufferList): PCANRawBuffer;
 function CANStorage_Tail(List: PCANRawBufferList): PCANRawBuffer;
 function CANStorage_IncHead(List: PCANRawBufferList): Boolean;
@@ -64,49 +63,6 @@ begin
 end;
 
 // *****************************************************************************
-//  function CANStorage_NextHead;
-//
-//  Parameters: List            : Pointer to the Raw Buffer List to extract the Next Head for
-//
-//  Result:  Pointer to the TCANRawBuffer object that is at the next head of the list.  If the list is
-//           full and the next Head can not accessed it returns nil
-//
-//  Description:
-// *****************************************************************************
-function CANStorage_NextHead(List: PCANRawBufferList): PCANRawBuffer;
-begin
-  if List^.Count < List^.Size then
-  begin
-    Result := List^.Head;                                                       // Take the current head
-    Inc(Result);                                                                // Increase it the size of a TCANRawBuffer
-    if Result > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
-     Result := @List^.Buffers^[0];
-  end
-end;
-
-// *****************************************************************************
-//  function CANStorage_NextTail;
-//
-//  Parameters: List            : Pointer to the Raw Buffer List to extract the Next Tail for
-//
-//  Result:  Pointer to the TCANRawBuffer object that is at the next tail of the list, if there
-//           are filled buffers in the list.  If the list is empty it returns nil
-//
-//  Description:
-// *****************************************************************************
-function CANStorage_NextTail(List: PCANRawBufferList): PCANRawBuffer;
-begin
-  if List^.Count > 0 then
-  begin
-    Result := List^.Tail;                                                       // Take the current head
-    Inc(Result);                                                                // Increase it the size of a TCANRawBuffer
-    if Result > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
-     Result := @List^.Buffers^[0];
-  end
-end;
-
-
-// *****************************************************************************
 //  function CANStorage_Head;
 //
 //  Parameters: List            : Pointer to the Raw Buffer List to extract the Head for
@@ -124,7 +80,7 @@ begin
 end;
 
 // *****************************************************************************
-//  function CANStorage_Head;
+//  function CANStorage_Tail;
 //
 //  Parameters: List            : Pointer to the Raw Buffer List to extract the Head for
 //
@@ -158,14 +114,14 @@ begin
   begin
     Temp := List^.Head;
     Inc(Temp);                                                                // Increase it the size of a TCANRawBuffer
-    if Temp > (@List^.Buffers^[0] + List^.Size) then                          // Wrap it if necessary
+    if Temp >= (@List^.Buffers^[0] + List^.Size) then                          // Wrap it if necessary
      Temp := @List^.Buffers^[0];
     List^.Head := Temp;
+    Inc(List^.Count);
+    if List^.Count > List^.MaxCount then
+      List^.MaxCount := List^.Count;
     Result := True
   end;
-  Inc(List^.Count);
-  if List^.Count > List^.MaxCount then
-    List^.MaxCount := List^.Count;
 end;
 
 // *****************************************************************************
@@ -185,13 +141,13 @@ begin
   if List^.Count > 0 then
   begin
     Temp := List^.Tail;
-    Inc(Temp);                                                                // Increase it the size of a TCANRawBuffer
-    if Temp > (@List^.Buffers^[0] + List^.Size) then                                // Wrap it if necessary
+    Inc(Temp);                                                                  // Increase it the size of a TCANRawBuffer
+    if Temp >= (@List^.Buffers^[0] + List^.Size) then                            // Wrap it if necessary
      Temp := @List^.Buffers^[0];
     List^.Tail := Temp;
+    Dec(List^.Count);
     Result := True;
   end;
-  Dec(List^.Count)
 end;
 
 end.

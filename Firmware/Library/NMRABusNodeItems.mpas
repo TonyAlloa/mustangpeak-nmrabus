@@ -1,3 +1,5 @@
+unit NMRABusNodeItems;
+
 // ******************************************************************************
 //
 // * Copyright:
@@ -14,7 +16,6 @@
 //    Implements the database that will be used for a NMRABus based Command Station
 //
 // ******************************************************************************
-unit NMRABusNodeItems;
 
 const
   MAX_MOBILE_ITEM_COUNT           = 16;                                          // Number of Virtual Nodes (locomotives)

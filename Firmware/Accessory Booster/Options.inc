@@ -9,3 +9,9 @@
 
 {.$DEFINE SPI_ENABLE}                   // Enables the SPI Module
 
+{$DEFINE ENABLE_TRAPS}                 // Enables the Trap Interrupts on the MCU, uses the dsPICxx_Traps.mpas file
+{.$DEFINE ENABLE_TOGGLE_PIN_ON_TRAP}    // Enables the Trap Interrupts on the MCU, uses the dsPICxx_Traps.mpas file
+{.$DEFINE ENABLE_LOOP_FOREVER_ON_TRAP}  // Enables the Trap Interrupts on the MCU, uses the dsPICxx_Traps.mpas file
+
+{$FIX_NESTED_INTERRUPT_SILICON_BUG}    // Add code to fix a silicon bug in nested Interrupts
+
