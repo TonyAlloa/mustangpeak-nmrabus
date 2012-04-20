@@ -38,7 +38,7 @@ const
   RAW_CAN_BUFFER_SIZE = 20;                                                     // There are 20 TCANRawBuffers defined in the above structures
 
 type
-  TDummy = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;                    // Define a "dummy" array that overlays the above structures so the compiler
+  TCANBufferAlias = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;           // Define a "dummy" array that overlays the above structures so the compiler
                                                                                 // can keep track of the memory and we can address the buffers as a normal array
                                                                                 // to initialize them
 
@@ -47,7 +47,7 @@ procedure CANBuffers_Initialize;
 implementation
 
 var
-  Dummy: TDummy; absolute $0800;
+  CANBufferAlias: TCANBufferAlias; absolute $0800;
     
 procedure CANBuffers_Initialize;
 var
@@ -55,14 +55,14 @@ var
 begin
   for i := 0 to RAW_CAN_BUFFER_SIZE-1 do
   begin
-    Dummy[i].Word0 := 0;
-    Dummy[i].Word1 := 0;
-    Dummy[i].Word2 := 0;
-    Dummy[i].Word3 := 0;
-    Dummy[i].Word4 := 0;
-    Dummy[i].Word5 := 0;
-    Dummy[i].Word6 := 0;
-    Dummy[i].Word7 := 0;
+    CANBufferAlias[i].Word0 := 0;
+    CANBufferAlias[i].Word1 := 0;
+    CANBufferAlias[i].Word2 := 0;
+    CANBufferAlias[i].Word3 := 0;
+    CANBufferAlias[i].Word4 := 0;
+    CANBufferAlias[i].Word5 := 0;
+    CANBufferAlias[i].Word6 := 0;
+    CANBufferAlias[i].Word7 := 0;
   end;
 
   CANDefines_InitializeList(@TX_CANLayer_List, @TX_CANLayer_RawBufferArray, 6);            // Overlays DMA RAM and is 6 Buffer Array long (8 Bytes)

@@ -24,6 +24,7 @@ uses
   CANDefines,
   CANStorage,
   dsPIC30_Traps,
+  NMRABusDatagrams,
   NodeIDs;
 
 {$I Options.inc}
@@ -87,6 +88,7 @@ begin
   CANStorage_Initialize;
   MCU_Setup_Initialize;
   NMRABus_Initialize;
+  NMRABusDatagrams_Initialize;
 
   NMRABus_Connect;
   NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);

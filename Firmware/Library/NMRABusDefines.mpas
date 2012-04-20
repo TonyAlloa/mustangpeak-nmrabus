@@ -67,16 +67,21 @@ const
   FT_VERIFIED_NODE_ID_NUMBER        = $080B7000;
   FT_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
   FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
+  
+  FT_DATAGRAM_FRAME                 = $0C000000;
+  FT_DATAGRAM_FRAME_END             = $0D000000;
+  FT_DATAGRAM_FRAME_RESULT          = $0E000000;
 
-  FT_BROADCAST_1     = $08;  // Broadcast Message
-  FT_BROADCAST_2     = $09;  // Broadcast Message again....
-  FT_DATAGRAM_FIRST  = $0C;  // First Frame of Datagram
-  FT_DATAGRAM_LAST   = $0D;  // Last Frame of Datagram
-  FT_DATAGRAM_SINGLE = $0E;  // Single Frame Datagram
-  FT_STREAM          = $0F;  // Stream Data
+//  FT_BROADCAST_1     = $08;  // Broadcast Message
+//  FT_BROADCAST_2     = $09;  // Broadcast Message again....
+//  FT_DATAGRAM_FIRST  = $0C;  // First Frame of Datagram
+//  FT_DATAGRAM_LAST   = $0D;  // Last Frame of Datagram
+//  FT_DATAGRAM_SINGLE = $0E;  // Single Frame Datagram
+ // FT_STREAM          = $0F;  // Stream Data
   
   MASK_DEST_ALIAS_FORMAT = $06000000;  // Bits to see if the OpenLCB Format bits say it contains a Dest ID (110)
   MASK_DEST_ALIAS        = $00FFF000;  // Masks out just the Destination Alias Address
+  MASK_SOURCE_ALIAS      = $00000FFF;  // Masks out just the Source Alias Address
 
   // NMRABus States
   BS_PERMITED          = $01;    // CAN Frame Layer is permitted (Node ID's resolved with bus)

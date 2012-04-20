@@ -28,9 +28,11 @@ procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer
 procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
 procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
 function NMRABusUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
+function NMRABusUtilities_ExtractSourceAlias(Packet: PCANBuffer): Word;
 procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID);
 function NMRABusUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
 function NMRABusUtilities_EqualAliasID(AliasID: Word): Boolean;
+function NMRABusUtilities_EqualDestinationAlias(Packet: PCANBuffer): Boolean;
 procedure NMRABusUtilities_LoadNodeID(var NodeID: TNodeID; Upper, Lower: DWORD);
 procedure NMRABusUtilities_PsudoRandomNumberGenerator;
 function NMRABusUtilities_GenerateID_Alias_From_Global_Seed: Word;
@@ -117,6 +119,19 @@ begin
 end;
 
 // *****************************************************************************
+//  function NMRABusUtilities_ExtractSourceAlias
+//     Parameters:
+//     Returns:
+//
+//     Description: Extracts the Source ID packed in the ID if it is available
+//
+// *****************************************************************************
+function NMRABusUtilities_ExtractSourceAlias(Packet: PCANBuffer): Word;
+begin
+  Result := Packet^.ID and MASK_SOURCE_ALIAS
+end;
+
+// *****************************************************************************
 //  function NMRABusUtilities_PacketBytesToNodeID
 //     Parameters:
 //     Returns:
@@ -146,6 +161,19 @@ end;
 function NMRABusUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
 begin
   Result := (NodeID[1] = NMRABus.Node_ID[1]) and (NodeID[0] = NMRABus.Node_ID[0])
+end;
+
+// *****************************************************************************
+//  function NMRABusUtilities_EqualDestinationAlias
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusUtilities_EqualDestinationAlias(Packet: PCANBuffer): Boolean;
+begin
+  Result := NMRABusUtilities_EqualAliasID(NMRABusUtilities_ExtractDestinationAlias(Packet))
 end;
 
 // *****************************************************************************

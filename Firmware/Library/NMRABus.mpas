@@ -22,7 +22,8 @@ uses
   NMRABusDefines,
   NMRABusUtilities,
   CANStorage,
-  CANDefines;
+  CANDefines,
+  NMRABusDatagrams;
 
 {$I Options.inc}
 
@@ -189,7 +190,6 @@ end;
 procedure HandlePacketReceivedOnNMRABusLayer(NMRABusPacketHandler: PPacketHandlerFunc);
 var
   CANBuffer: TCANBuffer;
-  Alias: Word;
   DoDefault: Boolean;
 begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #4; end; {$ENDIF}
@@ -202,8 +202,7 @@ begin
     begin
       if CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST then
       begin
-        Alias := NMRABusUtilities_ExtractDestinationAlias(@CANBuffer);
-        if NMRABusUtilities_EqualAliasID(Alias) then
+        if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
         begin
           NMRABusUtilities_CreateNMRABusMessagePacket(FT_VERIFIED_NODE_ID_NUMBER, 0, @CANBuffer);
           StartCANMessageEngine;
@@ -213,6 +212,27 @@ begin
       begin
         NMRABusUtilities_CreateNMRABusMessagePacket(FT_VERIFIED_NODE_ID_NUMBER, 0, @CANBuffer);
         StartCANMessageEngine;
+      end else
+      if (CANBuffer.ID and FT_DATAGRAM_FRAME = FT_DATAGRAM_FRAME) then
+      begin
+        if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
+        begin
+          NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, False);
+        end
+      end else
+      if (CANBuffer.ID and FT_DATAGRAM_FRAME_END = FT_DATAGRAM_FRAME_END) then
+      begin
+        if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
+        begin
+          NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, True);
+        end
+      end
+      if (CANBuffer.ID and FT_DATAGRAM_RESULT = FT_DATAGRAM_RESULT) then
+      begin
+        if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
+        begin
+          NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, True);
+        end
       end
     end
   end;

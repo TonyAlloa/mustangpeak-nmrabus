@@ -1,0 +1,69 @@
+unit NMRABusDatagrams;
+
+uses
+  CANDefines,
+  NMRABusDefines,
+  NMRABusDatagramDefines;
+
+var
+  DatagramList: TDatagramList;
+
+procedure NMRABusDatagrams_Initialize;
+function NMRABusDatagrams_ProcessNextFrame(Source: TNodeAliasID; var DataByte: TCAN_DataBytes; LastFrame: Boolean): Boolean;
+function NextPacket(var DatagramPacket: TDatagramPacket): Boolean;
+
+implementation
+
+// *****************************************************************************
+//  procedure NMRABusDatagrams_Initialize;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure NMRABusDatagrams_Initialize;
+begin
+  DatagramList.Count := 0;
+  DatagramList.Head := 0;
+  DatagramList.Tail := 0;
+end;
+
+// *****************************************************************************
+//  function NMRABusDatagrams_ProcessNextFrame;
+//
+//  Parameters: DataBytes:   The next 8 bytes received defined with a datagram MTI
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRABusDatagrams_ProcessNextFrame(Source: TNodeAliasID; var DataByte: TCAN_DataBytes; LastFrame: Boolean): Boolean;
+begin
+  Result := True;
+end;
+
+// *****************************************************************************
+//  function NextPacket;
+//
+//  Parameters: DatagramPacket:   The next full packet in the list
+//
+//  Result:
+//
+//  Description: True if the function returned a new Packet, false if there are no packet to receive
+// *****************************************************************************
+function NextPacket(var DatagramPacket: TDatagramPacket): Boolean;
+begin
+  Result := False;
+  if DatagramList.Count > 0 then
+  begin
+    DatagramPacket := DatagramList.Datagrams[DatagramList.Tail];
+    Inc(DatagramList.Tail);
+    if DatagramList.Tail >= DatagramList.Count then
+      DatagramList.Tail := 0;
+    Dec(DatagramList.Count);
+  end
+end;
+
+end.
