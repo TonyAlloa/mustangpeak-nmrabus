@@ -23,13 +23,18 @@ uses
   NMRABusUtilities,
   CANStorage,
   CANDefines,
-  NMRABusDatagrams;
+  NMRABusDatagrams,
+  NMRABusDatagramDefines;
 
 {$I Options.inc}
 
 type
   TPacketHandlerFunc = procedure(CANBuffer: PCANBuffer; var DoDefault: Boolean);
   PPacketHandlerFunc = ^TPacketHandlerFunc;
+  TDatagramPacketHandlerFunc = procedure(DatagramBuffer: PDatagramBuffer; var DoDefault: Boolean);
+  PDatagramPacketHandlerFunc = ^TDatagramPacketHandlerFunc;
+  TStreamPacketHandlerFunc = procedure(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+  PStreamPacketHandlerFunc = ^TStreamPacketHandlerFunc;
 
 
   procedure NMRABus_Connect;
@@ -39,6 +44,8 @@ type
   procedure NMRABus_GlobalTimer;
   procedure HandlePacketReceivedOnNMRABusLayer(NMRABusPacketHandler: PPacketHandlerFunc);
   procedure NMRABus_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);       // WARNING:  The Hook is called from within the Interrupt Handler.....
+  procedure NMRABus_HandleDatagrams(NMRABusPacketHandler: PDatagramPacketHandlerFunc);
+  procedure NMRABus_HandleStreams(NMRABusPacketHandler: PStreamPacketHandlerFunc);
 
 
   // callbacks from the CAN interrupts used in the xxxxx_CAN_Interrupt.mpas units
@@ -135,7 +142,7 @@ begin
           end
         end;
       end else
-      if NMRABusUtilities_EqualAliasID(CANBuffer.ID and $00000FFF) then           // Is the 12 Bit Alias equal to ours?
+      if NMRABusUtilities_EqualAliasID(CANBuffer.ID and MASK_SOURCE_ALIAS) then           // Is the 12 Bit Alias equal to ours?
       begin
         if (CANBuffer.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer.ID and FT_CID_MASK >= FT_CID6) then // If it is a CID message then force calling node to try again for an Alias this one is ours
         begin
@@ -180,6 +187,40 @@ begin
 end;
 
 // ****************************************************************************
+// procedure NMRABus_HandleDatagrams
+//
+//  Description: Call periodically to dispatch Datagrams received
+//
+// ****************************************************************************
+procedure NMRABus_HandleDatagrams(NMRABusPacketHandler: PDatagramPacketHandlerFunc);
+var
+  Buffer: TDatagramBuffer;
+  DoDefault: Boolean;
+begin
+  if NMRABusDatagrams_NextPacket(Buffer) then
+  begin
+    DoDefault := True;
+    NMRABusPacketHandler(@Buffer, DoDefault);
+    if DoDefault then
+    begin
+   ///  case Buffer.DataBytes[0] of
+
+   //   end;
+    end
+  end
+end;
+
+// ****************************************************************************
+// procedure NMRABus_HandleStreams
+//
+//  Description: Call periodically to dispatch Datagrams received
+//
+// ****************************************************************************
+procedure NMRABus_HandleStreams(NMRABusPacketHandler: PStreamPacketHandlerFunc);
+begin
+end;
+
+// ****************************************************************************
 // procedure HandlePacketReceivedOnNMRABusLayer
 //
 //  Description:
@@ -200,7 +241,7 @@ begin
     NMRABusPacketHandler(@CANBuffer, DoDefault);
     if DoDefault then
     begin
-      if CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST then
+      if (CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST) and (CANBuffer.DataBytes[0] = SFT_VERIFY_NODE_DEST) then
       begin
         if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
         begin
@@ -217,22 +258,22 @@ begin
       begin
         if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
         begin
-          NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, False);
-        end
+          if not NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, False) then
+          begin
+            // The buffers were Full so we have to signal the sender to resend... BUT HOW??????????
+          end;
+        end;
       end else
       if (CANBuffer.ID and FT_DATAGRAM_FRAME_END = FT_DATAGRAM_FRAME_END) then
       begin
         if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
         begin
           NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, True);
-        end
-      end
-      if (CANBuffer.ID and FT_DATAGRAM_RESULT = FT_DATAGRAM_RESULT) then
+        end;
+      end else
+      if (CANBuffer.ID and FT_DATAGRAM_FRAME_RESULT = FT_DATAGRAM_FRAME_RESULT) then
       begin
-        if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
-        begin
-          NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, True);
-        end
+
       end
     end
   end;

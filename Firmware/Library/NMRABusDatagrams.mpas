@@ -1,16 +1,17 @@
 unit NMRABusDatagrams;
 
 uses
+  NMRABusUtilities,
   CANDefines,
   NMRABusDefines,
   NMRABusDatagramDefines;
 
 var
-  DatagramList: TDatagramList;
+  DatagramList: TDatagramBufferArray;
 
 procedure NMRABusDatagrams_Initialize;
 function NMRABusDatagrams_ProcessNextFrame(Source: TNodeAliasID; var DataByte: TCAN_DataBytes; LastFrame: Boolean): Boolean;
-function NextPacket(var DatagramPacket: TDatagramPacket): Boolean;
+function NMRABusDatagrams_NextPacket(var DatagramPacket: TDatagramBuffer): Boolean;
 
 implementation
 
@@ -24,11 +25,36 @@ implementation
 //  Description:
 // *****************************************************************************
 procedure NMRABusDatagrams_Initialize;
+var
+  i: Integer;
 begin
-  DatagramList.Count := 0;
-  DatagramList.Head := 0;
-  DatagramList.Tail := 0;
+  for i := 0 to LEN_DATAGRAM_ARRAY - 1 do
+    DatagramList[i].State := DPB_EMPTY;
 end;
+
+// *****************************************************************************
+//  function NMRABusDatagrams_FindFirstEmptyBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRABusDatagrams_FindFirstEmptyBuffer: Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+  i := 0;
+  while (Result < 0) and (i < LEN_DATAGRAM_ARRAY) do
+  begin
+    if DatagramList[i].State and DPB_EMPTY = 0 then
+      Result := i;
+    Inc(i)
+  end
+end;
+
 
 // *****************************************************************************
 //  function NMRABusDatagrams_ProcessNextFrame;
@@ -37,15 +63,53 @@ end;
 //
 //  Result:
 //
-//  Description:
+//  Description: True if the Frame was handled, False if there was no buffers available
 // *****************************************************************************
 function NMRABusDatagrams_ProcessNextFrame(Source: TNodeAliasID; var DataByte: TCAN_DataBytes; LastFrame: Boolean): Boolean;
+var
+  i: Integer;
+  BufferPtr: PDatagramBuffer;
 begin
   Result := True;
+  i := 0;
+  BufferPtr := PDatagramBuffer( nil);
+  
+  while (BufferPtr = nil) and (i < LEN_DATAGRAM_ARRAY) do
+  begin
+    if DatagramList[i].State and DPB_RECEIVING = DPB_RECEIVING then             // Look to see if the buffer has already started a Datagram sequence
+      if NMRABusUtilities_CompareAliasIDs(Source, DatagramList[i].Source) then  // Next look to see if the Buffer that has started a Datagram sequence is the same Source as the new frame
+        BufferPtr := @DatagramList[i];                                          // Yes, that Source has started the Datagram sequence
+    Inc(i);
+  end;
+  
+  if BufferPtr = PDatagramBuffer( nil) then
+  begin
+    i := NMRABusDatagrams_FindFirstEmptyBuffer;                                 // Look for a free buffer
+    if i > -1 then
+    begin                                                                       // Initialize the newly allocated buffer
+      DatagramList[i].Source := Source;                                         // Save the source to compare later
+      DatagramList[i].ByteCount := 0;                                           // Reset the Byte Count Index
+      DatagramList[i].State := DPB_RECEIVING;                                   // Set the State to Receiving
+      BufferPtr := @DatagramList[i];
+    end;
+  end;
+  
+  if BufferPtr <> PDatagramBuffer( nil) then
+  begin
+    for i := 0 to 7 do                                                          // Copy over the frame of data
+    begin
+      DatagramList[i].DataBytes[DatagramList[i].ByteCount] := DataByte[i];
+      Inc(DatagramList[i].ByteCount);
+    end;
+
+    if LastFrame then                                                           // Note here that for a frame with less than 7 bytes of data (+ indicator byte) the first frame will be the last!
+       DatagramList[i].State := DPB_FULL;                                       // Set the State to Complete (full)
+  end else
+    Result := False                                                             // Buffer Full
 end;
 
 // *****************************************************************************
-//  function NextPacket;
+//  function NMRABusDatagrams_NextPacket;
 //
 //  Parameters: DatagramPacket:   The next full packet in the list
 //
@@ -53,16 +117,21 @@ end;
 //
 //  Description: True if the function returned a new Packet, false if there are no packet to receive
 // *****************************************************************************
-function NextPacket(var DatagramPacket: TDatagramPacket): Boolean;
+function NMRABusDatagrams_NextPacket(var DatagramPacket: TDatagramBuffer): Boolean;
+var
+  i: Integer;
 begin
   Result := False;
-  if DatagramList.Count > 0 then
+  i := 0;
+  while not Result and (i < LEN_DATAGRAM_ARRAY) do
   begin
-    DatagramPacket := DatagramList.Datagrams[DatagramList.Tail];
-    Inc(DatagramList.Tail);
-    if DatagramList.Tail >= DatagramList.Count then
-      DatagramList.Tail := 0;
-    Dec(DatagramList.Count);
+    if DatagramList[i].State = DPB_FULL then
+    begin
+      DatagramPacket := DatagramList[i];
+      DatagramList[i].State := DPB_EMPTY;
+      Result := True;
+    end;
+    Inc(i);
   end
 end;
 

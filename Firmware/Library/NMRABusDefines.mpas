@@ -44,21 +44,21 @@ const
 //
 // Frame Types.  These define what the Frame of the CAN message consists of.
 const
-  FT_CAN                            = $00000000;  // Frame Type CAN Control Message
-  FT_CID0                           = $07000000;  // First 12 Bits of 48 bit Node ID
-  FT_CID1                           = $06000000;  // 2rd 12 Bits of 48 bit Node ID
-  FT_CID2                           = $05000000;  // 3nd 12 Bits of 48 bit Node ID
-  FT_CID3                           = $04000000;  // Last 12 Bits of 48 bit Node ID
-  FT_CID4                           = $03000000;  // non-OpenLCB Protocol
-  FT_CID5                           = $02000000;  // non-OpenLCB Protocol
-  FT_CID6                           = $01000000;  // non-OpenLCB Protocol
+  FT_CAN                            = $00000000;                                // Frame Type CAN Control Message
+  FT_CID0                           = $07000000;                                // First 12 Bits of 48 bit Node ID
+  FT_CID1                           = $06000000;                                // 2rd 12 Bits of 48 bit Node ID
+  FT_CID2                           = $05000000;                                // 3nd 12 Bits of 48 bit Node ID
+  FT_CID3                           = $04000000;                                // Last 12 Bits of 48 bit Node ID
+  FT_CID4                           = $03000000;                                // non-OpenLCB Protocol
+  FT_CID5                           = $02000000;                                // non-OpenLCB Protocol
+  FT_CID6                           = $01000000;                                // non-OpenLCB Protocol
 
   
   FT_CID_MASK                       = $07000000;
-  FT_RID                            = $00700000;  // Reserve ID
-  FT_AMD                            = $00701000;  // Alias Map Definition
-  FT_AME                            = $00702000;  // Alias Mapping Enquiry
-  FT_AMR                            = $00703000;  // Alias Map Reset Frame
+  FT_RID                            = $00700000;                                // Reserve ID
+  FT_AMD                            = $00701000;                                // Alias Map Definition
+  FT_AME                            = $00702000;                                // Alias Mapping Enquiry
+  FT_AMR                            = $00703000;                                // Alias Map Reset Frame
 
 
   FT_INITIALIZATION_COMPLETE        = $09087000;
@@ -71,25 +71,41 @@ const
   FT_DATAGRAM_FRAME                 = $0C000000;
   FT_DATAGRAM_FRAME_END             = $0D000000;
   FT_DATAGRAM_FRAME_RESULT          = $0E000000;
-
-//  FT_BROADCAST_1     = $08;  // Broadcast Message
-//  FT_BROADCAST_2     = $09;  // Broadcast Message again....
-//  FT_DATAGRAM_FIRST  = $0C;  // First Frame of Datagram
-//  FT_DATAGRAM_LAST   = $0D;  // Last Frame of Datagram
-//  FT_DATAGRAM_SINGLE = $0E;  // Single Frame Datagram
- // FT_STREAM          = $0F;  // Stream Data
   
-  MASK_DEST_ALIAS_FORMAT = $06000000;  // Bits to see if the OpenLCB Format bits say it contains a Dest ID (110)
-  MASK_DEST_ALIAS        = $00FFF000;  // Masks out just the Destination Alias Address
-  MASK_SOURCE_ALIAS      = $00000FFF;  // Masks out just the Source Alias Address
+  // Base MTIs
+  SFT_VERIFY_NODE_DEST              = $0A;                                      // Sub-Type (in first Databyte) for a MTI with a destination in the header
+  SFT_OPTIONAL_INTERACTION_REJECTED = $0C;
+  SFT_TERMINATE_DUE_TO_ERROR        = $0D;
+  // Protocol Support MTIs
+  SFT_PROTOCOL_SUPPORT_QUERY        = $2E;
+  SFT_PROTOCOL_SUPPORT_REPLY        = $2F;
+  // Event Exchange MTIs
+  SFT_IDENTIFY_EVENTS               = $2B;
+  // Other MTIs
+  SFT_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;
+  SFT_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;
+  // Datagram MTIs
+  SFT_DATAGRAM_RECIEVED_OK          = $4C;
+  SFT_DATAGRAM_REJECTED             = $4D;
+  // Stream MTIs
+  SFT_STREAM_INITIATE_REQUEST       = $4E;
+  SFT_STREAM_INITIATE_REPLY         = $4F;
+  SFT_STREAMDATA_PROCEED            = $6A;
+  SFT_STREAMDATA_COMPLETE           = $6B;
+  
+
+
+  MASK_DEST_ALIAS_FORMAT = $06000000;                                           // Bits to see if the OpenLCB Format bits say it contains a Dest ID (110)
+  MASK_DEST_ALIAS        = $00FFF000;                                           // Masks out just the Destination Alias Address
+  MASK_SOURCE_ALIAS      = $00000FFF;                                           // Masks out just the Source Alias Address
 
   // NMRABus States
-  BS_PERMITED          = $01;    // CAN Frame Layer is permitted (Node ID's resolved with bus)
-  BS_INITIALIZED       = $02;    // Message Layer has sent its first Initialize Complete Message
+  BS_PERMITED          = $01;                                                   // CAN Frame Layer is permitted (Node ID's resolved with bus)
+  BS_INITIALIZED       = $02;                                                   // Message Layer has sent its first Initialize Complete Message
 
 
 type
-  TNodeID = array[0..1] of DWORD;    // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
+  TNodeID = array[0..1] of DWORD;                                                // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
   TNodeAliasID = Word;
 
 

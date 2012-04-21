@@ -80,6 +80,10 @@ begin
 
 end;
 
+procedure DatagramPacketHandler(DatagramBuffer: PDatagramBuffer; var DoDefault: Boolean);
+begin
+end;
+
 
 // *******************
 // MAIN LOOP
@@ -104,6 +108,8 @@ begin
       if NMRABus_Permitted then
       begin
         HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
+        NMRABus_HandleDatagrams(@DatagramPacketHandler);
+    //    NMRABus_HandleStreams;
       end
     end;
 end.
