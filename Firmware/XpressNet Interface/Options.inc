@@ -9,6 +9,8 @@
 
 {.$DEFINE SPI_ENABLE}                   // Enables the SPI Module
 
+{$DEFINE XPRESSNET_UART_ENABLE}         // Enables the RS232 Module for the Xpressnet 65kBaud
+
 {$DEFINE ENABLE_TRAPS}                 // Enables the Trap Interrupts on the MCU, uses the dsPICxx_Traps.mpas file
 {.$DEFINE ENABLE_TOGGLE_PIN_ON_TRAP}    // Enables the Trap Interrupts on the MCU, uses the dsPICxx_Traps.mpas file
 {.$DEFINE ENABLE_LOOP_FOREVER_ON_TRAP}  // Enables the Trap Interrupts on the MCU, uses the dsPICxx_Traps.mpas file

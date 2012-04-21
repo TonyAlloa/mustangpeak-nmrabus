@@ -1,0 +1,222 @@
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2011.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2010-11-24:   Created
+//
+// * Description: contains the code to manage the Xpressnet Devices
+//
+// ******************************************************************************
+
+unit NMRABusXpressnetDevices;
+
+uses
+//  ServiceMode,
+  NMRABusXpressNetConstants;
+
+// Initialized the unit
+procedure Devices_Initialize;
+// Internally increments and stores the next device ID that needs a window slot on the XpressBus
+procedure Devices_NextDeviceID;
+// Tests to see if the internally index Device is active but not ackowledging
+function Device_Active_But_Not_Acknowledging: Boolean; forward;
+// Tests to see if the internally index Device is active and ackowledging
+function Device_Active_And_Acknowledging: Boolean; forward;
+
+function Device_InServiceMode(iDevice: Byte): Boolean;
+
+implementation
+
+// ***************************************************************************
+//  procedure Devices_Initialize;
+//
+//  Parameters:
+//           None
+//
+//  Result:
+//          None
+//
+//  Description:
+//     Called once on startup to initialize the device list
+//
+// ***************************************************************************
+procedure Devices_Initialize;
+var
+  i: Integer;
+begin
+  // Device ID Initialization
+  for i := ID_MIN_DEVICE to ID_MAX_DEVICE do
+  begin
+    XpressNetBuffer.DeviceList[i].Flags := MASK_XPRESSNET_DEVICE_DECOMMISIONED_FLAGS;
+  end;
+end;
+
+// ****************************************************************************
+//
+// function Device_InServiceMode: Boolean;
+//
+//  Parameters:
+//           iDevice: Byte    ; Device to test
+//
+//  Result:
+//          True if it is in Service Mode
+//
+//  Description:
+//          Returns the first installed Device index on the bus. If there are no Devices
+//            installed it returns 0
+//
+// *****************************************************************************
+function Device_InServiceMode(iDevice: Byte): Boolean;
+begin
+  Result := False;
+ { if ServiceModeInfo.Flags.PROGRAMMING_ACK_STATE_IN_SERVICEMODE_BIT = 1 then           // If in ServiceMode there is a chance Device is in Service Mode
+    if ServiceModeInfo.Buffer.iDevice = iDevice then                                   // If the Device ID's are equal then need to think about it
+      if ServiceModeInfo.Flags.PROGRAMMING_ACK_STATE_RESPONSE_READY_BIT = 0 then       // If the Response is not ready then don't allow a time slice for this device.  Once the Response is ready we will allow a time slice
+        Result := True}
+end;
+
+// ****************************************************************************
+//
+// function FirstInstalledDevice: Byte;
+//
+//  Parameters:
+//           None
+//
+//  Result:
+//          Index into the DeviceList of the first installed device
+//
+//  Description:
+//          Returns the first installed Device index on the bus. If there are no Devices
+//            installed it returns 0
+//
+// *****************************************************************************
+function FirstInstalledDevice: Byte;
+var
+  i: Integer;
+begin
+  Result := ID_NO_DEVICE;
+  for i := ID_MIN_DEVICE to ID_MAX_DEVICE do
+  begin
+    if XpressNetBuffer.DeviceList[i].Flags and MASK_XPRESSNET_DEVICE_ACTIVE <> 0 then
+      if not Device_InServiceMode(i) then
+      begin
+        Result := i;
+        Exit
+      end;
+  end
+end;
+
+// ****************************************************************************
+//
+// function NextAvailableDevice(iDevice: Byte): Byte;
+//
+//  Parameters:
+//           iDevice: Device ID that is used as the starting point to find the next installed
+//                      device ID
+//
+//  Result:
+//          Index into the DeviceList of the next installed device
+//
+//  Description:
+//         Returns the next installed Device index on the bus after the passed index.
+//           If there are no Devices installed it returns 0
+//
+// *****************************************************************************
+function NextAvailableDevice(iDevice: Byte): Byte;
+var
+  i: Integer;
+begin
+  Result := ID_NO_DEVICE;
+  if iDevice <> ID_NO_DEVICE then
+  begin
+    i := iDevice;
+    repeat
+      Inc(i);
+      if i > ID_MAX_DEVICE then
+        i := ID_MIN_DEVICE;
+      if XpressNetBuffer.DeviceList[i].Flags and MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING <> 0 then
+        if not Device_InServiceMode(i) then
+        begin
+          Result := i;
+          Exit
+        end;
+    until i = iDevice;
+  end
+end;
+
+// ****************************************************************************
+//
+// function Device_Active_But_Not_Acknowledging;
+//
+//  Parameters:
+//           None
+//
+//  Result:
+//          True if the current active device is active but is not acknowledging
+//
+//  Description:
+////
+// *****************************************************************************
+function Device_Active_But_Not_Acknowledging: Boolean;
+begin
+  Result :=(XpressNetBuffer.DeviceList[XpressNetBuffer.iActiveDevice].Flags and MASK_XPRESSNET_DEVICE_ACTIVE <> 0) and
+           (XpressNetBuffer.DeviceList[XpressNetBuffer.iActiveDevice].Flags and MASK_XPRESSNET_DEVICE_ACKNOWLEDGING = 0)
+end;
+
+// ****************************************************************************
+//
+// function Device_Active_But_Not_Acknowledging;
+//
+//  Parameters:
+//           None
+//
+//  Result:
+//          True if the current active device is active but is not acknowledging
+//
+//  Description:
+////
+// *****************************************************************************
+function Device_Active_And_Acknowledging: Boolean;
+begin
+  Result := XpressNetBuffer.DeviceList[XpressNetBuffer.iActiveDevice].Flags and MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING = MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING
+end;
+
+// ****************************************************************************
+//
+// procedure Devices_NextDeviceID;
+//
+//  Parameters:
+//           None
+//
+//  Result:
+//          None
+//
+//  Description:
+//         Increments and stores internally the device ID that the Command Station will give a Time Slot Window
+//           to.  This is not necessarly iDevice+1, it also takes into account the rediscovery
+//           period that runs the entire list of device IDs in order to look for newly
+//           added devices to the bus
+//
+// *****************************************************************************
+procedure Devices_NextDeviceID;
+begin
+  if XpressNetBuffer.DeviceDiscoveryTimerCount = REDISCOVERY_TIME then          // Start the Rediscovery Sequence
+  begin
+    XpressNetBuffer.iActiveDevice := 1;                                         // Reset to start of Device List
+    Inc(XpressNetBuffer.DeviceDiscoveryTimerCount);                             // Flag that the Discovery is in process so next time through this is skipped
+  end else
+  if XpressNetBuffer.iActiveDevice > ID_MAX_DEVICE then                         // If overran devices then start the normal cycling of known devices and wait for the next Rediscover Time
+  begin
+    XpressNetBuffer.DeviceDiscoveryTimerCount := 0;                             // Reset the Timer Count
+    XpressNetBuffer.iActiveDevice := FirstInstalledDevice;
+  end else
+    XpressNetBuffer.iActiveDevice := NextAvailableDevice(XpressNetBuffer.iActiveDevice);   // Return installed devices
+end;
+
+end.

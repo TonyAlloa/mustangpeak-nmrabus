@@ -20,6 +20,8 @@ unit MCU_Setup_dsPIC4013;
 uses
   CANStorage,
   CANBuffers,
+  NMRABusXpressNetConstants,
+  NMRABusXpressnet,
   NMRABus;
 
 {$I Options.inc}
@@ -30,8 +32,16 @@ const
   CAN_PHASESEG_1 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_1-1
   CAN_PHASESEG_2 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
   CAN_PROP_SEG   = 1;               // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
+  
+  _840ms_PERIOD = $FFFF;     // prescaler = 256, 80Mhz clock = 1/(80Mhz/4) * _327675us_PERIOD = 3.27675ms
 
 procedure MCU_Setup_Initialize;
+
+var
+  UART_PC_CTS                         : sbit at LATA11_bit;
+  UART_PC_CTS_Direction               : sbit at TRISA11_bit;
+  Xpressnet_RS485_Select              : sbit at LATD0_bit;
+  Xpressnet_RS485_Select_Direction    : sbit at TRISB0_bit;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
 var
@@ -72,8 +82,40 @@ begin
  // ERRIF_bit := 1;                                                               // CAN Error Interrupt Enable
   C1IF_bit := 0;                                                                // Clear the CAN interrupt flag
   C1IE_bit := 1;                                                                // Enabled the CAN 1 interrupt
+  
+  
+   {$IFDEF XPRESSNET_UART_ENABLE}
+  // Initialize XpressNet UART 2, Xpressnet 65kbaud
+  U2BRG := BRG_EXPRESSNET_62500;
+  PDSEL_0_U2MODE_bit := 1;   // 11 = 9-Bit Data, no parity
+  PDSEL_1_U2MODE_bit := 1;   // 00 = 8-Bit Data, no parity
+  STSEL_U2MODE_bit   := 0;   // 0 = 1 Stop Bit
+  ADDEN_U2STA_bit    := 0;   // Address detect (9-bit mode) disabled
+  UARTEN_U2MODE_bit  := 1;   // Enable the UART module, must be done before enabling the UTXEN
+  U2RXIP_0_Bit        := 0;   // Interrupt Priority is third only to the DCC signal and the PC UART = 4
+  U2RXIP_1_Bit        := 0;
+  U2RXIP_2_Bit        := 1;
+  URXISEL_0_Bit      := 0;   // Interrupt with the buffer system has 1 bytes
+  URXISEL_1_Bit      := 0;
+  U2RXIF_Bit         := 0;   // Clear the interrupt flag
+  UTXEN_U2STA_bit    := 1;   // Enable Transmission
+  CN17PUE_bit        := 1;   // Enable the internal pull up  on the Rx Pin
+  U2RXIE_bit         := 1;   // Enable the RX Interrupt, is enabled when needed
+  {$ENDIF}
+  
+  // Global (Slow) 16 Bit Timer Initialization
+  TMR1              := 0;
+  PR1               := _840ms_PERIOD;  // Fire the interrupt every 840ms or so (low priority)
+  TCKPS_0_T1CON_bit := 1;    // 256 prescaler
+  TCKPS_1_T1CON_bit := 1;
+  T1IF_bit          := 0;    // Reset the Interrupt flag
+  T1IP_0_bit        := 1;
+  T1IP_1_bit        := 0;
+  T1IP_2_bit        := 0;    // Interrupt Priority of  Timer 2 = 1 (lowest)
+  T1IE_bit          := 1;    // Enable the interrupt
+  TON_T1CON_bit     := 1;    // Turn the timer on
 
-
+  // Global 1 ms Timer
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
   T2IP_1_bit := 1;
   T2IP_2_bit := 0;

@@ -15,7 +15,7 @@
 //
 // ******************************************************************************
 
-unit XpressNet_Constants;
+unit NMRABusXpressNetConstants;
 
 const
     // Error Codes
@@ -112,8 +112,8 @@ const
 type
   TXpressNetInfo = record
     DeviceList: TDeviceList;
-    RS232Data: TXpressNetMessage;      // Asyncronous message received from the PC that is being dispatched, handled by the UART interrupt
-    RS232DataBuffer: TXpressNetMessage;// Asyncronous message received from the PC that is being dispatched, handled by the UART interrupt
+//    RS232Data: TXpressNetMessage;      // Asyncronous message received from the PC that is being dispatched, handled by the UART interrupt
+//    RS232DataBuffer: TXpressNetMessage;// Asyncronous message received from the PC that is being dispatched, handled by the UART interrupt
     XpressNetData: TXpressNetMessage;  // Syncronous message recieved from the command station pinging the XpressNet bus begin dispatched
     iActiveDevice: Byte;               // Index of the Active Device in the Device List
     DeviceDiscoveryTimerCount: Word;   // Indexes number of Counts since Last Device Discovery period, if Set to (REDISCOVERY_TIME + 1) then means Discovery loop in process.  See DiscoveryNeeded, DiscoveryInProcess

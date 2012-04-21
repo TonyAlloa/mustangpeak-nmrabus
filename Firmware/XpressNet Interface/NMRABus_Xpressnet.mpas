@@ -25,6 +25,8 @@ uses
   CANStorage,
   dsPIC30_Traps,
   NMRABusDatagrams,
+  NMRABusXpressnet,
+  NMRABusXpressnetDevices,
   NodeIDs;
 
 {$I Options.inc}
@@ -46,7 +48,15 @@ end;
 //  INTERRUPTS
 // *****************************************************************************
 
-procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
+procedure INTERRUPT_Timer_840ms(); iv IVT_ADDR_T1INTERRUPT;
+begin 
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+  T2IF_bit := 0;
+  XpressNet_840ms_TimeTick;
+end;
+
+procedure INTERRUPT_Timer_1ms(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 1m
 begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
@@ -55,6 +65,18 @@ begin
   NMRABus_GlobalTimer;
 end;
 
+{$IFDEF XPRESSNET_UART_ENABLE}
+procedure INTERRUPT_XPRESSNET_UART_RX(); iv IVT_ADDR_U2RXINTERRUPT;
+begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+  U2RXIF_Bit := 0;              // Clear the interrupt flag to receive the next byte
+
+  while (URXDA_U2STA_bit = 1) and (XpressNetBuffer.XPressNetData.StateMachineIndex < STATE_RS232_FULL)  do
+    XpressNet_UART_RX_StateMachine(@XpressNetBuffer, @XpressNetBuffer.XPressNetData, U2RXREG, False);
+
+end;
+{$ENDIF}
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
 procedure INTERRUPT_Pin_Change_Notification(); iv IVT_ADDR_CNINTERRUPT;         // 93us when a TransmitCompleteOnCANLayerPacket called with new Tx Packet waiting
@@ -90,9 +112,11 @@ end;
 // *******************
 begin
   CANStorage_Initialize;
+  Devices_Initialize;
   MCU_Setup_Initialize;
   NMRABus_Initialize;
   NMRABusDatagrams_Initialize;
+  XpressNet_Initialize;
 
   NMRABus_Connect;
   NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
@@ -107,9 +131,21 @@ begin
       
       if NMRABus_Permitted then
       begin
+        // NMRANet CAN Bus
         HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
         NMRABus_HandleDatagrams(@DatagramPacketHandler);
-    //    NMRABus_HandleStreams;
+        
+        // Xpressnet Bus
+     //   if not Device_InServiceMode(XpressNetBuffer.iActiveDevice) then
+          if (XpressNetBuffer.iActiveDevice > 0) then
+            if (XpressNetBuffer.iActiveDevice <= ID_MAX_DEVICE) then
+            begin
+              if Device_Active_And_Acknowledging then
+                Xpressnet_SendNextNormalInquiryAndDispatch
+              else
+                XpressNet_RequestAcknowledgment    // Try to get the device back on line
+            end;
+        Devices_NextDeviceID;  // Get the next device in the Active List
       end
     end;
 end.
