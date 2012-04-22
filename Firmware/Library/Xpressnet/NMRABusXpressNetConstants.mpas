@@ -119,7 +119,7 @@ type
     DeviceDiscoveryTimerCount: Word;   // Indexes number of Counts since Last Device Discovery period, if Set to (REDISCOVERY_TIME + 1) then means Discovery loop in process.  See DiscoveryNeeded, DiscoveryInProcess
     Flags: Byte;                       // Bit 0 = PC Communication is is process
     Watchdog_Count_XpressNet_Bus : Byte;  // When reaches XPRESSNET_BUS_HUNG_COUNT the bus is concidered hungup
-    Watchdog_Count_PC_Bus        : Byte;  // When reaches XPRESSNET_PC_HUNG_COUNT the bus is concidered hungup
+ //   Watchdog_Count_PC_Bus        : Byte;  // When reaches XPRESSNET_PC_HUNG_COUNT the bus is concidered hungup
   end;
   PXpressNetInfo = ^TXpressNetInfo;
  // ****************************************************************************

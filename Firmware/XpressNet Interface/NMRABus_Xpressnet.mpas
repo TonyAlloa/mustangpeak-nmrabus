@@ -26,6 +26,7 @@ uses
   dsPIC30_Traps,
   NMRABusDatagrams,
   NMRABusXpressnet,
+  NMRABusXpressNetConstants,
   NMRABusXpressnetDevices,
   NodeIDs;
 
@@ -48,11 +49,11 @@ end;
 //  INTERRUPTS
 // *****************************************************************************
 
-procedure INTERRUPT_Timer_840ms(); iv IVT_ADDR_T1INTERRUPT;
+procedure INTERRUPT_Timer_840ms(); iv IVT_ADDR_T3INTERRUPT;
 begin 
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
-  T2IF_bit := 0;
+  T3IF_bit := 0;
   XpressNet_840ms_TimeTick;
 end;
 
@@ -73,8 +74,9 @@ begin
   U2RXIF_Bit := 0;              // Clear the interrupt flag to receive the next byte
 
   while (URXDA_U2STA_bit = 1) and (XpressNetBuffer.XPressNetData.StateMachineIndex < STATE_RS232_FULL)  do
+  begin
     XpressNet_UART_RX_StateMachine(@XpressNetBuffer, @XpressNetBuffer.XPressNetData, U2RXREG, False);
-
+  end
 end;
 {$ENDIF}
 
@@ -112,7 +114,7 @@ end;
 // *******************
 begin
   CANStorage_Initialize;
-  Devices_Initialize;
+  NMRABusXpressnetDevices_Initialize;
   MCU_Setup_Initialize;
   NMRABus_Initialize;
   NMRABusDatagrams_Initialize;
@@ -145,7 +147,9 @@ begin
               else
                 XpressNet_RequestAcknowledgment    // Try to get the device back on line
             end;
-        Devices_NextDeviceID;  // Get the next device in the Active List
+
+            LATD9_bit := Device_Active_And_Acknowledging;
+        NMRABusXpressnetDevices_NextDeviceID;  // Get the next device in the Active List     THIS IS MODIFIED >>>>>>>>>>>>>>>>>>>>>>>>> MUST RESTORE
       end
     end;
 end.

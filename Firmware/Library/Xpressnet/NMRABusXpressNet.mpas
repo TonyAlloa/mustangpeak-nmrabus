@@ -150,7 +150,7 @@ begin
   Xpressnet_RS485_Select          := 0;
   Xpressnet_RS485_Select_Direction := 0;      // Output
   XpressNetBuffer.Watchdog_Count_XpressNet_Bus := 0;
-  XpressNetBuffer.Watchdog_Count_PC_Bus := 0;
+ // XpressNetBuffer.Watchdog_Count_PC_Bus := 0;
 end;
 
 // *****************************************************************************
@@ -176,15 +176,17 @@ begin
   // Count up to the hung time then freeze.  Once Hung it is hung until the next
   // device ID is queried and it is reset
   if XpressNetBuffer.Watchdog_Count_XpressNet_Bus < XPRESSNET_BUS_HUNG_COUNT then
+  begin
     Inc(XpressNetBuffer.Watchdog_Count_XpressNet_Bus);
+  end;
 
   // Count up to the hung time then freeze.  Once Hung it is hung until the next
   // PC time slot is sampled and it is reset
-  if XpressNetBuffer.Flags.MASK_XPRESSNET_PC_COMMUNICATING_BIT = 1 then
+{  if XpressNetBuffer.Flags.MASK_XPRESSNET_PC_COMMUNICATING_BIT = 1 then
   begin
     if XpressNetBuffer.Watchdog_Count_PC_Bus < XPRESSNET_PC_HUNG_COUNT then
       Inc(XpressNetBuffer.Watchdog_Count_PC_Bus);
-  end;
+  end;    }
 end;
 
 // *****************************************************************************
@@ -236,19 +238,22 @@ procedure XpressNet_UART_RX_StateMachine(XpressNetBuffer: PXpressNetInfo; Xpress
 var
   Error: Byte;
   i: Integer;
-begin
+begin          
+
   case XpressNetMessage^.StateMachineIndex of
     STATE_RS232_READ_HEADER_BYTE :
       begin
-        if IsPC then
+      //  LATD3_bit := 1;
+      //  delay_us(10);
+      //  LATD3_bit := 0;
+      
+      {  if IsPC then
         begin
           XpressNetBuffer^.Watchdog_Count_PC_Bus := 0;                       // Reset the PC BUS Hung count
           XpressNetBuffer^.Flags.MASK_XPRESSNET_PC_COMMUNICATING_BIT := 1;   // We are communicating with the PC
-        end;
-          
+        end;   }
         XpressNetMessage^.DataCount := ReceivedByte and $0F;         // Use only the lower nibble for the count
         XpressNetMessage^.Instruction := ReceivedByte and $F0;       // Strip off the Data Count in the lower nibble
-
         XpressNetMessage^.StateMachineIndexDataByte := 0;
         if XpressNetMessage^.DataCount = 0 then                      // If the count is 0 then jump to the XOR byte state
           XpressNetMessage^.StateMachineIndex := STATE_RS232_READ_XOR_BYTE
@@ -522,12 +527,17 @@ end;
 //
 // *****************************************************************************
 procedure ReadXpressNetBuss(XpressNetMessage: PXpressNetMessage; StatusReg: ^Word);
+var
+  Dummy: Word;
 begin
+  while (URXDA_U2STA_bit = 1) do Dummy := U2RXREG;                              // Flush the RX Buffer
+  U2RXIF_Bit := 0;                                                              // Clear the interrupt flag to receive the next byte
   XpressnetBuffer.Watchdog_Count_XpressNet_Bus := 0;                            // Clear Hung Counter
   XpressNetMessage^.StateMachineIndex := STATE_RS232_READ_HEADER_BYTE;          // Reset the RS232 RX statemachine
 
   XpressNetMessage^.MessageReadResult := E_WINDOW_TIMEOUT;                      // Assume a timeout
   Delay_us(120);
+
   if (StatusReg^.RIDLE = 0) or (StatusReg^.URXDA = 1) then                      // Detect a response on the buss
   begin
     while XpressnetBuffer.Watchdog_Count_XpressNet_Bus < XPRESSNET_BUS_HUNG_COUNT do    // Loop waiting for the full message to be recieved or the Hung Bus counter times out
@@ -660,7 +670,7 @@ begin
   SendXpressNetMessage(@XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
 end;
 
-{
+
 // *****************************************************************************
 //
 // procedure Send_LocomotiveBeingOperatedByAnotherDevice;
@@ -671,7 +681,7 @@ end;
 //              Implements "2.1.15 Locomotive is being operated by another device response (XpressNet only)" in the XpressNet spec
 //
 // *****************************************************************************
-procedure Send_LocomotiveBeingOperatedByAnotherDevice(Slot: PAddressSlot);
+{procedure Send_LocomotiveBeingOperatedByAnotherDevice(Slot: PAddressSlot);
 var
   XpressNetMessage: TXpressNetMessage;
   HiAddress, LoAddress: Byte;
@@ -682,15 +692,18 @@ begin
     XpressNetMessage.Bytes[0]   := %01000000;            // $40
     HiAddress := 0;
     LoAddress := 0;
-    AddressSlot_EncodeAddressToNMRA_Format(Slot, HiAddress, LoAddress, True);
+
+  // TODO...
+  
+  AddressSlot_EncodeAddressToNMRA_Format(Slot, HiAddress, LoAddress, True);
 //    AddressSlot_EncodeAddressToNMRA_Format(Slot, XpressNetMessage.Bytes[1], XpressNetMessage.Bytes[2]);    BUG in mPASCAL
     XpressNetMessage.Bytes[1] := HiAddress;
     XpressNetMessage.Bytes[2] := LoAddress;
     XpressNetMessage.DataCount := 3;
     SendXpressNetMessage(@XpressNetMessage, CALLBYTE_RESPONSE, Slot^.OwnerDevice);
   end
-end;
-}
+end;     }
+
 
 // *****************************************************************************
 //
@@ -714,7 +727,7 @@ begin
   SendXpressNetMessage(@XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
 end;
 
-{
+
 // *****************************************************************************
 //
 // procedure Send_AddressRetrievalInfo;
@@ -727,14 +740,17 @@ end;
 //              Implements "2.1.15 Locomotive is being operated by another device response (XpressNet only)" in the XpressNet spec
 //
 // *****************************************************************************
-procedure Send_AddressRetrievalInfo(iDevice: Byte; ASlot: PAddressSlot);
+{procedure Send_AddressRetrievalInfo(iDevice: Byte; ASlot: PAddressSlot);
 var
   XpressNetMessage: TXpressNetMessage;
   AddressHi, AddressLo, RequestInfo: Byte;
 begin
   AddressHi := 0;
   AddressLo := 0;
-  if ASlot = nil then
+  
+  // TODO....
+  
+ if ASlot = nil then
     RequestInfo := ADDRESS_RETRIEVAL_NOT_FOUND
   else begin
     if ASlot^.Flags.ADDRESS_SLOT_FLAGS_CONSIST_BIT = 1 then
@@ -756,8 +772,8 @@ begin
   XpressNetMessage.Bytes[2] := AddressLo;
   XpressNetMessage.DataCount := 3;
   SendXpressNetMessage(@XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
-end;
-}
+end;  }
+
 
 // *****************************************************************************
 //
@@ -775,11 +791,11 @@ var
 begin
   SendXpressNetMessage(XpressNetMessage, Command, ID_PC_DEVICE);
   SendXpressNetMessage(XpressNetMessage, Command, 0);
- // for i := ID_MIN_DEVICE to ID_MAX_DEVICE do
- // begin
- //   if XpressNetBuffer.DeviceList[i].Flags and MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING = MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING then
- //      SendXpressNetMessage(XpressNetMessage, Command, i);
- // end
+  for i := ID_MIN_DEVICE to ID_MAX_DEVICE do
+  begin
+    if XpressNetBuffer.DeviceList[i].Flags and MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING = MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING then
+       SendXpressNetMessage(XpressNetMessage, Command, i);
+  end
 end;
 
 
@@ -1098,21 +1114,24 @@ end;
 // *****************************************************************************
 procedure ResumeOperationsRequest(XpressNetMessage: PXpressNetMessage);
 begin
-{  ServiceMode_End;             // Any kind of Service Mode in process is finshed
-  SPI_UpdateDCC_Outputs;
+
+//TODO....
+
+//  ServiceMode_End;             // Any kind of Service Mode in process is finshed
+//  SPI_UpdateDCC_Outputs;
   
-  NMRA_DCC_ResetTransmitter(@Track);                                      // Reset the transmitters so we are not in the middle of an unknown message
-  NMRA_DCC_ResetTransmitter(@Accessory);
-  NMRA_DCC_ResetTransmitter(@Programming);  
+//  NMRA_DCC_ResetTransmitter(@Track);                                      // Reset the transmitters so we are not in the middle of an unknown message
+ // NMRA_DCC_ResetTransmitter(@Accessory);
+//  NMRA_DCC_ResetTransmitter(@Programming);
   
-  CommandStation.Flags.COMMANDSTATION_FLAGS_EMERGENCY_SHUTDOWN_BIT := 0;  // Flag the Command Station is not in E-Shutdown or E-Stop
-  CommandStation.Flags.COMMANDSTATION_FLAGS_EMERGENCY_STOP_BIT := 0;
+ // CommandStation.Flags.COMMANDSTATION_FLAGS_EMERGENCY_SHUTDOWN_BIT := 0;  // Flag the Command Station is not in E-Shutdown or E-Stop
+ // CommandStation.Flags.COMMANDSTATION_FLAGS_EMERGENCY_STOP_BIT := 0;
 
   XpressNetMessage^.HeaderByte := %01100001;  // $61;  Reuse the passed XpressNet Message, enviromentally friendly save the bytes!
   XpressNetMessage^.Bytes[0]   := %00000001;  // $01
   XpressNetMessage^.DataCount  := 1;  
   Broadcast_XpressNetMessage(XpressNetMessage, CALLBYTE_BROADCAST);
-  Broadcast_XpressNetMessage(XpressNetMessage, CALLBYTE_BROADCAST);  }
+  Broadcast_XpressNetMessage(XpressNetMessage, CALLBYTE_BROADCAST);
 end;
 
 // *****************************************************************************
@@ -1129,14 +1148,18 @@ end;
 // *****************************************************************************
 procedure StopOperationsRequest(XpressNetMessage: PXpressNetMessage);
 begin
-{  CommandStation.Flags.COMMANDSTATION_FLAGS_EMERGENCY_SHUTDOWN_BIT := 1;  // Flag the Command Station is in E-Shutdown
-  ServiceMode_End;             // Any kind of Service Mode in process is finshed
-  SPI_UpdateDCC_Outputs;
+
+// TODO....
+
+//  CommandStation.Flags.COMMANDSTATION_FLAGS_EMERGENCY_SHUTDOWN_BIT := 1;  // Flag the Command Station is in E-Shutdown
+ // ServiceMode_End;             // Any kind of Service Mode in process is finshed
+//  SPI_UpdateDCC_Outputs;
+
   XpressNetMessage^.HeaderByte  := %01100001;  // $61
   XpressNetMessage^.Bytes[0]    := %00000000;  // $00
   XpressNetMessage^.DataCount   := 1;  
   Broadcast_XpressNetMessage(XpressNetMessage, CALLBYTE_BROADCAST);
-  Broadcast_XpressNetMessage(XpressNetMessage, CALLBYTE_BROADCAST);  }
+  Broadcast_XpressNetMessage(XpressNetMessage, CALLBYTE_BROADCAST);
 end;
 
 // *****************************************************************************
@@ -1156,15 +1179,18 @@ procedure StopAllLocomotivesRequest(XpressNetMessage: PXpressNetMessage; iDevice
 //var
 //  NewMessage: TDCCQueueMessage;
 begin
-{  CommandStation.Flags.COMMANDSTATION_FLAGS_EMERGENCY_STOP_BIT := 1;
-  NMRA_DCC_LoadMessage(@NewMessage, %00000000, %01000001, 0, 0, 0, 2);   // NMRA Basic Emergency Stop All instruction
-  NMRA_DCC_QueueMessage(@Track, @NewMessage, True);
+
+  // TODO...
+  
+//  CommandStation.Flags.COMMANDSTATION_FLAGS_EMERGENCY_STOP_BIT := 1;
+//  NMRA_DCC_LoadMessage(@NewMessage, %00000000, %01000001, 0, 0, 0, 2);   // NMRA Basic Emergency Stop All instruction
+//  NMRA_DCC_QueueMessage(@Track, @NewMessage, True);
   XpressNetMessage^.HeaderByte := %10000000;  // $80
   XpressNetMessage^.DataCount  := 0;
   Broadcast_XpressNetMessage(XpressNetMessage, CALLBYTE_BROADCAST);
   Broadcast_XpressNetMessage(XpressNetMessage, CALLBYTE_BROADCAST);
   SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
-  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice); }
+  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
 end;
 
 {
@@ -1441,11 +1467,14 @@ end;
 //
 // *****************************************************************************
 procedure DispatchServiceModeResultsRequest(iDevice: Byte);
-{var
+var
   Mask: Byte;
   RegisterIndex: Word;
-  XpressNetMessage: TXpressNetMessage;   }
+  XpressNetMessage: TXpressNetMessage;
 begin
+
+// TODO...
+
  { case ServiceModeInfo.ServiceModeResult of
     SERVICE_MODE_RESULT_SHORTCIRCUIT :            // System had too much current draw
       begin
@@ -1466,11 +1495,11 @@ begin
         XpressNetMessage.DataCount := 1;
       end;
     SERVICE_MODE_RESULT_STATION_READY :           // Not supported in XpressNet yet
-      begin
+      begin                        }
         XpressNetMessage.HeaderByte := %01100001;   // $61
         XpressNetMessage.Bytes[0] := %00010001;     // $11
         XpressNetMessage.DataCount := 1;
-      end;
+  {    end;
     SERVICE_MODE_RESULT_RESPONSE_PAGE_MODE :        // Response was achieved in Register or Page mode
       begin
         // Page Mode supports 1024 but the Xpressnet implementation only support 256
@@ -1522,8 +1551,8 @@ begin
         XpressNetMessage.Bytes[2] := ServiceModeInfo.Buffer.DeviceCache.Value;
         XpressNetMessage.DataCount := 3;
       end;
-  end;
-  SendXpressNetMessage(@XpressNetMessage, CALLBYTE_RESPONSE, iDevice);}
+  end;  }
+  SendXpressNetMessage(@XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
 end;
 
 // *****************************************************************************
@@ -1632,11 +1661,11 @@ end;
 // *****************************************************************************
 procedure CommandStationStatusRequest(XpressNetMessage: PXpressNetMessage; iDevice: Byte);
 begin
- { XpressNetMessage^.HeaderByte := %01100010;  // Reuse the passed XpressNet Message, enviromentally friendly save the bytes!
+  XpressNetMessage^.HeaderByte := %01100010;  // Reuse the passed XpressNet Message, enviromentally friendly save the bytes!
   XpressNetMessage^.Bytes[0]   := %00100010;
-  XpressNetMessage^.Bytes[1]   := CommandStation.Flags and $00FF;  // CommandStation State bottom 8 bits are mapped as the Xpressnet Spec
+  XpressNetMessage^.Bytes[1]   := $00;      //   TODO:  CommandStation.Flags and $00FF;  // CommandStation State bottom 8 bits are mapped as the Xpressnet Spec
   XpressNetMessage^.DataCount  := 2;
-  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice); }
+  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
 end;
 
 // *****************************************************************************
@@ -1758,6 +1787,9 @@ procedure LocomotiveInformationRequestV3(XpressNetMessage: PXpressNetMessage; iD
 //var
 //  Slot, Slot2: PAddressSlot;
 begin
+
+// TODO...
+
 {  Slot := AddressSlot_FindSlot(ExtractAddressFromXpressNetMessage(XpressNetMessage, 1, 2), False);  // Don't allocate if it does not exist
   if Slot <> nil then
   begin    
@@ -1789,21 +1821,23 @@ begin
         AddressSlot_EncodeAddressToNMRA_Format(Slot2, XpressNetMessage^.Bytes[4], XpressNetMessage^.Bytes[5], True);
     end else
     begin
-      // The Address Slot is a normal loco
+      // The Address Slot is a normal loco     }
       XpressNetMessage^.Bytes[0] := %00000000;  // Identification
       XpressNetMessage^.HeaderByte := %11100100;
-      XpressNetMessage^.DataCount := 4;
+      XpressNetMessage^.DataCount := 4;         {
     end;
   
     XpressNetMessage^.Bytes[0] := XpressNetMessage^.Bytes[0] or MapSlotToXpressNetSpeedStepID(Slot);  // Indentification Byte
     if not ((Slot^.OwnerDevice = ID_NO_DEVICE) or (Slot^.OwnerDevice = iDevice)) then
       XpressNetMessage^.Bytes[0].XPRESSNET_LOCO_CONTROLLED_BY_DEVICE_BIT := 1;
-    XpressNetMessage^.Bytes[1]  := Slot^.SpeedDir;
-    XpressNetMessage^.Bytes[2]  := Slot^.Functions and $001F;          // Functions F0..F4;   Bottom 5 Bits F0-F4
-    XpressNetMessage^.Bytes[3]  := (Slot^.Functions shr 5) and $00FF;  // Functions F5..F12;  Shift out the bottom 5 bits to get F5-F12
-  
-    SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
+      
+          }
+    XpressNetMessage^.Bytes[1]  := 0; //Slot^.SpeedDir;
+    XpressNetMessage^.Bytes[2]  := 0; // Slot^.Functions and $001F;          // Functions F0..F4;   Bottom 5 Bits F0-F4
+    XpressNetMessage^.Bytes[3]  := 0;  //(Slot^.Functions shr 5) and $00FF;  // Functions F5..F12;  Shift out the bottom 5 bits to get F5-F12
 
+    SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
+      {
   end else
   begin
     // If we can't find a slot then send back default values for the address, this is so we don't allocate a slot when a user is just typing in
@@ -1814,7 +1848,6 @@ begin
     XpressNetMessage^.Bytes[2]  := 0;         // Functions F0..F4;   Bottom 5 Bits F0-F4
     XpressNetMessage^.Bytes[3]  := 0;         // Functions F5..F12;  Shift out the bottom 5 bits to get F5-F12
     XpressNetMessage^.DataCount := 4;
-    SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
   end  }
 end;
 
@@ -1841,13 +1874,13 @@ procedure FunctionStatusRequest(XpressNetMessage: PXpressNetMessage; iDevice: By
 begin
   // Extract the Address BEFORE changing the Message Data!!!!!
  { Slot := AddressSlot_FindSlot(ExtractAddressFromXpressNetMessage(XpressNetMessage, 1, 2), False); // Don't allocate if it does not exist
-  
+      }
   XpressNetMessage^.HeaderByte := %11100011;  // Reuse the passed XpressNet Message, enviromentally friendly save the bytes!
   XpressNetMessage^.Bytes[0]   := %01010000;  // Identification
   XpressNetMessage^.Bytes[1]   := $00;        // Functions F0..F4 Status;   Bottom 5 Bits F0-F4
   XpressNetMessage^.Bytes[2]   := $00;        // Functions F5..F12 Status;  Shift out the bottom 5 bits to get F5-F12
   XpressNetMessage^.DataCount  := 3;
-
+   {
   if Slot <> nil then
   begin
     // Valid for:
@@ -1855,10 +1888,10 @@ begin
     //     - MU can operate the functions of individual decoders
     //     - Double Header can operate the functions of individual decoders
     //     - Single decoder can operate its functions
-    XpressNetMessage^.Bytes[1]   := Slot^.FunctionType and $001F;            // Functions F0..F4 Status;   Bottom 5 Bits F0-F4
-    XpressNetMessage^.Bytes[2]   := (Slot^.FunctionType shr 5) and $00FF;    // Functions F5..F12 Status;  Shift out the bottom 5 bits to get F5-F12
-  end;
-  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);   }
+    XpressNetMessage^.Bytes[1]   := 0; //Slot^.FunctionType and $001F;            // Functions F0..F4 Status;   Bottom 5 Bits F0-F4
+    XpressNetMessage^.Bytes[2]   := 0; //(Slot^.FunctionType shr 5) and $00FF;    // Functions F5..F12 Status;  Shift out the bottom 5 bits to get F5-F12
+  end;                                                                  }
+  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
 end;
 
 // *****************************************************************************
@@ -1883,14 +1916,14 @@ procedure FunctionStateRequestEx(XpressNetMessage: PXpressNetMessage; iDevice: B
 begin
   // Extract the Address BEFORE changing the Message Data!!!!!
 {  Slot := AddressSlot_FindSlot(ExtractAddressFromXpressNetMessage(XpressNetMessage, 1, 2), False); // Don't allocate if it does not exist
-  
+       }
   XpressNetMessage^.HeaderByte := %11100100;  // Reuse the passed XpressNet Message, enviromentally friendly save the bytes!
   XpressNetMessage^.Bytes[0]   := %01010001;  // Identification
   XpressNetMessage^.Bytes[1]   := $00;        // Functions F13..F20 Momentary/Continious Status;  Bottom 8 Bits F20-F13
   XpressNetMessage^.Bytes[2]   := $00;        // Functions F21..F28 Momentary/Continious Status;  Shift out the bottom 5 bits to get F21..F28
   XpressNetMessage^.Bytes[3]   := $00;        // Mystery Byte that is not documented but needed
   XpressNetMessage^.DataCount  := 4;
-
+ {
   if Slot <> nil then
   begin
     // Valid for:
@@ -1900,8 +1933,8 @@ begin
     //     - Single decoder can operate its functions
     XpressNetMessage^.Bytes[1]   :=  Lo(Slot^.FunctionTypeEx);                  // Functions F13..F20 Momentary/Continious Status;  Bottom 8 Bits F20-F13
     XpressNetMessage^.Bytes[2]   :=  Hi(Slot^.FunctionTypeEx);                  // Functions F21..F28 Momentary/Continious Status;  Shift out the bottom 5 bits to get F21..F28
-  end;
-  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);   }
+  end;                                                                  }
+  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
 end;
 
 // *****************************************************************************
@@ -1926,13 +1959,13 @@ procedure FunctionOperationRequestEx(XpressNetMessage: PXpressNetMessage; iDevic
 begin  
  { // Extract the Address BEFORE changing the Message Data!!!!!
   Slot := AddressSlot_FindSlot(ExtractAddressFromXpressNetMessage(XpressNetMessage, 1, 2), False); // Don't allocate if it does not exist
-  
+ }
   XpressNetMessage^.HeaderByte := %11100011;  // Reuse the passed XpressNet Message, enviromentally friendly save the bytes!
   XpressNetMessage^.Bytes[0]   := %01010010;  // Identification
   XpressNetMessage^.Bytes[1]   := $00;        // Functions F13..F20 On/Off Status;  Bottom 8 Bits F20-F13
   XpressNetMessage^.Bytes[2]   := $00;        // Functions F21..F28 On/Off Status;  Shift out the bottom 5 bits to get F21..F28
   XpressNetMessage^.DataCount  := 3;
-
+    {
   if Slot <> nil then
   begin
     // Valid for:
@@ -1941,8 +1974,8 @@ begin
     //     - Single decoder can operate its functions
     XpressNetMessage^.Bytes[1]   := Lo(Slot^.FunctionsEx);                      // Functions F13..F20 On/Off Status;  Bottom 8 Bits F20-F13
     XpressNetMessage^.Bytes[2]   := Hi(Slot^.FunctionsEx)                       // Functions F21..F28 On/Off Status;  Shift out the bottom 5 bits to get F21..F28
-  end;
-  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice); }
+  end;                                                                }
+  SendXpressNetMessage(XpressNetMessage, CALLBYTE_RESPONSE, iDevice);
 end;
 
 // *****************************************************************************
@@ -2809,8 +2842,8 @@ end;
 //
 // *****************************************************************************
 procedure PC_Interface_SetBaudRate(XpressNetMessage: PXpressNetMessage; iDevice: Byte);
-{var
-  OldBaud: Word;    }
+var
+  OldBaud: Word;
 begin
   // 1.5.6
  { OldBaud := ((CommandStation.Flags and MASK_COMMANDSTATION_FLAGS_BAUD_RATE) shr COMMANDSTATION_FLAGS_BAUD_RATE_OFFSET) + 1;
@@ -2824,12 +2857,12 @@ begin
       BAUD_RATE_XPRESSNET_PC_INTERFACE_57600 : CommandStation.Flags := CommandStation.Flags or COMMANDSTATION_FLAGS_BAUD_RATE_57600;
       BAUD_RATE_XPRESSNET_PC_INTERFACE_115200 : CommandStation.Flags := CommandStation.Flags or COMMANDSTATION_FLAGS_BAUD_RATE_115200;
     end;
-    XpressNetMessage^.HeaderByte := %11110010;
+  }  XpressNetMessage^.HeaderByte := %11110010;
     XpressNetMessage^.Bytes[0] := %00000010;
-    XpressNetMessage^.Bytes[1] := OldBaud;
+    XpressNetMessage^.Bytes[1] := 0; //  OldBaud;
     XpressNetMessage^.DataCount := 2;
     SendXpressNetMessage(XpressNetMessage, %00000000, iDevice);  // Reply at the old baud rate
-    CommandStation_SetupBaud_Rate;
+  {  CommandStation_SetupBaud_Rate;
   end else
   begin
     XpressNetMessage^.HeaderByte := %11110010;
@@ -2858,7 +2891,7 @@ begin
     %00100000:  // 0010 xxxx {$2x}
       begin
         case XpressNetMessage^.DataCount of
-          1: begin
+          1: begin  LATD3_bit := not LATD3_bit;
                case XpressNetMessage^.Bytes[0] of
                  %10000001 (*$81*): ResumeOperationsRequest(XpressNetMessage);                       // 2.2.2  Resume operations request
                  %10000000 (*$80*): StopOperationsRequest(XpressNetMessage);                         // 2.2.3  Stop operations request (emergency off)
@@ -3074,10 +3107,17 @@ begin
   WriteXpressNetByte( InsertHiBitParity(CALLBYTE_REQUEST_ACK_FROM_DEVICE or XpressNetBuffer.iActiveDevice), True, @U2TXREG, @U2STA);  // 000AAAAA
   Xpressnet_RS485_Select := 0;                                                                                                        // Select the 485 chip to receive mode ASAP
   ReadXpressNetBuss(@XpressNetBuffer.XpressNetData, @U2STA);                                                                          // Now wait for the response
-  
+
   case XpressNetBuffer.XpressNetData.MessageReadResult of
-    E_SUCCESS : Device^.Flags := Device^.Flags or MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING;                                      // Set the normal flags
-    E_WINDOW_TIMEOUT,
+    E_SUCCESS : 
+      begin
+        Device^.Flags := Device^.Flags or MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING;                                      // Set the normal flags
+      end;
+    E_WINDOW_TIMEOUT :
+      begin                                                                                                                            // If the Device times out when an Ack is sent then, by the spec, it will only
+        if Device^.Flags and MASK_XPRESSNET_DEVICE_ACTIVE <> 0 then                                                                     // receive Ack requests until it finally returns successfully.  Flag it as such
+          Device^.Flags := Device^.Flags and not MASK_XPRESSNET_DEVICE_ACKNOWLEDGING;                                                   // but only if it was a previously active Device
+      end;
     E_TRANSFER_XOR :                                                                                                                    // The time for the Communication Window with a device expired (Device does not exist?) Or The XOR Error Byte did not match
       begin                                                                                                                             // If the Device times out when an Ack is sent then, by the spec, it will only
         if Device^.Flags and MASK_XPRESSNET_DEVICE_ACTIVE <> 0 then                                                                     // receive Ack requests until it finally returns successfully.  Flag it as such
@@ -3112,7 +3152,6 @@ begin
   WriteXpressNetByte( InsertHiBitParity(CALLBYTE_INQUIRY or XpressNetBuffer.iActiveDevice), True, @U2TXREG, @U2STA); // Write to the Bus for a query
   Xpressnet_RS485_Select := 0;                                                                                       // Select the 485 chip to receive mode ASAP
   ReadXpressNetBuss(@XpressNetBuffer.XpressNetData, @U2STA);                                                         // Now wait for the Response
-  
   case XpressNetBuffer.XpressNetData.MessageReadResult of
     E_SUCCESS :                                                                                                      // No problems, responded to the request
       begin
@@ -3129,6 +3168,7 @@ begin
       end;
     E_BUS_HUNG :
       begin
+
       end;
   end
 end;

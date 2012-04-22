@@ -21,9 +21,9 @@ uses
   NMRABusXpressNetConstants;
 
 // Initialized the unit
-procedure Devices_Initialize;
+procedure NMRABusXpressnetDevices_Initialize;
 // Internally increments and stores the next device ID that needs a window slot on the XpressBus
-procedure Devices_NextDeviceID;
+procedure NMRABusXpressnetDevices_NextDeviceID;
 // Tests to see if the internally index Device is active but not ackowledging
 function Device_Active_But_Not_Acknowledging: Boolean; forward;
 // Tests to see if the internally index Device is active and ackowledging
@@ -34,7 +34,7 @@ function Device_InServiceMode(iDevice: Byte): Boolean;
 implementation
 
 // ***************************************************************************
-//  procedure Devices_Initialize;
+//  procedure NMRABusXpressnetDevices_Initialize;
 //
 //  Parameters:
 //           None
@@ -46,7 +46,7 @@ implementation
 //     Called once on startup to initialize the device list
 //
 // ***************************************************************************
-procedure Devices_Initialize;
+procedure NMRABusXpressnetDevices_Initialize;
 var
   i: Integer;
 begin
@@ -189,7 +189,7 @@ end;
 
 // ****************************************************************************
 //
-// procedure Devices_NextDeviceID;
+// procedure NMRABusXpressnetDevices_NextDeviceID;
 //
 //  Parameters:
 //           None
@@ -204,11 +204,11 @@ end;
 //           added devices to the bus
 //
 // *****************************************************************************
-procedure Devices_NextDeviceID;
+procedure NMRABusXpressnetDevices_NextDeviceID;
 begin
   if XpressNetBuffer.DeviceDiscoveryTimerCount = REDISCOVERY_TIME then          // Start the Rediscovery Sequence
   begin
-    XpressNetBuffer.iActiveDevice := 1;                                         // Reset to start of Device List
+    XpressNetBuffer.iActiveDevice := ID_MIN_DEVICE;                             // Reset to start of Device List
     Inc(XpressNetBuffer.DeviceDiscoveryTimerCount);                             // Flag that the Discovery is in process so next time through this is skipped
   end else
   if XpressNetBuffer.iActiveDevice > ID_MAX_DEVICE then                         // If overran devices then start the normal cycling of known devices and wait for the next Rediscover Time

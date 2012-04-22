@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\NMRABusXpressnet.mpas
+Value=..\Library\Xpressnet\NMRABusXpressnet.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -36,14 +36,13 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=7
-File0=..\Library\NMRABusDatagramDefines.mpas
-File1=..\Library\Xpressnet\NMRABusXpressNet.mpas
-File2=MCU_Setup_dsPIC4013.mpas
-File3=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\NMRABusXpressNetConstants.mpas
-File4=NMRABus_Xpressnet.mpas
-File5=..\Library\Xpressnet\NMRABusXpressnetDevices.mpas
-File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\NMRABusXpressnet.mpas
+Count=6
+File0=..\Library\Xpressnet\NMRABusXpressnet.mpas
+File1=..\Library\Xpressnet\NMRABusXpressNetConstants.mpas
+File2=..\Library\Xpressnet\NMRABusXpressnetDevices.mpas
+File3=NMRABus_Xpressnet.mpas
+File4=..\..\..\dspXpressnet\Command Station\dspDCC_Command_Station.mpas
+File5=MCU_Setup_dsPIC4013.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -52,20 +51,14 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=13
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
-Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\
-Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
-Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
-Path10=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
-Path11=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
-Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
+Count=7
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
+Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
+Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
 [HEADER_PATH]
 Count=0
 [HEADERS]
