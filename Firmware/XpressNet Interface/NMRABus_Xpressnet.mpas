@@ -108,7 +108,6 @@ procedure DatagramPacketHandler(DatagramBuffer: PDatagramBuffer; var DoDefault: 
 begin
 end;
 
-
 // *******************
 // MAIN LOOP
 // *******************

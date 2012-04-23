@@ -43,6 +43,7 @@ const
 function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
 function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
+procedure DecodeRawBuffer(RawBuffer: PCANRawBuffer; var Buffer: TCANBuffer);
 // *****************************************************************************
  
 procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
@@ -191,7 +192,7 @@ end;
 //
 // parameters:
 //
-//  Description:
+//  Description:    Approx 220 cycles (11us at 80Mhz)
 //
 // ****************************************************************************
 procedure dsPIC30_Style_Buffer(Direction: Word; CANPtr: ^Word; var Buffer: TCANBuffer);
@@ -327,10 +328,25 @@ begin
   Tail := CANStorage_Tail(List);
   if Tail <> nil then
   begin
-    dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @(Tail^.Word0), Buffer);         // dsPIC33 and the dsPIC30 are the same format for RX Buffers
+    dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @Tail^.Word0, Buffer);         // dsPIC33 and the dsPIC30 are the same format for RX Buffers
     CANStorage_IncTail(List);
     Result := True;
-  end
+  end                                                                               -
+end;
+
+// *****************************************************************************
+//  function ExtractFromList
+//     Parameters:
+//
+//     Returns: True if the return parameters are valid (i.e. there was something to read in the List
+//
+//     Description:   Loads the passed paramters with the next Buffer Data in the FIFO list
+//                    ~260 Cycles to complete for the dsPIC33 and dsPIC30
+//
+// *****************************************************************************
+procedure DecodeRawBuffer(RawBuffer: PCANRawBuffer; var Buffer: TCANBuffer);
+begin
+  dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @(RawBuffer^.Word0), Buffer);
 end;
 
 end.

@@ -65,6 +65,7 @@ type
   
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
+  procedure DecodeRawBuffer(RawBuffer: PCANRawBuffer; var Buffer: TCANBuffer); external;
   
   // defined in the user program
   procedure GetUniqueIDFunc(var HiID, LoID: DWord); external;
@@ -295,12 +296,12 @@ procedure ReceivedOnFilter0(RawBuffer: PCANRawBuffer);
 var
   Next: PCANRawBuffer;
 begin
-  Next := CANStorage_Head(@RX_CANLayer_List);
+  Next := CANStorage_Head(@RX_CANLayer_List);                                   // A little inefficient but keeps it consistent, move the message in to the buffer
   if Next <> nil then
   begin
     Next^ := RawBuffer^;
     CANStorage_IncHead(@RX_CANLayer_List);
-    HandlePacketReceivedOnCANLayer
+    HandlePacketReceivedOnCANLayer                                              // On the CAN Layer the messages are dealt with in real time
   end else
   begin
       // Have overrun problem
@@ -320,12 +321,17 @@ end;
 procedure ReceivedOnFilter1(RawBuffer: PCANRawBuffer);
 var
   Next: PCANRawBuffer;
+  Buffer: TCANBuffer;
 begin
   Next := CANStorage_Head(@RX_NMRABusLayer_List);
   if Next <> nil then
   begin
-    Next^ := RawBuffer^;
-    CANStorage_IncHead(@RX_NMRABusLayer_List);
+    DecodeRawBuffer(RawBuffer, Buffer);
+    if not NMRABusUtilities_IsAddressedMessageToOtherNode(@Buffer) then
+    begin
+      Next^ := RawBuffer^;
+      CANStorage_IncHead(@RX_NMRABusLayer_List);
+    end
   end else
   begin
       // Have overrun problem

@@ -60,6 +60,8 @@ const
   FT_AME                            = $00702000;                                // Alias Mapping Enquiry
   FT_AMR                            = $00703000;                                // Alias Map Reset Frame
 
+  FT_MTI_TYPE_MASK                  = $07000000;
+  FT_FIRST_ADDRESSED_MTI_TYPE       = $04000000;                                // Destination Address for Datagram Non Last Segment (up to $07000000 for Addressed Stream)
 
   FT_INITIALIZATION_COMPLETE        = $09087000;
   FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
