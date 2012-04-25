@@ -2107,6 +2107,9 @@ begin
     if iDevice = ID_PC_DEVICE then  // The PC needs a response
       Send_PCMessage(ErrorCode);
   end             }
+  
+  //LATD3_bit := not LATD3_bit;
+  //delay_ms(10000);
 end;
 
 

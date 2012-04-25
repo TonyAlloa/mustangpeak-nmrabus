@@ -331,7 +331,7 @@ begin
     dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @Tail^.Word0, Buffer);         // dsPIC33 and the dsPIC30 are the same format for RX Buffers
     CANStorage_IncTail(List);
     Result := True;
-  end                                                                               -
+  end
 end;
 
 // *****************************************************************************
