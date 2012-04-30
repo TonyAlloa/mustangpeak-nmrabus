@@ -43,7 +43,6 @@ const
 function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
 function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
-procedure DecodeRawBuffer(RawBuffer: PCANRawBuffer; var Buffer: TCANBuffer);
 // *****************************************************************************
  
 procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
@@ -332,21 +331,6 @@ begin
     CANStorage_IncTail(List);
     Result := True;
   end
-end;
-
-// *****************************************************************************
-//  function ExtractFromList
-//     Parameters:
-//
-//     Returns: True if the return parameters are valid (i.e. there was something to read in the List
-//
-//     Description:   Loads the passed paramters with the next Buffer Data in the FIFO list
-//                    ~260 Cycles to complete for the dsPIC33 and dsPIC30
-//
-// *****************************************************************************
-procedure DecodeRawBuffer(RawBuffer: PCANRawBuffer; var Buffer: TCANBuffer);
-begin
-  dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @(RawBuffer^.Word0), Buffer);
 end;
 
 end.

@@ -148,7 +148,7 @@ begin
             end;
 
             LATD9_bit := Device_Active_And_Acknowledging;
-        NMRABusXpressnetDevices_NextDeviceID;  // Get the next device in the Active List     THIS IS MODIFIED >>>>>>>>>>>>>>>>>>>>>>>>> MUST RESTORE
+        NMRABusXpressnetDevices_NextDeviceID;  // Get the next device in the Active List
       end
     end;
 end.

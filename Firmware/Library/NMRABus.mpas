@@ -289,7 +289,7 @@ end;
 //
 //     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
 //                  Called when a message passes Filter 0 which is defined
-//                  as any NMRABus level message (bit 26 = 0)
+//                  as any CAN level message (bit 26 = 0)
 //
 // *****************************************************************************
 procedure ReceivedOnFilter0(RawBuffer: PCANRawBuffer);
@@ -321,17 +321,12 @@ end;
 procedure ReceivedOnFilter1(RawBuffer: PCANRawBuffer);
 var
   Next: PCANRawBuffer;
-  Buffer: TCANBuffer;
 begin
   Next := CANStorage_Head(@RX_NMRABusLayer_List);
   if Next <> nil then
   begin
-    DecodeRawBuffer(RawBuffer, Buffer);
-    if not NMRABusUtilities_IsAddressedMessageToOtherNode(@Buffer) then
-    begin
-      Next^ := RawBuffer^;
-      CANStorage_IncHead(@RX_NMRABusLayer_List);
-    end
+    Next^ := RawBuffer^;
+    CANStorage_IncHead(@RX_NMRABusLayer_List);
   end else
   begin
       // Have overrun problem

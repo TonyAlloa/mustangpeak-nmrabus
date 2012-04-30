@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\NMRABus.mpas
+Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\NMRABusXpressnetDevices.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -38,18 +38,17 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=11
-File0=..\Library\NMRABusDatagramDefines.mpas
-File1=..\Library\Xpressnet\NMRABusXpressNet.mpas
-File2=MCU_Setup_dsPIC4013.mpas
-File3=..\Library\Xpressnet\NMRABusXpressNetConstants.mpas
-File4=NMRABus_Xpressnet.mpas
-File5=..\Library\Xpressnet\NMRABusXpressnetDevices.mpas
-File6=..\Library\NMRABusMobleNode\NMRABusMobileNode.mpas
-File7=..\Library\NMRABus.mpas
-File8=..\Library\NMRABusDefines.mpas
-File9=..\Library\NMRABusDatagrams.mpas
-File10=..\Library\dsPIC30_CAN.mpas
+Count=10
+File0=NMRABus_Xpressnet.mpas
+File1=..\Library\Xpressnet\NMRABusXpressnetDevices.mpas
+File2=..\Library\NMRABusMobleNode\NMRABusMobileNode.mpas
+File3=..\Library\NMRABus.mpas
+File4=..\Library\NMRABusDefines.mpas
+File5=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABus.mpas
+File6=..\Library\Statemachines\StateMachineBase.mpas
+File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusUtilities.mpas
+File8=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusDefines.mpas
+File9=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\NMRABusXpressnetDevices.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -58,15 +57,22 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=8
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusMobleNode\
+Count=15
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
+Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
+Path10=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusMobleNode\
+Path11=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
+Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
+Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
+Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRABusMobleNode\
 [HEADER_PATH]
 Count=0
 [HEADERS]

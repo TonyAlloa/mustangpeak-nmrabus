@@ -1,0 +1,11 @@
+unit StateMachineBase;
+
+type
+  TBaseStateMachine = record
+    State: Byte;
+    HeaderMatchMask: DWord;                                                     // The mask to match with the incomming message to increment the State
+  end;
+
+implementation
+
+end.
