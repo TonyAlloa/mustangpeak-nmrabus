@@ -1,0 +1,75 @@
+unit XpressnetUtilities;
+
+uses
+  XpressnetDefines;
+
+function XpressnetUtilities_InsertHiBitParity(DataByte: Byte): Byte;
+procedure XpressnetUtilities_WriteXpressNetByte(DataByte: Word; SetAddressBit: Boolean; TxReg: ^Word; StatusReg: ^Word);
+
+implementation
+
+// *****************************************************************************
+//
+// function XpressnetUtilities_InsertHiBitParity(DataByte: Byte): Byte;
+//
+//  Parameters:
+//                DataByte:  Byte to count '1's in
+//
+//  Returns:
+//                DataByte with the parity bit (inclusive) in the MSB
+//
+//  Description:
+//              Adds the parity bit to B7.  It is an inclusive parity only on
+//  address bytes
+//
+// *****************************************************************************
+function XpressnetUtilities_InsertHiBitParity(DataByte: Byte): Byte;
+begin
+  Result := 0;
+  if DataByte.B0 then Inc(Result);
+  if DataByte.B1 then Inc(Result);
+  if DataByte.B2 then Inc(Result);
+  if DataByte.B3 then Inc(Result);
+  if DataByte.B4 then Inc(Result);
+  if DataByte.B5 then Inc(Result);
+  if DataByte.B6 then Inc(Result);
+  // This is inclusive parity so if there are an even number of 1's (mod 2 = 0) then
+  // adding the parity bit will make the number of 1's odd
+  if Result mod 2 <> 0 then
+    Result := DataByte or %10000000
+  else
+    Result := DataByte
+end;
+
+// *****************************************************************************
+//
+// procedure XpressnetUtilities_WriteXpressNetByte(DataByte: Word; SetAddressBit: Boolean);
+//
+//   Parameters:
+//              DataByte:      The Byte to send
+//              SetAddressBit: True if the 9th bit should be set to signify it as an address
+//
+//   Returns:
+//      None
+//
+//  Description:
+//                The workhorse function that places the data onto the
+//    UART Xpressnet bus RS485 but in RS232 format
+//
+// *****************************************************************************
+procedure XpressnetUtilities_WriteXpressNetByte(DataByte: Word; SetAddressBit: Boolean; TxReg: ^Word; StatusReg: ^Word);
+begin
+  {$IFNDEF DISABLE_XPRESSNET_UART_WRITE}
+  if SetAddressBit then
+   DataByte := DataByte or $0100
+  else
+    DataByte := DataByte and $00FF;
+
+  TxReg^ := DataByte;
+  StatusReg^.UTXEN := 1;          // Force the Register in to the TSR so the Idle check is not "too fast" to start
+  while StatusReg^.TRMT = 1 do;   // Wait for the UART to start transmitting
+  while StatusReg^.TRMT = 0 do;   // Wait for the UART to finsh transmitting to make sure the ExpressNet timing is met
+  {$ENDIF}
+end;
+
+end.

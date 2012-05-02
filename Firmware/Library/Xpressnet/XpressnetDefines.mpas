@@ -15,15 +15,9 @@
 //
 // ******************************************************************************
 
-unit NMRABusXpressNetConstants;
+unit XpressnetDefines;
 
 const
-    // Error Codes
-  E_SUCCESS        = 0;       // Sucessful XpressNet data transfer
-  E_BUS_HUNG       = 1;       // The bus was hung up and no response
-  E_WINDOW_TIMEOUT = 2;       // The elapsed time for a communication with a device expired (Device does not exist?)
-  E_TRANSFER_XOR   = 3;       // The XOR Error Byte did not match
-
   E_PC_SUCCESS = $04;                           // Instruction was successfully sent to command or normal operations have resumed after a timeout
   E_PC_COMMUNICATION = $01;                     // Error occurred between the interfaces and the PC (Timeout during data communication with PC)
   E_PC_COMMANDSTATION_COMMUNICATION = $02;      // Error occurred between the interfaces and the command station (Timeout during data communication with command station)
@@ -90,15 +84,14 @@ type
   PXpressNetMessage = ^TXpressNetMessage;
   
 const
-  MASK_XPRESSNET_DEVICE_ACTIVE                              = $01;  // Indicates the Device is active on the bus
-  MASK_XPRESSNET_DEVICE_ACKNOWLEDGING                       = $02;  // Indicates the Device is acknowledging quires
-  MASK_XPRESSNET_DEVICE_DECOMMISIONED_FLAGS                 = $00;  // not Active, not Acknowledging
-  MASK_XPRESSNET_DEVICE_ACTIVE_AND_ACKNOWLEDGING            = MASK_XPRESSNET_DEVICE_ACTIVE or MASK_XPRESSNET_DEVICE_ACKNOWLEDGING;
+  XDS_XPRESSNET_DEVICE_INACTIVE                            = $00;  // not Active, not Acknowledging
+  XDS_XPRESSNET_DEVICE_ACTIVE                              = $01;  // Indicates the Device is active on the bus
+
 
 type
  // Information about the Devices found on the XpressNet bus
   TDevice = record
-    Flags: Byte;                     // Flags associated with the Device
+    State: Byte;                     // Flags associated with the Device
                                      //   Bit 0     - Set if the Device is Active (connected to the bus and communicating)
                                      //   Bit 1     - Set if the Device is not Acknowledging
   end;
@@ -110,22 +103,19 @@ const
   MASK_XPRESSNET_PC_COMMUNICATING_BIT      = 0;   // Set when the PC communication is occuring
 
 type
-  TXpressNetInfo = record
+  TXpressnetStateMachineInfo = record
     DeviceList: TDeviceList;
-//    RS232Data: TXpressNetMessage;      // Asyncronous message received from the PC that is being dispatched, handled by the UART interrupt
-//    RS232DataBuffer: TXpressNetMessage;// Asyncronous message received from the PC that is being dispatched, handled by the UART interrupt
-    XpressNetData: TXpressNetMessage;  // Syncronous message recieved from the command station pinging the XpressNet bus begin dispatched
-    iActiveDevice: Byte;               // Index of the Active Device in the Device List
-    DeviceDiscoveryTimerCount: Word;   // Indexes number of Counts since Last Device Discovery period, if Set to (REDISCOVERY_TIME + 1) then means Discovery loop in process.  See DiscoveryNeeded, DiscoveryInProcess
-    Flags: Byte;                       // Bit 0 = PC Communication is is process
-    Watchdog_Count_XpressNet_Bus : Byte;  // When reaches XPRESSNET_BUS_HUNG_COUNT the bus is concidered hungup
- //   Watchdog_Count_PC_Bus        : Byte;  // When reaches XPRESSNET_PC_HUNG_COUNT the bus is concidered hungup
+    XpressnetData: TXpressNetMessage;     // Syncronous message recieved from the command station pinging the XpressNet bus begin dispatched
+    iState: Byte;                         // Current State the StateMachine is in
+    Discovering: Boolean;                 // Discovering new Devices on the Xpressnet Bus
+    iActiveDevice: Byte;                  // The Device currently being communicated with
+    DiscoveryCount: Byte;                 // Counts (typically 840ms steps) between rediscovery intervals
+    WatchdogCount: Byte;                  // Counts (typically 840ms steps) before the Xpressnet Bus is declared hung
   end;
-  PXpressNetInfo = ^TXpressNetInfo;
- // ****************************************************************************
+  PXpressnetStateMachineInfo = ^TXpressnetStateMachineInfo;
 
 var
-  XpressNetBuffer: TXpressNetInfo;
+  XpressnetStateMachineInfo: TXpressnetStateMachineInfo;
   
   
 implementation

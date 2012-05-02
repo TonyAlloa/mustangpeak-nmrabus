@@ -25,9 +25,9 @@ uses
   CANStorage,
   dsPIC30_Traps,
   NMRABusDatagrams,
-  NMRABusXpressnet,
-  NMRABusXpressNetConstants,
-  NMRABusXpressnetDevices,
+  XpressnetDefines,
+  XpressnetStateMachine,
+  XpressnetDevices,
   NodeIDs;
 
 {$I Options.inc}
@@ -54,7 +54,7 @@ begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T3IF_bit := 0;
-  XpressNet_840ms_TimeTick;
+  XpressnetStateMachine_840ms_TimeTick;
 end;
 
 procedure INTERRUPT_Timer_1ms(); iv IVT_ADDR_T2INTERRUPT;
@@ -73,9 +73,9 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   U2RXIF_Bit := 0;              // Clear the interrupt flag to receive the next byte
 
-  while (URXDA_U2STA_bit = 1) and (XpressNetBuffer.XPressNetData.StateMachineIndex < STATE_RS232_FULL)  do
+  while (URXDA_U2STA_bit = 1) and (XpressnetStateMachineInfo.XPressNetData.StateMachineIndex < STATE_RS232_FULL)  do
   begin
-    XpressNet_UART_RX_StateMachine(@XpressNetBuffer, @XpressNetBuffer.XPressNetData, U2RXREG, False);
+    XpressnetStateMachine_UART_RX_StateMachine(@XpressnetStateMachineInfo, U2RXREG);
   end
 end;
 {$ENDIF}
@@ -117,7 +117,7 @@ begin
   MCU_Setup_Initialize;
   NMRABus_Initialize;
   NMRABusDatagrams_Initialize;
-  XpressNet_Initialize;
+  XpressnetStateMachine_Initialize;
 
   NMRABus_Connect;
   NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
@@ -136,19 +136,7 @@ begin
         HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
         NMRABus_HandleDatagrams(@DatagramPacketHandler);
         
-        // Xpressnet Bus
-     //   if not Device_InServiceMode(XpressNetBuffer.iActiveDevice) then
-          if (XpressNetBuffer.iActiveDevice > 0) then
-            if (XpressNetBuffer.iActiveDevice <= ID_MAX_DEVICE) then
-            begin
-              if Device_Active_And_Acknowledging then
-                Xpressnet_SendNextNormalInquiryAndDispatch
-              else
-                XpressNet_RequestAcknowledgment    // Try to get the device back on line
-            end;
-
-            LATD9_bit := Device_Active_And_Acknowledging;
-        NMRABusXpressnetDevices_NextDeviceID;  // Get the next device in the Active List
+        XpressnetStateMachine_Process;
       end
     end;
 end.

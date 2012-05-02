@@ -20,8 +20,7 @@ unit MCU_Setup_dsPIC4013;
 uses
   CANStorage,
   CANBuffers,
-  NMRABusXpressNetConstants,
-  NMRABusXpressnet,
+  XpressnetDefines,
   NMRABus;
 
 {$I Options.inc}
@@ -34,6 +33,8 @@ const
   CAN_PROP_SEG   = 1;               // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
   
   _840ms_PERIOD = $FFFF;     // prescaler = 256, 80Mhz clock = 1/(80Mhz/4) * _327675us_PERIOD = 3.27675ms
+  
+  BRG_EXPRESSNET_62500 = 19;       // 0.00% error with 80Mhz Clock
 
 procedure MCU_Setup_Initialize;
 
