@@ -18,6 +18,13 @@
 unit XpressnetDefines;
 
 const
+  VERSION_SOFTWARE_PC_INERFACE = %00000001;  // Software version 1
+  VERSION_HARDWARE_PC_INERFACE = %00010000;  // Hardware version 1.0
+  VERSION_SOFTWARE_XPRESSNET   = $36;        // Version 3.6 Compatible
+  VERSION_COMMANDSTATION_LZ100 = $00;        // LZ 100 - command station
+  VERSION_COMMANDSTATION_LH200 = $01;        // LH 200 - command station
+  VERSION_COMMANDSTATION_DPC   = $02;        // DPC - command station (Compact and COMM other)
+
   E_PC_SUCCESS = $04;                           // Instruction was successfully sent to command or normal operations have resumed after a timeout
   E_PC_COMMUNICATION = $01;                     // Error occurred between the interfaces and the PC (Timeout during data communication with PC)
   E_PC_COMMANDSTATION_COMMUNICATION = $02;      // Error occurred between the interfaces and the command station (Timeout during data communication with command station)
@@ -91,26 +98,26 @@ const
 type
  // Information about the Devices found on the XpressNet bus
   TDevice = record
-    State: Byte;                     // Flags associated with the Device
-                                     //   Bit 0     - Set if the Device is Active (connected to the bus and communicating)
-                                     //   Bit 1     - Set if the Device is not Acknowledging
+    State: Byte;                     // See XDS_XPRESSNET_xxxxx Flags
   end;
   PDevice = ^TDevice;
   TDeviceList = array[ID_MIN_DEVICE..ID_MAX_DEVICE] of TDevice;  // Don't reserve a slot for device 0
   
-const
-
-  MASK_XPRESSNET_PC_COMMUNICATING_BIT      = 0;   // Set when the PC communication is occuring
+  TUARTReception = record
+    XpressnetData: TXpressNetMessage;     // Syncronous message recieved from the command station pinging the XpressNet bus begin dispatched
+    Done: Boolean;                        // True when the reception is complete
+    XORFailed: Boolean ;                  // True if the XOR check failed
+  end;
 
 type
   TXpressnetStateMachineInfo = record
     DeviceList: TDeviceList;
-    XpressnetData: TXpressNetMessage;     // Syncronous message recieved from the command station pinging the XpressNet bus begin dispatched
     iState: Byte;                         // Current State the StateMachine is in
     Discovering: Boolean;                 // Discovering new Devices on the Xpressnet Bus
     iActiveDevice: Byte;                  // The Device currently being communicated with
     DiscoveryCount: Byte;                 // Counts (typically 840ms steps) between rediscovery intervals
     WatchdogCount: Byte;                  // Counts (typically 840ms steps) before the Xpressnet Bus is declared hung
+    RS232: TUARTReception;                // Hold information about the UART reception on the XpressnetBus
   end;
   PXpressnetStateMachineInfo = ^TXpressnetStateMachineInfo;
 
