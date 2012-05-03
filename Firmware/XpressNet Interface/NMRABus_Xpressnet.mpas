@@ -27,7 +27,6 @@ uses
   NMRABusDatagrams,
   XpressnetDefines,
   XpressnetStateMachine,
-  XpressnetDevices,
   NodeIDs;
 
 {$I Options.inc}
@@ -113,7 +112,6 @@ end;
 // *******************
 begin
   CANStorage_Initialize;
-  NMRABusXpressnetDevices_Initialize;
   MCU_Setup_Initialize;
   NMRABus_Initialize;
   NMRABusDatagrams_Initialize;
