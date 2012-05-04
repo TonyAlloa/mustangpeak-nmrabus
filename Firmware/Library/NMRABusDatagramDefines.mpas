@@ -21,10 +21,8 @@ const
   DATAGRAM_REJECTED_TRANSPORT_ERROR_MASK                = $0400;
 
 
-  LEN_DATAGRAM = 72;                                                            // How many Bytes in the datagram
+  LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
   LEN_DATAGRAM_ARRAY = 3;                                                       // How many Datagram buffers to have
-  
-  
 
   DPB_EMPTY          = 0;                                                       // The Datagram Packet Buffer is empty
   DPB_RECEIVING      = 1;                                                       // The Datagram Packet Buffer is currently collecting frames

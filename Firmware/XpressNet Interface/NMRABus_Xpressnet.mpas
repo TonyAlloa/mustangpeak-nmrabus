@@ -72,7 +72,7 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   U2RXIF_Bit := 0;              // Clear the interrupt flag to receive the next byte
 
-  while (URXDA_U2STA_bit = 1) and (XpressnetStateMachineInfo.RS232.XPressNetData.StateMachineIndex < STATE_RS232_FULL)  do
+  while (URXDA_U2STA_bit = 1) and (XpressnetStateMachineInfo.RS485.XPressNetData.StateMachineIndex < STATE_RS485_FULL)  do
   begin
     XpressnetStateMachine_UART_RX_StateMachine(@XpressnetStateMachineInfo, U2RXREG);
   end

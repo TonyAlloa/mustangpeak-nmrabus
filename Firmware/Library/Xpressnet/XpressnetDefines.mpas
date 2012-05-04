@@ -17,6 +17,10 @@
 
 unit XpressnetDefines;
 
+uses
+  NMRABusDefines,
+  NMRABusDatagramDefines;
+
 const
   VERSION_SOFTWARE_PC_INERFACE = %00000001;  // Software version 1
   VERSION_HARDWARE_PC_INERFACE = %00010000;  // Hardware version 1.0
@@ -73,11 +77,14 @@ const
   XPRESSNET_PC_HUNG_COUNT  = 100;  // 3.2 ms counts and the PC interface is declared hung. (added 1 since we can't be sure when in the timer we started this covers if the timer interrupts right after we set the flag to 0)
   REDISCOVERY_TIME         = 1;    // = Slow timer count (840ms * REDISCOVERY_TIME = time to rescan for new Devices)
   
+  XDS_XPRESSNET_DEVICE_INACTIVE                            = $00;  // not Active, not Acknowledging
+  XDS_XPRESSNET_DEVICE_ACTIVE                              = $01;  // Indicates the Device is active on the bus
+  XDS_XPRESSNET_DEVICE_SERVICEMODE                         = $02;  // In Service Mode on the device
+  
 type
   TXpressNetDataArray = array[0..XPRESSNET_MAX_DATA_BYTE-1] of Byte;
   PXpressNetDataArray = ^TXpressNetDataArray;
 
-type
   TXpressNetMessage = record
     Bytes: TXpressNetDataArray;          // [RX, TX] The XpressNet data that was recieved from Data Byte 1...Data Byte 15.  Does NOT include the Header Byte or the XOR Byte
     Instruction,                         // [RX] The ExpressNet Instruction Byte that was recieved
@@ -90,12 +97,6 @@ type
   end;
   PXpressNetMessage = ^TXpressNetMessage;
   
-const
-  XDS_XPRESSNET_DEVICE_INACTIVE                            = $00;  // not Active, not Acknowledging
-  XDS_XPRESSNET_DEVICE_ACTIVE                              = $01;  // Indicates the Device is active on the bus
-
-
-type
  // Information about the Devices found on the XpressNet bus
   TDevice = record
     State: Byte;                     // See XDS_XPRESSNET_xxxxx Flags
@@ -103,10 +104,18 @@ type
   PDevice = ^TDevice;
   TDeviceList = array[ID_MIN_DEVICE..ID_MAX_DEVICE] of TDevice;  // Don't reserve a slot for device 0
   
+  // Buffer to hold the data as it comes in on the RS485 bus
   TUARTReception = record
     XpressnetData: TXpressNetMessage;     // Syncronous message recieved from the command station pinging the XpressNet bus begin dispatched
     Done: Boolean;                        // True when the reception is complete
     XORFailed: Boolean ;                  // True if the XOR check failed
+  end;
+  
+  // Buffer to hold the NMRANet data on the CAN bus
+  TDatagramReception = record
+    DataBytes: array[0..LEN_DATAGRAM-1] of Byte;                                // The bytes sent in the datagram
+    Source: TNodeAliasID;                                                       // The Node that sent the datagram
+    Done: Boolean;
   end;
 
 type
@@ -117,7 +126,8 @@ type
     iActiveDevice: Byte;                  // The Device currently being communicated with
     DiscoveryCount: Byte;                 // Counts (typically 840ms steps) between rediscovery intervals
     WatchdogCount: Byte;                  // Counts (typically 840ms steps) before the Xpressnet Bus is declared hung
-    RS232: TUARTReception;                // Hold information about the UART reception on the XpressnetBus
+    RS485: TUARTReception;                // Hold information about the UART reception on the XpressnetBus
+    Datagram: TDatagramReception;         // Receiving NMRANet Datagram that sends/receives the message from the Database (limited to serializing all devices on the Xpressnet bus as of today)
   end;
   PXpressnetStateMachineInfo = ^TXpressnetStateMachineInfo;
 
