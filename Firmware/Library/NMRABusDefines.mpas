@@ -63,16 +63,19 @@ const
   FT_MTI_TYPE_MASK                  = $07000000;
   FT_FIRST_ADDRESSED_MTI_TYPE       = $04000000;                                // Destination Address for Datagram Non Last Segment (up to $07000000 for Addressed Stream)
 
-  FT_INITIALIZATION_COMPLETE        = $09087000;
+  FT_INITIALIZATION_COMPLETE        = $08087000;
   FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
-  FT_VERIFY_NODE_ID_NUMBER_NO_DEST  = $080A7000;
-  FT_VERIFIED_NODE_ID_NUMBER        = $080B7000;
+  FT_VERIFY_NODE_ID_NUMBER_NO_DEST  = $088A7000;
+  FT_VERIFIED_NODE_ID_NUMBER        = $088B7000;
   FT_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
   FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
   
+  FT_DATAGRAM_ONLY_FRAME            = $0A000000;
+  FT_DATAGRAM_FRAME_START           = $0B000000;
   FT_DATAGRAM_FRAME                 = $0C000000;
-  FT_DATAGRAM_FRAME_END             = $0D000000;
-  FT_DATAGRAM_FRAME_RESULT          = $0E000000;
+  FT_DATAGRAM_FRAME_END             = $0D000000;                                // Sub type SFT_DATAGRAM_END
+  FT_DATAGRAM_FRAME_RESULT          = $0E000000;                                // Sub type SFT_DATAGRAM_RECIEVED_OK
+  FT_DATAGRAM_FRAME_REJECTED        = $0E000000;                                // Sub type SFT_DATAGRAM_REJECTED
   
   // Base MTIs
   SFT_VERIFY_NODE_DEST              = $0A;                                      // Sub-Type (in first Databyte) for a MTI with a destination in the header
