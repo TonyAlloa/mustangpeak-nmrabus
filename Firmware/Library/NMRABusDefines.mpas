@@ -77,7 +77,8 @@ const
   FT_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
   FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
   
-
+  MASK_DEST_ALIAS                   = $00FFF000;                                // Masks out just the Destination Alias Address
+  MASK_SOURCE_ALIAS                 = $00000FFF;                                // Masks out just the Source Alias Address
   
   FT_DATAGRAM_FRAME_RESULT          = $0E000000;                                // Sub type SFT_DATAGRAM_RECIEVED_OK
   FT_DATAGRAM_FRAME_REJECTED        = $0E000000;                                // Sub type SFT_DATAGRAM_REJECTED
@@ -102,12 +103,7 @@ const
   SFT_STREAM_INITIATE_REPLY         = $4F;
   SFT_STREAMDATA_PROCEED            = $6A;
   SFT_STREAMDATA_COMPLETE           = $6B;
-  
 
-
-  MASK_DEST_ALIAS_FORMAT = $06000000;                                           // Bits to see if the OpenLCB Format bits say it contains a Dest ID (110)
-  MASK_DEST_ALIAS        = $00FFF000;                                           // Masks out just the Destination Alias Address
-  MASK_SOURCE_ALIAS      = $00000FFF;                                           // Masks out just the Source Alias Address
 
   // NMRABus States
   BS_PERMITED          = $01;                                                   // CAN Frame Layer is permitted (Node ID's resolved with bus)

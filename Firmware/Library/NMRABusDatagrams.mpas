@@ -10,8 +10,8 @@ var
   DatagramList: TDatagramBufferArray;
 
 procedure NMRABusDatagrams_Initialize;
-procedure NMRABusDatagrams_Process(var Buffer: TCANBuffer);
-function NMRABusDatagrams_NextPacket(var DatagramPacket: TDatagramBuffer): Boolean;
+procedure NMRABusDatagrams_DatagramReceived(var Buffer: TCANBuffer);
+procedure NMRABusDatagrams_840ms_TimeTick;
 
 implementation
 
@@ -29,7 +29,37 @@ var
   i: Integer;
 begin
   for i := 0 to LEN_DATAGRAM_ARRAY - 1 do
-    DatagramList[i].State := DPB_EMPTY;
+    DatagramList[i].State := STATE_EMPTY;
+end;
+
+// *****************************************************************************
+//
+// procedure NMRABusDatagrams_840ms_TimeTick;
+//
+//  Parameters:
+//                None
+//  Returns:
+//                None
+//  Description:
+//              Updates internal flags to track for various timeout conditions mainly for the bus.
+//
+//              WARNING: Application must make sure that the Datagram Array is not
+//              modified in an interrupt when calling this function...... Disable the CAN for
+//              the time this takes to run.
+//
+// *****************************************************************************
+procedure NMRABusDatagrams_840ms_TimeTick;
+var
+  i: Integer;
+begin
+  for i := 0 to LEN_DATAGRAM_ARRAY - 1 do
+  begin
+    if DatagramList[i].State = STATE_RECEIVING then
+    begin
+      if DatagramList[i].iWatchdog < DATAGRAM_WATCHDOG_MAX then                 // Latch it at DATAGRAM_WATCHDOG_MAX
+        Inc(DatagramList[i].iWatchdog)                                          // Increase the Watchdog counter
+    end
+  end;
 end;
 
 
@@ -43,7 +73,17 @@ end;
 //  Description:
 // *****************************************************************************
 procedure CheckAndFreeAbandonBuffers;
+var
+  i: Integer;
 begin
+  for i := 0 to LEN_DATAGRAM_ARRAY - 1 do
+  begin
+    if DatagramList[i].State = STATE_RECEIVING then
+    begin
+      if DatagramList[i].iWatchdog >= DATAGRAM_WATCHDOG_MAX then                // Source took too long between frames
+        DatagramList[i].State := STATE_EMPTY;                                     // Throw the buffer away
+    end
+  end
 end;
 
 // *****************************************************************************
@@ -55,9 +95,69 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function TryAllocateBuffer(Buffer: PDatagramBuffer): Boolean;
+function TryAllocateBuffer(var Datagram: PDatagramBuffer): Boolean;
+var
+  i: Integer;
 begin
-  Result := True
+  Result := False;
+  i := 0;
+  while (i < LEN_DATAGRAM_ARRAY) and not Result do
+  begin
+    if DatagramList[i].State = STATE_EMPTY then
+    begin                                                                       // Grab the first empty buffer
+      Datagram := @DatagramList[i];                                             // It is NOT initialized
+      Result := True
+    end;
+    Inc(i);
+  end
+end;
+
+// *****************************************************************************
+//  function FindInProcessDatagram;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function FindInProcessDatagram(Source: TNodeAliasID; var Datagram: PDatagramBuffer): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  i := 0;
+  while (i < LEN_DATAGRAM_ARRAY) and not Result do
+  begin
+    if DatagramList[i].State = STATE_RECEIVING then
+      if NMRABusUtilities_CompareAliasIDs(DatagramList[i].Source, Source) then
+      begin
+        Datagram := @DatagramList[i];
+        Result := True
+      end;
+    Inc(i)
+  end
+end;
+
+// *****************************************************************************
+//  procedure UpdateFrameCount;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function UpdateFrameCount(Datagram: PDatagramBuffer): Boolean;
+begin
+  if Datagram^.State <> STATE_FRAME_OUTOFORDER then                                    // If in Error has already failed this function
+  begin
+    Inc(Datagram^.iCount);                                                      // Next Frame
+    Datagram^.iWatchdog := 0;                                                   // Reset the Watchdog since the source connected again
+    if Datagram^.iCount >= DATAGRAM_MAX_FRAME_COUNT then                        // Source sent too many frames
+      Datagram^.State := STATE_FRAME_OUTOFORDER;                                // Ready for a "Frame out of Order" Response
+  end;
+  Result := Datagram^.State <> STATE_FRAME_OUTOFORDER
 end;
 
 // *****************************************************************************
@@ -69,83 +169,53 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRABusDatagrams_Process(var Buffer: TCANBuffer);
+procedure NMRABusDatagrams_DatagramReceived(var Buffer: TCANBuffer);
 var
   Datagram: PDatagramBuffer;
 begin
-  case Buffer.ID and FT_MTI_TYPE_MASK of
-    FT_DATAGRAM_ONLY_FRAME :
+  case Buffer.ID and MTI_TYPE_MASK of
+    MTI_DATAGRAM_ONLY_FRAME :
       begin
         CheckAndFreeAbandonBuffers;
         if TryAllocateBuffer(Datagram) then
         begin
+          Datagram^.Source := Buffer.ID and MASK_SOURCE_ALIAS;
+          Datagram^.DataBytes := Buffer.DataBytes;
+          Datagram^.State := STATE_TRANSFER_FULL;                               // Ready for a "Full" Response
         end
       end;
-    FT_DATAGRAM_FRAME_START :
+    MTI_DATAGRAM_FRAME_START :
       begin
         CheckAndFreeAbandonBuffers;
         if TryAllocateBuffer(Datagram) then
         begin
+          Datagram^.Source := Buffer.ID and MASK_SOURCE_ALIAS;
+          Datagram^.DataBytes := Buffer.DataBytes;
+          Datagram^.iCount := 0;
+          Datagram^.iWatchdog := 0;
+          Datagram^.State := STATE_RECEIVING;
         end
       end;
-    FT_DATAGRAM_FRAME :
+    MTI_DATAGRAM_FRAME :
       begin
+        if FindInProcessDatagram(Buffer.ID and MASK_SOURCE_ALIAS, Datagram) then
+        begin
+          if UpdateFrameCount(Datagram) then
+            PCAN_DataBytes( @Datagram^.DataBytes[Datagram^.iCount * 8])^ := Buffer.DataBytes
+        end
       end;
-    FT_DATAGRAM_FRAME_END :
+    MTI_DATAGRAM_FRAME_END :
       begin
+        if FindInProcessDatagram(Buffer.ID and MASK_SOURCE_ALIAS, Datagram) then
+        begin
+          if UpdateFrameCount(Datagram) then
+          begin
+            PCAN_DataBytes( @Datagram^.DataBytes[Datagram^.iCount * 8])^ := Buffer.DataBytes;
+            Datagram^.State := STATE_TRANSFER_FULL;                             // Ready for a "Full" Response
+          end
+        end
       end;
   end;
-end;
-
-// *****************************************************************************
-//  function NMRABusDatagrams_FindFirstEmptyBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function NMRABusDatagrams_FindFirstEmptyBuffer: Integer;
-var
-  i: Integer;
-begin
-  Result := -1;
-  i := 0;
-  while (Result < 0) and (i < LEN_DATAGRAM_ARRAY) do
-  begin
-    if DatagramList[i].State and DPB_EMPTY = 0 then
-      Result := i;
-    Inc(i)
-  end
-end;
-
-
-// *****************************************************************************
-//  function NMRABusDatagrams_NextPacket;
-//
-//  Parameters: DatagramPacket:   The next full packet in the list
-//
-//  Result:
-//
-//  Description: True if the function returned a new Packet, false if there are no packet to receive
-// *****************************************************************************
-function NMRABusDatagrams_NextPacket(var DatagramPacket: TDatagramBuffer): Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  i := 0;
-  while not Result and (i < LEN_DATAGRAM_ARRAY) do
-  begin
-    if DatagramList[i].State = DPB_FULL then
-    begin
-      DatagramPacket := DatagramList[i];
-      DatagramList[i].State := DPB_EMPTY;
-      Result := True;
-    end;
-    Inc(i);
-  end
 end;
 
 end.

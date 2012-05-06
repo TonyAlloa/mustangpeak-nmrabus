@@ -22,6 +22,7 @@ uses
   Throttle_events_code,
   MCU_Setup_dsPIC33FJ256GP710A,
   CANStorage,
+  NMRABusDatagrams,
   NMRABus;
   
 var
@@ -33,6 +34,9 @@ begin
   // 1ms Timer
   T2IF_bit := 0;  // Reset the Flag
   NMRABus_GlobalTimer;
+  EnableCANInterrupt(False);
+  NMRABusDatagrams_840ms_TimeTick;
+  EnableCANInterrupt(True);
 end;
 
 procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);

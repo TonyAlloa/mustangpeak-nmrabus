@@ -23,6 +23,7 @@ uses
   MCU_Setup_dsPIC4013,
   CANDefines,
   CANStorage,
+  dsPIC30_CAN,
   dsPIC30_Traps,
   NMRABusDatagrams,
   XpressnetDefines,
@@ -54,6 +55,9 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T3IF_bit := 0;
   XpressnetStateMachine_840ms_TimeTick;
+  EnableCANInterrupt(False);
+  NMRABusDatagrams_840ms_TimeTick;
+  EnableCANInterrupt(True);
 end;
 
 procedure INTERRUPT_Timer_1ms(); iv IVT_ADDR_T2INTERRUPT;
@@ -132,8 +136,7 @@ begin
       begin
         // NMRANet CAN Bus
         HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
-        NMRABus_HandleDatagrams(@DatagramPacketHandler);
-        
+
         XpressnetStateMachine_Process;
       end
     end;

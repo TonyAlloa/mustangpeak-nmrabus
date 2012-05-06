@@ -11,9 +11,7 @@ const
   DATAGRAM_REJECTED_INFORMATION_LOGGED                  = $0101;
   DATAGRAM_REJECTED_SOURCE_NOT_PERMITTED                = $0102;
   DATAGRAM_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED       = $0104;
-  // Error that will cause the sender to retry
   DATAGRAM_REJECTED_BUFFER_FULL                         = $0200;
-
   DATAGRAM_REJECTED_OUT_OF_ORDER                        = $0600;
 
   DATAGRAM_REJECTED_NO_RESENT_MASK                      = $0100;
@@ -24,16 +22,23 @@ const
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
   LEN_DATAGRAM_ARRAY = 3;                                                       // How many Datagram buffers to have
 
-  DPB_EMPTY          = 0;                                                       // The Datagram Packet Buffer is empty
-  DPB_RECEIVING      = 1;                                                       // The Datagram Packet Buffer is currently collecting frames
-  DPB_FULL           = 2;                                                       // The Datagram Packet Buffer Full ready for use
+  STATE_EMPTY             = 0;                                                  // The Datagram Packet Buffer is empty
+  STATE_RECEIVING         = 1;                                                  // The Datagram Packet Buffer is currently collecting frames
+  STATE_TRANSFER_FULL     = 3;                                                  // The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
+  STATE_FRAME_OUTOFORDER  = 4;                                                  // The Datagram frames were corrupted (greater than DATAGRAM_MAX_FRAME_COUNT ect.) (DATAGRAM_REJECTED_OUT_OF_ORDER response needed)
+  STATE_DATAGRAM_READY    = 5;                                                  // The Datagram is ready for consumption by the application
+  
+  DATAGRAM_WATCHDOG_MAX = 12;                                                   // Give the sender about 10 seconds max to complete before calling the datagram lost
+  
+  DATAGRAM_MAX_FRAME_COUNT = 9;                                                 // Maximum number of Frames (segments) in a Datagram
   
 type
   TDatagramBuffer = record
     DataBytes: array[0..LEN_DATAGRAM-1] of Byte;                                // The bytes sent in the datagram
     Source: TNodeAliasID;                                                       // The Node that sent the datagram
     State: Byte;                                                                // The State of the Packet Buffer, See the DPB_XXXX contants
-    ByteCount: Byte;                                                            // Counts the number of bytes recevied as they come in, used to index where to add the next 8 bytes
+    iCount: Byte;                                                               // Counts the number of bytes recevied as they come in, used to index where to add the next 8 bytes
+    iWatchdog: Byte;                                                            // Increments every 800ms or so to allow detecting a datagram that was abandon and never sent the End message
   end;
   PDatagramBuffer = ^TDatagramBuffer;
   TDatagramBufferArray = array[0..LEN_DATAGRAM_ARRAY-1] of TDatagramBuffer;

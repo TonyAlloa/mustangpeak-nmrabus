@@ -43,6 +43,7 @@ const
 function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
 function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
+procedure EnableCANInterrupt(Enable: Boolean);
 // *****************************************************************************
  
 procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
@@ -307,6 +308,29 @@ begin
   Buffer.DataBytes[7] := Byte7;
   Buffer.IsExtended := IsExtended;
   Result := AddToList(List, Buffer)
+end;
+
+
+// *****************************************************************************
+//  function EnableInterrupt
+//     Parameters: Enable:  Enables/Disables the Interrupt for the CAN
+//
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure EnableCANInterrupt(Enable: Boolean);
+begin
+  if Enable then
+  begin
+    {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+    C1IE_bit := 1                  // Enabled the CAN 1 interrupt
+  end else
+  begin
+    {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+    C1IE_bit := 0                 // Disable the CAN 1 interrupt
+  end
 end;
 
 // *****************************************************************************

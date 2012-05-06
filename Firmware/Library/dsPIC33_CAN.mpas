@@ -185,6 +185,7 @@ function dsPIC33_CAN_RX_Overflow(BufferNumber: Word; Clear: Boolean): Boolean;
 function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
 function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
+procedure EnableCANInterrupt(Enable: Boolean);
 // *****************************************************************************
 
 procedure StartCANMessageEngine;                                                // Used to start a transmission cycle after a message is placed in a TX Buffer
@@ -275,13 +276,13 @@ begin
   while dsPIC33_CAN_InterruptCode <> ICODE_NO_INTERRUPT do                      // Use the Interrupt Code to decode the Events that are both Enabled and Flags are set
   begin
     case dsPIC33_CAN_InterruptCode of
-      ICODE_TRB0 :
+      ICODE_TRB0 :                                                              // Tx Rx Buffer 0
       begin
         dsPIC33_CAN_InterruptFlagTXBuffer(True);                                // TX Interrupt Flag Reset
         if not StartTransmission then
           CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
       end;
-      ICODE_TRB1 :
+      ICODE_TRB1 :                                                              // Tx Rx Buffer 1
       begin
         // CAN Layer Reception
         dsPIC33_CAN_InterruptFlagRXBuffer(True);                                // RX Interrupt Flag Reset
@@ -440,6 +441,20 @@ begin
   Buffer.DataBytes[7] := Byte7;
   Buffer.IsExtended := IsExtended;
   Result := AddToList(List, Buffer)
+end;
+
+// *****************************************************************************
+//  function EnableCANInterrupt
+//     Parameters:
+//
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure EnableCANInterrupt(Enable: Boolean);
+begin
+  dsPIC33_CAN_GlobalInterruptCAN_Event(Enable);                                 // Enable the CAN Event Interrupt
 end;
 
 // *****************************************************************************

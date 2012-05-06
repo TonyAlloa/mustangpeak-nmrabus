@@ -26,6 +26,7 @@ uses
   NMRABusNodeItems,
   NMRABusUtilities,
   NMRABusAddressSlots,
+  NMRABusDatagrams,
   dsPIC30_Traps,
   NodeIDs;
   
@@ -87,6 +88,9 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
   NMRABus_GlobalTimer;
+  EnableCANInterrupt(False);
+  NMRABusDatagrams_840ms_TimeTick;
+  EnableCANInterrupt(True);
 end;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}

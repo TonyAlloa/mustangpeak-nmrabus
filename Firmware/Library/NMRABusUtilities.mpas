@@ -118,7 +118,7 @@ end;
 function NMRABusUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
 begin
   Result := 0;
-  if Packet^.ID and MASK_DEST_ALIAS_FORMAT = MASK_DEST_ALIAS_FORMAT then
+  if Packet^.ID and MTI_TYPE_MASK > MTI_UNADDRESSED then
     Result := DWord( (Packet^.ID and MASK_DEST_ALIAS) shr 12)
 end;
 
@@ -312,7 +312,7 @@ end;
 // *****************************************************************************
 function NMRABusUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
 begin
-  Result := Packet^.ID and FT_MTI_TYPE_MASK >
+  Result := Packet^.ID and MTI_TYPE_MASK > MTI_UNADDRESSED
 end;
 
 // *****************************************************************************
@@ -329,6 +329,32 @@ begin
     Result := NMRABusUtilities_EqualAliasID(  NMRABusUtilities_ExtractDestinationAlias(Packet))
   else
     Result := False
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_IsDatagramMsg
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusUtilities_IsDatagramMsg(Packet: PCANBuffer): Boolean;
+begin
+  Result := ((Packet^.ID and MTI_TYPE_MASK) >= MTI_DATAGRAM_FRAME_START) and ((Packet^.ID and MTI_TYPE_MASK) <= MTI_DATAGRAM_FRAME_END)
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_IsAddressedDatagramToNode
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusUtilities_IsAddressedDatagramToNode(Packet: PCANBuffer): Boolean;
+begin
+  Result := NMRABusUtilities_IsAddressedMessageToNode(Packet) and NMRABusUtilities_IsDatagramMsg(Packet)
 end;
 
 end.

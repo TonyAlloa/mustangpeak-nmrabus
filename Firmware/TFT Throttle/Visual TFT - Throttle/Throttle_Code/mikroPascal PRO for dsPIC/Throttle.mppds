@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=Throttle_main.mpas
+Value=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANStorage.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -38,15 +38,19 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=8
+Count=12
 File0=Throttle_main.mpas
-File1=..\..\..\..\Library\NMRABus.mpas
-File2=MCU_Setup_dsPIC33FJ256GP710A.mpas
-File3=..\..\..\..\Library\NMRABusUtilities.mpas
-File4=..\..\..\..\Library\dsPIC33_DMA.mpas
-File5=..\..\..\..\Library\NMRABusDefines.mpas
-File6=..\..\..\..\Library\CANStorage.mpas
-File7=..\..\..\..\Library\dsPIC33_CAN.mpas
+File1=MCU_Setup_dsPIC33FJ256GP710A.mpas
+File2=..\..\..\..\Library\NMRABusUtilities.mpas
+File3=..\..\..\..\Library\dsPIC33_DMA.mpas
+File4=..\..\..\..\Library\NMRABusDefines.mpas
+File5=..\..\..\..\Library\CANStorage.mpas
+File6=..\..\..\..\Library\dsPIC33_CAN.mpas
+File7=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\CANBuffers.mpas
+File8=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines.mpas
+File9=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC33_CAN.mpas
+File10=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABus.mpas
+File11=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANStorage.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -55,12 +59,17 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=5
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\
+Count=10
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\
+Path8=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
+Path9=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\
 [HEADER_PATH]
 Count=0
 [HEADERS]

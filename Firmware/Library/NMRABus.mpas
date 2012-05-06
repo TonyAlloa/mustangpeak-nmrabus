@@ -44,8 +44,6 @@ type
   procedure NMRABus_GlobalTimer;
   procedure HandlePacketReceivedOnNMRABusLayer(NMRABusPacketHandler: PPacketHandlerFunc);
   procedure NMRABus_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);       // WARNING:  The Hook is called from within the Interrupt Handler.....
-  procedure NMRABus_HandleDatagrams(NMRABusPacketHandler: PDatagramPacketHandlerFunc);
-  procedure NMRABus_HandleStreams(NMRABusPacketHandler: PStreamPacketHandlerFunc);
 
 
   // callbacks from the CAN interrupts used in the xxxxx_CAN_Interrupt.mpas units
@@ -65,8 +63,7 @@ type
   
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
-  procedure DecodeRawBuffer(RawBuffer: PCANRawBuffer; var Buffer: TCANBuffer); external;
-  
+
   // defined in the user program
   procedure GetUniqueIDFunc(var HiID, LoID: DWord); external;
   
@@ -76,9 +73,6 @@ var
   TX_NMRABusLayer_List: TCANRawBufferList; external;
   RX_CANLayer_List: TCANRawBufferList; external;
   RX_NMRABusLayer_List: TCANRawBufferList; external;
-  RX_Main_RawBufferArray: TCanRawBufferArray; external;
-  TX_Main_RawBufferArray: TCanRawBufferArray; external;
-  
 
 
 implementation
@@ -188,40 +182,6 @@ begin
 end;
 
 // ****************************************************************************
-// procedure NMRABus_HandleDatagrams
-//
-//  Description: Call periodically to dispatch Datagrams received
-//
-// ****************************************************************************
-procedure NMRABus_HandleDatagrams(NMRABusPacketHandler: PDatagramPacketHandlerFunc);
-var
-  Buffer: TDatagramBuffer;
-  DoDefault: Boolean;
-begin
-  if NMRABusDatagrams_NextPacket(Buffer) then
-  begin
-    DoDefault := True;
-    NMRABusPacketHandler(@Buffer, DoDefault);
-    if DoDefault then
-    begin
-   ///  case Buffer.DataBytes[0] of
-
-   //   end;
-    end
-  end
-end;
-
-// ****************************************************************************
-// procedure NMRABus_HandleStreams
-//
-//  Description: Call periodically to dispatch Datagrams received
-//
-// ****************************************************************************
-procedure NMRABus_HandleStreams(NMRABusPacketHandler: PStreamPacketHandlerFunc);
-begin
-end;
-
-// ****************************************************************************
 // procedure HandlePacketReceivedOnNMRABusLayer
 //
 //  Description:
@@ -254,27 +214,6 @@ begin
       begin
         NMRABusUtilities_CreateNMRABusMessagePacket(FT_VERIFIED_NODE_ID_NUMBER, 0, @CANBuffer);
         StartCANMessageEngine;
-      end else
-      if (CANBuffer.ID and FT_DATAGRAM_FRAME = FT_DATAGRAM_FRAME) then
-      begin
-        if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
-        begin
-       //   if not NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, False) then
-          begin
-            // The buffers were Full so we have to signal the sender to resend... BUT HOW??????????
-          end;
-        end;
-      end else
-      if (CANBuffer.ID and FT_DATAGRAM_FRAME_END = FT_DATAGRAM_FRAME_END) then
-      begin
-        if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
-        begin
-      //    NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, True);
-        end;
-      end else
-      if (CANBuffer.ID and FT_DATAGRAM_FRAME_RESULT = FT_DATAGRAM_FRAME_RESULT) then
-      begin
-
       end
     end
   end;
@@ -420,6 +359,7 @@ begin
   NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Node_ID[1];
   NMRABusUtilities_CreateAliasID(False);
   CANLayerReceiveHook := PPacketHandlerFunc( nil);
+  NMRABusDatagrams_Initialize;
 end;
 
 // *****************************************************************************
