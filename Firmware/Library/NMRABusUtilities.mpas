@@ -40,7 +40,7 @@ procedure NMRABusUtilities_PsudoRandomNumberGenerator;
 function NMRABusUtilities_GenerateID_Alias_From_Global_Seed: Word;
 procedure NMRABusUtilities_CreateAliasID(Regenerate: Boolean);
 procedure NMRABusUtilities_RecreateAliasID;
-function NMRABusUtilities_IsAddressedMessageToOtherNode(Packet: PCANBuffer): Boolean;
+function NMRABusUtilities_IsAddressedMessageToNode(Packet: PCANBuffer): Boolean;
 function NMRABusUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
 
 
@@ -312,18 +312,18 @@ end;
 // *****************************************************************************
 function NMRABusUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
 begin
-  Result := Packet^.ID and FT_MTI_TYPE_MASK >= FT_FIRST_ADDRESSED_MTI_TYPE
+  Result := Packet^.ID and FT_MTI_TYPE_MASK >
 end;
 
 // *****************************************************************************
-//  procedure NMRABusUtilities_IsAddressedMessageToOtherNode
+//  procedure NMRABusUtilities_IsAddressedMessageToNode
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-function NMRABusUtilities_IsAddressedMessageToOtherNode(Packet: PCANBuffer): Boolean;
+function NMRABusUtilities_IsAddressedMessageToNode(Packet: PCANBuffer): Boolean;
 begin
   if NMRABusUtilities_IsAddressedMessage(Packet) then
     Result := NMRABusUtilities_EqualAliasID(  NMRABusUtilities_ExtractDestinationAlias(Packet))

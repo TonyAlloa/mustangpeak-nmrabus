@@ -259,7 +259,7 @@ begin
       begin
         if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
         begin
-          if not NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, False) then
+       //   if not NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, False) then
           begin
             // The buffers were Full so we have to signal the sender to resend... BUT HOW??????????
           end;
@@ -269,7 +269,7 @@ begin
       begin
         if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
         begin
-          NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, True);
+      //    NMRABusDatagrams_ProcessNextFrame(NMRABusUtilities_ExtractSourceAlias(@CANBuffer), CANBuffer.DataBytes, True);
         end;
       end else
       if (CANBuffer.ID and FT_DATAGRAM_FRAME_RESULT = FT_DATAGRAM_FRAME_RESULT) then
