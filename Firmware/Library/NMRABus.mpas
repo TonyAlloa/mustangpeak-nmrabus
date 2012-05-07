@@ -47,32 +47,26 @@ type
 
 
   // callbacks from the CAN interrupts used in the xxxxx_CAN_Interrupt.mpas units
-  procedure ReceivedOnFilter0(RawBuffer: PCANRawBuffer);
-  procedure ReceivedOnFilter1(RawBuffer: PCANRawBuffer);
-  procedure ReceivedOnFilter2(RawBuffer: PCANRawBuffer);
-  procedure ReceivedOnFilter3(RawBuffer: PCANRawBuffer);
-  procedure ReceivedOnFilter4(RawBuffer: PCANRawBuffer);
-  procedure ReceivedOnFilter5(RawBuffer: PCANRawBuffer);
-  procedure ReceivedOnFilter6(RawBuffer: PCANRawBuffer);
+  procedure ReceivedOnFilter0(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter1(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter2(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter3(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter4(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter5(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter6(Buffer: PCANBuffer);
 
 
-  // defined in the dsPICxx_CAN.mpas file
-  function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;  external;
-  function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean; external;
-  function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean; external;
-  
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
 
   // defined in the user program
   procedure GetUniqueIDFunc(var HiID, LoID: DWord); external;
   
-  // defined in the user program
 var
-  TX_CANLayer_List: TCANRawBufferList; external;
-  TX_NMRABusLayer_List: TCANRawBufferList; external;
-  RX_CANLayer_List: TCANRawBufferList; external;
-  RX_NMRABusLayer_List: TCANRawBufferList; external;
+  RX_CANBufferList: TCANBufferList; external;
+  TX_CANBufferList: TCANBufferList; external;
+  RX_NMRAnetBufferList: TCANBufferList; external;
+  TX_NMRAnetBufferList: TCANBufferList; external;
 
 
 implementation
@@ -95,10 +89,10 @@ end;
 // *****************************************************************************
 procedure FlushLists;
 begin
-  CANStorage_FlushList(@TX_CANLayer_List);                                      // Flush any pending packets
-  CANStorage_FlushList(@TX_NMRABusLayer_List);
-  CANStorage_FlushList(@RX_CANLayer_List);                                      // Flush any pending packets
-  CANStorage_FlushList(@RX_NMRABusLayer_List);
+  CANStorage_FlushList(@TX_CANBufferList);                                      // Flush any pending packets
+  CANStorage_FlushList(@TX_NMRAnetBufferList);
+  CANStorage_FlushList(@RX_CANBufferList);                                      // Flush any pending packets
+  CANStorage_FlushList(@RX_NMRAnetBufferList);
 end;
 
 // ****************************************************************************
@@ -114,7 +108,7 @@ var
   NodeID: TNodeID;
   DoDefault: Boolean;
 begin       
-  while ExtractFromList(@RX_CANLayer_List, CANBuffer) do                        // Pull all the Received Messages out (should be only one)
+  while CANStorage_ExtractFromList(@RX_CANBufferList, CANBuffer) do                        // Pull all the Received Messages out (should be only one)
   begin
     DoDefault := True;
     if CANLayerReceiveHook <> nil then
@@ -142,7 +136,7 @@ begin
         if (CANBuffer.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer.ID and FT_CID_MASK >= FT_CID6) then // If it is a CID message then force calling node to try again for an Alias this one is ours
         begin
           NMRABusUtilities_CreateCANControlFramePacket(FT_RID, @CANBuffer);
-          AddToList(@TX_CANLayer_List, CANBuffer);
+          CANStorage_AddToList(@TX_CANBufferList, CANBuffer);
           StartCANMessageEngine;
         end else
         begin
@@ -151,7 +145,7 @@ begin
             FlushLists();                                                         // Clear any queued packets
             NMRABus_Disconnect;                                                   // Take the node off line
             NMRABusUtilities_CreateCANControlFramePacket(FT_AMR, @CANBuffer);     // Send an Alias Map Reset
-            AddToList(@TX_CANLayer_List, CANBuffer);
+            CANStorage_AddToList(@TX_CANBufferList, CANBuffer);
             StartCANMessageEngine;
           end
         end
@@ -196,7 +190,7 @@ var
 begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #4; end; {$ENDIF}
   C1IE_bit := 0;
-  if ExtractFromList(@RX_NMRABusLayer_List, CANBuffer) then                     // Pull next Received Messages out
+  if CANStorage_ExtractFromList(@RX_NMRAnetBufferList, CANBuffer) then                     // Pull next Received Messages out
   begin
     DoDefault := True;
     NMRABusPacketHandler(@CANBuffer, DoDefault);
@@ -231,15 +225,15 @@ end;
 //                  as any CAN level message (bit 26 = 0)
 //
 // *****************************************************************************
-procedure ReceivedOnFilter0(RawBuffer: PCANRawBuffer);
+procedure ReceivedOnFilter0(Buffer: PCANBuffer);
 var
-  Next: PCANRawBuffer;
+  Next: PCANBuffer;
 begin
-  Next := CANStorage_Head(@RX_CANLayer_List);                                   // A little inefficient but keeps it consistent, move the message in to the buffer
+  Next := CANStorage_Head(@RX_CANBufferList);                                   // A little inefficient but keeps it consistent, move the message in to the buffer
   if Next <> nil then
   begin
-    Next^ := RawBuffer^;
-    CANStorage_IncHead(@RX_CANLayer_List);
+    Next^ := Buffer^;
+    CANStorage_IncHead(@RX_CANBufferList);
     HandlePacketReceivedOnCANLayer                                              // On the CAN Layer the messages are dealt with in real time
   end else
   begin
@@ -257,15 +251,15 @@ end;
 //                  as any NMRABus level message (bit 26 = 1)
 //
 // *****************************************************************************
-procedure ReceivedOnFilter1(RawBuffer: PCANRawBuffer);
+procedure ReceivedOnFilter1(Buffer: PCANBuffer);
 var
-  Next: PCANRawBuffer;
+  Next: PCANBuffer;
 begin
-  Next := CANStorage_Head(@RX_NMRABusLayer_List);
+  Next := CANStorage_Head(@RX_NMRAnetBufferList);
   if Next <> nil then
   begin
-    Next^ := RawBuffer^;
-    CANStorage_IncHead(@RX_NMRABusLayer_List);
+    Next^ := Buffer^;
+    CANStorage_IncHead(@RX_NMRAnetBufferList);
   end else
   begin
       // Have overrun problem
@@ -281,7 +275,7 @@ end;
 //                  Called when a message passes Filter 2
 //
 // *****************************************************************************
-procedure ReceivedOnFilter2(RawBuffer: PCANRawBuffer);
+procedure ReceivedOnFilter2(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
 end;
@@ -295,7 +289,7 @@ end;
 //                  Called when a message passes Filter 3
 //
 // *****************************************************************************
-procedure ReceivedOnFilter3(RawBuffer: PCANRawBuffer);
+procedure ReceivedOnFilter3(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
 end;
@@ -309,7 +303,7 @@ end;
 //                  Called when a message passes Filter 4
 //
 // *****************************************************************************
-procedure ReceivedOnFilter4(RawBuffer: PCANRawBuffer);
+procedure ReceivedOnFilter4(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
 end;
@@ -323,7 +317,7 @@ end;
 //                  Called when a message passes Filter 5
 //
 // *****************************************************************************
-procedure ReceivedOnFilter5(RawBuffer: PCANRawBuffer);
+procedure ReceivedOnFilter5(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
 end;
@@ -337,9 +331,30 @@ end;
 //                  Called when a message passes Filter 6
 //
 // *****************************************************************************
-procedure ReceivedOnFilter6(RawBuffer: PCANRawBuffer);
+procedure ReceivedOnFilter6(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure NMRABus_InitializeList;
+//
+//  Parameters: ListPtr        : Pointer to the FIFO buffer Lists
+//              BufferArrayPtr : Pointer to the first item in the BufferArray
+//              LasterBuffer   : Pointer to the last item in the BufferArray
+//
+//  Result:
+//
+//  Description: Initializes a FIFO Buffer Array
+// *****************************************************************************
+procedure NMRABus_InitializeList(ListPtr: PCANBufferList; BufferArrayPtr: PCANBufferArray; ListLength: Byte);
+begin
+  ListPtr^.Buffers := BufferArrayPtr;
+  ListPtr^.Size := ListLength;
+  ListPtr^.Head := @BufferArrayPtr^[0];
+  ListPtr^.Tail := @BufferArrayPtr^[0];
+  ListPtr^.Count := 0;
+  ListPtr^.MaxCount := 0;
 end;
 
 // *****************************************************************************
@@ -359,6 +374,10 @@ begin
   NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Node_ID[1];
   NMRABusUtilities_CreateAliasID(False);
   CANLayerReceiveHook := PPacketHandlerFunc( nil);
+  NMRABus_InitializeList(@RX_CANBufferList, @RX_CANBuffer, RX_CAN_BUFFER_LEN);
+  NMRABus_InitializeList(@TX_CANBufferList, @TX_CANBuffer, TX_CAN_BUFFER_LEN);
+  NMRABus_InitializeList(@RX_NMRAnetBufferList, @RX_NMRAnet_Buffer, RX_NMRANET_BUFFER_LEN);
+  NMRABus_InitializeList(@TX_NMRAnetBufferList, @TX_NMRAnet_Buffer, RX_NMRANET_BUFFER_LEN);
   NMRABusDatagrams_Initialize;
 end;
 
@@ -405,18 +424,18 @@ begin
   while CANStorage_Transmitting do;                                             // Wait for the last transmited packet
   Delay_ms(10);
   NMRABusUtilities_CreateCANControlFramePacket(FT_CID0, @Buffer);               // Queue up
-  AddToList(@TX_CANLayer_List, Buffer);
+  CANStorage_AddToList(@TX_CANBufferList, Buffer);
   NMRABusUtilities_CreateCANControlFramePacket(FT_CID1, @Buffer);
-  AddToList(@TX_CANLayer_List, Buffer);
+  CANStorage_AddToList(@TX_CANBufferList, Buffer);
   NMRABusUtilities_CreateCANControlFramePacket(FT_CID2, @Buffer);
-  AddToList(@TX_CANLayer_List, Buffer);
+  CANStorage_AddToList(@TX_CANBufferList, Buffer);
   NMRABusUtilities_CreateCANControlFramePacket(FT_CID3, @Buffer);
-  AddToList(@TX_CANLayer_List, Buffer);
+  CANStorage_AddToList(@TX_CANBufferList, Buffer);
   StartCANMessageEngine();
   DuplicateCID := False;
   while CANStorage_Transmitting and not DuplicateCID do
   begin
-    if ExtractFromList(@RX_CANLayer_List, Buffer) then
+    if CANStorage_ExtractFromList(@RX_CANBufferList, Buffer) then
       DuplicateCID := NMRABusUtilities_EqualAliasID(Buffer.ID and $00000FFF) and (Buffer.ID and FT_RID = FT_RID);
   end;
   if not DuplicateCID then
@@ -424,7 +443,7 @@ begin
     NMRABus.BusLoginCount := 0;
     while NMRABus.BusLoginCount < MAX_BUS_LOGIN_TIMEOUT do
     begin
-      if ExtractFromList(@RX_CANLayer_List, Buffer) then
+      if CANStorage_ExtractFromList(@RX_CANBufferList, Buffer) then
         DuplicateCID := NMRABusUtilities_EqualAliasID(Buffer.ID and $00000FFF) and (Buffer.ID and FT_RID = FT_RID);
     end;
     
@@ -432,9 +451,9 @@ begin
     begin
       NMRABus.State := NMRABus.State or BS_PERMITED;
       NMRABusUtilities_CreateCANControlFramePacket(FT_AMD, @Buffer);
-      AddToList(@TX_CANLayer_List, Buffer);
+      CANStorage_AddToList(@TX_CANBufferList, Buffer);
       NMRABusUtilities_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Buffer);
-      AddToList(@TX_NMRABusLayer_List, Buffer);
+      CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer);
       StartCANMessageEngine();
       while CANStorage_Transmitting do;                                         // Just wait
       NMRABus.State := NMRABus.State or BS_INITIALIZED;

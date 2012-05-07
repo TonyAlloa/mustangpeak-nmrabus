@@ -20,6 +20,15 @@ unit CANDefines;
 const
   CAN_DIRECTION_READ = 1;
   CAN_DIRECTION_WRITE = 0;
+  
+const
+  CES_TRANSMITTING = $0001;                                                     // CAN State constants
+  
+  // defined in the user program
+  RX_CAN_BUFFER_LEN = 2;
+  TX_CAN_BUFFER_LEN = 5;
+  RX_NMRANET_BUFFER_LEN = 2;
+  TX_NMRANET_BUFFER_LEN = 5;
 
 type
   TCAN_DataBytes = array[8] of Byte;
@@ -43,6 +52,10 @@ type
   end;
   PCANRawBuffer = ^TCANRawBuffer;
 
+  TCANRawBufferArray = array[0..0] of TCANRawBuffer;                            // Allows any length array within the TCANRawBufferList
+  PCANRawBufferArray = ^TCANRawBufferArray;
+
+type
  // ***************************************************************************
   // CAN Message Buffers in user friendly form that can be easily maniuplated then
   // loaded into the Raw CAN FIFOs
@@ -54,48 +67,32 @@ type
     IsExtended: Boolean;
   end;
   PCANBuffer = ^TCANBuffer;
-
-type
-  TCANRawBufferArray = array[0..0] of TCANRawBuffer;                            // Allows any length array within the TCANRawBufferList
-  PCANRawBufferArray = ^TCANRawBufferArray;
-
-
-  TCANRawBufferList = record
-    Buffers: PCANRawBufferArray;                                                // Pointer to the TCANRawBuffer Array where the data is stored (Normal RAM or DMA RAM depending on device)
+  
+  TCANBufferArray = array[0..0] of TCANBuffer;                                  // Allows any length array within the TCANBufferList
+  PCANBufferArray = ^TCANBufferArray;
+  
+  TCANBufferList = record
+    Buffers: PCANBufferArray;                                                   // Pointer to the TCANBuffer Array where the data is stored (Normal RAM or DMA RAM depending on device)
     Size: Byte;                                                                 // Number of Buffers in the List
-    Head: PCANRawBuffer;                                                        // Points to the Next empty item in the list (may point to a used item if Count = Size so this comparison needs to be checked)
-    Tail: PCANRawBuffer;                                                        // Points to the first used item in the list
+    Head: PCANBuffer;                                                           // Points to the Next empty item in the list (may point to a used item if Count = Size so this comparison needs to be checked)
+    Tail: PCANBuffer;                                                           // Points to the first used item in the list
     Count: Byte;                                                                // Number of Items in the List
     MaxCount: Byte;                                                             // The max number of Buffers used in the list
   end;
-  PCANRawBufferList = ^TCANRawBufferList;
-
-const
-  CES_TRANSMITTING = $0001;
+  PCANBufferList = ^TCANBufferList;
   
-procedure CANDefines_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; ListLength: Byte);
+var
+  RX_CANBuffer: array[0..RX_CAN_BUFFER_LEN-1] of TCANBuffer;
+  TX_CANBuffer: array[0..TX_CAN_BUFFER_LEN-1] of TCANBuffer;
+  RX_NMRAnet_Buffer: array[0..RX_NMRANET_BUFFER_LEN-1] of TCANBuffer;
+  TX_NMRAnet_Buffer: array[0..TX_NMRANET_BUFFER_LEN-1] of TCANBuffer;
+  
+  RX_CANBufferList, 
+  TX_CANBufferList,
+  RX_NMRAnetBufferList,
+  TX_NMRAnetBufferList: TCANBufferList;
+
 
 implementation
-
-// *****************************************************************************
-//  procedure CANDefines_InitializeList;
-//
-//  Parameters: ListPtr        : Pointer to the FIFO buffer Lists
-//              BufferArrayPtr : Pointer to the first item in the RawBufferArray
-//              LasterBuffer   : Pointer to the last item in the RawBufferArray
-//
-//  Result:
-//
-//  Description: Initializes a FIFO Buffer Array
-// *****************************************************************************
-procedure CANDefines_InitializeList(ListPtr: PCANRawBufferList; BufferArrayPtr: PCANRawBufferArray; ListLength: Byte);
-begin
-  ListPtr^.Buffers := BufferArrayPtr;
-  ListPtr^.Size := ListLength;
-  ListPtr^.Head := @BufferArrayPtr^[0];
-  ListPtr^.Tail := @BufferArrayPtr^[0];
-  ListPtr^.Count := 0;
-  ListPtr^.MaxCount := 0;
-end;
 
 end.

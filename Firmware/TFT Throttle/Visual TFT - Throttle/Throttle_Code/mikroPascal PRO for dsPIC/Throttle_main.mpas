@@ -51,7 +51,6 @@ begin
 end;
   
 begin
-  CANBuffers_Initialize;
   CANStorage_Initialize;
   dsPIC33_CAN_Initialize;
   MCU_Setup_Initialize;
@@ -66,8 +65,7 @@ begin
   Offset := 0;
   ECAN_RegPage := 0;
   DMA_RegPage := 0;
-  TX_List := @TX_CANLayer_List;
-  
+
   NMRABus_Connect;
   while true do
   begin

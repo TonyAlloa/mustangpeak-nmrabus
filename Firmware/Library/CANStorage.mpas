@@ -13,17 +13,12 @@ unit CAN_Storage;
 //     2012-04-01:   1.0.0.0 Created
 //
 // * Description:
-//    Implements a FIFO data structure that can be overlayed onto DSPRAM and DMA transfers
-//    for the ECAN Peripheral or overlayed in normal RAM to add FIFO data structures
-//    for the dsPIC33 CAN Peripheral.
-//    It also implements functions to convert a easy to use CAN data struture (TCANBuffer) into
-//    the SID, EID, DLC, ect bit formats needed for the CAN Modules (TCANRAWBuffer)
+//    Implements a FIFO data structure for CAN Message Buffers
 //
 // ******************************************************************************
 
 uses
-  CANDefines,
-  CANBuffers;
+  CANDefines;
   
 {$I Options.inc}
 
@@ -34,12 +29,16 @@ type
   
 
 procedure CANStorage_Initialize;
-function CANStorage_Head(List: PCANRawBufferList): PCANRawBuffer;
-function CANStorage_Tail(List: PCANRawBufferList): PCANRawBuffer;
-function CANStorage_IncHead(List: PCANRawBufferList): Boolean;
-function CANStorage_IncTail(List: PCANRawBufferList): Boolean;
-procedure CANStorage_FlushList(List: PCANRAwBufferList);
+function CANStorage_Head(List: PCANBufferList): PCANBuffer;
+function CANStorage_Tail(List: PCANBufferList): PCANBuffer;
+function CANStorage_IncHead(List: PCANBufferList): Boolean;
+function CANStorage_IncTail(List: PCANBufferList): Boolean;
+procedure CANStorage_FlushList(List: PCANBufferList);
 function CANStorage_Transmitting: Boolean;
+
+function CANStorage_AddToList(List: PCANBufferList; var Buffer: TCANBuffer): Boolean;
+function CANStorage_AddToListByParameter(List: PCANBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
+function CANStorage_ExtractFromList(List :PCANBufferList; var Buffer: TCANBuffer): Boolean;
 
 var
   CAN_Engine: TCAN_Engine;
@@ -48,11 +47,10 @@ implementation
 
 procedure CANStorage_Initialize;
 begin
-  CANBuffers_Initialize;
   CAN_Engine.State := 0;
 end;
 
-procedure CANStorage_FlushList(List: PCANRAwBufferList);
+procedure CANStorage_FlushList(List: PCANBufferList);
 begin
   List^.Count := 0
 end;
@@ -65,55 +63,55 @@ end;
 // *****************************************************************************
 //  function CANStorage_Head;
 //
-//  Parameters: List            : Pointer to the Raw Buffer List to extract the Head for
+//  Parameters: List            : Pointer to the Buffer List to extract the Head for
 //
-//  Result:  Pointer to the TCANRawBuffer object that is at the head of the list
+//  Result:  Pointer to the TCANBuffer object that is at the head of the list
 //
 //  Description:
 // *****************************************************************************
-function CANStorage_Head(List: PCANRawBufferList): PCANRawBuffer;
+function CANStorage_Head(List: PCANBufferList): PCANBuffer;
 begin
   if List^.Count < List^.Size then
     Result := List^.Head
   else
-    Result := PCANRawBuffer( nil)
+    Result := PCANBuffer( nil)
 end;
 
 // *****************************************************************************
 //  function CANStorage_Tail;
 //
-//  Parameters: List            : Pointer to the Raw Buffer List to extract the Head for
+//  Parameters: List            : Pointer to the Buffer List to extract the Head for
 //
-//  Result:  Pointer to the TCANRawBuffer object that is at the head of the list
+//  Result:  Pointer to the TCANBuffer object that is at the head of the list
 //
 //  Description:
 // *****************************************************************************
-function CANStorage_Tail(List: PCANRawBufferList): PCANRawBuffer;
+function CANStorage_Tail(List: PCANBufferList): PCANBuffer;
 begin
   if List^.Count > 0 then
     Result := List^.Tail
   else
-    Result := PCANRawBuffer( nil)
+    Result := PCANBuffer( nil)
 end;
 
 // *****************************************************************************
 //  procedure CANStorage_IncHead;
 //
-//  Parameters: List            : Pointer to the Raw Buffer List to extract Increase the Head for
+//  Parameters: List            : Pointer to the Buffer List to extract Increase the Head for
 //
 //  Result:  Returns True if the list is not full and the head pointer was increased
 //
 //  Description:
 // *****************************************************************************
-function CANStorage_IncHead(List: PCANRawBufferList): Boolean;
+function CANStorage_IncHead(List: PCANBufferList): Boolean;
 var
-  Temp: PCANRawBuffer;
+  Temp: PCANBuffer;
 begin
   Result := False;
   if List^.Count < List^.Size then
   begin
     Temp := List^.Head;
-    Inc(Temp);                                                                // Increase it the size of a TCANRawBuffer
+    Inc(Temp);                                                                // Increase it the size of a TCANBuffer
     if Temp >= (@List^.Buffers^[0] + List^.Size) then                          // Wrap it if necessary
      Temp := @List^.Buffers^[0];
     List^.Head := Temp;
@@ -127,27 +125,103 @@ end;
 // *****************************************************************************
 //  procedure CANStorage_IncTail;
 //
-//  Parameters: List            : Pointer to the Raw Buffer List to extract Increase the Tail for
+//  Parameters: List            : Pointer to the Buffer List to extract Increase the Tail for
 //
 //  Result:  Returns True if the list is not empty and the tail pointer was increased
 //
 //  Description:
 // *****************************************************************************
-function CANStorage_IncTail(List: PCANRawBufferList): Boolean;
+function CANStorage_IncTail(List: PCANBufferList): Boolean;
 var
-  Temp: PCANRawBuffer;
+  Temp: PCANBuffer;
 begin
   Result := False;
   if List^.Count > 0 then
   begin
     Temp := List^.Tail;
-    Inc(Temp);                                                                  // Increase it the size of a TCANRawBuffer
+    Inc(Temp);                                                                  // Increase it the size of a TCANBuffer
     if Temp >= (@List^.Buffers^[0] + List^.Size) then                            // Wrap it if necessary
      Temp := @List^.Buffers^[0];
     List^.Tail := Temp;
     Dec(List^.Count);
     Result := True;
   end;
+end;
+
+// *****************************************************************************
+//  function CANStorage_AddToList
+//     Parameters:
+//
+//     Returns: True if the parameters were loaded into the FIFO buffers, else the buffers were full
+//
+//     Description:   Loads the passed paramters into the next empty Buffer FIFO list
+//                    ~260 Cycles to complete for the dsPIC33
+//
+// *****************************************************************************
+function CANStorage_AddToList(List: PCANBufferList; var Buffer: TCANBuffer): Boolean;
+var
+  Head: PCANBuffer;
+begin
+  Result := False;
+  // Could wait until the buffer has space... BUT if this is called in a CAN interrupt then there will be dead lock.....
+  Head := CANStorage_Head(List);
+  if Head <> PCANBuffer( nil) then
+  begin
+    Head^ := Buffer;
+    CANStorage_IncHead(List);
+    Result := True
+  end;
+end;
+
+// *****************************************************************************
+//  procedure AddToListByParameter;
+//
+//  Parameters: List           : Pointer to the FIFO buffer List to operation on
+//
+//  Result:
+//
+//  Description: Stores the passed Buffer Information into the CAN Storage Buffer in the passed list
+// *****************************************************************************
+function CANStorage_AddToListByParameter(List: PCANBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
+var
+  Buffer: TCANBuffer;
+begin
+  Buffer.ID := ID;
+  Buffer.DataCount := ByteCount;
+  Buffer.DataBytes[0] := Byte0;
+  Buffer.DataBytes[1] := Byte1;
+  Buffer.DataBytes[2] := Byte2;
+  Buffer.DataBytes[3] := Byte3;
+  Buffer.DataBytes[4] := Byte4;
+  Buffer.DataBytes[5] := Byte5;
+  Buffer.DataBytes[6] := Byte6;
+  Buffer.DataBytes[7] := Byte7;
+  Buffer.IsExtended := IsExtended;
+  Result := CANStorage_AddToList(List, Buffer)
+end;
+
+// *****************************************************************************
+//  function CANStorage_ExtractFromList
+//     Parameters:
+//
+//     Returns: True if the return parameters are valid (i.e. there was something to read in the List
+//
+//     Description:   Loads the passed paramters with the next Buffer Data in the FIFO list
+//                    ~260 Cycles to complete for the dsPIC33 and dsPIC30
+//
+// *****************************************************************************
+function CANStorage_ExtractFromList(List :PCANBufferList; var Buffer: TCANBuffer): Boolean;
+var
+  Tail: PCANBuffer;
+begin
+  Result := False;
+  Tail := CANStorage_Tail(List);
+  if Tail <> nil then
+  begin
+    Buffer := Tail^;
+    CANStorage_IncTail(List);
+    Result := True;
+  end
 end;
 
 end.

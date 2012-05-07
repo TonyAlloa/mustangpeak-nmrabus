@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANStorage.mpas
+Value=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC33_CAN.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -16,7 +16,7 @@ Value=0
 [HEAP_SIZE]
 Value=2000
 [FILES]
-Count=15
+Count=14
 File0=Throttle_main.mpas
 File1=Throttle_objects.mpas
 File2=Throttle_driver.mpas
@@ -31,14 +31,13 @@ File10=..\..\..\..\Library\NMRABusUtilities.mpas
 File11=..\..\..\..\Library\NMRABusDefines.mpas
 File12=..\..\..\..\Library\CANStorage.mpas
 File13=..\..\..\..\Library\CANDefines.mpas
-File14=..\..\..\..\Library\CANDefines\dsPIC33FJ256GP710A\CANBuffers.mpas
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=12
+Count=14
 File0=Throttle_main.mpas
 File1=MCU_Setup_dsPIC33FJ256GP710A.mpas
 File2=..\..\..\..\Library\NMRABusUtilities.mpas
@@ -46,11 +45,13 @@ File3=..\..\..\..\Library\dsPIC33_DMA.mpas
 File4=..\..\..\..\Library\NMRABusDefines.mpas
 File5=..\..\..\..\Library\CANStorage.mpas
 File6=..\..\..\..\Library\dsPIC33_CAN.mpas
-File7=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\CANBuffers.mpas
-File8=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines.mpas
-File9=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC33_CAN.mpas
-File10=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABus.mpas
-File11=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANStorage.mpas
+File7=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines.mpas
+File8=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC33_CAN.mpas
+File9=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABus.mpas
+File10=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANStorage.mpas
+File11=Throttle_events_code.mpas
+File12=..\..\..\..\Library\dsPIC30_CAN.mpas
+File13=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

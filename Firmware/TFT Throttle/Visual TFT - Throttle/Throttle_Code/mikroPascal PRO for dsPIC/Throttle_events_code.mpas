@@ -1,6 +1,6 @@
 unit Throttle_events_code;
 
-uses Throttle_objects, Throttle_resources, CANDefines, CANBuffers;
+uses Throttle_objects, Throttle_resources, CANDefines;
 
 procedure Button9Click();
 procedure Button7Click();
@@ -158,8 +158,7 @@ procedure DrawLine(Aline : ^TLine); external;
 var
   Base: ^Word;
   Offset, ECAN_RegPage, DMA_RegPage: Integer;
-  TX_List: PCANRawBufferList;
-  
+
 procedure WriteCANModuleRegisters(Offset: Word);
 procedure WriteBuffer(WordPtr: ^Word; BufferID: Integer);
 procedure WriteDMAModuleRegisters(Channel: Integer);
@@ -171,7 +170,7 @@ implementation
 //--------------------- User code ---------------------//
   {
   
-uses Throttle_objects, Throttle_resources, CANDefines, CANBuffers;
+uses Throttle_objects, Throttle_resources, CANDefines;
 
    }
 
@@ -936,7 +935,7 @@ procedure PrintTXListCount;
 var
   s1: array[0..64] of char;
 begin
-  WordToHex(TX_List^.Count, s1);
+{  WordToHex(TX_List^.Count, s1);
   if TX_List = @TX_CANLayer_List then
   begin
     s1 := 'CAN: ' + s1 ;
@@ -945,7 +944,7 @@ begin
   begin
     s1 := 'Bus: ' + s1 ;
     TX_List := @TX_CANLayer_List;
-  end;
+  end;       }
   strcpy(ButtonRound1.Caption, s1);
   DrawRoundButton(@ButtonRound1);
 end;

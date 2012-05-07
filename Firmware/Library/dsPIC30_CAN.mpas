@@ -22,7 +22,6 @@ unit dsPIC30_CAN;
 uses
   CANDefines,
   CANStorage,
-  CANBuffers,
   NMRABus;
   
 {$I Options.inc}
@@ -38,11 +37,8 @@ const
   ICODE_WAKE    = 7;
 
 // *****************************************************************************
-// CAN FIFO Buffer Access, these are exported through the "external" modifier
+// These are exported through the "external" modifier
 // *****************************************************************************
-function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
-function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
-function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
 procedure EnableCANInterrupt(Enable: Boolean);
 // *****************************************************************************
  
@@ -65,15 +61,15 @@ implementation
 // add/intialize more TCANRawBufferLists
 //
 // ****************************************************************************
-function PendingTransmitList: PCANRawBufferList;
+function PendingTransmitList: PCANBufferList;
 begin
-   if TX_CANLayer_List.Count > 0 then
-    Result := @TX_CANLayer_List                                                 // Highest Priority List
+   if TX_CANBufferList.Count > 0 then
+    Result := @TX_CANBufferList                                                 // Highest Priority List
   else
-  if TX_NMRABusLayer_List.Count > 0 then                                        // Least Priority List
-    Result := @TX_NMRABusLayer_List
+  if TX_NMRAnetBufferList.Count > 0 then                                        // Least Priority List
+    Result := @TX_NMRAnetBufferList
   else
-    Result := PCANRawBufferList( nil)
+    Result := PCANBufferList( nil)
 end;
 
 
@@ -85,28 +81,27 @@ end;
 // ****************************************************************************
 function StartTransmission: Boolean;
 var
-  NextBuffer: PCANRawBuffer;
-  PendingList: PCANRawBufferList;
+  RawBuffer: TCANRawBuffer;
+  Buffer: PCANBuffer;
+  PendingList: PCANBufferList;
 begin
   Result := False;
   PendingList := PendingTransmitList;
-  if PendingList <> PCANRawBufferList( nil) then                                // Pick the highest Priority List to send next
+  if PendingList <> PCANBufferList( nil) then                                   // Pick the highest Priority List to send next
   begin
-    NextBuffer := CANStorage_Tail(PendingList);                                 // Get a pointer to the Buffer to transmit
-    if NextBuffer <> nil then                                                   // If there is something to send then send it
-    begin
-      C1TX0SID := NextBuffer^.Word0;                                            // Copy the buffer info into the Transmit Registers
-      C1TX0EID := NextBuffer^.Word1;
-      C1TX0DLC := NextBuffer^.Word2;
-      C1TX0B1 := NextBuffer^.Word3;
-      C1TX0B2 := NextBuffer^.Word4;
-      C1TX0B3 := NextBuffer^.Word5;
-      C1TX0B4 := NextBuffer^.Word6;
-      TXREQ_C1TX0CON_bit := 1;                                                  // Set the Flag to start the transmission
-      CANStorage_IncTail(PendingList);                                          // Release the Buffer from the List
-      CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
-      Result := True;
-    end
+    Buffer := CANStorage_Tail(PendingList);                                     // Pull the next item to send out of the list
+    dsPIC30_Style_Buffer(CAN_DIRECTION_WRITE, @RawBuffer.Word0,  Buffer^);      // Convert it into a version that matches the registers
+    C1TX0SID := RawBuffer.Word0;                                                // Copy the buffer info into the Transmit Registers
+    C1TX0EID := RawBuffer.Word1;
+    C1TX0DLC := RawBuffer.Word2;
+    C1TX0B1 := RawBuffer.Word3;
+    C1TX0B2 := RawBuffer.Word4;
+    C1TX0B3 := RawBuffer.Word5;
+    C1TX0B4 := RawBuffer.Word6;
+    TXREQ_C1TX0CON_bit := 1;                                                  // Set the Flag to start the transmission
+    CANStorage_IncTail(PendingList);                                          // Release the Buffer from the List
+    CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
+    Result := True;
   end
 end;
 
@@ -160,13 +155,15 @@ begin
       ICODE_RX1 :
         begin
           RXB1IF_bit := 0;                                                      // Clear Receive Interrupt Flag
-          ReceivedOnFilter1(PCANRawBuffer( @C1RX1SID));                         // NMRABus Layer
+          dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @C1RX1SID, Buffer);          // Convert to a common Buffer Format
+          ReceivedOnFilter1(@Buffer);                                           // NMRABus Layer
           RXFUL_C1RX1CON_bit := 0;                                              // Reset the Full Flag
         end;
       ICODE_RX0 :
         begin
           RXB0IF_bit := 0;                                                      // Clear Receive Interrupt Flag
-          ReceivedOnFilter0(PCANRawBuffer( @C1RX0SID));                         // CAN Layer
+          dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @C1RX0SID, Buffer);          // Convert to a common Buffer Format
+          ReceivedOnFilter0(@Buffer);                                           // CAN Layer
           RXFUL_C1RX0CON_bit := 0;                                              // Reset the Full Flag
         end;
       ICODE_WAKE  : begin end;                                                  // Not used
@@ -259,59 +256,6 @@ begin
 end;
 
 // *****************************************************************************
-//  function AddToList
-//     Parameters:
-//
-//     Returns: True if the parameters were loaded into the FIFO buffers, else the buffers were full
-//
-//     Description:   Loads the passed paramters into the next empty Buffer FIFO list
-//                    ~260 Cycles to complete for the dsPIC33
-//
-// *****************************************************************************
-function AddToList(List: PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
-var
-  Head: PCANRawBuffer;
-begin
-  Result := False;
-  // Could wait until the buffer has space... BUT if this is called in a CAN interrupt then there will be dead lock.....
-  Head := CANStorage_Head(List);
-  if Head <> PCANRawBuffer( nil) then
-  begin
-    dsPIC30_Style_Buffer(CAN_DIRECTION_WRITE, @(Head^.Word0), Buffer);
-    CANStorage_IncHead(List);
-    Result := True
-  end;
-end;
-
-// *****************************************************************************
-//  procedure AddToListByParameter;
-//
-//  Parameters: List           : Pointer to the FIFO buffer List to operation on
-//
-//  Result:
-//
-//  Description: Stores the passed Buffer Information into the CAN Storage Buffer in the passed list
-// *****************************************************************************
-function AddToListByParameter(List: PCANRawBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
-var
-  Buffer: TCANBuffer;
-begin
-  Buffer.ID := ID;
-  Buffer.DataCount := ByteCount;
-  Buffer.DataBytes[0] := Byte0;
-  Buffer.DataBytes[1] := Byte1;
-  Buffer.DataBytes[2] := Byte2;
-  Buffer.DataBytes[3] := Byte3;
-  Buffer.DataBytes[4] := Byte4;
-  Buffer.DataBytes[5] := Byte5;
-  Buffer.DataBytes[6] := Byte6;
-  Buffer.DataBytes[7] := Byte7;
-  Buffer.IsExtended := IsExtended;
-  Result := AddToList(List, Buffer)
-end;
-
-
-// *****************************************************************************
 //  function EnableInterrupt
 //     Parameters: Enable:  Enables/Disables the Interrupt for the CAN
 //
@@ -330,30 +274,6 @@ begin
   begin
     {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
     C1IE_bit := 0                 // Disable the CAN 1 interrupt
-  end
-end;
-
-// *****************************************************************************
-//  function ExtractFromList
-//     Parameters:
-//
-//     Returns: True if the return parameters are valid (i.e. there was something to read in the List
-//
-//     Description:   Loads the passed paramters with the next Buffer Data in the FIFO list
-//                    ~260 Cycles to complete for the dsPIC33 and dsPIC30
-//
-// *****************************************************************************
-function ExtractFromList(List :PCANRawBufferList; var Buffer: TCANBuffer): Boolean;
-var
-  Tail: PCANRawBuffer;
-begin
-  Result := False;
-  Tail := CANStorage_Tail(List);
-  if Tail <> nil then
-  begin
-    dsPIC30_Style_Buffer(CAN_DIRECTION_READ, @Tail^.Word0, Buffer);         // dsPIC33 and the dsPIC30 are the same format for RX Buffers
-    CANStorage_IncTail(List);
-    Result := True;
   end
 end;
 

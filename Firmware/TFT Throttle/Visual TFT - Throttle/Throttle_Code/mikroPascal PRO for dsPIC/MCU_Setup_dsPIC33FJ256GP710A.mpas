@@ -3,7 +3,6 @@ unit MCU_Setup_dsPIC33FJ256GP710A;
 uses
   Throttle_driver,
   CANDefines,
-  CANBuffers,
   dsPIC33_CAN,
   dsPIC33_DMA,
   NodeIDs;
