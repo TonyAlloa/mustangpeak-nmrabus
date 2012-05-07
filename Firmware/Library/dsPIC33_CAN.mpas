@@ -21,6 +21,7 @@ unit dsPIC33_CAN;
 
 uses
   CANDefines,
+  CANBuffers
   CANStorage,
   dsPIC33_DMA,
   NMRABus;

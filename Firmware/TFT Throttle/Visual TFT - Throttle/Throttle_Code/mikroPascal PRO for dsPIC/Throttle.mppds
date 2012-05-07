@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC33_CAN.mpas
+Value=MCU_Setup_dsPIC33FJ256GP710A.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -16,7 +16,7 @@ Value=0
 [HEAP_SIZE]
 Value=2000
 [FILES]
-Count=14
+Count=15
 File0=Throttle_main.mpas
 File1=Throttle_objects.mpas
 File2=Throttle_driver.mpas
@@ -31,6 +31,7 @@ File10=..\..\..\..\Library\NMRABusUtilities.mpas
 File11=..\..\..\..\Library\NMRABusDefines.mpas
 File12=..\..\..\..\Library\CANStorage.mpas
 File13=..\..\..\..\Library\CANDefines.mpas
+File14=..\..\..\..\Library\CANDefines\dsPIC33FJ256GP710A\CANBuffers.mpas
 [BINARIES]
 Count=0
 [IMAGES]
