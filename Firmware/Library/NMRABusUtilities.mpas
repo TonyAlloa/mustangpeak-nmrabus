@@ -76,7 +76,7 @@ end;
 procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
 begin
   Packet^.DataCount := 0;
-  Packet^.IsExtended := True;
+  Packet^.State := Packet^.State or CBS_EXTENDED;
   Packet^.ID := $10000000 or VariableField or NMRABus.Node_Alias_ID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
   if VariableField = FT_CID0 then Packet^.ID := Packet^.ID or (NMRABus.Node_ID[1] and $00FFF000) else
   if VariableField = FT_CID1 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
@@ -98,7 +98,7 @@ end;
 procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
 begin
   Packet^.DataCount := 0;
-  Packet^.IsExtended := True;
+  Packet^.State := Packet^.State or CBS_EXTENDED;
   if DestinationAliasID <> 0 then 
     Packet^.ID := Packet^.ID or (DestinationAliasID shl 12);
   Packet^.ID := $10000000 or VariableField or NMRABus.Node_Alias_ID;

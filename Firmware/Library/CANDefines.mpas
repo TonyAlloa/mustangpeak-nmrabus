@@ -25,10 +25,10 @@ const
   CES_TRANSMITTING = $0001;                                                     // CAN State constants
   
   // defined in the user program
-  RX_CAN_BUFFER_LEN = 2;
-  TX_CAN_BUFFER_LEN = 5;
-  RX_NMRANET_BUFFER_LEN = 2;
-  TX_NMRANET_BUFFER_LEN = 5;
+  RX_CAN_BUFFER_LEN = 1;
+  TX_CAN_BUFFER_LEN = 1;
+  RX_NMRANET_BUFFER_LEN = 1;
+  TX_NMRANET_BUFFER_LEN = 1;
 
 type
   TCAN_DataBytes = array[8] of Byte;
@@ -55,6 +55,9 @@ type
   TCANRawBufferArray = array[0..0] of TCANRawBuffer;                            // Allows any length array within the TCANRawBufferList
   PCANRawBufferArray = ^TCANRawBufferArray;
 
+const
+  CBS_EXTENDED = $01;                                                           // CAN Buffer State constants, Buffer is extended
+
 type
  // ***************************************************************************
   // CAN Message Buffers in user friendly form that can be easily maniuplated then
@@ -64,7 +67,7 @@ type
     ID: DWord;
     DataCount: Byte;
     DataBytes: TCAN_DataBytes;
-    IsExtended: Boolean;
+    State: Byte;                                                                // See CBS_xxxx Constants (CAN Buffer State)
   end;
   PCANBuffer = ^TCANBuffer;
   

@@ -20,7 +20,7 @@ unit NMRABusDefines;
 {$I Options.inc}
 
 const
-  MAX_BUS_LOGIN_TIMEOUT = 51;              // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
+  MAX_BUS_LOGIN_TIMEOUT = 201;              // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
 
   CAN_TX_0 = 0;
   CAN_TX_1 = 1;
@@ -106,10 +106,29 @@ const
 
 
   // NMRABus States
-  BS_PERMITED          = $01;                                                   // CAN Frame Layer is permitted (Node ID's resolved with bus)
-  BS_INITIALIZED       = $02;                                                   // Message Layer has sent its first Initialize Complete Message
-
-
+  BS_INHIBITED         = $01;                                                   // CAN Frame Layer is inhibited
+  BS_PERMITED          = $02;                                                   // CAN Frame Layer is permitted (Node ID's resolved with bus)
+  BS_UNITIALIZED       = $04;                                                   // Message Layer has not sent its first Initialize Complete Message
+  BS_INITIALIZED       = $08;                                                   // Message Layer has sent its first Initialize Complete Message
+  
+  STATE_NMRABUS_START                       = 0;
+  STATE_NMRABUS_GENERATE_NODE_ALIAS         = 1;
+  STATE_RANDOM_NUMBER_GENERATOR             = 2;
+  STATE_NMRABUS_TRANSMIT_CID                = 3;
+  STATE_NMRABUS_NEXT_MTI                    = 4;
+  STATE_NMRABUS_WAITSTATE                   = 5;
+  STATE_NMRABUS_SEND_LOGIN_RID              = 6;
+  STATE_NMRABUS_SEND_LOGIN_AMD              = 7;
+  STATE_NMRABUS_INITIALIZED                 = 8;
+  STATE_NMRABUS_PERMITTED                   = 9;
+  STATE_NMRABUS_SEND_AMD                    = 10;
+  STATE_NMRABUS_DUPLICATE_ALIAS             = 12;
+  STATE_NMRABUS_SEND_RID                    = 13;
+  STATE_NMRABUS_INHIBITED                   = 14;
+  STATE_NMRABUS_DUPLICATE_FULL_ID           = 15;
+  STATE_NMRABUS_TAKE_OFFLINE                = 16;
+  STATE_NMRABUS_OFFLINE                     = 17;
+  
 type
   TNodeID = array[0..1] of DWORD;                                                // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
   TNodeAliasID = Word;
@@ -119,9 +138,11 @@ type
     Node_ID: TNodeID;                // Unique 48 Bit ID for Node
     Unique_ID_Global_Seed: TNodeID;  // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
     Node_Alias_ID: TNodeAliasID;     // 12 Bit Alias ID
-    BusLoginCount: Integer;          // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
+    LoginTimeCount: Integer;         // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
     State: Word;                     // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
     Interrupt_State: Byte;           // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
+    iState: Byte;                    // Statemachine index
+    MTI: Byte;                       // CID state for logging into bus
   end;
   
 var

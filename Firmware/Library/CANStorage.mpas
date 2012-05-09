@@ -196,7 +196,10 @@ begin
   Buffer.DataBytes[5] := Byte5;
   Buffer.DataBytes[6] := Byte6;
   Buffer.DataBytes[7] := Byte7;
-  Buffer.IsExtended := IsExtended;
+  if IsExtended then
+    Buffer.State := Buffer.State or CBS_EXTENDED
+  else
+    Buffer.State := Buffer.State and not CBS_EXTENDED;
   Result := CANStorage_AddToList(List, Buffer)
 end;
 

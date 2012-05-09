@@ -132,7 +132,7 @@ end;
 
 procedure INTERRUPT_CAN_1(); iv IVT_ADDR_C1INTERRUPT;
 var 
-  Buffer: TCANRawBuffer;
+  Buffer: TCANBuffer;
 begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
@@ -203,7 +203,7 @@ begin
     EID := Buffer.ID and $0003FFFF;
 
     CANPtr^ := ((SID shl 2) and $00FC) or ((SID shl 5) and $F800);
-    if Buffer.IsExtended then
+    if Buffer.State and CBS_EXTENDED = CBS_EXTENDED then
     begin
       CANPtr^ := CANPtr^ or $0001;
       Inc(CANPtr);                                                              // Move to C1TXnEID
@@ -228,7 +228,10 @@ begin
   end else
   begin
     SID := ((DWORD( CANPtr^ shr 2)) and $000007FF);                             // Get the Standard ID
-    IsExtended := CANPtr^ and $0001 <> 0;
+    if CANPtr^ and $0001 <> 0 then
+      Buffer.State := Buffer.State or CBS_EXTENDED
+    else
+      Buffer.State := Buffer.State and not CBS_EXTENDED;
     Inc(CANPtr);                                                                // Move to the RXnEID Register
     if IsExtended then
     begin
