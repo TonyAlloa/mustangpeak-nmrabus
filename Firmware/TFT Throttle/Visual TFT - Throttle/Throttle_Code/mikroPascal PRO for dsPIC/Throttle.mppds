@@ -38,9 +38,11 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=2
+Count=4
 File0=..\..\..\..\Library\dsPIC33_CAN.mpas
 File1=Throttle_main.mpas
+File2=..\..\..\..\Library\CANStorage.mpas
+File3=..\..\..\..\Library\CANDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

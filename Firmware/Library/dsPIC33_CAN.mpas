@@ -21,7 +21,7 @@ unit dsPIC33_CAN;
 
 uses
   CANDefines,
-  CANBuffers
+  CANBuffers,
   CANStorage,
   dsPIC33_DMA,
   NMRABus;
@@ -268,7 +268,7 @@ end;
 
 procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT; ics ICS_AUTO;
 var
-  Buffer: TCANRawBuffer;
+  Buffer: TCANBuffer;
 begin
   dsPIC33_CAN_GlobalInterruptFlagCAN_Event(True);                               // Reset the Global CAN Event Interrupt Flag
 
@@ -334,7 +334,7 @@ begin
   if Direction = CAN_DIRECTION_WRITE then
   begin
     // Direction = 0 means Parameters to Buffer (Load TX Buffer)
-    if Buffer.IsExtended then
+    if Buffer.State and CBS_EXTENDED <> 0 then
     begin
       CANPtr^ := DWORD(Buffer.ID shr 16) and $1FFC;                             // Setup the Extended iD 7..17
       CANPtr^ := CANPtr^ or $0001;                                              // Setup if it is an extended ID
@@ -361,8 +361,12 @@ begin
   end else
   begin
     // Direction <> 0 then Buffer to Parameters (Read RX Buffer)
-    Buffer.IsExtended := CANPtr^ and $0001 <> 0;                                // Word 0
-    if Buffer.IsExtended then
+
+    if CANPtr^ and $0001 <> 0 then                                              // Word 0
+      Buffer.State := Buffer.State or CBS_EXTENDED
+    else
+      Buffer.State := Buffer.State and not CBS_EXTENDED;
+    if Buffer.State and CBS_EXTENDED <> 0 then
     begin
       Buffer.ID := CANPtr^ and $1FFC;
       Buffer.ID := Buffer.ID shl 16;

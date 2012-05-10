@@ -33,10 +33,7 @@ procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 begin
   // 1ms Timer
   T2IF_bit := 0;  // Reset the Flag
-  NMRABus_GlobalTimer;
-  EnableCANInterrupt(False);
-  NMRABusDatagrams_840ms_TimeTick;
-  EnableCANInterrupt(True);
+  NMRABus_1ms_Timer;
 end;
 
 procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);
@@ -66,17 +63,14 @@ begin
   ECAN_RegPage := 0;
   DMA_RegPage := 0;
 
-  NMRABus_Connect;
-  while true do
+  while (TRUE) do
   begin
-    Check_TP();
-    if not NMRABus_Permitted then
-    begin
-      NMRABusUtilities_RecreateAliasID;
-      NMRABus_Connect;
-    end;
+    NMRABus_Process;
 
-    HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
+    if NMRABus_Permitted then
+    begin
+    //  XpressnetStateMachine_Process;
+    end
   end;
 
 end.
