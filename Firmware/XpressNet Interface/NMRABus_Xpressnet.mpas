@@ -55,7 +55,6 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T3IF_bit := 0;
   XpressnetStateMachine_840ms_TimeTick;
-  NMRABus_GlobalTimer;
   EnableCANInterrupt(False);
   NMRABusDatagrams_840ms_TimeTick;
   EnableCANInterrupt(True);
@@ -121,23 +120,13 @@ begin
   NMRABus_Initialize;
   XpressnetStateMachine_Initialize;
 
- // NMRABus_Connect;
   NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
   while (TRUE) do
     begin
-   //   if not NMRABus_Permitted then
-   //   begin
-    //    NMRABusUtilities_RecreateAliasID;
-    //    NMRABus_Connect;
-   //   end;
-      
       NMRABus_Process;
       
       if NMRABus_Permitted then
       begin
-        // NMRANet CAN Bus
-        HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
-
       //  XpressnetStateMachine_Process;
       end
     end;

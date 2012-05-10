@@ -118,10 +118,11 @@ const
   STATE_NMRABUS_NEXT_MTI                    = 4;
   STATE_NMRABUS_WAITSTATE                   = 5;
   STATE_NMRABUS_SEND_LOGIN_RID              = 6;
-  STATE_NMRABUS_SEND_LOGIN_AMD              = 7;
-  STATE_NMRABUS_INITIALIZED                 = 8;
-  STATE_NMRABUS_PERMITTED                   = 9;
-  STATE_NMRABUS_SEND_AMD                    = 10;
+  STATE_NMRABUS_SEND_NODE_VERIFIED          = 7;
+  STATE_NMRABUS_SEND_LOGIN_AMD              = 8;
+  STATE_NMRABUS_INITIALIZED                 = 9;
+  STATE_NMRABUS_PERMITTED                   = 10;
+  STATE_NMRABUS_SEND_AMD                    = 11;
   STATE_NMRABUS_DUPLICATE_ALIAS             = 12;
   STATE_NMRABUS_SEND_RID                    = 13;
   STATE_NMRABUS_INHIBITED                   = 14;
@@ -129,20 +130,30 @@ const
   STATE_NMRABUS_TAKE_OFFLINE                = 16;
   STATE_NMRABUS_OFFLINE                     = 17;
   
+  
+  MAX_QUEUED_RESONSE_DEST                   = 4;
+  
+  RMF_DUPLICATE_ALIAS_DETECTED              = $0001;
+  RMF_SEND_AMD                              = $0002;
+  RMF_SEND_PCER                             = $0004;
+  RMF_SEND_RID                              = $0008;
+  RMF_SEND_VERIFIED_NODE                    = $0010;
+  
+  
 type
   TNodeID = array[0..1] of DWORD;                                                // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
-  TNodeAliasID = Word;
 
 
   TNMRABus = record
     Node_ID: TNodeID;                // Unique 48 Bit ID for Node
     Unique_ID_Global_Seed: TNodeID;  // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
-    Node_Alias_ID: TNodeAliasID;     // 12 Bit Alias ID
+    Node_Alias_ID: Word;             // 12 Bit Alias ID
     LoginTimeCount: Integer;         // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
     State: Word;                     // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
     Interrupt_State: Byte;           // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
     iState: Byte;                    // Statemachine index
     MTI: Byte;                       // CID state for logging into bus
+    ReceivedMsgFlags: Word;          // See the RMF_xxxx constants
   end;
   
 var

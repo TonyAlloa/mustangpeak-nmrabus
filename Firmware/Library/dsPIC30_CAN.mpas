@@ -90,18 +90,21 @@ begin
   if PendingList <> PCANBufferList( nil) then                                   // Pick the highest Priority List to send next
   begin
     Buffer := CANStorage_Tail(PendingList);                                     // Pull the next item to send out of the list
-    dsPIC30_Style_Buffer(CAN_DIRECTION_WRITE, @RawBuffer.Word0,  Buffer^);      // Convert it into a version that matches the registers
-    C1TX0SID := RawBuffer.Word0;                                                // Copy the buffer info into the Transmit Registers
-    C1TX0EID := RawBuffer.Word1;
-    C1TX0DLC := RawBuffer.Word2;
-    C1TX0B1 := RawBuffer.Word3;
-    C1TX0B2 := RawBuffer.Word4;
-    C1TX0B3 := RawBuffer.Word5;
-    C1TX0B4 := RawBuffer.Word6;
-    TXREQ_C1TX0CON_bit := 1;                                                  // Set the Flag to start the transmission
-    CANStorage_IncTail(PendingList);                                          // Release the Buffer from the List
-    CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
-    Result := True;
+    if Buffer <> nil then
+    begin
+      dsPIC30_Style_Buffer(CAN_DIRECTION_WRITE, @RawBuffer.Word0,  Buffer^);    // Convert it into a version that matches the registers
+      CANStorage_IncTail(PendingList);                                          // Release the Buffer from the List
+      C1TX0SID := RawBuffer.Word0;                                              // Copy the buffer info into the Transmit Registers
+      C1TX0EID := RawBuffer.Word1;
+      C1TX0DLC := RawBuffer.Word2;
+      C1TX0B1 := RawBuffer.Word3;
+      C1TX0B2 := RawBuffer.Word4;
+      C1TX0B3 := RawBuffer.Word5;
+      C1TX0B4 := RawBuffer.Word6;
+      TXREQ_C1TX0CON_bit := 1;                                                  // Set the Flag to start the transmission
+      CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
+      Result := True;
+    end
   end
 end;
 
@@ -228,18 +231,19 @@ begin
   end else
   begin
     SID := ((DWORD( CANPtr^ shr 2)) and $000007FF);                             // Get the Standard ID
-    if CANPtr^ and $0001 <> 0 then
-      Buffer.State := Buffer.State or CBS_EXTENDED
-    else
-      Buffer.State := Buffer.State and not CBS_EXTENDED;
+    IsExtended := CANPtr^ and $0001 <> 0;
     Inc(CANPtr);                                                                // Move to the RXnEID Register
     if IsExtended then
     begin
+      Buffer.State := Buffer.State or CBS_EXTENDED;
       EID := ((DWORD( CANPtr^) shl 6) and $0003FFC0);                           // Pull out the info from the RXnEID
       Inc(CANPtr);                                                              // Move to the RXnDLC Register
       EID := EID or (DWORD( CANPtr^) shr 10);                                   // Pull out the rest of the Extended ID
     end else
+    begin
+      Buffer.State := Buffer.State and not CBS_EXTENDED;
       Inc(CANPtr);                                                              // Move to the RXnDLC Register
+    end;
     Buffer.ID := (SID shl 18) or EID;                                              // Build the EID
     Buffer.DataCount := CANPtr^ and $000F;
     Inc(CANPtr);                                                                // Move to C1RXnB1

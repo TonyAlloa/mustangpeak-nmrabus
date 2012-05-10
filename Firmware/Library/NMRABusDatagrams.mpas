@@ -121,7 +121,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function FindInProcessDatagram(Source: TNodeAliasID; var Datagram: PDatagramBuffer): Boolean;
+function FindInProcessDatagram(SourceAlias: Word; var Datagram: PDatagramBuffer): Boolean;
 var
   i: Integer;
 begin
@@ -130,7 +130,7 @@ begin
   while (i < LEN_DATAGRAM_ARRAY) and not Result do
   begin
     if DatagramList[i].State = STATE_RECEIVING then
-      if NMRABusUtilities_CompareAliasIDs(DatagramList[i].Source, Source) then
+      if NMRABusUtilities_CompareAliasIDs(DatagramList[i].SourceAlias, SourceAlias) then
       begin
         Datagram := @DatagramList[i];
         Result := True
@@ -179,7 +179,7 @@ begin
         CheckAndFreeAbandonBuffers;
         if TryAllocateBuffer(Datagram) then
         begin
-          Datagram^.Source := Buffer.ID and MASK_SOURCE_ALIAS;
+          Datagram^.SourceAlias := Buffer.ID and MASK_SOURCE_ALIAS;
           Datagram^.DataBytes := Buffer.DataBytes;
           Datagram^.State := STATE_TRANSFER_FULL;                               // Ready for a "Full" Response
         end
@@ -189,7 +189,7 @@ begin
         CheckAndFreeAbandonBuffers;
         if TryAllocateBuffer(Datagram) then
         begin
-          Datagram^.Source := Buffer.ID and MASK_SOURCE_ALIAS;
+          Datagram^.SourceAlias := Buffer.ID and MASK_SOURCE_ALIAS;
           Datagram^.DataBytes := Buffer.DataBytes;
           Datagram^.iCount := 0;
           Datagram^.iWatchdog := 0;

@@ -18,6 +18,7 @@ program NMRABusCommandStation;
  
 uses
   NMRABus,
+  NMRABusDefines,
   CANDefines,
   CANStorage,
   MCU_Setup_dsPIC4013,
@@ -31,9 +32,6 @@ uses
   NodeIDs;
   
 {$I Options.inc}
-
-const
-  LF = #13+#10;
 
 var
   // DCC SIGNAL PINS
@@ -88,9 +86,6 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
   NMRABus_GlobalTimer;
-  EnableCANInterrupt(False);
-  NMRABusDatagrams_840ms_TimeTick;
-  EnableCANInterrupt(True);
 end;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
@@ -129,11 +124,16 @@ Exit;
 
 end;
 
-procedure CANBusPacketHook(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+procedure CANLayerReceiveHook(CANBuffer: PCANBuffer; var DoDefault: Boolean);
 // WARNING: THIS IS CALLED IN THE CONTEXT OF THE INTERRUPT AND CAN NOT BE LONGER THAN
 // IT TAKES TO RECEIVE THE NEXT CAN MESSAGE!!!!!!!!
+var
+  s1: array[8] of char;
 begin
-
+ // LongIntToHex(CANBuffer^.ID, s1);
+ // UART1_Write_Text('CAN'+LF);
+ // UART1_Write_Text(s1+LF);
+  
 end;
 
 
@@ -147,6 +147,7 @@ var
   Loop: DWord;
   s1: array[8] of char;
   s2: array[32] of char;
+  laststate: word;
 begin
 
   Track_DCC_Out_Pin := 0;
@@ -165,59 +166,32 @@ begin
   NMRA_DCC_Initialize;
   AddressSlots_Initialize;
   
-  NMRABus_SetCANLayerReceiveHook(@CANBusPacketHook);
- 
+
   UART1_Write_Text('Connecting'+LF);
   
   Loop := 0;
-  NMRABus_Connect;
+  laststate := 0;
+
+  NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
   while (TRUE) do
     begin
-      if not NMRABus_Permitted then
+      NMRABus_Process;
+      
+      if NMRABus.iState <> laststate then
       begin
-        UART1_Write_Text('Reconnecting'+LF);
-        NMRABusUtilities_RecreateAliasID;
-        NMRABus_Connect;
+        IntToStr(NMRABus.iState, s1);
+       UART1_Write_Text(s1+LF);
+     //   WordToHex(NMRABus.ReceivedMsgFlags, s1);
+      //  UART1_Write_Text(s1+':    ')+LF);
+     //   WordToHex(NMRABus.Node_Alias_ID, s1);
+     //   UART1_Write_Text(s1+LF);
+        laststate := NMRABus.iState
       end;
       
+
       if NMRABus_Permitted then
       begin
-        
-        UART1_Write_Text('Connected'+LF);
 
-        NMRA_DCC_Packet_Init;                                                   // Send the 20 Idle Packets per the NMRA Spec
-        
-        UART1_Write_Text('DCC Packets Done'+LF);
-        
-        while NMRABus_Permitted do
-        begin
-          HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler);
-          
-          if Loop mod 100000 = 0 then
-          begin
-        {    ByteToStr(TX_CANLayer_List.MaxCount, s1);
-            s2 := 'CAN TX:  ';
-            s2 := s2 + s1;
-            UART1_Write_Text(s2 + LF);
-            
-            ByteToStr(RX_CANLayer_List.MaxCount, s1);
-            s2 := 'CAN RX:  ';
-            s2 := s2 + s1;
-            UART1_Write_Text(s2 + LF);
-            
-            ByteToStr(TX_NMRABUsLayer_List.MaxCount, s1);
-            s2 := 'NMRA TX: ';
-            s2 := s2 + s1;
-            UART1_Write_Text(s2 + LF);
-            
-            ByteToStr(RX_NMRABusLayer_List.MaxCount, s1);
-            s2 := 'NMRA RX: ';
-            s2 := s2 + s1;
-            UART1_Write_Text(s2 + LF);   }
-          end;
-          Inc(Loop);
-          
-        end
       end
     end;
 end.

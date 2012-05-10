@@ -23,7 +23,6 @@ uses
   CANDefines,
   CANStorage,
   MCU_Setup_dsPIC4013,
-  NMRABusDatagram,
   NodeIDs;
 
 {$I Options.inc}
@@ -52,9 +51,6 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
   NMRABus_GlobalTimer;
-  EnableCANInterrupt(False);
-  NMRABusDatagrams_840ms_TimeTick;
-  EnableCANInterrupt(True);
 end;
 
 
@@ -106,23 +102,18 @@ end;
 // *******************
 begin
   CANStorage_Initialize;
-  NMRABus_Initialize;
   MCU_Setup_Initialize;
+  NMRABus_Initialize;
 
-  NMRABus_Connect;
+
   NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
   while (TRUE) do
     begin
-      if not NMRABus_Permitted then
-      begin
-        NMRABusUtilities_RecreateAliasID;
-        NMRABus_Connect;
-      end;
-
+      NMRABus_Process;
 
       if NMRABus_Permitted then
       begin
-        HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler)
+      //  XpressnetStateMachine_Process;
       end
     end;
 end.

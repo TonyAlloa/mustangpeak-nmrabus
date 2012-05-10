@@ -18,6 +18,9 @@ unit CANDefines;
 // *****************************************************************************
 
 const
+  LF = #13+#10;
+  
+const
   CAN_DIRECTION_READ = 1;
   CAN_DIRECTION_WRITE = 0;
   
@@ -25,9 +28,9 @@ const
   CES_TRANSMITTING = $0001;                                                     // CAN State constants
   
   // defined in the user program
-  RX_CAN_BUFFER_LEN = 1;
+  RX_CAN_BUFFER_LEN = 3;
   TX_CAN_BUFFER_LEN = 1;
-  RX_NMRANET_BUFFER_LEN = 1;
+  RX_NMRANET_BUFFER_LEN = 3;
   TX_NMRANET_BUFFER_LEN = 1;
 
 type

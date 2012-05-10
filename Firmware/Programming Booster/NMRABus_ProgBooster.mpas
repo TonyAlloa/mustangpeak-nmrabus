@@ -85,23 +85,17 @@ end;
 // *******************
 begin
   CANStorage_Initialize;
-  NMRABus_Initialize;
   MCU_Setup_Initialize;
+  NMRABus_Initialize;
 
-  NMRABus_Connect;
   NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
   while (TRUE) do
     begin
-      if not NMRABus_Permitted then
-      begin
-        NMRABusUtilities_RecreateAliasID;
-        NMRABus_Connect;
-      end;
-
+      NMRABus_Process;
 
       if NMRABus_Permitted then
       begin
-        HandlePacketReceivedOnNMRABusLayer(@NMRABusPacketHandler)
+      //  XpressnetStateMachine_Process;
       end
     end;
 end.

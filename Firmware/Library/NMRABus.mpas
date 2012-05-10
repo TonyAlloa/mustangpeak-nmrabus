@@ -43,8 +43,8 @@ type
   procedure NMRABus_Disconnect;
   procedure NMRABus_Initialize;
   procedure NMRABus_GlobalTimer;
-  procedure HandlePacketReceivedOnNMRABusLayer(NMRABusPacketHandler: PPacketHandlerFunc);
   procedure NMRABus_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);       // WARNING:  The Hook is called from within the Interrupt Handler.....
+  procedure NMRABus_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);   // WARNING:  The Hook is called from within the Interrupt Handler.....
 
 
   // callbacks from the CAN interrupts used in the xxxxx_CAN_Interrupt.mpas units
@@ -59,6 +59,7 @@ type
 
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
+  procedure EnableCANInterrupt(Enable: Boolean); external;
 
   // defined in the user program
   procedure GetUniqueIDFunc(var HiID, LoID: DWord); external;
@@ -74,10 +75,17 @@ implementation
 
 var
   CANLayerReceiveHook: PPacketHandlerFunc;
+  NMRAnetLayerReceiveHook: PPacketHandlerFunc;
+  
 
 procedure NMRABus_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);
 begin
   CANLayerReceiveHook := HookFunc
+end;
+
+procedure NMRABus_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);
+begin
+  NMRAnetLayerReceiveHook := HookFunc
 end;
 
 // *****************************************************************************
@@ -108,53 +116,47 @@ var
   CANBuffer: TCANBuffer;
   NodeID: TNodeID;
   DoDefault: Boolean;
-begin       
-  while CANStorage_ExtractFromList(@RX_CANBufferList, CANBuffer) do                        // Pull all the Received Messages out (should be only one)
+  LocalFlags: Word;
+begin
+  while CANStorage_ExtractFromList(@RX_CANBufferList, CANBuffer) do             // Pull all the Received Messages out (should be only one)
   begin
     DoDefault := True;
     if CANLayerReceiveHook <> nil then
       CANLayerReceiveHook(@CANBuffer, DoDefault);
     if DoDefault then
     begin
-      if CANBuffer.ID and FT_AMD = FT_AMD then                                    // Alias Map Definition Message
-      begin
-        NMRABusUtilities_PacketBytesToNodeID(@CANBuffer, NodeID);
-        if NMRABusUtilities_EqualNodeID(NodeID) then                              // Is the 48 Bit node ID equal to ours?
-        begin                                                                     // Big error, there are duplicate 48 Bit ID on the bus
-
-        end;
-      end else
+      LocalFlags := 0;
+      // This is ALWAYS checked regardless of permitted state
       if NMRABusUtilities_EqualAliasID(CANBuffer.ID and MASK_SOURCE_ALIAS) then           // Is the 12 Bit Alias equal to ours?
       begin
+        LocalFlags := LocalFlags or RMF_DUPLICATE_ALIAS_DETECTED;
         if (CANBuffer.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer.ID and FT_CID_MASK >= FT_CID6) then // If it is a CID message then force calling node to try again for an Alias this one is ours
         begin
-        end else
-        begin
-        end
-      end else
+          LocalFlags := LocalFlags or RMF_SEND_RID;
+        end;
+      end;
+      if NMRABus_Permitted then
       begin
-        if NMRABus_Permitted then
+        if CANBuffer.ID and FT_AME = FT_AME then                                // Alias Mapping Enquiry
         begin
-          if CANBuffer.ID and FT_AME = FT_AME then                                // Alias Mapping Enquiry
+          if CANBuffer.DataCount > 0 then
           begin
-            if CANBuffer.DataCount > 0 then
-            begin                                                                 // The Data contain a valid 48 Bit ID to compare with?
-              NMRABusUtilities_PacketBytesToNodeID(@CANBuffer, NodeID);           // Extract the 48 Bit ID
-              if NMRABusUtilities_EqualNodeID(NodeID) then
-              begin                                                               // The 48 Bit node ID is equal to ours
-                NMRABusUtilities_CreateCANControlFramePacket(FT_AMD, @CANBuffer); // Send an Alias Map Definition
-                StartCANMessageEngine;
-              end
-            end else
-            begin                                                                 // No Data so just send the AMD
-              NMRABusUtilities_CreateCANControlFramePacket(FT_AMD, @CANBuffer);   // Send an Alias Map Definition
-              StartCANMessageEngine;
-            end
-          end
-        end
-      end
+            NMRABusUtilities_PacketBytesToNodeID(@CANBuffer, NodeID);           // Extract the 48 Bit ID
+            if NMRABusUtilities_EqualNodeID(NodeID) then                        // If addressed to us then respond
+              LocalFlags := LocalFlags or RMF_SEND_AMD;
+          end else
+            LocalFlags := LocalFlags or RMF_SEND_AMD;
+        end else
+        if CANBuffer.ID and FT_AMD = FT_AMD then
+        begin
+          NMRABusUtilities_PacketBytesToNodeID(@CANBuffer, NodeID);           // Extract the 48 Bit ID
+          if NMRABusUtilities_EqualNodeID(NodeID) then                        // If addressed to us then respond
+            LocalFlags := LocalFlags or RMF_SEND_PCER
+        end;
+      end;
+      NMRABus.ReceivedMsgFlags := NMRABus.ReceivedMsgFlags or LocalFlags
     end
-  end;
+  end
 end;
 
 // ****************************************************************************
@@ -165,31 +167,53 @@ end;
 //     handling in the main message loop
 //
 // ****************************************************************************
-procedure HandlePacketReceivedOnNMRABusLayer(NMRABusPacketHandler: PPacketHandlerFunc);
+procedure HandlePacketReceivedOnNMRABusLayer;
 var
   CANBuffer: TCANBuffer;
   DoDefault: Boolean;
+  LocalFlags: Word;
+  
+    s1: array[8] of char;
+    
 begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #4; end; {$ENDIF}
   C1IE_bit := 0;
   if CANStorage_ExtractFromList(@RX_NMRAnetBufferList, CANBuffer) then                     // Pull next Received Messages out
   begin
-    DoDefault := True;
-    NMRABusPacketHandler(@CANBuffer, DoDefault);
-    if DoDefault then
+  
+ //   LongWordToStr(CANBuffer.ID, s1);
+ //  UART1_Write_Text(s1+LF);
+   
+    if NMRABus_Permitted then
     begin
-      if (CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST) and (CANBuffer.DataBytes[0] = SFT_VERIFY_NODE_DEST) then
+      DoDefault := True;
+      if NMRAnetLayerReceiveHook <> nil then
+        NMRAnetLayerReceiveHook(@CANBuffer, DoDefault);
+      if DoDefault then
       begin
-        if NMRABusUtilities_EqualDestinationAlias(@CANBuffer) then
+        LocalFlags := 0;
+        if not NMRABusUtilities_IsAddressedMessage(@CANBuffer) then
         begin
-          NMRABusUtilities_CreateNMRABusMessagePacket(FT_VERIFIED_NODE_ID_NUMBER, 0, @CANBuffer);
-          StartCANMessageEngine;
+        
+    //    UART1_Write_Text('na'+LF);
+        
+          // Not and addressed message
+          if CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_NO_DEST = FT_VERIFY_NODE_ID_NUMBER_NO_DEST then
+            LocalFlags := LocalFlags or RMF_SEND_VERIFIED_NODE
+        end else
+        if NMRABusUtilities_IsAddressedMessageToNode(@CANBuffer) then
+        begin
+        
+     //     UART1_Write_Text('atn'+LF);
+          // Address message to this node
+          if (CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST) and (CANBuffer.DataBytes[0] = SFT_VERIFY_NODE_DEST) then
+            LocalFlags := LocalFlags or RMF_SEND_VERIFIED_NODE
+        end else
+        begin
+          // Addressed message not to this node
+    //      UART1_Write_Text('antn'+LF);
         end;
-      end else
-      if CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_NO_DEST = FT_VERIFY_NODE_ID_NUMBER_NO_DEST then
-      begin
-        NMRABusUtilities_CreateNMRABusMessagePacket(FT_VERIFIED_NODE_ID_NUMBER, 0, @CANBuffer);
-        StartCANMessageEngine;
+        NMRABus.ReceivedMsgFlags := NMRABus.ReceivedMsgFlags or LocalFlags
       end
     end
   end;
@@ -242,6 +266,7 @@ begin
   begin
     Next^ := Buffer^;
     CANStorage_IncHead(@RX_NMRAnetBufferList);
+    HandlePacketReceivedOnNMRABusLayer
   end else
   begin
       // Have overrun problem
@@ -355,7 +380,9 @@ begin
   NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Node_ID[0];
   NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Node_ID[1];
   NMRABus.iState := STATE_NMRABUS_START;
+  NMRABus.ReceivedMsgFlags := 0;
   CANLayerReceiveHook := PPacketHandlerFunc( nil);
+  NMRAnetLayerReceiveHook := PPacketHandlerFunc( nil);
   NMRABus_InitializeList(@RX_CANBufferList, @RX_CANBuffer, RX_CAN_BUFFER_LEN);
   NMRABus_InitializeList(@TX_CANBufferList, @TX_CANBuffer, TX_CAN_BUFFER_LEN);
   NMRABus_InitializeList(@RX_NMRAnetBufferList, @RX_NMRAnet_Buffer, RX_NMRANET_BUFFER_LEN);
@@ -394,6 +421,17 @@ begin
   Result := True
 end;
 
+function TestReceivedMsgFlags(Flag: Word): Boolean;
+var
+  Temp: Word;
+begin
+  EnableCANInterrupt(False);
+  Temp := NMRABus.ReceivedMsgFlags;
+  NMRABus.ReceivedMsgFlags := NMRABus.ReceivedMsgFlags and not Flag;
+  Result := Temp and Flag = Flag;
+  EnableCANInterrupt(True);
+end;
+
 procedure NMRABus_Process;
 var
   Buffer: TCANBuffer;
@@ -420,7 +458,7 @@ begin
     STATE_NMRABUS_TRANSMIT_CID :
       begin
         case NMRABus.MTI of
-          0 : NMRABusUtilities_CreateCANControlFramePacket(FT_CID0, @Buffer);               // Queue up
+          0 : NMRABusUtilities_CreateCANControlFramePacket(FT_CID0, @Buffer);   // Queue up
           1 : NMRABusUtilities_CreateCANControlFramePacket(FT_CID1, @Buffer);
           2 : NMRABusUtilities_CreateCANControlFramePacket(FT_CID2, @Buffer);
           3 : NMRABusUtilities_CreateCANControlFramePacket(FT_CID3, @Buffer);
@@ -453,17 +491,24 @@ begin
       end;
     STATE_NMRABUS_SEND_LOGIN_RID :
       begin
-        // TEST FOR DUPLICATE ALIAS ID
-      //  if DuplicateAliasIDDetected then
-       //   NMRABus.iState := STATE_RANDOM_NUMBER_GENERATOR
-      //  else
-        begin
+        if TestReceivedMsgFlags(RMF_DUPLICATE_ALIAS_DETECTED) then
+          NMRABus.iState := STATE_RANDOM_NUMBER_GENERATOR
+        else begin
           NMRABusUtilities_CreateCANControlFramePacket(FT_RID, @Buffer);
           if CANStorage_AddToList(@TX_CANBufferList, Buffer) then
           begin
             StartCANMessageEngine();
             NMRABus.iState := STATE_NMRABUS_SEND_LOGIN_AMD
           end
+        end
+      end;
+    STATE_NMRABUS_SEND_NODE_VERIFIED :
+      begin
+        NMRABusUtilities_CreateCANControlFramePacket(FT_VERIFIED_NODE_ID_NUMBER, @Buffer);
+        if CANStorage_AddToList(@TX_CANBufferList, Buffer) then
+        begin
+          StartCANMessageEngine();
+          NMRABus.iState := STATE_NMRABUS_PERMITTED;
         end
       end;
     STATE_NMRABUS_SEND_LOGIN_AMD :
@@ -488,12 +533,12 @@ begin
       end;
     STATE_NMRABUS_PERMITTED :
       begin
-    {    if DuplicateAliasIDDetected then
+        if TestReceivedMsgFlags(RMF_DUPLICATE_ALIAS_DETECTED) then
           NMRABus.iState := STATE_NMRABUS_DUPLICATE_ALIAS;
-        if AliasMapEnquiryDetected then
+        if TestReceivedMsgFlags(RMF_SEND_AMD) then                              // AliasMapEnquiryDetected
           NMRABus.iState := STATE_NMRABUS_SEND_AMD;
-        if AliasMapDefinitionDuplicateNodeIDDetected then
-          NMRABus.iState := STATE_NMRABUS_DUPLICATE_FULL_ID;  }
+        if TestReceivedMsgFlags(RMF_SEND_PCER) then                             // AliasMapDefinitionDuplicateNodeIDDetected
+          NMRABus.iState := STATE_NMRABUS_DUPLICATE_FULL_ID;
       end;
     STATE_NMRABUS_SEND_AMD :
       begin
@@ -506,10 +551,10 @@ begin
       end;
     STATE_NMRABUS_DUPLICATE_ALIAS :
       begin
-    {    if ReceivedCheckIDMsg then
+        if TestReceivedMsgFlags(RMF_SEND_RID) then                              // ReceivedCheckIDMsg
           NMRABus.iState := STATE_NMRABUS_SEND_RID
         else
-          NMRABus.iState := STATE_NMRABUS_INHIBITED    }
+          NMRABus.iState := STATE_NMRABUS_INHIBITED
       end;
     STATE_NMRABUS_SEND_RID :
       begin
@@ -557,62 +602,6 @@ begin
       end;
   end
 end;
-
-       {
-// *****************************************************************************
-//  function NMRABus_Connect
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure NMRABus_Connect;
-var
-  Buffer: TCANBuffer;
-  DuplicateCID: Boolean;
-begin
-  FlushLists;
-  while CANStorage_Transmitting do;                                             // Wait for the last transmited packet
-  Delay_ms(10);
-  NMRABusUtilities_CreateCANControlFramePacket(FT_CID0, @Buffer);               // Queue up
-  CANStorage_AddToList(@TX_CANBufferList, Buffer);
-  NMRABusUtilities_CreateCANControlFramePacket(FT_CID1, @Buffer);
-  CANStorage_AddToList(@TX_CANBufferList, Buffer);
-  NMRABusUtilities_CreateCANControlFramePacket(FT_CID2, @Buffer);
-  CANStorage_AddToList(@TX_CANBufferList, Buffer);
-  NMRABusUtilities_CreateCANControlFramePacket(FT_CID3, @Buffer);
-  CANStorage_AddToList(@TX_CANBufferList, Buffer);
-  StartCANMessageEngine();
-  DuplicateCID := False;
-  while CANStorage_Transmitting and not DuplicateCID do
-  begin
-    if CANStorage_ExtractFromList(@RX_CANBufferList, Buffer) then
-      DuplicateCID := NMRABusUtilities_EqualAliasID(Buffer.ID and $00000FFF) and (Buffer.ID and FT_RID = FT_RID);
-  end;
-  if not DuplicateCID then
-  begin
-    NMRABus.LoginTimeCount := 0;
-    while NMRABus.LoginTimeCount < MAX_BUS_LOGIN_TIMEOUT do
-    begin
-      if CANStorage_ExtractFromList(@RX_CANBufferList, Buffer) then
-        DuplicateCID := NMRABusUtilities_EqualAliasID(Buffer.ID and $00000FFF) and (Buffer.ID and FT_RID = FT_RID);
-    end;
-    
-    if not DuplicateCID then
-    begin
-      NMRABus.State := NMRABus.State or BS_PERMITED and not BS_INHIBITED;
-      NMRABusUtilities_CreateCANControlFramePacket(FT_AMD, @Buffer);
-      CANStorage_AddToList(@TX_CANBufferList, Buffer);
-      NMRABusUtilities_CreateNMRABusMessagePacket(FT_INITIALIZATION_COMPLETE, 0, @Buffer);
-      CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer);
-      StartCANMessageEngine();
-      while CANStorage_Transmitting do;                                         // Just wait
-      NMRABus.State := NMRABus.State or BS_INITIALIZED;
-    end;
-  end;
-end;   }
-
 
 // *****************************************************************************
 //  procedure NMRABus_Disconnect

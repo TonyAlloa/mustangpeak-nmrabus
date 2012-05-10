@@ -114,7 +114,7 @@ type
   // Buffer to hold the NMRANet data on the CAN bus
   TDatagramReception = record
     DataBytes: array[0..LEN_DATAGRAM-1] of Byte;                                // The bytes sent in the datagram
-    Source: TNodeAliasID;                                                       // The Node that sent the datagram
+    Source: Word;                                                               // The Node that sent the datagram
     Done: Boolean;
   end;
 

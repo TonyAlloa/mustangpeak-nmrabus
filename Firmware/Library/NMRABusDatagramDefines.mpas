@@ -35,7 +35,7 @@ const
 type
   TDatagramBuffer = record
     DataBytes: array[0..LEN_DATAGRAM-1] of Byte;                                // The bytes sent in the datagram
-    Source: TNodeAliasID;                                                       // The Node that sent the datagram
+    SourceAlias: Word;                                                          // The Node that sent the datagram
     State: Byte;                                                                // The State of the Packet Buffer, See the DPB_XXXX contants
     iCount: Byte;                                                               // Counts the number of bytes recevied as they come in, used to index where to add the next 8 bytes
     iWatchdog: Byte;                                                            // Increments every 800ms or so to allow detecting a datagram that was abandon and never sent the End message

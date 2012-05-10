@@ -163,7 +163,6 @@ var
   Head: PCANBuffer;
 begin
   Result := False;
-  // Could wait until the buffer has space... BUT if this is called in a CAN interrupt then there will be dead lock.....
   Head := CANStorage_Head(List);
   if Head <> PCANBuffer( nil) then
   begin
