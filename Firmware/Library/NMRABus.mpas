@@ -42,7 +42,7 @@ type
   function NMRABus_Permitted: Boolean;
   procedure NMRABus_Disconnect;
   procedure NMRABus_Initialize;
-  procedure NMRABus_GlobalTimer;
+  procedure NMRABus_1ms_Timer;
   procedure NMRABus_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);       // WARNING:  The Hook is called from within the Interrupt Handler.....
   procedure NMRABus_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);   // WARNING:  The Hook is called from within the Interrupt Handler.....
 
@@ -131,13 +131,11 @@ begin
       begin
         LocalFlags := LocalFlags or RMF_DUPLICATE_ALIAS_DETECTED;
         if (CANBuffer.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer.ID and FT_CID_MASK >= FT_CID6) then // If it is a CID message then force calling node to try again for an Alias this one is ours
-        begin
           LocalFlags := LocalFlags or RMF_SEND_RID;
-        end;
       end;
       if NMRABus_Permitted then
       begin
-        if CANBuffer.ID and FT_AME = FT_AME then                                // Alias Mapping Enquiry
+        if CANBuffer.ID and FT_UNADDRESSED_MASK = FT_AME then                                // Alias Mapping Enquiry
         begin
           if CANBuffer.DataCount > 0 then
           begin
@@ -147,7 +145,7 @@ begin
           end else
             LocalFlags := LocalFlags or RMF_SEND_AMD;
         end else
-        if CANBuffer.ID and FT_AMD = FT_AMD then
+        if CANBuffer.ID and FT_UNADDRESSED_MASK = FT_AMD then
         begin
           NMRABusUtilities_PacketBytesToNodeID(@CANBuffer, NodeID);           // Extract the 48 Bit ID
           if NMRABusUtilities_EqualNodeID(NodeID) then                        // If addressed to us then respond
@@ -172,18 +170,15 @@ var
   CANBuffer: TCANBuffer;
   DoDefault: Boolean;
   LocalFlags: Word;
-  
-    s1: array[8] of char;
-    
 begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #4; end; {$ENDIF}
   C1IE_bit := 0;
   if CANStorage_ExtractFromList(@RX_NMRAnetBufferList, CANBuffer) then                     // Pull next Received Messages out
   begin
-  
- //   LongWordToStr(CANBuffer.ID, s1);
- //  UART1_Write_Text(s1+LF);
-   
+    LocalFlags := 0;
+    if NMRABusUtilities_EqualAliasID(CANBuffer.ID and MASK_SOURCE_ALIAS) then           // Is the 12 Bit Alias equal to ours?
+      LocalFlags := LocalFlags or RMF_DUPLICATE_ALIAS_DETECTED;
+
     if NMRABus_Permitted then
     begin
       DoDefault := True;
@@ -191,30 +186,26 @@ begin
         NMRAnetLayerReceiveHook(@CANBuffer, DoDefault);
       if DoDefault then
       begin
-        LocalFlags := 0;
-        if not NMRABusUtilities_IsAddressedMessage(@CANBuffer) then
+        if not NMRABusUtilities_IsAddressedMessage(@CANBuffer) then             // Not an addressed message
         begin
-        
-    //    UART1_Write_Text('na'+LF);
-        
-          // Not and addressed message
-          if CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_NO_DEST = FT_VERIFY_NODE_ID_NUMBER_NO_DEST then
-            LocalFlags := LocalFlags or RMF_SEND_VERIFIED_NODE
+          if (CANBuffer.ID and FT_UNADDRESSED_MASK = FT_VERIFY_NODE_ID_NUMBER_NO_DEST) then
+            LocalFlags := LocalFlags or RMF_SEND_VERIFIED_NODE;
         end else
-        if NMRABusUtilities_IsAddressedMessageToNode(@CANBuffer) then
+        if NMRABusUtilities_IsAddressedMessageToNode(@CANBuffer) then           // Address message to this node
         begin
-        
-     //     UART1_Write_Text('atn'+LF);
-          // Address message to this node
-          if (CANBuffer.ID and FT_VERIFY_NODE_ID_NUMBER_DEST = FT_VERIFY_NODE_ID_NUMBER_DEST) and (CANBuffer.DataBytes[0] = SFT_VERIFY_NODE_DEST) then
+          if (CANBuffer.ID and FT_ADDRESSED_MASK = FT_VERIFY_NODE_ID_NUMBER_DEST) and (CANBuffer.DataBytes[0] = SFT_VERIFY_NODE_DEST) then
             LocalFlags := LocalFlags or RMF_SEND_VERIFIED_NODE
+          else begin
+            if (CANBuffer.ID and MTI_TYPE_MASK >= MTI_DATAGRAM_MIN) and (CANBuffer.ID and MTI_TYPE_MASK >= MTI_DATAGRAM_MAX) then
+            begin
+              // Load up the addressed buffer.....
+            end;
+          end
         end else
-        begin
-          // Addressed message not to this node
-    //      UART1_Write_Text('antn'+LF);
+        begin                                                                   // Addressed message but not to this node
         end;
-        NMRABus.ReceivedMsgFlags := NMRABus.ReceivedMsgFlags or LocalFlags
-      end
+      end;
+      NMRABus.ReceivedMsgFlags := NMRABus.ReceivedMsgFlags or LocalFlags
     end
   end;
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #4; end; {$ENDIF}
@@ -266,7 +257,7 @@ begin
   begin
     Next^ := Buffer^;
     CANStorage_IncHead(@RX_NMRAnetBufferList);
-    HandlePacketReceivedOnNMRABusLayer
+    HandlePacketReceivedOnNMRABusLayer;
   end else
   begin
       // Have overrun problem
@@ -404,14 +395,14 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure NMRABus_GlobalTimer
+//  procedure NMRABus_1ms_Timer;
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-procedure NMRABus_GlobalTimer;
+procedure NMRABus_1ms_Timer;
 begin
   Inc(NMRABus.LoginTimeCount);
 end;
@@ -425,11 +416,11 @@ function TestReceivedMsgFlags(Flag: Word): Boolean;
 var
   Temp: Word;
 begin
-  EnableCANInterrupt(False);
+ // EnableCANInterrupt(False);
   Temp := NMRABus.ReceivedMsgFlags;
   NMRABus.ReceivedMsgFlags := NMRABus.ReceivedMsgFlags and not Flag;
   Result := Temp and Flag = Flag;
-  EnableCANInterrupt(True);
+ // EnableCANInterrupt(True);
 end;
 
 procedure NMRABus_Process;
@@ -504,8 +495,8 @@ begin
       end;
     STATE_NMRABUS_SEND_NODE_VERIFIED :
       begin
-        NMRABusUtilities_CreateCANControlFramePacket(FT_VERIFIED_NODE_ID_NUMBER, @Buffer);
-        if CANStorage_AddToList(@TX_CANBufferList, Buffer) then
+        NMRABusUtilities_CreateNMRABusMessagePacket(FT_VERIFIED_NODE_ID_NUMBER, 0, @Buffer);
+        if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
         begin
           StartCANMessageEngine();
           NMRABus.iState := STATE_NMRABUS_PERMITTED;
@@ -539,6 +530,8 @@ begin
           NMRABus.iState := STATE_NMRABUS_SEND_AMD;
         if TestReceivedMsgFlags(RMF_SEND_PCER) then                             // AliasMapDefinitionDuplicateNodeIDDetected
           NMRABus.iState := STATE_NMRABUS_DUPLICATE_FULL_ID;
+        if TestReceivedMsgFlags(RMF_SEND_VERIFIED_NODE) then                    // Verify Node detected
+          NMRABus.iState := STATE_NMRABUS_SEND_NODE_VERIFIED;
       end;
     STATE_NMRABUS_SEND_AMD :
       begin

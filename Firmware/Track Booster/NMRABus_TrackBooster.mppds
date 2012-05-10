@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRABus_TrackBooster.mpas
+Value=..\Library\NMRABus.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -34,11 +34,11 @@ ActiveImageIndex=-1
 Count=7
 File0=NMRABus_TrackBooster.mpas
 File1=..\Library\NMRABus.mpas
-File2=..\..\..\..\..\..\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\P30F4013.mpas
-File3=..\Library\NodeIDs.mpas
-File4=..\Library\NMRABusNodeItems.mpas
-File5=..\Library\NMRABusAddressSlots.mpas
-File6=MCU_Setup_dsPIC4013.mpas
+File2=..\Library\NodeIDs.mpas
+File3=..\Library\NMRABusNodeItems.mpas
+File4=..\Library\NMRABusAddressSlots.mpas
+File5=MCU_Setup_dsPIC4013.mpas
+File6=..\Library\NMRABusDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

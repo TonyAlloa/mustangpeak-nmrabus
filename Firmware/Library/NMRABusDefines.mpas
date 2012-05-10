@@ -62,14 +62,18 @@ const
 
   MTI_UNADDRESSED                   = $08000000;
   MTI_RESERVED                      = $09000000;
-  MTI_DATAGRAM_FRAME_START          = $0A000000;
-  MTI_DATAGRAM_ONLY_FRAME           = $0B000000;
+  MTI_DATAGRAM_ONLY_FRAME           = $0A000000;
+  MTI_DATAGRAM_FRAME_START          = $0B000000;
   MTI_DATAGRAM_FRAME                = $0C000000;
   MTI_DATAGRAM_FRAME_END            = $0D000000;                                // Sub type SFT_DATAGRAM_END
   MTI_ADDRESSED_NOT_DATAGRAM        = $0E000000;
   MTI_STREAM_DATA_SEND              = $0F000000;
   MTI_TYPE_MASK                     = $0F000000;                                // The lower 4 bits of the upper word that decodes the NMRAnet Format code of the message
+  MTI_DATAGRAM_MIN                  = MTI_DATAGRAM_ONLY_FRAME;
+  MTI_DATAGRAM_MAX                  = MTI_DATAGRAM_FRAME_END;
 
+  FT_UNADDRESSED_MASK               = $0FFFF000;
+  FT_ADDRESSED_MASK                 = $0F000000;
   FT_INITIALIZATION_COMPLETE        = $08087000;
   FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
   FT_VERIFY_NODE_ID_NUMBER_NO_DEST  = $088A7000;

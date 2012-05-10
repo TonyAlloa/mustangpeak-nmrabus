@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\Library\dsPIC33_CAN.mpas
+Value=Throttle_main.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -31,25 +31,16 @@ File10=..\..\..\..\Library\NMRABusUtilities.mpas
 File11=..\..\..\..\Library\NMRABusDefines.mpas
 File12=..\..\..\..\Library\CANStorage.mpas
 File13=..\..\..\..\Library\CANDefines.mpas
-File14=..\..\..\..\Library\CANDefines\dsPIC33FJ256GP710A\CANBuffers.mpas
+File14=..\..\..\..\Library\CANBuffers\dsPIC33FJ256GP710A\CANBuffers.mpas
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=11
-File0=Throttle_main.mpas
-File1=MCU_Setup_dsPIC33FJ256GP710A.mpas
-File2=..\..\..\..\Library\NMRABusUtilities.mpas
-File3=..\..\..\..\Library\dsPIC33_DMA.mpas
-File4=..\..\..\..\Library\NMRABusDefines.mpas
-File5=..\..\..\..\Library\CANStorage.mpas
-File6=..\..\..\..\Library\dsPIC33_CAN.mpas
-File7=..\..\..\..\Library\CANDefines.mpas
-File8=..\..\..\..\Library\NMRABus.mpas
-File9=Throttle_events_code.mpas
-File10=..\..\..\..\Library\dsPIC30_CAN.mpas
+Count=2
+File0=..\..\..\..\Library\dsPIC33_CAN.mpas
+File1=Throttle_main.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -58,17 +49,13 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=10
+Count=6
 Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
 Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
-Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\
-Path8=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
-Path9=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\
+Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBuffers\dsPIC33FJ256GP710A\
 [HEADER_PATH]
 Count=0
 [HEADERS]
@@ -89,6 +76,5 @@ File8=ECAN
 File9=Button
 [EXPANDED NODES]
 Node1=Sources
-Node2=Output Files
-Node3=Other Files
-Count=3
+Node2=Other Files
+Count=2

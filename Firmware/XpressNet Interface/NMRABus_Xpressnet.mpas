@@ -66,7 +66,7 @@ begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRABus_GlobalTimer;
+  NMRABus_1ms_Timer;
 end;
 
 {$IFDEF XPRESSNET_UART_ENABLE}

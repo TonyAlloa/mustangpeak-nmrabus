@@ -85,7 +85,7 @@ begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRABus_GlobalTimer;
+  NMRABus_1ms_Timer;
 end;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
@@ -124,19 +124,6 @@ Exit;
 
 end;
 
-procedure CANLayerReceiveHook(CANBuffer: PCANBuffer; var DoDefault: Boolean);
-// WARNING: THIS IS CALLED IN THE CONTEXT OF THE INTERRUPT AND CAN NOT BE LONGER THAN
-// IT TAKES TO RECEIVE THE NEXT CAN MESSAGE!!!!!!!!
-var
-  s1: array[8] of char;
-begin
- // LongIntToHex(CANBuffer^.ID, s1);
- // UART1_Write_Text('CAN'+LF);
- // UART1_Write_Text(s1+LF);
-  
-end;
-
-
 // *******************
 // MAIN LOOP
 // *******************
@@ -172,7 +159,6 @@ begin
   Loop := 0;
   laststate := 0;
 
-  NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
   while (TRUE) do
     begin
       NMRABus_Process;
