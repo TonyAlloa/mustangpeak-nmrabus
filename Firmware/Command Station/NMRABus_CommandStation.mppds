@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\NMRABusDatagrams.mpas
+Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusDefines.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -28,23 +28,27 @@ File7=..\Library\NMRABusNodeItems.mpas
 File8=..\Library\NMRABusUtilities.mpas
 File9=..\Library\dsPIC30_CAN.mpas
 File10=..\Library\CANStorage.mpas
-File11=..\Library\NMRABusDatagrams.mpas
-File12=..\Library\NMRABusDatagramDefines.mpas
+File11=..\Library\NMRABusDatagramDefines.mpas
+File12=..\Library\NMRABusDatagrams.mpas
 [BINARIES]
 Count=0
 [IMAGES]
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=8
+Count=12
 File0=NMRABusCommandStation.mpas
-File1=..\Library\CANStorage.mpas
-File2=..\Library\NMRABusUtilities.mpas
-File3=..\Library\NMRABusDefines.mpas
-File4=..\Library\dsPIC30_CAN.mpas
-File5=..\Library\NMRABusDatagrams.mpas
-File6=..\Library\NMRABus.mpas
-File7=..\Library\NMRABusDatagramDefines.mpas
+File1=..\Library\NMRABus.mpas
+File2=..\Library\CANStorage.mpas
+File3=..\Library\NMRABusUtilities.mpas
+File4=..\Library\NMRABusDefines.mpas
+File5=..\Library\dsPIC30_CAN.mpas
+File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusUtilities.mpas
+File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANStorage.mpas
+File8=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines.mpas
+File9=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusDatagramDefines.mpas
+File10=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusDatagrams.mpas
+File11=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRABusDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -54,12 +58,12 @@ Count=1
 File0=Options.inc
 [SEARCH_PATH]
 Count=10
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
-Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\Command Station\
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Command Station\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
 Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
 Path7=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
 Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library NMRABus\

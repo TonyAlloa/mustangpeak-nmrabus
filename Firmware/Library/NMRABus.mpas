@@ -533,7 +533,7 @@ begin
         if TestReceivedMsgFlags(RMF_SEND_VERIFIED_NODE) then                    // Verify Node detected
           NMRABus.iState := STATE_NMRABUS_SEND_NODE_VERIFIED;
           
-     //   NMRABusDatagrams_ProcessResponse;
+        NMRABusDatagrams_ProcessResponse;
       end;
     STATE_NMRABUS_SEND_AMD :
       begin

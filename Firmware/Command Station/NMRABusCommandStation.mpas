@@ -169,7 +169,7 @@ begin
     end;
     Inc(Loop);
     
-    NMRABusDatagrams_ProcessResponse;
+
     
     if NMRABusDatagrams_Remove(Datagram) then
     begin

@@ -84,9 +84,6 @@ const
   MASK_DEST_ALIAS                   = $00FFF000;                                // Masks out just the Destination Alias Address
   MASK_SOURCE_ALIAS                 = $00000FFF;                                // Masks out just the Source Alias Address
   
-  FT_DATAGRAM_FRAME_RESULT          = $0E000000;                                // Sub type SFT_DATAGRAM_RECIEVED_OK
-  FT_DATAGRAM_FRAME_REJECTED        = $0E000000;                                // Sub type SFT_DATAGRAM_REJECTED
-  
   // Base MTIs
   SFT_VERIFY_NODE_DEST              = $0A;                                      // Sub-Type (in first Databyte) for a MTI with a destination in the header
   SFT_OPTIONAL_INTERACTION_REJECTED = $0C;

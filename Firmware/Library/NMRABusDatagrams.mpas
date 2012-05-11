@@ -41,8 +41,22 @@ begin
   end;
   DatagramProcessor.iBuffer := 0;
   DatagramProcessor.iBuffer := STATE_DATAGRAM_PROCESSOR_START;
+  for i := 0 to LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST-1 do
+    DatagramProcessor.BufferFullResponseList[i] := 0;
 end;
 
+// *****************************************************************************
+//
+// procedure NMRABusDatagrams_Remove;
+//
+//  Parameters:
+//                None
+//  Returns:
+//                None
+//  Description:
+//              Pulls the first found Ready Datagram in the Datagram Array
+//
+// *****************************************************************************
 function NMRABusDatagrams_Remove(var Datagram: TDatagram): Boolean;
 var
   i: Integer;
@@ -91,6 +105,108 @@ begin
   end;
 end;
 
+// *****************************************************************************
+//  procedure SendAnyBufferFullResponses;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure SendAnyBufferFullResponses;
+var
+  i: Integer;
+  Buffer: TCANBuffer;
+begin
+  if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
+  begin
+    i := 0;
+    while i < LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST do
+    begin
+      if DatagramProcessor.BufferFullResponseList[i] <> 0 then
+      begin
+        NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, DatagramProcessor.BufferFullResponseList[i], @Buffer);
+        NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_BUFFER_FULL), Lo(DATAGRAM_REJECTED_BUFFER_FULL), 0, 0, 0, 0, 0);
+        if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
+        begin
+          StartCANMessageEngine();
+          DatagramProcessor.BufferFullResponseList[i] := 0;
+        end;
+        Exit;
+      end
+    end;
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRABusDatagrams_ProcessResponse;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure NMRABusDatagrams_ProcessResponse;
+var
+  Datagram: PDatagramBuffer;   
+  Buffer: TCANBuffer;
+begin
+  Datagram := @DatagramList[DatagramProcessor.iBuffer];
+  case DatagramProcessor.iState of
+    STATE_DATAGRAM_PROCESSOR_START :
+      begin
+        SendAnyBufferFullResponses;
+        case Datagram^.iState of
+          STATE_DATAGRAM_RECEIVING          : if Datagram^.iWatchdog > DATAGRAM_WATCHDOG_MAX then DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_ABANDONED;
+          STATE_DATAGRAM_TRANSFER_FULL      :  DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_RESPOND
+        else
+          DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
+        end;
+      end;
+    STATE_DATAGRAM_PROCESSOR_ABANDONED : 
+      begin
+        if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
+        begin
+          NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, Datagram^.SourceAlias, @Buffer);
+          NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+          if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
+          begin
+            StartCANMessageEngine();
+            DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
+            Datagram^.iState := STATE_DATAGRAM_EMPTY;
+          end
+        end
+      end;
+    STATE_DATAGRAM_PROCESSOR_RESPOND  :
+      begin
+        if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
+        begin
+          NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, Datagram^.SourceAlias, @Buffer);
+          if Datagram^.ErrorCode = DGE_NONE then
+            NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_RECIEVED_OK, 0, 0, 0, 0, 0, 0, 0)
+          else
+            NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_RECIEVED_OK, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+          if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
+          begin
+            StartCANMessageEngine();
+            DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
+            if Datagram^.ErrorCode = DGE_NONE then
+              Datagram^.iState := STATE_DATAGRAM_READY
+            else
+              Datagram^.iState := STATE_DATAGRAM_EMPTY;
+          end
+        end
+      end;
+    STATE_DATAGRAM_PROCESSOR_NEXT      :
+      begin
+        Inc(DatagramProcessor.iBuffer);
+        if DatagramProcessor.iBuffer >= LEN_DATAGRAM_ARRAY then DatagramProcessor.iBuffer := 0;
+        DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_START
+      end;
+   end;
+end;
 
 // *****************************************************************************
 //  function TryAllocateBuffer;
@@ -112,6 +228,7 @@ begin
     if DatagramList[i].iState = STATE_DATAGRAM_EMPTY then
     begin                                                                       // Grab the first empty buffer
       Datagram := @DatagramList[i];                                             // It is NOT initialized
+      Datagram^.ErrorCode := 0;
       Result := True
     end;
     Inc(i);
@@ -156,19 +273,18 @@ end;
 // *****************************************************************************
 function UpdateFrameCount(Datagram: PDatagramBuffer): Boolean;
 begin
-  if Datagram^.iState <> STATE_DATAGRAM_FRAME_OUTOFORDER then                   // If in Error has already failed this function
-  begin   
+  if Datagram^.ErrorCode = DGE_NONE then                                        // If in Error has already failed this function
+  begin
     Inc(Datagram^.iFrameCount);                                                 // Next Frame
     Datagram^.iWatchdog := 0;                                                   // Reset the Watchdog since the source connected again
     if Datagram^.iFrameCount >= DATAGRAM_MAX_FRAME_COUNT then                   // Source sent too many frames
-      Datagram^.iState := STATE_DATAGRAM_FRAME_OUTOFORDER;                      // Ready for a "Frame out of Order" Response
+      Datagram^.ErrorCode := DGE_FRAME_OUT_OF_ORDER                             // Ready for a "Frame out of Order" Response
   end;
-  Result := Datagram^.iState <> STATE_DATAGRAM_FRAME_OUTOFORDER
+  Result := Datagram^.ErrorCode = DGE_NONE
 end;
 
-
 // *****************************************************************************
-//  procedure NMRABusDatagrams_ProcessResponse;
+//  procedure StoreBytes;
 //
 //  Parameters:
 //
@@ -176,69 +292,40 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRABusDatagrams_ProcessResponse;
+procedure StoreBytes(Datagram: PDatagramBuffer; var Buffer: TCANBuffer; IsFull: Boolean);
 var
-  Datagram: PDatagramBuffer;
-  Buffer: TCANBuffer;
+  i: Integer;
+  Offset: Word;
 begin
-  Datagram := @DatagramList[DatagramProcessor.iBuffer];
-  case DatagramProcessor.iState of
-    STATE_DATAGRAM_PROCESSOR_START :
-      begin
-        case Datagram^.iState of
-          STATE_DATAGRAM_RECEIVING : if Datagram^.iWatchdog > DATAGRAM_WATCHDOG_MAX then
-                                       DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_ABANDONED;
-          STATE_DATAGRAM_FRAME_OUTOFORDER : DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_ERROR;
-          STATE_DATAGRAM_TRANSFER_FULL :  DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_OK
-        else
-          DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
-        end;
-      end;
-    STATE_DATAGRAM_PROCESSOR_ABANDONED :
-      begin
-        NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, Datagram^.SourceAlias, @Buffer);
-        Buffer.DataBytes[0] := SFT_DATAGRAM_REJECTED;
-        Buffer.DataBytes[1] := Hi(DATAGRAM_REJECTED_OUT_OF_ORDER);
-        Buffer.DataBytes[2] := Lo(DATAGRAM_REJECTED_OUT_OF_ORDER);
-        if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
-        begin
-          StartCANMessageEngine();
-          DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
-          Datagram^.iState := STATE_DATAGRAM_EMPTY;
-        end
-      end;
-    STATE_DATAGRAM_PROCESSOR_ERROR :
-      begin
-        NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, Datagram^.SourceAlias, @Buffer);
-        Buffer.DataBytes[0] := SFT_DATAGRAM_REJECTED;
-        Buffer.DataBytes[1] := Hi(DATAGRAM_REJECTED_OUT_OF_ORDER);
-        Buffer.DataBytes[1] := Lo(DATAGRAM_REJECTED_OUT_OF_ORDER);
-        if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
-        begin
-          StartCANMessageEngine();
-          DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
-          Datagram^.iState := STATE_DATAGRAM_EMPTY;
-        end
-      end;
-    STATE_DATAGRAM_PROCESSOR_OK :
-      begin
-        NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, Datagram^.SourceAlias, @Buffer);
-        Buffer.DataBytes[0] := SFT_DATAGRAM_RECIEVED_OK;
-        if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
-        begin
-          StartCANMessageEngine();
-          DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
-          Datagram^.iState := STATE_DATAGRAM_READY;
-        end
-      end;
-    STATE_DATAGRAM_PROCESSOR_NEXT :
-      begin
-        Inc(DatagramProcessor.iBuffer);
-        if DatagramProcessor.iBuffer >= LEN_DATAGRAM_ARRAY then
-          DatagramProcessor.iBuffer := 0;
-        DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_START
-      end;
-   end;
+  Offset := Datagram^.iFrameCount * 8;
+  for i := 0 to CAN_DATA_LEN - 1 do
+    Datagram^.DataBytes[i + Offset] := Buffer.DataBytes[i];
+  if IsFull then
+    Datagram^.iState := STATE_DATAGRAM_TRANSFER_FULL;                             // Ready for a "Full" Response
+end;
+
+// *****************************************************************************
+//  procedure AddToBufferFullList;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure AddToBufferFullList(Datagram: PDatagramBuffer);
+var
+  i: Integer;
+begin
+  i := 0;
+  while i < LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST do
+  begin
+    if DatagramProcessor.BufferFullResponseList[i] = 0 then
+    begin
+      DatagramProcessor.BufferFullResponseList[i] := Datagram^.SourceAlias;
+      Exit;
+    end
+  end;
 end;
 
 // *****************************************************************************
@@ -253,8 +340,6 @@ end;
 procedure NMRABusDatagrams_ProcessReceive(var Buffer: TCANBuffer);
 var
   Datagram: PDatagramBuffer;
-  i: Integer;
-  Offset: Word;
 begin
   Datagram := PDatagramBuffer( nil);
   case Buffer.ID and MTI_TYPE_MASK of
@@ -263,52 +348,38 @@ begin
         if TryAllocateBuffer(Datagram) then
         begin
           Datagram^.SourceAlias := Buffer.ID and MASK_SOURCE_ALIAS;
-          for i := 0 to CAN_DATA_LEN - 1 do
-            Datagram^.DataBytes[i] := Buffer.DataBytes[i];
+          Datagram^.iFrameCount := 0;
+          StoreBytes(Datagram, Buffer, False);
           Datagram^.iState := STATE_DATAGRAM_TRANSFER_FULL;                               // Ready for a "Full" Response
-        end;
+        end
       end;
     MTI_DATAGRAM_FRAME_START :
       begin
         if TryAllocateBuffer(Datagram) then
         begin
           Datagram^.SourceAlias := Buffer.ID and MASK_SOURCE_ALIAS;
-          for i := 0 to CAN_DATA_LEN - 1 do
-            Datagram^.DataBytes[i] := Buffer.DataBytes[i];
           Datagram^.iFrameCount := 0;
           Datagram^.iWatchdog := 0;
+          StoreBytes(Datagram, Buffer, False);
           Datagram^.iState := STATE_DATAGRAM_RECEIVING;
         end
       end;
     MTI_DATAGRAM_FRAME :
       begin
         if FindInProcessDatagram(Buffer.ID and MASK_SOURCE_ALIAS, Datagram) then
-        begin
           if UpdateFrameCount(Datagram) then
-          begin
-            Offset := Datagram^.iFrameCount * 8;
-            for i := 0 to CAN_DATA_LEN - 1 do
-              Datagram^.DataBytes[i + Offset] := Buffer.DataBytes[i];
-          end
-        end
+            StoreBytes(Datagram, Buffer, False)
       end;
     MTI_DATAGRAM_FRAME_END :
       begin
         if FindInProcessDatagram(Buffer.ID and MASK_SOURCE_ALIAS, Datagram) then
         begin
           if UpdateFrameCount(Datagram) then
-          begin
-            Offset := Datagram^.iFrameCount * 8;
-            for i := 0 to CAN_DATA_LEN - 1 do
-              Datagram^.DataBytes[i + Offset] := Buffer.DataBytes[i];
-            Datagram^.iState := STATE_DATAGRAM_TRANSFER_FULL;                             // Ready for a "Full" Response
-          end
+            StoreBytes(Datagram, Buffer, True)
         end else
-        begin
-          // SEND A FAILURE MESSAGE TO THE SOURCE?????
-        end
+          AddToBufferFullList(Datagram);
       end;
-  end;
+   end;
 end;
 
 end.

@@ -21,24 +21,25 @@ const
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
   LEN_DATAGRAM_ARRAY = 1;                                                       // How many Datagram buffers to have
+  LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST = 4;                                   // How many Datagram requests to buffer if there is no buffer available to service them
 
-  STATE_DATAGRAM_EMPTY             = 0;                                         // The Datagram Packet Buffer is empty
-  STATE_DATAGRAM_RECEIVING         = 1;                                         // The Datagram Packet Buffer is currently collecting frames
-  STATE_DATAGRAM_TRANSFER_FULL     = 3;                                         // The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
-  STATE_DATAGRAM_FRAME_OUTOFORDER  = 4;                                         // The Datagram frames were corrupted (greater than DATAGRAM_MAX_FRAME_COUNT ect.) (DATAGRAM_REJECTED_OUT_OF_ORDER response needed)
-  STATE_DATAGRAM_READY             = 5;                                         // The Datagram is ready for consumption by the application
+  STATE_DATAGRAM_EMPTY               = 0;                                       // The Datagram Packet Buffer is empty
+  STATE_DATAGRAM_RECEIVING           = 1;                                       // The Datagram Packet Buffer is currently collecting frames
+  STATE_DATAGRAM_TRANSFER_FULL       = 3;                                       // The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
+  STATE_DATAGRAM_READY               = 4;                                       // The Datagram is ready for consumption by the application
 
   STATE_DATAGRAM_PROCESSOR_START           = 0;
   STATE_DATAGRAM_PROCESSOR_ABANDONED       = 1;
-  STATE_DATAGRAM_PROCESSOR_ERROR           = 2;
-  STATE_DATAGRAM_PROCESSOR_OK              = 3;
-  STATE_DATAGRAM_PROCESSOR_NEXT            = 4;
+  STATE_DATAGRAM_PROCESSOR_RESPOND         = 2;
+  STATE_DATAGRAM_PROCESSOR_NEXT            = 3;
 
   DATAGRAM_WATCHDOG_MAX = 10000;                                                // 1ms counts before the datagram is declared abandon
   
   DATAGRAM_MAX_FRAME_COUNT = 9;                                                 // Maximum number of Frames (segments) in a Datagram
-  
 
+  DGE_NONE                                 = 0;
+  DGE_FRAME_OUT_OF_ORDER                   = 1;                                 // Datagram Errors
+  DGE_BUFFER_FULL                          = 2;
   
 type  
   TDatagram = array[0..LEN_DATAGRAM-1] of Byte;
@@ -49,6 +50,7 @@ type
     iState: Byte;                                                               // The State of the Packet Buffer,
     iFrameCount: Byte;                                                          // Counts the number of bytes recevied as they come in, used to index where to add the next 8 bytes
     iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message
+    ErrorCode: Byte;                                                            // Tracks any errors that occur, see the DGE_xxxx contants
   end;
   PDatagramBuffer = ^TDatagramBuffer;
   TDatagramBufferArray = array[0..LEN_DATAGRAM_ARRAY-1] of TDatagramBuffer;
@@ -56,6 +58,7 @@ type
   TDatagramProcessor = record
     iState: Byte;                                                               // State of the Processor
     iBuffer: Byte;                                                              // Index to the next item in the array
+    BufferFullResponseList: array[LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST] of Word;
   end;
 var
   DatagramList: TDatagramBufferArray;

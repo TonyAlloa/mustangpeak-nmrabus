@@ -39,6 +39,7 @@ function CANStorage_Transmitting: Boolean;
 function CANStorage_AddToList(List: PCANBufferList; var Buffer: TCANBuffer): Boolean;
 function CANStorage_AddToListByParameter(List: PCANBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
 function CANStorage_ExtractFromList(List :PCANBufferList; var Buffer: TCANBuffer): Boolean;
+function CANStorage_ListFull(List: PCANBufferList): Boolean;
 
 var
   CAN_Engine: TCAN_Engine;
@@ -58,6 +59,20 @@ end;
 function CANStorage_Transmitting: Boolean;
 begin
   Result := CAN_Engine.State and CES_TRANSMITTING <> 0
+end;
+
+// *****************************************************************************
+//  function CANStorage_ListFull;
+//
+//  Parameters: List            : Pointer to the Buffer List to extract the Head for
+//
+//  Result:  Pointer to the TCANBuffer object that is at the head of the list
+//
+//  Description:
+// *****************************************************************************
+function CANStorage_ListFull(List: PCANBufferList): Boolean;
+begin
+  Result := List^.Count < List^.Size
 end;
 
 // *****************************************************************************

@@ -42,6 +42,8 @@ procedure NMRABusUtilities_CreateAliasID(Regenerate: Boolean);
 procedure NMRABusUtilities_RecreateAliasID;
 function NMRABusUtilities_IsAddressedMessageToNode(Packet: PCANBuffer): Boolean;
 function NMRABusUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
+procedure NMRABusUtilities_LoadCANData(var DataBytes: TCAN_DataBytes; Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte);
+procedure NMRABusUtilities_ZeroCANData(var DataBytes: TCAN_DataBytes);
 
 
 implementation
@@ -74,8 +76,6 @@ end;
 //
 // *****************************************************************************
 procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
-var
-  i: Integer;
 begin
   Packet^.DataCount := 0;
   Packet^.State := Packet^.State or CBS_EXTENDED;
@@ -84,8 +84,7 @@ begin
   if VariableField = FT_CID1 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
   if VariableField = FT_CID2 then Packet^.ID := Packet^.ID or (NMRABus.Node_ID[0] and $00FFF000) else
   if VariableField = FT_CID3 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
-  for i := 0 to CAN_DATA_LEN-1 do
-    Packet^.DataBytes[i] := 0;
+  NMRABusUtilities_ZeroCANData(Packet^.DataBytes);
 
   if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
     NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
@@ -100,16 +99,13 @@ end;
 //
 // *****************************************************************************
 procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
-var
-  i: Integer;
 begin
   Packet^.DataCount := 0;
   Packet^.State := Packet^.State or CBS_EXTENDED;
   Packet^.ID := $10000000 or VariableField or NMRABus.Node_Alias_ID;
   if DestinationAliasID <> 0 then
     Packet^.ID := Packet^.ID or DWORD(DestinationAliasID shl 12);
-  for i := 0 to CAN_DATA_LEN-1 do
-    Packet^.DataBytes[i] := 0;
+  NMRABusUtilities_ZeroCANData(Packet^.DataBytes);
 
   if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
     NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
@@ -363,6 +359,42 @@ end;
 function NMRABusUtilities_IsAddressedDatagramToNode(Packet: PCANBuffer): Boolean;
 begin
   Result := NMRABusUtilities_IsAddressedMessageToNode(Packet) and NMRABusUtilities_IsDatagramMsg(Packet)
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_LoadCANData
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_LoadCANData(var DataBytes: TCAN_DataBytes; Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte);
+begin
+  DataBytes[0] := Byte0;
+  DataBytes[1] := Byte1;
+  DataBytes[2] := Byte2;
+  DataBytes[3] := Byte3;
+  DataBytes[4] := Byte4;
+  DataBytes[5] := Byte5;
+  DataBytes[6] := Byte6;
+  DataBytes[7] := Byte7;
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_ZeroCANData
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRABusUtilities_ZeroCANData(var DataBytes: TCAN_DataBytes);
+var
+  i: Integer;
+begin
+  for i := 0 to CAN_DATA_LEN - 1 do
+    DataBytes[i] := 0;
 end;
 
 end.
