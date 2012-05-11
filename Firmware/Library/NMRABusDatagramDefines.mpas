@@ -21,7 +21,7 @@ const
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
   LEN_DATAGRAM_ARRAY = 1;                                                       // How many Datagram buffers to have
-  LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST = 4;                                   // How many Datagram requests to buffer if there is no buffer available to service them
+  LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST = 2;                                   // How many Datagram requests to buffer if there is no buffer available to service them
 
   STATE_DATAGRAM_EMPTY               = 0;                                       // The Datagram Packet Buffer is empty
   STATE_DATAGRAM_RECEIVING           = 1;                                       // The Datagram Packet Buffer is currently collecting frames

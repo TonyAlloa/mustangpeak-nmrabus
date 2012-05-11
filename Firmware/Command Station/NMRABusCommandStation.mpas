@@ -140,7 +140,7 @@ begin
   begin
     NMRABus_Process;
     
-    if Loop mod 100000 = 0 then
+  {  if Loop mod 100000 = 0 then
     begin
       for i := 0 to LEN_DATAGRAM_ARRAY - 1 do
       begin
@@ -167,7 +167,7 @@ begin
 
       end;
     end;
-    Inc(Loop);
+    Inc(Loop);     }
     
 
     

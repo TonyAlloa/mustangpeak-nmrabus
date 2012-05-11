@@ -39,8 +39,8 @@ begin
     for j := 0 to LEN_DATAGRAM-1 do
       DatagramList[i].DataBytes[j] := 0;
   end;
+  DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_START;
   DatagramProcessor.iBuffer := 0;
-  DatagramProcessor.iBuffer := STATE_DATAGRAM_PROCESSOR_START;
   for i := 0 to LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST-1 do
     DatagramProcessor.BufferFullResponseList[i] := 0;
 end;
@@ -128,13 +128,15 @@ begin
       begin
         NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, DatagramProcessor.BufferFullResponseList[i], @Buffer);
         NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_BUFFER_FULL), Lo(DATAGRAM_REJECTED_BUFFER_FULL), 0, 0, 0, 0, 0);
+        Buffer.DataCount := 3;
         if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
         begin
           StartCANMessageEngine();
           DatagramProcessor.BufferFullResponseList[i] := 0;
         end;
         Exit;
-      end
+      end;
+      Inc(i);
     end;
   end
 end;
@@ -159,8 +161,8 @@ begin
       begin
         SendAnyBufferFullResponses;
         case Datagram^.iState of
-          STATE_DATAGRAM_RECEIVING          : if Datagram^.iWatchdog > DATAGRAM_WATCHDOG_MAX then DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_ABANDONED;
-          STATE_DATAGRAM_TRANSFER_FULL      :  DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_RESPOND
+          STATE_DATAGRAM_RECEIVING          : if Datagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_ABANDONED;
+          STATE_DATAGRAM_TRANSFER_FULL      : DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_RESPOND
         else
           DatagramProcessor.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
         end;
@@ -171,6 +173,7 @@ begin
         begin
           NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, Datagram^.SourceAlias, @Buffer);
           NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+          Buffer.DataCount := 3;
           if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
           begin
             StartCANMessageEngine();
@@ -185,9 +188,14 @@ begin
         begin
           NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED_NOT_DATAGRAM, Datagram^.SourceAlias, @Buffer);
           if Datagram^.ErrorCode = DGE_NONE then
-            NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_RECIEVED_OK, 0, 0, 0, 0, 0, 0, 0)
-          else
-            NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_RECIEVED_OK, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+          begin
+            NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_RECIEVED_OK, 0, 0, 0, 0, 0, 0, 0);
+            Buffer.DataCount := 1
+          end else
+          begin
+            NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+            Buffer.DataCount := 3;
+          end;
           if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
           begin
             StartCANMessageEngine();

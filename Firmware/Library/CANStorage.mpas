@@ -72,7 +72,7 @@ end;
 // *****************************************************************************
 function CANStorage_ListFull(List: PCANBufferList): Boolean;
 begin
-  Result := List^.Count < List^.Size
+  Result := List^.Count >= List^.Size
 end;
 
 // *****************************************************************************
