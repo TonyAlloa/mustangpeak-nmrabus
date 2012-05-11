@@ -27,14 +27,17 @@ const
 const
   CES_TRANSMITTING = $0001;                                                     // CAN State constants
   
+  
   // defined in the user program
   RX_CAN_BUFFER_LEN = 3;
   TX_CAN_BUFFER_LEN = 3;
   RX_NMRANET_BUFFER_LEN = 3;
   TX_NMRANET_BUFFER_LEN = 3;
 
+  CAN_DATA_LEN = 8;
+
 type
-  TCAN_DataBytes = array[8] of Byte;
+  TCAN_DataBytes = array[CAN_DATA_LEN] of Byte;
   PCAN_DataBytes = ^TCAN_DataBytes;
 
   // ***************************************************************************

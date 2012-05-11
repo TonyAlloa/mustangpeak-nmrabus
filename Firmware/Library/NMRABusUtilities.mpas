@@ -74,6 +74,8 @@ end;
 //
 // *****************************************************************************
 procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
+var
+  i: Integer;
 begin
   Packet^.DataCount := 0;
   Packet^.State := Packet^.State or CBS_EXTENDED;
@@ -82,6 +84,8 @@ begin
   if VariableField = FT_CID1 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
   if VariableField = FT_CID2 then Packet^.ID := Packet^.ID or (NMRABus.Node_ID[0] and $00FFF000) else
   if VariableField = FT_CID3 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
+  for i := 0 to CAN_DATA_LEN-1 do
+    Packet^.DataBytes[i] := 0;
 
   if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
     NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
@@ -96,12 +100,16 @@ end;
 //
 // *****************************************************************************
 procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
+var
+  i: Integer;
 begin
   Packet^.DataCount := 0;
   Packet^.State := Packet^.State or CBS_EXTENDED;
-  if DestinationAliasID <> 0 then 
-    Packet^.ID := Packet^.ID or (DestinationAliasID shl 12);
   Packet^.ID := $10000000 or VariableField or NMRABus.Node_Alias_ID;
+  if DestinationAliasID <> 0 then
+    Packet^.ID := Packet^.ID or DWORD(DestinationAliasID shl 12);
+  for i := 0 to CAN_DATA_LEN-1 do
+    Packet^.DataBytes[i] := 0;
 
   if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
     NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet);

@@ -176,14 +176,15 @@ begin
   if CANStorage_ExtractFromList(@RX_NMRAnetBufferList, CANBuffer) then                     // Pull next Received Messages out
   begin
     LocalFlags := 0;
+    
+    // Alsways check for duplicate Alias
     if NMRABusUtilities_EqualAliasID(CANBuffer.ID and MASK_SOURCE_ALIAS) then           // Is the 12 Bit Alias equal to ours?
       LocalFlags := LocalFlags or RMF_DUPLICATE_ALIAS_DETECTED;
 
     if NMRABus_Permitted then
     begin
       DoDefault := True;
-      if NMRAnetLayerReceiveHook <> nil then
-        NMRAnetLayerReceiveHook(@CANBuffer, DoDefault);
+      if NMRAnetLayerReceiveHook <> nil then NMRAnetLayerReceiveHook(@CANBuffer, DoDefault);  // Allow the program to have a crack at the message handler
       if DoDefault then
       begin
         if not NMRABusUtilities_IsAddressedMessage(@CANBuffer) then             // Not an addressed message
@@ -196,10 +197,8 @@ begin
           if (CANBuffer.ID and FT_ADDRESSED_MASK = FT_VERIFY_NODE_ID_NUMBER_DEST) and (CANBuffer.DataBytes[0] = SFT_VERIFY_NODE_DEST) then
             LocalFlags := LocalFlags or RMF_SEND_VERIFIED_NODE
           else begin
-            if (CANBuffer.ID and MTI_TYPE_MASK >= MTI_DATAGRAM_MIN) and (CANBuffer.ID and MTI_TYPE_MASK >= MTI_DATAGRAM_MAX) then
-            begin
-              // Load up the addressed buffer.....
-            end;
+            if (CANBuffer.ID and MTI_TYPE_MASK >= MTI_DATAGRAM_MIN) and (CANBuffer.ID and MTI_TYPE_MASK <= MTI_DATAGRAM_MAX) then
+              NMRABusDatagrams_ProcessReceive(CANBuffer);
           end
         end else
         begin                                                                   // Addressed message but not to this node
@@ -405,6 +404,7 @@ end;
 procedure NMRABus_1ms_Timer;
 begin
   Inc(NMRABus.LoginTimeCount);
+  NMRABusDatagrams_1ms_TimeTick;
 end;
 
 function TransmitBufferEmptyCAN: Boolean;
@@ -532,6 +532,8 @@ begin
           NMRABus.iState := STATE_NMRABUS_DUPLICATE_FULL_ID;
         if TestReceivedMsgFlags(RMF_SEND_VERIFIED_NODE) then                    // Verify Node detected
           NMRABus.iState := STATE_NMRABUS_SEND_NODE_VERIFIED;
+          
+     //   NMRABusDatagrams_ProcessResponse;
       end;
     STATE_NMRABUS_SEND_AMD :
       begin
