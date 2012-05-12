@@ -195,6 +195,7 @@ begin
 
     if NMRABus_Permitted then
     begin
+      NMRABusDatagrams_Process;
 
     end;
   end;

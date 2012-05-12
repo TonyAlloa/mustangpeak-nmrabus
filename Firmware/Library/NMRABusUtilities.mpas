@@ -44,6 +44,8 @@ function NMRABusUtilities_IsAddressedMessageToNode(Packet: PCANBuffer): Boolean;
 function NMRABusUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
 procedure NMRABusUtilities_LoadCANData(var DataBytes: TCAN_DataBytes; Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte);
 procedure NMRABusUtilities_ZeroCANData(var DataBytes: TCAN_DataBytes);
+function NMRABusUtilities_PackBytesLo(Packet: PCANBuffer): Word;
+function NMRABusUtilities_PackBytesHi(Packet: PCANBuffer): Word;
 
 
 implementation
@@ -395,6 +397,46 @@ var
 begin
   for i := 0 to CAN_DATA_LEN - 1 do
     DataBytes[i] := 0;
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_PackBytesLo
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusUtilities_PackBytesLo(Packet: PCANBuffer): Word;
+begin
+  Result := Packet^.DataBytes[3];
+  Result := Result shr 8;
+  Result := Packet^.DataBytes[2];
+  Result := Result shr 8;
+  Result := Packet^.DataBytes[1];
+  Result := Result shr 8;
+  Result := Packet^.DataBytes[0];
+  Result := Result shr 8;
+end;
+
+// *****************************************************************************
+//  procedure NMRABusUtilities_PackBytesHi
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusUtilities_PackBytesHi(Packet: PCANBuffer): Word;
+begin
+  Result := Packet^.DataBytes[7];
+  Result := Result shr 8;
+  Result := Packet^.DataBytes[6];
+  Result := Result shr 8;
+  Result := Packet^.DataBytes[5];
+  Result := Result shr 8;
+  Result := Packet^.DataBytes[4];
+  Result := Result shr 8;
 end;
 
 end.

@@ -43,6 +43,7 @@ const
   
 type  
   TDatagram = array[0..LEN_DATAGRAM-1] of Byte;
+  TDatagramSenderAliasList = array[LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST] of Word;
   
   TDatagramBuffer = record
     DataBytes: TDatagram;                                                       // The bytes sent in the datagram
@@ -55,14 +56,15 @@ type
   PDatagramBuffer = ^TDatagramBuffer;
   TDatagramBufferArray = array[0..LEN_DATAGRAM_ARRAY-1] of TDatagramBuffer;
 
-  TDatagramProcessor = record
+  TDatagramInfo = record
+    List: TDatagramBufferArray;
     iState: Byte;                                                               // State of the Processor
     iBuffer: Byte;                                                              // Index to the next item in the array
-    BufferFullResponseList: array[LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST] of Word;
+    BufferFullResponseList: TDatagramSenderAliasList;                           // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;
+  
 var
-  DatagramList: TDatagramBufferArray;
-  DatagramProcessor: TDatagramProcessor;
+  DatagramInfo: TDatagramInfo;
   
 implementation
 

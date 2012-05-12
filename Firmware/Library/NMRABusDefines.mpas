@@ -19,6 +19,9 @@ unit NMRABusDefines;
 
 {$I Options.inc}
 
+uses
+  CANDefines;
+
 const
   MAX_BUS_LOGIN_TIMEOUT = 201;              // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
 
@@ -66,14 +69,13 @@ const
   MTI_DATAGRAM_FRAME_START          = $0B000000;
   MTI_DATAGRAM_FRAME                = $0C000000;
   MTI_DATAGRAM_FRAME_END            = $0D000000;                                // Sub type SFT_DATAGRAM_END
-  MTI_ADDRESSED_NOT_DATAGRAM        = $0E000000;
+  MTI_ADDRESSED                     = $0E000000;
   MTI_STREAM_DATA_SEND              = $0F000000;
   MTI_TYPE_MASK                     = $0F000000;                                // The lower 4 bits of the upper word that decodes the NMRAnet Format code of the message
   MTI_DATAGRAM_MIN                  = MTI_DATAGRAM_ONLY_FRAME;
   MTI_DATAGRAM_MAX                  = MTI_DATAGRAM_FRAME_END;
 
   FT_UNADDRESSED_MASK               = $0FFFF000;
-  FT_ADDRESSED_MASK                 = $0F000000;
   FT_INITIALIZATION_COMPLETE        = $08087000;
   FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
   FT_VERIFY_NODE_ID_NUMBER_NO_DEST  = $088A7000;
@@ -83,6 +85,22 @@ const
   
   MASK_DEST_ALIAS                   = $00FFF000;                                // Masks out just the Destination Alias Address
   MASK_SOURCE_ALIAS                 = $00000FFF;                                // Masks out just the Source Alias Address
+  
+  PIP_PROTOCOL_SUPPORT_INQUIRY      = $08000000;
+  PIP_PROTOCOL_SUPPORT_RESPONSE     = $08000000;
+  MTI_PROTOCOL_SUPPORT_INQUIRY      = $32E4;                                     // Datagram DataBytes: 32 E4 vv vv vv vv vv vv
+  MTI_PROTOCOL_SUPPORT_RESPONSE     = $32F4;                                     // Datagram DataBytes: 32 F4 vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_PROTOCOL          = $800000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_DATAGRAM          = $400000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_STREAM            = $200000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_CONFIGURATION     = $100000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_RESERVATION       = $080000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_PRODUCER_CONSUMER = $040000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_IDENTIFICATION    = $020000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_TEACH_LEARN       = $010000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_REMOTE_BUTTON     = $008000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_CDI               = $004000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_DISPLAY           = $002000;                                  // vv vv vv vv vv vv
   
   // Base MTIs
   SFT_VERIFY_NODE_DEST              = $0A;                                      // Sub-Type (in first Databyte) for a MTI with a destination in the header
@@ -116,10 +134,10 @@ const
   STATE_NMRABUS_GENERATE_NODE_ALIAS         = 1;
   STATE_RANDOM_NUMBER_GENERATOR             = 2;
   STATE_NMRABUS_TRANSMIT_CID                = 3;
-  STATE_NMRABUS_NEXT_MTI                    = 4;
+  STATE_NMRABUS_NEXT_CDI                    = 4;
   STATE_NMRABUS_WAITSTATE                   = 5;
   STATE_NMRABUS_SEND_LOGIN_RID              = 6;
-  STATE_NMRABUS_SEND_NODE_VERIFIED          = 7;
+  STATE_NMRABUS_SEND_LOGIN_NODE_VERIFIED    = 7;
   STATE_NMRABUS_SEND_LOGIN_AMD              = 8;
   STATE_NMRABUS_INITIALIZED                 = 9;
   STATE_NMRABUS_PERMITTED                   = 10;
@@ -131,30 +149,54 @@ const
   STATE_NMRABUS_TAKE_OFFLINE                = 16;
   STATE_NMRABUS_OFFLINE                     = 17;
   
-  
-  MAX_QUEUED_RESONSE_DEST                   = 4;
-  
-  RMF_DUPLICATE_ALIAS_DETECTED              = $0001;
-  RMF_SEND_AMD                              = $0002;
-  RMF_SEND_PCER                             = $0004;
-  RMF_SEND_RID                              = $0008;
-  RMF_SEND_VERIFIED_NODE                    = $0010;
+  STATE_RESPONSE_START                      = 0;
+  STATE_RESPONSE_SIMPLE_RESPONSE            = 1;
+  STATE_RESPONSE_NEXT_SIMPLE_RESPONSE       = 2;
+  STATE_RESPONSE_COMPLEX_RESPONSE           = 3;
+  STATE_RESPONSE_NEXT_COMPLEX_RESPONSE      = 4;
   
   
+  STATE_SIMPLE_RESPONSE_SEND_AMD            = 0;
+  STATE_SIMPLE_RESPONSE_SEND_RID            = 1;
+
+  LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
+  
+  SRF_DUPLICATE_ALIAS                       = $0001;                            // Duplicate Alais Detected that was not a CID message, need to regenerate an Alias
+  SRF_SEND_AMD                              = $0002;                            // Send an Alias Map Definition
+  SRF_SEND_PCER                             = $0004;                            // Send a Procducer/Consumer Message that a Duplicate 48 Bit node ID was detected, very bad...
+  SRF_SEND_RID                              = $0008;                            // Duplicate Alias Detected that was a CID so tell the node we own that Alias
+  SRF_SEND_VERIFIED_NODE                    = $0010;                            // Send a Verified Node message
+  SRF_SEND_PROTOCOL_SUPPORT_RESULT          = $0020;                            // Send what Protocols we support
+
 type
   TNodeID = array[0..1] of DWORD;                                                // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
-
+  
+  TQueuedResponse = record                                                      // When a message is received that needs a response that contains a destination
+    ResponseCode: Byte;                                                         // node or needs to decode the DataBytes to understand what to respond with
+    DestinationNodeAlias: Word;                                                 // the info needed to response is queued up in this structure to be acted on in the main
+    DataBytes: TCAN_DataBytes;                                                  // NMRABus_Process loop
+  end;
+  
+  TQueuedResponseList = array[0..LEN_QUEUED_RESPONSE_LIST] of TQueuedResponse;      // List of responses the NMRABus_Process loop needs to handle
+  
+  TQueuedResponses = record
+    List: TQueuedResponseList;                                                  // List of complex Responses to be handled in the NMRABus_Process loop
+    SimpleResponseFlags: Word;                                                  // List of simple Responses that do not need any information to respond to in the NMRABus_Process loop.  See SRF_xxx constants
+    ListIndex: Byte;                                                            // Next index in the List to Access
+    SimpleIndexMask: Byte;                                                      // Next Bit Mask in the SimpleResponseFlags
+    iState: Byte;                                                               // Statemachine Index
+    iCDI: Byte;                                                                 // CID state for logging into bus
+  end;
 
   TNMRABus = record
-    Node_ID: TNodeID;                // Unique 48 Bit ID for Node
-    Unique_ID_Global_Seed: TNodeID;  // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
-    Node_Alias_ID: Word;             // 12 Bit Alias ID
-    LoginTimeCount: Integer;         // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
-    State: Word;                     // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
-    Interrupt_State: Byte;           // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
-    iState: Byte;                    // Statemachine index
-    MTI: Byte;                       // CID state for logging into bus
-    ReceivedMsgFlags: Word;          // See the RMF_xxxx constants
+    Node_ID: TNodeID;                           // Unique 48 Bit ID for Node
+    Unique_ID_Global_Seed: TNodeID;             // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
+    Node_Alias_ID: Word;                        // 12 Bit Alias ID
+    LoginTimeCount: Integer;                    // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
+    State: Word;                                // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
+    Interrupt_State: Byte;                      // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
+    iState: Byte;                               // Statemachine index
+    Responses: TQueuedResponses;                // Responses the NMRABus_Process loop looks at to response to received messages
   end;
   
 var

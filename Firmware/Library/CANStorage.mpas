@@ -36,9 +36,9 @@ function CANStorage_IncTail(List: PCANBufferList): Boolean;
 procedure CANStorage_FlushList(List: PCANBufferList);
 function CANStorage_Transmitting: Boolean;
 
-function CANStorage_AddToList(List: PCANBufferList; var Buffer: TCANBuffer): Boolean;
+function CANStorage_AddToList(List: PCANBufferList; Buffer: PCANBuffer): Boolean;
 function CANStorage_AddToListByParameter(List: PCANBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
-function CANStorage_ExtractFromList(List :PCANBufferList; var Buffer: TCANBuffer): Boolean;
+function CANStorage_ExtractFromList(List :PCANBufferList; Buffer: PCANBuffer): Boolean;
 function CANStorage_ListFull(List: PCANBufferList): Boolean;
 
 var
@@ -173,7 +173,7 @@ end;
 //                    ~260 Cycles to complete for the dsPIC33
 //
 // *****************************************************************************
-function CANStorage_AddToList(List: PCANBufferList; var Buffer: TCANBuffer): Boolean;
+function CANStorage_AddToList(List: PCANBufferList; Buffer: PCANBuffer): Boolean;
 var
   Head: PCANBuffer;
 begin
@@ -181,7 +181,7 @@ begin
   Head := CANStorage_Head(List);
   if Head <> PCANBuffer( nil) then
   begin
-    Head^ := Buffer;
+    Head^ := Buffer^;
     CANStorage_IncHead(List);
     Result := True
   end;
@@ -214,7 +214,7 @@ begin
     Buffer.State := Buffer.State or CBS_EXTENDED
   else
     Buffer.State := Buffer.State and not CBS_EXTENDED;
-  Result := CANStorage_AddToList(List, Buffer)
+  Result := CANStorage_AddToList(List, @Buffer)
 end;
 
 // *****************************************************************************
@@ -227,7 +227,7 @@ end;
 //                    ~260 Cycles to complete for the dsPIC33 and dsPIC30
 //
 // *****************************************************************************
-function CANStorage_ExtractFromList(List :PCANBufferList; var Buffer: TCANBuffer): Boolean;
+function CANStorage_ExtractFromList(List :PCANBufferList; Buffer: PCANBuffer): Boolean;
 var
   Tail: PCANBuffer;
 begin
@@ -235,7 +235,7 @@ begin
   Tail := CANStorage_Tail(List);
   if Tail <> nil then
   begin
-    Buffer := Tail^;
+    Buffer^ := Tail^;
     CANStorage_IncTail(List);
     Result := True;
   end

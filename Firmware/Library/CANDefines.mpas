@@ -29,10 +29,8 @@ const
   
   
   // defined in the user program
-  RX_CAN_BUFFER_LEN = 3;
-  TX_CAN_BUFFER_LEN = 3;
-  RX_NMRANET_BUFFER_LEN = 3;
-  TX_NMRANET_BUFFER_LEN = 3;
+  TX_CAN_BUFFER_LEN = 1;
+  TX_NMRANET_BUFFER_LEN = 4;
 
   CAN_DATA_LEN = 8;
 
@@ -91,14 +89,10 @@ type
   PCANBufferList = ^TCANBufferList;
   
 var
-  RX_CANBuffer: array[0..RX_CAN_BUFFER_LEN-1] of TCANBuffer;
   TX_CANBuffer: array[0..TX_CAN_BUFFER_LEN-1] of TCANBuffer;
-  RX_NMRAnet_Buffer: array[0..RX_NMRANET_BUFFER_LEN-1] of TCANBuffer;
   TX_NMRAnet_Buffer: array[0..TX_NMRANET_BUFFER_LEN-1] of TCANBuffer;
   
-  RX_CANBufferList, 
   TX_CANBufferList,
-  RX_NMRAnetBufferList,
   TX_NMRAnetBufferList: TCANBufferList;
 
 
