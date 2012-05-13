@@ -102,26 +102,26 @@ const
   PIV_PROTOCOL_ID_CDI               = $004000;                                  // vv vv vv vv vv vv
   PIV_PROTOCOL_ID_DISPLAY           = $002000;                                  // vv vv vv vv vv vv
   
-  // Base MTIs
-  SFT_VERIFY_NODE_DEST              = $0A;                                      // Sub-Type (in first Databyte) for a MTI with a destination in the header
-  SFT_OPTIONAL_INTERACTION_REJECTED = $0C;
-  SFT_TERMINATE_DUE_TO_ERROR        = $0D;
+  // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
+  MTI_VERIFY_NODE_DEST              = $0A;                                      // Sub-Type (in first Databyte) for a MTI with a destination in the header
+  MTI_OPTIONAL_INTERACTION_REJECTED = $0C;
+  MTI_TERMINATE_DUE_TO_ERROR        = $0D;
   // Protocol Support MTIs
-  SFT_PROTOCOL_SUPPORT_QUERY        = $2E;
-  SFT_PROTOCOL_SUPPORT_REPLY        = $2F;
+  MTI_PROTOCOL_SUPPORT_QUERY        = $2E;
+  MTI_PROTOCOL_SUPPORT_REPLY        = $2F;
   // Event Exchange MTIs
-  SFT_IDENTIFY_EVENTS               = $2B;
+  MTI_IDENTIFY_EVENTS               = $2B;
   // Other MTIs
-  SFT_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;
-  SFT_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;
+  MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;
+  MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;
   // Datagram MTIs
-  SFT_DATAGRAM_RECIEVED_OK          = $4C;
-  SFT_DATAGRAM_REJECTED             = $4D;
+  MTI_DATAGRAM_RECIEVED_OK          = $4C;
+  MTI_DATAGRAM_REJECTED             = $4D;
   // Stream MTIs
-  SFT_STREAM_INITIATE_REQUEST       = $4E;
-  SFT_STREAM_INITIATE_REPLY         = $4F;
-  SFT_STREAMDATA_PROCEED            = $6A;
-  SFT_STREAMDATA_COMPLETE           = $6B;
+  MTI_STREAM_INITIATE_REQUEST       = $4E;
+  MTI_STREAM_INITIATE_REPLY         = $4F;
+  MTI_STREAMDATA_PROCEED            = $6A;
+  MTI_STREAMDATA_COMPLETE           = $6B;
 
 
   // NMRABus States
@@ -137,13 +137,9 @@ const
   STATE_NMRABUS_NEXT_CDI                    = 4;
   STATE_NMRABUS_WAITSTATE                   = 5;
   STATE_NMRABUS_SEND_LOGIN_RID              = 6;
-  STATE_NMRABUS_SEND_LOGIN_NODE_VERIFIED    = 7;
   STATE_NMRABUS_SEND_LOGIN_AMD              = 8;
   STATE_NMRABUS_INITIALIZED                 = 9;
   STATE_NMRABUS_PERMITTED                   = 10;
-  STATE_NMRABUS_SEND_AMD                    = 11;
-  STATE_NMRABUS_DUPLICATE_ALIAS             = 12;
-  STATE_NMRABUS_SEND_RID                    = 13;
   STATE_NMRABUS_INHIBITED                   = 14;
   STATE_NMRABUS_DUPLICATE_FULL_ID           = 15;
   STATE_NMRABUS_TAKE_OFFLINE                = 16;
@@ -161,13 +157,17 @@ const
 
   LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
   
+  // CAN responses
   SRF_DUPLICATE_ALIAS                       = $0001;                            // Duplicate Alais Detected that was not a CID message, need to regenerate an Alias
-  SRF_SEND_AMD                              = $0002;                            // Send an Alias Map Definition
-  SRF_SEND_PCER                             = $0004;                            // Send a Procducer/Consumer Message that a Duplicate 48 Bit node ID was detected, very bad...
-  SRF_SEND_RID                              = $0008;                            // Duplicate Alias Detected that was a CID so tell the node we own that Alias
+  SRF_DUPLICATE_NODE_ID                     = $0002;                            // Send a Procducer/Consumer Message that a Duplicate 48 Bit node ID was detected, very bad...
+  SRF_SEND_RID                              = $0004;                            // Duplicate Alias Detected that was a CID so tell the node we own that Alias
+  SRF_DUPLICATE_ALIAS_ANY                   = SRF_DUPLICATE_ALIAS or SRF_SEND_RID;
+  SRF_SEND_AMD                              = $0008;                            // Send an Alias Map Definition
+  // NMRAnet level responses
   SRF_SEND_VERIFIED_NODE                    = $0010;                            // Send a Verified Node message
-  SRF_SEND_PROTOCOL_SUPPORT_RESULT          = $0020;                            // Send what Protocols we support
+  SRF_SEND_PROTOCOL_SUPPORT                 = $0020;                            // Send what Protocols we support
 
+  
 type
   TNodeID = array[0..1] of DWORD;                                                // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
   

@@ -127,7 +127,7 @@ begin
       if DatagramInfo.BufferFullResponseList[i] <> 0 then
       begin
         NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, DatagramInfo.BufferFullResponseList[i], @Buffer);
-        NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_BUFFER_FULL), Lo(DATAGRAM_REJECTED_BUFFER_FULL), 0, 0, 0, 0, 0);
+        NMRABusUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_BUFFER_FULL), Lo(DATAGRAM_REJECTED_BUFFER_FULL), 0, 0, 0, 0, 0);
         Buffer.DataCount := 3;
         if CANStorage_AddToList(@TX_NMRAnetBufferList, @Buffer) then
         begin
@@ -172,7 +172,7 @@ begin
         if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
         begin
           NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, Datagram^.SourceAlias, @Buffer);
-          NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+          NMRABusUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
           Buffer.DataCount := 3;
           if CANStorage_AddToList(@TX_NMRAnetBufferList, @Buffer) then
           begin
@@ -189,11 +189,11 @@ begin
           NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, Datagram^.SourceAlias, @Buffer);
           if Datagram^.ErrorCode = DGE_NONE then
           begin
-            NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_RECIEVED_OK, 0, 0, 0, 0, 0, 0, 0);
+            NMRABusUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_RECIEVED_OK, 0, 0, 0, 0, 0, 0, 0);
             Buffer.DataCount := 1
           end else
           begin
-            NMRABusUtilities_LoadCANData(Buffer.DataBytes, SFT_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+            NMRABusUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
             Buffer.DataCount := 3;
           end;
           if CANStorage_AddToList(@TX_NMRAnetBufferList, @Buffer) then
