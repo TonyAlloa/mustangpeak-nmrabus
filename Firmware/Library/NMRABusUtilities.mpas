@@ -26,7 +26,7 @@ uses
 
 procedure NMRABusUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer);
 procedure NMRABusUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
-procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
+procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: Word; Packet: PCANBuffer);
 function NMRABusUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
 function NMRABusUtilities_ExtractSourceAlias(Packet: PCANBuffer): Word;
 procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID);
@@ -100,7 +100,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: DWord; Packet: PCANBuffer);
+procedure NMRABusUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: Word; Packet: PCANBuffer);
 begin
   Packet^.DataCount := 0;
   Packet^.State := Packet^.State or CBS_EXTENDED;
@@ -152,12 +152,12 @@ end;
 // *****************************************************************************
 procedure NMRABusUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID);
 begin
-  NodeID[0] := Packet^.DataBytes[0];
-  NodeID[0] := NodeID[0] or Packet^.DataBytes[1] shl 8;
-  NodeID[0] := NodeID[0] or Packet^.DataBytes[2] shl 16;
-  NodeID[1] := Packet^.DataBytes[3];
-  NodeID[1] := NodeID[1] or Packet^.DataBytes[4] shl 8;
-  NodeID[1] := NodeID[1] or Packet^.DataBytes[5] shl 16;
+  NodeID[1] := Packet^.DataBytes[2];
+  NodeID[1] := NodeID[1] or Packet^.DataBytes[1] shl 8;
+  NodeID[1] := NodeID[1] or Packet^.DataBytes[0] shl 16;
+  NodeID[0] := Packet^.DataBytes[5];
+  NodeID[0] := NodeID[0] or Packet^.DataBytes[4] shl 8;
+  NodeID[0] := NodeID[0] or Packet^.DataBytes[3] shl 16;
 end;
 
 // *****************************************************************************

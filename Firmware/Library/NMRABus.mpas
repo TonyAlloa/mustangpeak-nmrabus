@@ -75,6 +75,9 @@ var
   CANLayerReceiveHook: PPacketHandlerFunc;
   NMRAnetLayerReceiveHook: PPacketHandlerFunc;
   
+  
+  s1: array[32] of char;
+  
 
 procedure NMRABus_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);
 begin
@@ -125,7 +128,6 @@ procedure FlushLists;
 begin
   CANStorage_FlushList(@TX_CANBufferList);                                      // Flush any pending packets
   CANStorage_FlushList(@TX_NMRAnetBufferList);
-  FlushResponses;
 end;
 
 // *****************************************************************************
@@ -226,7 +228,7 @@ var
 begin
   NMRABusUtilities_PacketBytesToNodeID(@CANBuffer^, NodeID);                    // Extract the 48 Bit ID
   if NMRABusUtilities_EqualNodeID(NodeID) then                                  // If addressed to us then respond
-    NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_DUPLICATE_NODE_ID
+    NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_DUPLICATE_NODE_ID;
 end;
 
 procedure ReceivedAliasMappingEnquiry(CANBuffer: PCANBuffer);
@@ -245,6 +247,7 @@ end;
 // *****************************************************************************
 // NMRAnet Layer Message Handlers
 // *****************************************************************************
+
 procedure ReceivedUnAddressedMessage(CANBuffer: PCANBuffer);
 begin
   if (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_VERIFY_NODE_ID_NUMBER_NO_DEST) then
@@ -304,10 +307,8 @@ begin
   DoDefault := True;
   if CANLayerReceiveHook <> nil then
     CANLayerReceiveHook(CANBuffer, DoDefault);
-    
   if DoDefault then
   begin
-
     if NMRABusUtilities_EqualAliasID(CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
       ReceivedEqualAliasID(CANBuffer);
 
@@ -319,7 +320,7 @@ begin
       if CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_AMD then
          ReceivedAliasMappingDefinition(CANBuffer)
     end;
-  end
+  end;
 end;
 
 // ****************************************************************************
@@ -494,7 +495,7 @@ end;
 //     Description: Clears the lists
 //
 // *****************************************************************************
-function TryTransmitNMRABusLayerMsg(VariableField: DWord; DestinationAlias: Word;  Buffer: PCANBuffer): Boolean;
+function TryTransmitNMRABusLayerMsg(VariableField: DWord; DestinationAlias: Word; Buffer: PCANBuffer): Boolean;
 begin
   Result := False;
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
@@ -516,7 +517,7 @@ begin
   Temp := NMRABus.Responses.SimpleResponseFlags;
   if Clear then
     NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags and not Flags;
-  Result := Temp and Flags = Flags;
+  Result := Temp and Flags <> 0;
  // EnableCANInterrupt(True);
 end;
 
@@ -526,10 +527,14 @@ begin
 end;
 
 procedure Response_Process;
-begin        {
+begin
   case NMRABus.Responses.iState of
     STATE_RESPONSE_START :
       begin
+        if NMRABus.Responses.SimpleResponseFlags = 0 then
+          NMRABus.Responses.iState := STATE_RESPONSE_NEXT_SIMPLE_RESPONSE
+        else
+          NMRABus.Responses.iState := STATE_RESPONSE_SIMPLE_RESPONSE
       end;
     STATE_RESPONSE_SIMPLE_RESPONSE :
       begin
@@ -555,19 +560,30 @@ begin        {
           $2000 : begin end;
           $4000 : begin end;
           $4000 : begin end;
+        end;
+        NMRABus.Responses.iState := STATE_RESPONSE_NEXT_SIMPLE_RESPONSE
       end;
     STATE_RESPONSE_NEXT_SIMPLE_RESPONSE :
       begin
+        if NMRABus.Responses.SimpleIndexMask < $8000 then
+         NMRABus.Responses.SimpleIndexMask := NMRABus.Responses.SimpleIndexMask shr 1
+        else
+          NMRABus.Responses.SimpleIndexMask := $0001;
+
+        NMRABus.Responses.iState := STATE_RESPONSE_COMPLEX_RESPONSE
       end;
     STATE_RESPONSE_COMPLEX_RESPONSE :
       begin
+        NMRABus.Responses.iState := STATE_RESPONSE_NEXT_COMPLEX_RESPONSE
       end;
     STATE_RESPONSE_NEXT_COMPLEX_RESPONSE :
       begin
+        Inc(NMRABus.Responses.ListIndex);
+        NMRABus.Responses.iState := STATE_RESPONSE_START
       end
   else
     NMRABus.Responses.iState := STATE_RESPONSE_START;
-  end         }
+  end
 end;
 
 procedure NMRABus_Process;
@@ -627,16 +643,16 @@ begin
       end;
     STATE_NMRABUS_SEND_LOGIN_RID :
       begin
-        if TestReceivedMsgFlags(SRF_DUPLICATE_ALIAS_ANY, True) then
-          NMRABus.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS
+        if TestReceivedMsgFlags(SRF_DUPLICATE_ALIAS, True) then
+          NMRABus.iState := STATE_RANDOM_NUMBER_GENERATOR
         else
         if TryTransmitCANLayerMsg(FT_RID, @Buffer) then
           NMRABus.iState := STATE_NMRABUS_SEND_LOGIN_AMD;
       end;
     STATE_NMRABUS_SEND_LOGIN_AMD :
       begin
-        if TestReceivedMsgFlags(SRF_DUPLICATE_ALIAS_ANY, True) then
-          NMRABus.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS
+        if TestReceivedMsgFlags(SRF_DUPLICATE_ALIAS, True) then
+          NMRABus.iState := STATE_RANDOM_NUMBER_GENERATOR
         else
         if TryTransmitCANLayerMsg(FT_AMD, @Buffer) then
         begin
@@ -646,7 +662,7 @@ begin
       end;
     STATE_NMRABUS_INITIALIZED :
       begin
-        if TestReceivedMsgFlags(SRF_DUPLICATE_ALIAS_ANY, True) then
+        if TestReceivedMsgFlags(SRF_DUPLICATE_ALIAS, True) then
           NMRABus.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS
         else
         if TryTransmitNMRABusLayerMsg(FT_INITIALIZATION_COMPLETE, 0, @Buffer) then
@@ -657,19 +673,20 @@ begin
       end;
     STATE_NMRABUS_PERMITTED :
       begin
-        if TestReceivedMsgFlags(SRF_DUPLICATE_ALIAS, False) then
+        if TestReceivedMsgFlags(SRF_DUPLICATE_NODE_ID, True) then
+          NMRABus.iState :=  STATE_NMRABUS_DUPLICATE_FULL_ID                    // Highest Priority
+        else
+        if TestReceivedMsgFlags(SRF_DUPLICATE_ALIAS, True) then
           NMRABus.iState := STATE_NMRABUS_INHIBITED
         else
-        if TestReceivedMsgFlags(SRF_DUPLICATE_NODE_ID, False) then
-          NMRABus.iState :=  STATE_NMRABUS_DUPLICATE_FULL_ID
-        else begin
-        end;
+          Response_Process
       end;
     STATE_NMRABUS_INHIBITED :
       begin
         if TryTransmitCANLayerMsg(FT_AMR, @Buffer) then
         begin
           FlushLists;
+          FlushResponses;
           NMRABus.State := NMRABus.State or BS_INHIBITED and not BS_PERMITED;
           NMRABus.iState := STATE_RANDOM_NUMBER_GENERATOR;
         end
@@ -679,6 +696,7 @@ begin
         if TryTransmitCANLayerMsg(FT_AMR, @Buffer) then
         begin
           FlushLists;
+          FlushResponses;
           NMRABus.State := NMRABus.State or BS_INHIBITED and not BS_PERMITED;
           NMRABus.iState := STATE_NMRABUS_TAKE_OFFLINE
         end
