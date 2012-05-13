@@ -1,7 +1,7 @@
 unit XpressnetStateMachine;
 
 uses
-  NMRABus,
+  NMRAnetCANReceive,
   XpressnetDefines;
 
 const
@@ -271,7 +271,7 @@ begin
   case XpressnetStateMachineInfo.iState of
     STATE_DISCOVERDEVICES :
       begin
-        if NMRABus_Permitted then
+        if NMRAnetCANReceive_Permited then
         begin
           XpressnetStateMachineInfo.Discovering := True;
           XpressnetStateMachineInfo.iActiveDevice := 0;
@@ -323,7 +323,7 @@ begin
       end;
     STATE_QUERYDATABASE :
       begin
-        if NMRABus_Permitted then
+        if NMRAnetCANReceive_Permited then
         begin
           // Send NMRANet message here......
           XpressnetStateMachineInfo.iState := STATE_XPRESSNETREPLYBRANCH;
@@ -367,7 +367,7 @@ begin
       end;
     STATE_TESTFORDISCOVERYMODE :
       begin
-        if NMRABus_Permitted then
+        if NMRAnetCANReceive_Permited then
         begin
           if XpressnetStateMachineInfo.Discovering then
             XpressnetStateMachineInfo.iState := STATE_DISCOVERNEXTDEVICE

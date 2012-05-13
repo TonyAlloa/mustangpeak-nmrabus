@@ -18,8 +18,7 @@
 unit XpressnetDefines;
 
 uses
-  NMRABusDefines,
-  NMRABusDatagramDefines;
+  NMRAnetDefines;
 
 const
   VERSION_SOFTWARE_PC_INERFACE = %00000001;  // Software version 1
@@ -111,13 +110,6 @@ type
     XORFailed: Boolean ;                  // True if the XOR check failed
   end;
   
-  // Buffer to hold the NMRANet data on the CAN bus
-  TDatagramReception = record
-    DataBytes: array[0..LEN_DATAGRAM-1] of Byte;                                // The bytes sent in the datagram
-    Source: Word;                                                               // The Node that sent the datagram
-    Done: Boolean;
-  end;
-
 type
   TXpressnetStateMachineInfo = record
     DeviceList: TDeviceList;
@@ -127,7 +119,6 @@ type
     DiscoveryCount: Byte;                 // Counts (typically 840ms steps) between rediscovery intervals
     WatchdogCount: Byte;                  // Counts (typically 840ms steps) before the Xpressnet Bus is declared hung
     RS485: TUARTReception;                // Hold information about the UART reception on the XpressnetBus
-    Datagram: TDatagramReception;         // Receiving NMRANet Datagram that sends/receives the message from the Database (limited to serializing all devices on the Xpressnet bus as of today)
   end;
   PXpressnetStateMachineInfo = ^TXpressnetStateMachineInfo;
 

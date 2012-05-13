@@ -22,8 +22,7 @@ uses
   Throttle_events_code,
   MCU_Setup_dsPIC33FJ256GP710A,
   CANStorage,
-  NMRABusDatagrams,
-  NMRABus;
+  NMRAnetStateMachine;
   
 var
   CANLayerCount,
@@ -33,7 +32,7 @@ procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 begin
   // 1ms Timer
   T2IF_bit := 0;  // Reset the Flag
-  NMRABus_1ms_Timer;
+  NMRAnetStateMachine_1ms_Timer;
 end;
 
 procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);
@@ -51,7 +50,7 @@ begin
   CANStorage_Initialize;
   dsPIC33_CAN_Initialize;
   MCU_Setup_Initialize;
-  NMRABus_Initialize;
+  NMRAnetStateMachine_Initialize;
 
   Start_TP();
   
@@ -65,11 +64,11 @@ begin
 
   while (TRUE) do
   begin
-    NMRABus_Process;
+    NMRAnetStateMachine_Process;
 
-    if NMRABus_Permitted then
+    if NMRAnetCANReceive_Permited then
     begin
-    //  XpressnetStateMachine_Process;
+
     end
   end;
 

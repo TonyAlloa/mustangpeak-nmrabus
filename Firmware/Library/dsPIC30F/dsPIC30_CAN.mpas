@@ -22,7 +22,7 @@ unit dsPIC30_CAN;
 uses
   CANDefines,
   CANStorage,
-  NMRABus;
+  NMRANetCANReceive;
   
 {$I Options.inc}
 

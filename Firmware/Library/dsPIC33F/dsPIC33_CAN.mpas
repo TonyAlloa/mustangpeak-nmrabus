@@ -20,11 +20,11 @@ unit dsPIC33_CAN;
 // ******************************************************************************
 
 uses
+  NMRAnetCANReceive,
   CANDefines,
   CANBuffers,
   CANStorage,
-  dsPIC33_DMA,
-  NMRABus;
+  dsPIC33_DMA;
   
 {$I Options.inc}
 

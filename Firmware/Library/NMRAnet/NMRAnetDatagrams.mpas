@@ -1,17 +1,17 @@
-unit NMRABusDatagrams;
+unit NMRAnetDatagrams;
 
 uses
-  NMRABusUtilities,
+  NMRAnetUtilities,
   CANDefines,
   CANStorage,
-  NMRABusDefines,
-  NMRABusDatagramDefines;
+  NMRAnetDefines,
+  NMRAnetDatagramDefines;
 
-procedure NMRABusDatagrams_Initialize;
-procedure NMRABusDatagrams_ProcessReceive(Buffer: PCANBuffer);
-procedure NMRABusDatagrams_Process;
-procedure NMRABusDatagrams_1ms_TimeTick;
-function NMRABusDatagrams_Remove(var Datagram: TDatagram): Boolean;
+procedure NMRAnetDatagrams_Initialize;
+procedure NMRAnetDatagrams_ProcessReceive(Buffer: PCANBuffer);
+procedure NMRAnetDatagrams_Process;
+procedure NMRAnetDatagrams_1ms_TimeTick;
+function NMRAnetDatagrams_Remove(var Datagram: TDatagram): Boolean;
 
 // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
@@ -20,7 +20,7 @@ function NMRABusDatagrams_Remove(var Datagram: TDatagram): Boolean;
 implementation
 
 // *****************************************************************************
-//  procedure NMRABusDatagrams_Initialize;
+//  procedure NMRAnetDatagrams_Initialize;
 //
 //  Parameters:
 //
@@ -28,7 +28,7 @@ implementation
 //
 //  Description:
 // *****************************************************************************
-procedure NMRABusDatagrams_Initialize;
+procedure NMRAnetDatagrams_Initialize;
 var
   i, j: Integer;
 begin
@@ -47,7 +47,7 @@ end;
 
 // *****************************************************************************
 //
-// procedure NMRABusDatagrams_Remove;
+// procedure NMRAnetDatagrams_Remove;
 //
 //  Parameters:
 //                None
@@ -57,7 +57,7 @@ end;
 //              Pulls the first found Ready Datagram in the Datagram Array
 //
 // *****************************************************************************
-function NMRABusDatagrams_Remove(var Datagram: TDatagram): Boolean;
+function NMRAnetDatagrams_Remove(var Datagram: TDatagram): Boolean;
 var
   i: Integer;
 begin
@@ -77,7 +77,7 @@ end;
 
 // *****************************************************************************
 //
-// procedure NMRABusDatagrams_1ms_TimeTick;
+// procedure NMRAnetDatagrams_1ms_TimeTick;
 //
 //  Parameters:
 //                None
@@ -91,7 +91,7 @@ end;
 //              the time this takes to run.
 //
 // *****************************************************************************
-procedure NMRABusDatagrams_1ms_TimeTick;
+procedure NMRAnetDatagrams_1ms_TimeTick;
 var
   i: Integer;
 begin
@@ -126,8 +126,8 @@ begin
     begin
       if DatagramInfo.BufferFullResponseList[i] <> 0 then
       begin
-        NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, DatagramInfo.BufferFullResponseList[i], @Buffer);
-        NMRABusUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_BUFFER_FULL), Lo(DATAGRAM_REJECTED_BUFFER_FULL), 0, 0, 0, 0, 0);
+        NMRAnetUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, DatagramInfo.BufferFullResponseList[i], @Buffer);
+        NMRAnetUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_BUFFER_FULL), Lo(DATAGRAM_REJECTED_BUFFER_FULL), 0, 0, 0, 0, 0);
         Buffer.DataCount := 3;
         if CANStorage_AddToList(@TX_NMRAnetBufferList, @Buffer) then
         begin
@@ -142,7 +142,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure NMRABusDatagrams_Process;
+//  procedure NMRAnetDatagrams_Process;
 //
 //  Parameters:
 //
@@ -150,7 +150,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRABusDatagrams_Process;
+procedure NMRAnetDatagrams_Process;
 var
   Datagram: PDatagramBuffer;   
   Buffer: TCANBuffer;
@@ -171,8 +171,8 @@ begin
       begin
         if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
         begin
-          NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, Datagram^.SourceAlias, @Buffer);
-          NMRABusUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+          NMRAnetUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, Datagram^.SourceAlias, @Buffer);
+          NMRAnetUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
           Buffer.DataCount := 3;
           if CANStorage_AddToList(@TX_NMRAnetBufferList, @Buffer) then
           begin
@@ -186,14 +186,14 @@ begin
       begin
         if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
         begin
-          NMRABusUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, Datagram^.SourceAlias, @Buffer);
+          NMRAnetUtilities_CreateNMRABusMessagePacket(MTI_ADDRESSED, Datagram^.SourceAlias, @Buffer);
           if Datagram^.ErrorCode = DGE_NONE then
           begin
-            NMRABusUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_RECIEVED_OK, 0, 0, 0, 0, 0, 0, 0);
+            NMRAnetUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_RECIEVED_OK, 0, 0, 0, 0, 0, 0, 0);
             Buffer.DataCount := 1
           end else
           begin
-            NMRABusUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
+            NMRAnetUtilities_LoadCANData(Buffer.DataBytes, MTI_DATAGRAM_REJECTED, Hi(DATAGRAM_REJECTED_OUT_OF_ORDER), Lo(DATAGRAM_REJECTED_OUT_OF_ORDER), 0, 0, 0, 0, 0);
             Buffer.DataCount := 3;
           end;
           if CANStorage_AddToList(@TX_NMRAnetBufferList, @Buffer) then
@@ -263,7 +263,7 @@ begin
   while (i < LEN_DATAGRAM_ARRAY) and not Result do
   begin
     if DatagramInfo.List[i].iState = STATE_DATAGRAM_RECEIVING then
-      if NMRABusUtilities_CompareAliasIDs(DatagramInfo.List[i].SourceAlias, SourceAlias) then
+      if NMRAnetUtilities_CompareAliasIDs(DatagramInfo.List[i].SourceAlias, SourceAlias) then
       begin
         Datagram := @DatagramInfo.List[i];
         Result := True
@@ -339,7 +339,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure NMRABusDatagrams_ProcessReceive;
+//  procedure NMRAnetDatagrams_ProcessReceive;
 //
 //  Parameters:
 //
@@ -347,7 +347,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRABusDatagrams_ProcessReceive(Buffer: PCANBuffer);
+procedure NMRAnetDatagrams_ProcessReceive(Buffer: PCANBuffer);
 var
   Datagram: PDatagramBuffer;
 begin

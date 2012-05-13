@@ -1,4 +1,4 @@
-unit NMRABusDefines;
+unit NMRAnetDefines;
 
 // ******************************************************************************
 //
@@ -83,13 +83,22 @@ const
   FT_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
   FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
   
+  FT_CONSUMER_IDENTIFY              = $08A4F000;                                // Databytes = EventID
+  FT_CONSUMER_IDENTIFY_RANGE        = $0825F000;                                // Databytes = EventID
+  FT_CONSUMER_IDENTIFIED            = $0826B000;                                // Databytes = EventID
+  FT_PRODUCER_IDENDIFY              = $08A8F000;                                // Databytes = EventID
+  FT_PRODUCER_IDENTIFY_RANGE        = $0829F000;                                // Databytes = EventID
+  FT_PRODUCER_IDENTIFIED            = $082AB000;                                // Databytes = EventID
+  FT_EVENTS_IDENTIFY_DEST           = $08000000;                                // Databytes = 2B (see MTI_IDENTIFY_EVENTS)
+  FT_EVENTS_IDENTIFY_NO_DEST        = $08AB7000;
+  FT_EVENT_LEARN                    = $08ACF000;                                // Databytes = EventID
+  FT_PC_EVENT_REPORT                = $08ADF000;                                // Infamouse PCER
+  
   MASK_DEST_ALIAS                   = $00FFF000;                                // Masks out just the Destination Alias Address
   MASK_SOURCE_ALIAS                 = $00000FFF;                                // Masks out just the Source Alias Address
   
   PIP_PROTOCOL_SUPPORT_INQUIRY      = $08000000;
   PIP_PROTOCOL_SUPPORT_RESPONSE     = $08000000;
-  MTI_PROTOCOL_SUPPORT_INQUIRY      = $32E4;                                     // Datagram DataBytes: 32 E4 vv vv vv vv vv vv
-  MTI_PROTOCOL_SUPPORT_RESPONSE     = $32F4;                                     // Datagram DataBytes: 32 F4 vv vv vv vv vv vv
   PIV_PROTOCOL_ID_PROTOCOL          = $800000;                                  // vv vv vv vv vv vv
   PIV_PROTOCOL_ID_DATAGRAM          = $400000;                                  // vv vv vv vv vv vv
   PIV_PROTOCOL_ID_STREAM            = $200000;                                  // vv vv vv vv vv vv
@@ -103,25 +112,25 @@ const
   PIV_PROTOCOL_ID_DISPLAY           = $002000;                                  // vv vv vv vv vv vv
   
   // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
-  MTI_VERIFY_NODE_DEST              = $0A;                                      // Sub-Type (in first Databyte) for a MTI with a destination in the header
-  MTI_OPTIONAL_INTERACTION_REJECTED = $0C;
-  MTI_TERMINATE_DUE_TO_ERROR        = $0D;
+  MTI_VERIFY_NODE_DEST                 = $0A;                                   // Sub-Type (in first Databyte) for a MTI with a destination in the header
+  MTI_OPTIONAL_INTERACTION_REJECTED    = $0C;
+  MTI_TERMINATE_DUE_TO_ERROR           = $0D;
   // Protocol Support MTIs
-  MTI_PROTOCOL_SUPPORT_QUERY        = $2E;
-  MTI_PROTOCOL_SUPPORT_REPLY        = $2F;
+  MTI_PROTOCOL_SUPPORT_QUERY           = $2E;
+  MTI_PROTOCOL_SUPPORT_REPLY           = $2F;                                   // Datagram DataBytes: 2F xx vv vv vv vv vv vv
   // Event Exchange MTIs
-  MTI_IDENTIFY_EVENTS               = $2B;
+  MTI_IDENTIFY_EVENTS                  = $2B;
   // Other MTIs
   MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;
   MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;
   // Datagram MTIs
-  MTI_DATAGRAM_RECIEVED_OK          = $4C;
-  MTI_DATAGRAM_REJECTED             = $4D;
+  MTI_DATAGRAM_RECIEVED_OK             = $4C;
+  MTI_DATAGRAM_REJECTED                = $4D;
   // Stream MTIs
-  MTI_STREAM_INITIATE_REQUEST       = $4E;
-  MTI_STREAM_INITIATE_REPLY         = $4F;
-  MTI_STREAMDATA_PROCEED            = $6A;
-  MTI_STREAMDATA_COMPLETE           = $6B;
+  MTI_STREAM_INITIATE_REQUEST          = $4E;
+  MTI_STREAM_INITIATE_REPLY            = $4F;
+  MTI_STREAMDATA_PROCEED               = $6A;
+  MTI_STREAMDATA_COMPLETE              = $6B;
 
 
   // NMRABus States
@@ -170,6 +179,14 @@ const
 type
   TNodeID = array[0..1] of DWORD;                                                // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
   
+  // When a message is received on the CAN bus the logic decodes the message and
+  // separates the message into different types of Responses.  Some messages require
+  // a response that is a simple message without needed to know any information, these
+  // are defined as "SimpleResponseFlags".  The logic simply sets the flag to tell the
+  // main message loop to send the simple response.  This also allows for multiple requests
+  // to be summed together into a single response.  Other responses need to know more information
+  // such as the node Alias the response needs to be sent to.  These are stored in the QueuedResponseList
+  
   TQueuedResponse = record                                                      // When a message is received that needs a response that contains a destination
     ResponseCode: Byte;                                                         // node or needs to decode the DataBytes to understand what to respond with
     DestinationNodeAlias: Word;                                                 // the info needed to response is queued up in this structure to be acted on in the main
@@ -194,7 +211,7 @@ type
     LoginTimeCount: Integer;                    // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
     State: Word;                                // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
     Interrupt_State: Byte;                      // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
-    iState: Byte;                               // Statemachine index
+    iState: Byte;                               // Statemachine index for the main bus login
     Responses: TQueuedResponses;                // Responses the NMRABus_Process loop looks at to response to received messages
   end;
   

@@ -18,9 +18,7 @@ unit MCU_Setup_dsPIC4013;
 // *****************************************************************************
 
 uses
-  CANStorage,
-  XpressnetDefines,
-  NMRABus;
+  CANStorage;
 
 {$I Options.inc}
 

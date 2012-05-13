@@ -18,14 +18,12 @@ program NMRABus_Xpressnet;
 // *****************************************************************************
 
 uses
-  NMRABus,
-  NMRABusUtilities,
+  NMRAnetStateMachine,
   MCU_Setup_dsPIC4013,
   CANDefines,
   CANStorage,
   dsPIC30_CAN,
   dsPIC30_Traps,
-  NMRABusDatagrams,
   XpressnetDefines,
   XpressnetStateMachine,
   NodeIDs;
@@ -54,9 +52,9 @@ begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T3IF_bit := 0;
+  
   XpressnetStateMachine_840ms_TimeTick;
   EnableCANInterrupt(False);
-  NMRABusDatagrams_840ms_TimeTick;
   EnableCANInterrupt(True);
 end;
 
@@ -66,7 +64,7 @@ begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRABus_1ms_Timer;
+  NMRAnetStateMachine_1ms_Timer;
 end;
 
 {$IFDEF XPRESSNET_UART_ENABLE}
@@ -95,21 +93,6 @@ begin
 end;
 {$ENDIF}
 
-procedure CANLayerReceiveHook(CANBuffer: PCANBuffer; var DoDefault: Boolean);
-// WARNING: THIS IS CALLED IN THE CONTEXT OF THE INTERRUPT AND CAN NOT BE LONGER THAN
-// IT TAKES TO RECEIVE THE NEXT CAN MESSAGE!!!!!!!!
-begin
-
-end;
-
-procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);
-begin
-
-end;
-
-procedure DatagramPacketHandler(DatagramBuffer: PDatagramBuffer; var DoDefault: Boolean);
-begin
-end;
 
 // *******************
 // MAIN LOOP
@@ -117,17 +100,16 @@ end;
 begin
   CANStorage_Initialize;
   MCU_Setup_Initialize;
-  NMRABus_Initialize;
+  NMRAnetStateMachine_Initialize;
   XpressnetStateMachine_Initialize;
 
-  NMRABus_SetCANLayerReceiveHook(@CANLayerReceiveHook);
   while (TRUE) do
     begin
-      NMRABus_Process;
+      NMRAnetStateMachine_Process;
       
-      if NMRABus_Permitted then
+      if NMRAnetCANReceive_Permited then
       begin
-      //  XpressnetStateMachine_Process;
+        XpressnetStateMachine_Process;
       end
     end;
 end.

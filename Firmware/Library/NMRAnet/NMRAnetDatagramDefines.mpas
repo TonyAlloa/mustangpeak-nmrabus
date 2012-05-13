@@ -2,7 +2,7 @@ unit NMRABusDatagramDefines;
 
 uses
   CANDefines,
-  NMRABusDefines;
+  NMRAnetDefines;
 
 const
   DATAGRAM_REJECTED                                     = $0000;

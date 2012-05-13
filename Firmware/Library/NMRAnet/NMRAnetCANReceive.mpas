@@ -1,0 +1,380 @@
+unit NMRAnetCANReceive;
+
+uses
+  NMRAnetDefines,
+  NMRAnetUtilities,
+  NMRAnetDatagrams,
+  NMRAnetDatagramDefines,
+  CANDefines;
+  
+type
+  TPacketHandlerFunc = procedure(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+  PPacketHandlerFunc = ^TPacketHandlerFunc;
+  
+  procedure NMRAnetCANReceive_Initialize;
+  function NMRAnetCANReceive_Permited: Boolean;
+  procedure NMRAnetCANReceive_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);       // WARNING:  The Hook is called from within the Interrupt Handler.....
+  procedure NMRAnetCANReceive_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);   // WARNING:  The Hook is called from within the Interrupt Handler.....
+
+  // callbacks from the CAN interrupts used in the xxxxx_CAN_Interrupt.mpas units
+  procedure ReceivedOnFilter0(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter1(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter2(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter3(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter4(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter5(Buffer: PCANBuffer);
+  procedure ReceivedOnFilter6(Buffer: PCANBuffer);
+  
+  // defined in the dsPICxx_CAN_Interrupt.mpas file
+  procedure StartCANMessageEngine; external;
+  procedure EnableCANInterrupt(Enable: Boolean); external;
+
+implementation
+
+var
+  CANLayerReceiveHook: PPacketHandlerFunc;
+  NMRAnetLayerReceiveHook: PPacketHandlerFunc;
+  
+// ****************************************************************************
+// procedure NMRAnetCANReceive_Initialize
+//
+//  Description:
+//
+// ****************************************************************************
+procedure NMRAnetCANReceive_Initialize;
+begin
+  CANLayerReceiveHook := PPacketHandlerFunc( nil);
+  NMRAnetLayerReceiveHook := PPacketHandlerFunc( nil);
+end;
+  
+// ****************************************************************************
+// procedure NMRAnetCANReceive_SetCANLayerReceiveHook
+//
+//  Description:
+//
+// ****************************************************************************
+procedure NMRAnetCANReceive_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);
+begin
+  CANLayerReceiveHook := HookFunc
+end;
+
+// ****************************************************************************
+// procedure NMRAnetCANReceive_SetNMRANetLayerReceiveHook
+//
+//  Description:
+//
+// ****************************************************************************
+procedure NMRAnetCANReceive_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);
+begin
+  NMRAnetLayerReceiveHook := HookFunc
+end;
+
+// *****************************************************************************
+//  function NMRAnetCANReceive_Permited
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRAnetCANReceive_Permited: Boolean;
+begin
+  Result := NMRABus.State and BS_PERMITED = BS_PERMITED
+end;
+
+
+// ****************************************************************************
+// procedure ReceivedEqualAliasID
+//
+//  Description:
+//
+// ****************************************************************************
+procedure ReceivedEqualAliasID(CANBuffer: PCANBuffer);
+begin
+  if (CANBuffer^.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer^.ID and FT_CID_MASK >= FT_CID6) then // If it is a CID message then force calling node to try again for an Alias this one is ours
+    NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_SEND_RID
+  else
+    NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_DUPLICATE_ALIAS
+end;
+
+// ****************************************************************************
+// procedure ReceivedAliasMappingDefinition
+//
+//  Description:
+//
+// ****************************************************************************
+procedure ReceivedAliasMappingDefinition(CANBuffer: PCANBuffer);
+var
+  NodeID: TNodeID;
+begin
+  NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^, NodeID);                    // Extract the 48 Bit ID
+  if NMRAnetUtilities_EqualNodeID(NodeID) then                                  // If addressed to us then respond
+    NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_DUPLICATE_NODE_ID;
+end;
+
+// ****************************************************************************
+// procedure ReceivedAliasMappingEnquiry
+//
+//  Description:
+//
+// ****************************************************************************
+procedure ReceivedAliasMappingEnquiry(CANBuffer: PCANBuffer);
+var
+  NodeID: TNodeID;
+begin
+  if CANBuffer^.DataCount > 0 then
+  begin
+    NMRAnetUtilities_PacketBytesToNodeID(CANBuffer, NodeID);              // Extract the 48 Bit ID
+    if NMRAnetUtilities_EqualNodeID(NodeID) then                          // If addressed to us then respond
+      NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_SEND_AMD;
+  end else
+    NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_SEND_AMD;
+end;
+
+// ****************************************************************************
+// procedure ReceivedUnAddressedMessage
+//
+//  Description:
+//
+// ****************************************************************************
+procedure ReceivedUnAddressedMessage(CANBuffer: PCANBuffer);
+begin
+  case CANBuffer^.ID and FT_UNADDRESSED_MASK of
+    FT_VERIFY_NODE_ID_NUMBER_NO_DEST : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_SEND_VERIFIED_NODE;
+    FT_VERIFIED_NODE_ID_NUMBER       : begin end; // TODO
+    FT_CONSUMER_IDENTIFY             : begin end; // TODO
+    FT_CONSUMER_IDENTIFIED           : begin end; // TODO
+    FT_CONSUMER_IDENTIFY_RANGE       : begin end; // TODO
+    FT_PRODUCER_IDENDIFY             : begin end; // TODO
+    FT_PRODUCER_IDENTIFIED           : begin end; // TODO
+    FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
+    FT_EVENT_LEARN                   : begin end; // TODO
+    FT_EVENTS_IDENTIFY_NO_DEST       : begin end; // TODO
+    FT_PC_EVENT_REPORT               : begin end; // TODO
+  end
+end;
+
+// ****************************************************************************
+// procedure ReceivedAddressedMessage
+//
+//  Description:
+//
+// ****************************************************************************
+procedure ReceivedAddressedMessage(CANBuffer: PCANBuffer);
+begin
+  if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
+  begin
+    case CANBuffer^.Databytes[0] of
+      MTI_VERIFY_NODE_DEST                 : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_SEND_VERIFIED_NODE;
+      MTI_PROTOCOL_SUPPORT_QUERY           : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRF_SEND_PROTOCOL_SUPPORT;
+      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
+      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
+      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
+      MTI_IDENTIFY_EVENTS                  : begin end;  // TODO
+      MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
+      MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;  // TODO
+      MTI_DATAGRAM_RECIEVED_OK             : begin end;  // TODO
+      MTI_DATAGRAM_REJECTED                : begin end;  // TODO
+      MTI_STREAM_INITIATE_REPLY            : begin end;  // TODO
+      MTI_STREAM_INITIATE_REQUEST          : begin end;  // TODO
+      MTI_STREAMDATA_COMPLETE              : begin end;  // TODO
+      MTI_STREAMDATA_PROCEED               : begin end;  // TODO
+      MTI_IDENTIFY_EVENTS                  : begin end;  // TODO
+    end
+  end
+end;
+
+// ****************************************************************************
+// procedure ReceivedDatagramMessage
+//
+//  Description:
+//
+// ****************************************************************************
+procedure ReceivedDatagramMessage(CANBuffer: PCANBuffer);
+begin
+  if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
+  begin
+  end
+end;
+
+// ****************************************************************************
+// procedure ReceivedStreamMessage
+//
+//  Description:
+//
+// ****************************************************************************
+procedure ReceivedStreamMessage(CANBuffer: PCANBuffer);
+begin
+  if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
+  begin
+  end
+end;
+
+// ****************************************************************************
+// procedure HandlePacketReceivedOnCANLayer
+//
+//  Description:
+//                 All CAN Layer messages are high priority and are dealt with immediately
+//
+// ****************************************************************************
+procedure HandlePacketReceivedOnCANLayer(CANBuffer: PCANBuffer);
+var
+  DoDefault: Boolean;
+begin
+  DoDefault := True;
+  if CANLayerReceiveHook <> nil then
+    CANLayerReceiveHook(CANBuffer, DoDefault);
+  if DoDefault then
+  begin
+    if NMRAnetUtilities_EqualAliasID(CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
+      ReceivedEqualAliasID(CANBuffer);
+
+    if NMRAnetCANReceive_Permited then
+    begin
+      if CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_AME then
+        ReceivedAliasMappingEnquiry(CANBuffer)
+      else
+      if CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_AMD then
+         ReceivedAliasMappingDefinition(CANBuffer)
+    end;
+  end;
+end;
+
+// ****************************************************************************
+// procedure HandlePacketReceivedOnNMRABusLayer
+//
+//  Description:
+//                 All NMRABus Layer messages are low priority and placed in the List for
+//     handling in the main message loop
+//
+// ****************************************************************************
+procedure HandlePacketReceivedOnNMRABusLayer(CANBuffer: PCANBuffer);
+var
+  DoDefault: Boolean;
+begin
+  DoDefault := True;
+  if NMRAnetLayerReceiveHook <> nil then
+    NMRAnetLayerReceiveHook(CANBuffer, DoDefault);                              // Allow the program to have a crack at the message handler
+
+  if DoDefault then
+  begin
+    if NMRAnetUtilities_EqualAliasID(CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
+      ReceivedEqualAliasID(CANBuffer);
+
+    if NMRAnetCANReceive_Permited then
+    begin
+      case CANBuffer^.ID and MTI_TYPE_MASK of
+        MTI_UNADDRESSED              : ReceivedUnAddressedMessage(CANBuffer);
+        MTI_RESERVED                 : begin end;
+        MTI_DATAGRAM_ONLY_FRAME,
+        MTI_DATAGRAM_FRAME_START,
+        MTI_DATAGRAM_FRAME,
+        MTI_DATAGRAM_FRAME_END       : ReceivedDatagramMessage(CANBuffer);
+        MTI_ADDRESSED                : ReceivedAddressedMessage(CANBuffer);
+        MTI_STREAM_DATA_SEND         : ReceivedStreamMessage(CANBuffer);
+      end;
+    end;
+  end;
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter0
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 0 which is defined
+//                  as any CAN level message (bit 26 = 0)
+//
+// *****************************************************************************
+procedure ReceivedOnFilter0(Buffer: PCANBuffer);
+begin
+  HandlePacketReceivedOnCANLayer(Buffer)
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter1
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 1 which is defined
+//                  as any NMRABus level message (bit 26 = 1)
+//
+// *****************************************************************************
+procedure ReceivedOnFilter1(Buffer: PCANBuffer);
+begin
+  HandlePacketReceivedOnNMRABusLayer(Buffer);
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter2
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 2
+//
+// *****************************************************************************
+procedure ReceivedOnFilter2(Buffer: PCANBuffer);
+begin
+  // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter3
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 3
+//
+// *****************************************************************************
+procedure ReceivedOnFilter3(Buffer: PCANBuffer);
+begin
+  // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter4
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 4
+//
+// *****************************************************************************
+procedure ReceivedOnFilter4(Buffer: PCANBuffer);
+begin
+  // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter5
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 5
+//
+// *****************************************************************************
+procedure ReceivedOnFilter5(Buffer: PCANBuffer);
+begin
+  // Not used for NMRABus
+end;
+
+// *****************************************************************************
+//  procedure ReceivedOnFilter6
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 6
+//
+// *****************************************************************************
+procedure ReceivedOnFilter6(Buffer: PCANBuffer);
+begin
+  // Not used for NMRABus
+end;
+
+end.

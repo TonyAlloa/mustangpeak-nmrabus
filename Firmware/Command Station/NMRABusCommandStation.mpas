@@ -17,17 +17,17 @@ program NMRABusCommandStation;
 // ******************************************************************************
  
 uses
-  NMRABus,
-  NMRABusDefines,
+  NMRAnetStateMachine,
+  NMRAnetDefines,
+  NMRAnetDCC,
   CANDefines,
   CANStorage,
   MCU_Setup_dsPIC4013,
   _25AAxxxx,
-  NMRABusDCC,
-  NMRABusNodeItems,
-  NMRABusUtilities,
-  NMRABusAddressSlots,
-  NMRABusDatagrams,
+ // NMRABusNodeItems,
+ // NMRAnetUtilities,
+ // NMRABusAddressSlots,
+ // NMRAnetDatagrams,
   dsPIC30_Traps,
   NodeIDs;
   
@@ -85,7 +85,7 @@ begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRABus_1ms_Timer;
+  NMRAnetStateMachine_1ms_Timer;
 end;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
@@ -122,12 +122,12 @@ begin
   TRISD0_bit := 0;        // Debugging output
 
   _25AAxxxx_Initialize;
-  NMRABusNodeItems_Initialize;
+ // NMRABusNodeItems_Initialize;
   CANStorage_Initialize;
-  NMRABus_Initialize;
+  NMRAnetStateMachine_Initialize;
   MCU_Setup_Initialize;
   NMRA_DCC_Initialize;
-  AddressSlots_Initialize;
+ // AddressSlots_Initialize;
   
 
   UART1_Write_Text('Connecting'+LF);
@@ -138,7 +138,7 @@ begin
 
   while (TRUE) do
   begin
-    NMRABus_Process;
+    NMRAnetStateMachine_Process;
     
   {  if Loop mod 100000 = 0 then
     begin
@@ -171,7 +171,7 @@ begin
     
 
     
-    if NMRABusDatagrams_Remove(Datagram) then
+    if NMRAnetDatagrams_Remove(Datagram) then
     begin
       for i := 0 to LEN_DATAGRAM-1 do
       begin
@@ -193,9 +193,9 @@ begin
     end;
     
 
-    if NMRABus_Permitted then
+    if NMRAnetCANReceive_Permited then
     begin
-      NMRABusDatagrams_Process;
+   //   NMRABnetDatagrams_Process;
 
     end;
   end;

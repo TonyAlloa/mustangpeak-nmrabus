@@ -1,4 +1,4 @@
-unit NMRABusAddressSlots;
+unit NMRAnetAddressSlots;
 
 // ******************************************************************************
 //
@@ -18,7 +18,7 @@ unit NMRABusAddressSlots;
 // ******************************************************************************
 
 uses
-  NMRABusDCC;
+  NMRAnetDCC;
 
 const
   MAX_ADDRESS_SLOTS = 1;
