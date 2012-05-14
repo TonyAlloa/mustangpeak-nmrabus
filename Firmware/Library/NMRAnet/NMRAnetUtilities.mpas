@@ -461,7 +461,8 @@ begin
     begin
       Result := True;
       Exit
-    end
+    end;
+    Inc(i)
   end
 end;
 
@@ -477,7 +478,8 @@ begin
     begin
       Result := True;
       Exit
-    end
+    end;
+    Inc(i)
   end
 end;
 

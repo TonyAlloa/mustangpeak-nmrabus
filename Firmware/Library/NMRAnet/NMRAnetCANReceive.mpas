@@ -256,7 +256,7 @@ procedure DispatchVerifyNodeID(CANBuffer: PCANBuffer);
 var
   NodeID: TNodeID;
 begin
-  if CANBuffer^.DataCount = 0 then       // THIS IS NOT CLEAR IN THE SPEC
+  if (CANBuffer^.DataCount = 0) or (CANBuffer^.DataCount = 1)  then       // THIS IS NOT CLEAR IN THE SPEC
     NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
   else
   if CANBuffer^.DataCount = 6 then       // THIS IS NOT CLEAR IN THE SPEC
@@ -264,7 +264,7 @@ begin
     NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^, NodeID);                    // Extract the 48 Bit ID
     if NMRAnetUtilities_EqualNodeID(NodeID) then                                  // If addressed to us then respond
      NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
-  end
+  end;
 end;
 
 // ****************************************************************************
@@ -317,8 +317,8 @@ var
 begin
 
   longwordtohex(CANBuffer^.ID and FT_UNADDRESSED_MASK, s1);
-  UART1_Write_Text('UnAddressed: ');
-  UART1_Write_Text(s1+LF);
+ // UART1_Write_Text('UnAddressed: ');
+ // UART1_Write_Text(s1+LF);
   
 
   case CANBuffer^.ID and FT_UNADDRESSED_MASK of
@@ -352,7 +352,7 @@ var
   Buffer: PQueuedResponse;
 begin
 
-  UART1_Write_Text('Addressed'+LF);
+//  UART1_Write_Text('Addressed'+LF);
   
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
   begin
@@ -417,7 +417,7 @@ var
   DoDefault: Boolean;
 begin
 
-UART1_Write_Text('CAN'+LF);
+// UART1_Write_Text('CAN'+LF);
 
   DoDefault := True;
   if CANLayerReceiveHook <> nil then
@@ -452,7 +452,7 @@ var
   DoDefault: Boolean;
 begin
 
-  UART1_Write_Text('NMRAnet'+LF);
+//  UART1_Write_Text('NMRAnet'+LF);
 
   DoDefault := True;
   if NMRAnetLayerReceiveHook <> nil then

@@ -108,9 +108,9 @@ var
   Loop: DWord;
   s1: array[8] of char;
   s2: array[32] of char;
-  laststate: word;
+  laststate, Rlaststate: word;
   datagram: TDatagram;
-  i: Integer;
+  i, j: Integer;
 begin
 
   Track_DCC_Out_Pin := 0;
@@ -134,13 +134,25 @@ begin
   
   Loop := 0;
   laststate := 0;
+  Rlaststate := 0;
+  
+  for i := 0 to MAX_SUPPORTED_EVENTS_CONSUMED-1 do
+  begin
+    for j := 0 to 7 do
+    begin
+      ByteToHex(SUPPORTED_EVENTS_CONSUMED[i][j], s1);
+      UART1_Write_Text(s1+' ');
+    end;
+    UART1_Write_Text(LF);
+  end;
+
   
 
   while (TRUE) do
   begin
     NMRAnetStateMachine_Process;
     
-    delay_us(1000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
+    delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
     
   {  if Loop mod 100000 = 0 then
     begin
@@ -183,16 +195,20 @@ begin
       UART1_Write_Text(LF);
     end;
     
-    if NMRABus.iState <> laststate then
+   { if NMRABus.iState <> laststate then
     begin
-   //   IntToStr(NMRABus.iState, s1);
-   //   UART1_Write_Text(s1 + '  Flags: ');
-   //   WordToHex(NMRABus.Responses.SimpleResponseFlags, s1);
-    //  UART1_Write_Text(s1+LF);
-   //   WordToHex(NMRABus.Node_Alias_ID, s1);
-   //   UART1_Write_Text(s1+LF);
+      IntToStr(NMRABus.iState, s1);
+      UART1_Write_Text(s1 + '  State: '+LF);
+      IntToStr(NMRABus.Responses.iState, s1);
+      UART1_Write_Text(s1 + '  Response State: '+LF);
       laststate := NMRABus.iState
     end;
+    if NMRABus.Responses.iState <> Rlaststate then
+    begin
+      IntToStr(NMRABus.Responses.iState, s1);
+      UART1_Write_Text(s1 + '  Response State: '+LF);
+      laststate := NMRABus.iState
+    end;  }
     
 
     if NMRAnetCANReceive_Permited then
