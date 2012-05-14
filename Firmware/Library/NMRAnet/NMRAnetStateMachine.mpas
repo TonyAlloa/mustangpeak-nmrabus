@@ -362,14 +362,12 @@ begin
     if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS_PRODUCED then
     begin
       if TryTransmitNMRABusLayerMsg(FT_PRODUCER_IDENTIFIED, 0, @SUPPORTED_EVENTS_PRODUCED[NMRABus.Responses.Tag], 8, Buffer) then
-      begin
-      end;
+        Inc(NMRABus.Responses.Tag);
     end else
-    if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED then
+    if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS then
     begin
       if TryTransmitNMRABusLayerMsg(FT_CONSUMER_IDENTIFIED, 0, @SUPPORTED_EVENTS_CONSUMED[NMRABus.Responses.Tag-MAX_SUPPORTED_EVENTS_PRODUCED], 8, Buffer) then
-      begin
-      end;
+        Inc(NMRABus.Responses.Tag);
     end else
     begin
       ClearReceivedMsgFlags(SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED);              // Done

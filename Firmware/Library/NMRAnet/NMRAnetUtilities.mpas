@@ -20,6 +20,7 @@ unit NMRAnetUtilities;
 {$I Options.inc}
 
 uses
+  NMRAnetAppDefines,
   NMRAnetDefines,
   CANDefines;
 
@@ -46,6 +47,8 @@ procedure NMRAnetUtilities_LoadCANData(var DataBytes: TCAN_DataBytes; Byte0, Byt
 procedure NMRAnetUtilities_ZeroCANData(var DataBytes: TCAN_DataBytes);
 function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): DWord;
 function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
+function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
+function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
 
 
 implementation
@@ -437,6 +440,45 @@ begin
   Result := Result shr 8;
   Result := Packet^.DataBytes[4];
   Result := Result shr 8;
+end;
+
+function EqualEventID(Event1, Event2: PEventID): Boolean;
+begin
+  Result := (Word(Event1^[0]) = Word(Event2^[0])) and (Word(Event1^[2]) = Word(Event2^[2])) and
+            (Word(Event1^[4]) = Word(Event2^[4])) and (Word(Event1^[6]) = Word(Event2^[6]))
+end;
+
+
+function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  i := 0;
+  while (i < MAX_SUPPORTED_EVENTS_PRODUCED) and not Result do
+  begin
+    if EqualEventID(@SUPPORTED_EVENTS_PRODUCED[i], DataBytes) then
+    begin
+      Result := True;
+      Exit
+    end
+  end
+end;
+
+function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  i := 0;
+  while (i < MAX_SUPPORTED_EVENTS_CONSUMED) and not Result do
+  begin
+    if EqualEventID(@SUPPORTED_EVENTS_CONSUMED[i], DataBytes) then
+    begin
+      Result := True;
+      Exit
+    end
+  end
 end;
 
 end.

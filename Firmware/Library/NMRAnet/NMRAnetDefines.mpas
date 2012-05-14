@@ -184,7 +184,7 @@ const
 type
   TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used
   TEventID = array[0..7] of Byte;                                               // Is the 48 Bit node ID + 16 Bits of unique Event ID = 64 Bits
-  
+  PEventID = ^TEventID;
   // When a message is received on the CAN bus the logic decodes the message and
   // separates the message into different types of Responses.  Some messages require
   // a response that is a simple message without needed to know any information, these

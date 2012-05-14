@@ -149,7 +149,7 @@ begin
 end;
 
 // ****************************************************************************
-// procedure ReceivedEqualAliasID
+// procedure DispatchEqualAliasID
 //
 //  Description:   Called when the CAN receiver detects a duplicate Alias.
 //
@@ -160,7 +160,7 @@ end;
 //                 Simple Response
 //
 // ****************************************************************************
-procedure ReceivedEqualAliasID(CANBuffer: PCANBuffer);
+procedure DispatchEqualAliasID(CANBuffer: PCANBuffer);
 begin
   if (CANBuffer^.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer^.ID and FT_CID_MASK >= FT_CID6) then // If it is a CID message then force calling node to try again for an Alias this one is ours
     NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_RID
@@ -169,7 +169,7 @@ begin
 end;
 
 // ****************************************************************************
-// procedure ReceivedAliasMappingDefinition
+// procedure DispatchAliasMappingDefinition
 //
 //  Response Layer:
 //                 CAN Layer
@@ -178,7 +178,7 @@ end;
 //                 Simple Response
 //
 // ****************************************************************************
-procedure ReceivedAliasMappingDefinition(CANBuffer: PCANBuffer);
+procedure DispatchAliasMappingDefinition(CANBuffer: PCANBuffer);
 var
   NodeID: TNodeID;
 begin
@@ -188,7 +188,7 @@ begin
 end;
 
 // ****************************************************************************
-// procedure ReceivedAliasMappingEnquiry
+// procedure DispatchAliasMappingEnquiry
 //
 //  Response Layer:
 //                 CAN Layer
@@ -197,7 +197,7 @@ end;
 //                 Simple Response
 //
 // ****************************************************************************
-procedure ReceivedAliasMappingEnquiry(CANBuffer: PCANBuffer);
+procedure DispatchAliasMappingEnquiry(CANBuffer: PCANBuffer);
 var
   NodeID: TNodeID;
 begin
@@ -208,6 +208,97 @@ begin
       NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_AMD;
   end else
     NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_AMD;
+end;
+
+// ****************************************************************************
+// procedure DispatchEventProducerIdenitify
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Complex Response
+//
+// ****************************************************************************
+procedure DispatchEventProducerIdenitify(CANBuffer: PCANBuffer);
+begin
+  if NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes) then
+    StoreComplexResponse(CANBuffer, CRC_PRODUCER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 7);
+end;
+
+// ****************************************************************************
+// procedure DispatchEventConsumerIdenitify
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Complex Response
+//
+// ****************************************************************************
+procedure DispatchEventConsumerIdenitify(CANBuffer: PCANBuffer);
+begin
+  if NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes) then
+    StoreComplexResponse(CANBuffer, CRC_CONSUMER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 7);
+end;
+
+// ****************************************************************************
+// procedure DispatchVerifyNodeID
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Simple Response
+//
+// ****************************************************************************
+procedure DispatchVerifyNodeID(CANBuffer: PCANBuffer);
+var
+  NodeID: TNodeID;
+begin
+  if CANBuffer^.DataCount = 0 then       // THIS IS NOT CLEAR IN THE SPEC
+    NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
+  else
+  if CANBuffer^.DataCount = 6 then       // THIS IS NOT CLEAR IN THE SPEC
+  begin
+    NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^, NodeID);                    // Extract the 48 Bit ID
+    if NMRAnetUtilities_EqualNodeID(NodeID) then                                  // If addressed to us then respond
+     NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
+  end
+end;
+
+// ****************************************************************************
+// procedure DispatchIdentifyEvents
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Simple Response
+//
+// ****************************************************************************
+procedure DispatchIdentifyEvents(CANBuffer: PCANBuffer);
+begin
+   NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED;
+end;
+
+// ****************************************************************************
+// procedure DispatchProtocolSupportInquiry
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Complex Response
+//
+// ****************************************************************************
+procedure DispatchProtocolSupportInquiry(CANBuffer: PCANBuffer);
+var
+  DataBytes: TCAN_DataBytes;
+begin
+       // Nodes send things like :X1EAAAE8DN2F030405060765;
+  NMRAnetUtilities_LoadCANData(DataBytes, $2F, $03, $04, $05, $06, $07, $65, $00); // TODO THIS IS MADE UP>>>>>>>>>>>>>>>>>>>>
+  StoreComplexResponse(CANBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
 end;
 
 // ****************************************************************************
@@ -223,7 +314,6 @@ end;
 procedure ReceivedUnAddressedMessage(CANBuffer: PCANBuffer);
 var
   s1: array[23] of char;
-  NodeID: TNodeID;
 begin
 
   longwordtohex(CANBuffer^.ID and FT_UNADDRESSED_MASK, s1);
@@ -232,26 +322,15 @@ begin
   
 
   case CANBuffer^.ID and FT_UNADDRESSED_MASK of
-    FT_VERIFY_NODE_ID_NUMBER         : begin
-                                         if CANBuffer^.DataCount = 0 then       // THIS IS NOT CLEAR IN THE SPEC
-                                           NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
-                                         else
-                                         if CANBuffer^.DataCount = 6 then       // THIS IS NOT CLEAR IN THE SPEC
-                                         begin
-                                           NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^, NodeID);                    // Extract the 48 Bit ID
-                                           if NMRAnetUtilities_EqualNodeID(NodeID) then                                  // If addressed to us then respond
-                                            NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
-                                         end
-                                       end;
-//    FT_VERIFIED_NODE_ID_NUMBER       : begin end; // TODO
-    FT_CONSUMER_IDENTIFY             : begin end; // TODO
+    FT_VERIFY_NODE_ID_NUMBER         : DispatchVerifyNodeID(CANBuffer);
+    FT_CONSUMER_IDENTIFY             : DispatchEventConsumerIdenitify(CANBuffer);
 //    FT_CONSUMER_IDENTIFIED           : begin end; // TODO
-    FT_CONSUMER_IDENTIFY_RANGE       : begin end; // TODO
-    FT_PRODUCER_IDENDIFY             : begin end; // TODO
-//    FT_PRODUCER_IDENTIFIED           : begin end; // TODO
-    FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
+ //   FT_CONSUMER_IDENTIFY_RANGE       : begin end; // TODO
+    FT_PRODUCER_IDENDIFY             : DispatchEventProducerIdenitify(CANBuffer);
+ //   FT_PRODUCER_IDENTIFIED           : begin end; // TODO
+ //   FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
     FT_EVENT_LEARN                   : begin end; // TODO
-    FT_EVENTS_IDENTIFY               : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED;
+    FT_EVENTS_IDENTIFY               : DispatchIdentifyEvents(CANBuffer);
     FT_PC_EVENT_REPORT               : begin end; // TODO
   end
 end;
@@ -271,7 +350,6 @@ end;
 procedure ReceivedAddressedMessage(CANBuffer: PCANBuffer);
 var
   Buffer: PQueuedResponse;
-  DataBytes: TCAN_DataBytes;
 begin
 
   UART1_Write_Text('Addressed'+LF);
@@ -279,24 +357,14 @@ begin
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
   begin
     case CANBuffer^.Databytes[0] of
-      MTI_VERIFY_NODE_ID_NUMBER_DEST       : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE;
-      MTI_PROTOCOL_SUPPORT_QUERY           : begin
-                                                 // Nodes send things like :X1EAAAE8DN2F030405060765;
-                                               NMRAnetUtilities_LoadCANData(DataBytes, $2F, $03, $04, $05, $06, $07, $65, $00); // TODO THIS IS MADE UP>>>>>>>>>>>>>>>>>>>>
-                                               StoreComplexResponse(CANBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
-                                             end;
+      MTI_VERIFY_NODE_ID_NUMBER_DEST       : DispatchVerifyNodeID(CANBuffer);
+      MTI_PROTOCOL_SUPPORT_QUERY           : DispatchProtocolSupportInquiry(CANBuffer);
 //      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
 //      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
 //      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
-      MTI_IDENTIFY_EVENTS                  : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED;
+      MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents(CANBuffer);
       MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
       MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;  // TODO
-//      MTI_DATAGRAM_RECIEVED_OK             : begin end;  // TODO
-//      MTI_DATAGRAM_REJECTED                : begin end;  // TODO
-//      MTI_STREAM_INITIATE_REPLY            : begin end;  // TODO
-//      MTI_STREAM_INITIATE_REQUEST          : begin end;  // TODO
-//      MTI_STREAMDATA_COMPLETE              : begin end;  // TODO
-//      MTI_STREAMDATA_PROCEED               : begin end;  // TODO
     end
   end
 end;
@@ -357,13 +425,13 @@ UART1_Write_Text('CAN'+LF);
   if DoDefault then
   begin
     if NMRAnetUtilities_EqualAliasID(CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
-      ReceivedEqualAliasID(CANBuffer);
+      DispatchEqualAliasID(CANBuffer);
 
     if NMRAnetCANReceive_Permited then
     begin
       case CANBuffer^.ID and FT_UNADDRESSED_MASK of
-        FT_AME : ReceivedAliasMappingEnquiry(CANBuffer);
-        FT_AMD : ReceivedAliasMappingDefinition(CANBuffer);
+        FT_AME : DispatchAliasMappingEnquiry(CANBuffer);
+        FT_AMD : DispatchAliasMappingDefinition(CANBuffer);
       end
     end;
   end;
@@ -393,7 +461,7 @@ begin
   if DoDefault then
   begin
     if NMRAnetUtilities_EqualAliasID(CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
-      ReceivedEqualAliasID(CANBuffer);
+      DispatchEqualAliasID(CANBuffer);
 
     if NMRAnetCANReceive_Permited then
     begin

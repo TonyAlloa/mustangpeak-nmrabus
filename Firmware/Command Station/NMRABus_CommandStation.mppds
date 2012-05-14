@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\NMRAnet\NMRAnetStateMachine.mpas
+Value=..\Library\NMRAnet\NMRAnetCANReceive.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -39,7 +39,7 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=10
+Count=11
 File0=NMRABusCommandStation.mpas
 File1=..\Library\NMRAnet\NMRAnetCANReceive.mpas
 File2=..\Library\NMRAnet\NMRAnetStateMachine.mpas
@@ -50,6 +50,7 @@ File6=..\Library\CANBus\CANDefines.mpas
 File7=..\Library\NMRAnetAppDefines.mpas
 File8=..\Library\NodeIDs.mpas
 File9=..\Library\NMRAnet\NMRAnetDefines.mpas
+File10=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetAppDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
