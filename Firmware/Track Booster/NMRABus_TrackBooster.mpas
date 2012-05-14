@@ -18,8 +18,8 @@ program NMRABus_TrackBooster;
 // *****************************************************************************
 
 uses
-  NMRABus,
-  NMRABusUtilities,
+  NMRAnetStateMachine,
+  NMRAnetUtilities,
   CANDefines,
   CANStorage,
   MCU_Setup_dsPIC4013,
@@ -50,7 +50,7 @@ begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRABus_1ms_Timer;
+  NMRAnetStateMachine_1ms_Timer;
 end;
 
 
@@ -91,13 +91,13 @@ end;
 begin
   CANStorage_Initialize;
   MCU_Setup_Initialize;
-  NMRABus_Initialize;
+  NMRAnetStateMachine_Initialize;
 
   while (TRUE) do
     begin
-      NMRABus_Process;
+      NMRAnetStateMachine_Process;
 
-      if NMRABus_Permitted then
+      if NMRAnetCANReceive_Permited then
       begin
       //  XpressnetStateMachine_Process;
       end

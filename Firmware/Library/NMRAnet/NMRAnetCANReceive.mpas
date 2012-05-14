@@ -130,7 +130,7 @@ end;
 //
 //
 // ****************************************************************************
-procedure StoreComplexResponse(CANBuffer: PCANBuffer; nCode, NodeAlias: Word; DataBytes: PCAN_DataBytes);
+procedure StoreComplexResponse(CANBuffer: PCANBuffer; nCode, NodeAlias: Word; DataBytes: PCAN_DataBytes; DataCount: Byte);
 var
   Buffer: PQueuedResponse;
 begin
@@ -139,6 +139,7 @@ begin
   begin
     Buffer^.nCode := nCode;
     Buffer^.NodeAlias := NodeAlias;
+    Buffer^.DataCount := DataCount;
     if DataBytes <> nil then
       Buffer^.DataBytes := DataBytes^
   end else
@@ -198,7 +199,7 @@ procedure ReceivedAliasMappingEnquiry(CANBuffer: PCANBuffer);
 var
   NodeID: TNodeID;
 begin
-  if CANBuffer^.DataCount > 0 then
+  if CANBuffer^.DataCount = 6 then
   begin
     NMRAnetUtilities_PacketBytesToNodeID(CANBuffer, NodeID);              // Extract the 48 Bit ID
     if NMRAnetUtilities_EqualNodeID(NodeID) then                          // If addressed to us then respond
@@ -218,9 +219,28 @@ end;
 //
 // ****************************************************************************
 procedure ReceivedUnAddressedMessage(CANBuffer: PCANBuffer);
+var
+  s1: array[23] of char;
+  NodeID: TNodeID;
 begin
+
+  longwordtohex(CANBuffer^.ID and FT_UNADDRESSED_MASK, s1);
+  UART1_Write_Text('UnAddressed: ');
+  UART1_Write_Text(s1+LF);
+  
+
   case CANBuffer^.ID and FT_UNADDRESSED_MASK of
-    FT_VERIFY_NODE_ID_NUMBER_NO_DEST : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE;
+    FT_VERIFY_NODE_ID_NUMBER         : begin
+                                         if CANBuffer^.DataCount = 0 then       // THIS IS NOT CLEAR IN THE SPEC
+                                           NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
+                                         else
+                                         if CANBuffer^.DataCount = 6 then       // THIS IS NOT CLEAR IN THE SPEC
+                                         begin
+                                           NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^, NodeID);                    // Extract the 48 Bit ID
+                                           if NMRAnetUtilities_EqualNodeID(NodeID) then                                  // If addressed to us then respond
+                                            NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
+                                         end
+                                       end;
 //    FT_VERIFIED_NODE_ID_NUMBER       : begin end; // TODO
     FT_CONSUMER_IDENTIFY             : begin end; // TODO
 //    FT_CONSUMER_IDENTIFIED           : begin end; // TODO
@@ -249,12 +269,27 @@ end;
 procedure ReceivedAddressedMessage(CANBuffer: PCANBuffer);
 var
   Buffer: PQueuedResponse;
+  PIP_Flags: TCAN_DataBytes;
 begin
+
+  UART1_Write_Text('Addressed'+LF);
+  
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
   begin
     case CANBuffer^.Databytes[0] of
-      MTI_VERIFY_NODE_DEST                 : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE;
-      MTI_PROTOCOL_SUPPORT_QUERY           : StoreComplexResponse(CANBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, nil);
+      MTI_VERIFY_NODE_ID_NUMBER_DEST       : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE;
+      MTI_PROTOCOL_SUPPORT_QUERY           : begin
+      
+                                                 // Nodes send things like :X1EAAAE8DN2F030405060765;
+                                               PIP_Flags[0] := $2F;
+                                               PIP_Flags[1] := $03;
+                                               PIP_Flags[2] := $04;
+                                               PIP_Flags[3] := $05;
+                                               PIP_Flags[4] := $06;
+                                               PIP_Flags[5] := $07;
+                                               PIP_Flags[6] := $65;
+                                               StoreComplexResponse(CANBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @PIP_Flags, 7);
+                                             end;
 //      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
 //      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
 //      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
@@ -319,6 +354,9 @@ procedure ReceivedOnFilter0(CANBuffer: PCANBuffer);                             
 var
   DoDefault: Boolean;
 begin
+
+UART1_Write_Text('CAN'+LF);
+
   DoDefault := True;
   if CANLayerReceiveHook <> nil then
     CANLayerReceiveHook(CANBuffer, DoDefault);
@@ -351,6 +389,9 @@ procedure ReceivedOnFilter1(CANBuffer: PCANBuffer);                             
 var
   DoDefault: Boolean;
 begin
+
+  UART1_Write_Text('NMRAnet'+LF);
+
   DoDefault := True;
   if NMRAnetLayerReceiveHook <> nil then
     NMRAnetLayerReceiveHook(CANBuffer, DoDefault);                              // Allow the program to have a crack at the message handler

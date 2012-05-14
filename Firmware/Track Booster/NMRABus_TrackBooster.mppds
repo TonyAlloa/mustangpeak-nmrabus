@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\NMRABus.mpas
+Value=NMRABus_TrackBooster.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -36,14 +36,10 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=7
+Count=3
 File0=NMRABus_TrackBooster.mpas
-File1=..\Library\NMRABus.mpas
-File2=..\Library\NodeIDs.mpas
-File3=..\Library\NMRABusNodeItems.mpas
-File4=..\Library\NMRABusAddressSlots.mpas
-File5=MCU_Setup_dsPIC4013.mpas
-File6=..\Library\NMRABusDefines.mpas
+File1=..\Library\NodeIDs.mpas
+File2=MCU_Setup_dsPIC4013.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -52,13 +48,16 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=6
+Count=9
 Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
 Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Track Booster\
 Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
 Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library NMRABus\
 Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
 [HEADER_PATH]
 Count=0
 [HEADERS]

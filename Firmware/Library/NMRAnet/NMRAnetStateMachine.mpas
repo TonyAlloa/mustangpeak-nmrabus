@@ -77,6 +77,7 @@ begin
   begin
     NMRABus.Responses.List[i].nCode := CRC_EMPTY;
     NMRABus.Responses.List[i].NodeAlias := 0;
+    NMRABus.Responses.List[i].DataCount := 0;
     for j := 0 to CAN_DATA_LEN - 1 do
       NMRABus.Responses.List[i].DataBytes[j] := 0;
   end;
@@ -185,12 +186,18 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function TryTransmitNMRABusLayerMsg(VariableField: DWord; DestinationAlias: Word; Buffer: PCANBuffer): Boolean;
+function TryTransmitNMRABusLayerMsg(VariableField: DWord; DestinationAlias: Word; DataBytes: PCAN_DataBytes; DataCount: Byte; Buffer: PCANBuffer): Boolean;
 begin
   Result := False;
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
   begin
     NMRAnetUtilities_CreateNMRABusMessagePacket(VariableField, DestinationAlias, Buffer);
+    if DataBytes <> nil then
+    begin
+      Buffer^.DataCount := DataCount;
+      Buffer^.DataBytes := DataBytes^;
+    end else
+      Buffer^.DataCount := 0;
     if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
     begin
       StartCANMessageEngine();
@@ -308,7 +315,7 @@ procedure HandleNMRAnetLayerSimpleResponse(Buffer: PCANBuffer; VariableField: DW
 begin
   if TestReceivedMsgFlags(Flag) then
   begin
-    if TryTransmitNMRABusLayerMsg(VariableField, 0, Buffer) then
+    if TryTransmitNMRABusLayerMsg(VariableField, 0, nil, 0, Buffer) then
     begin
       ClearReceivedMsgFlags(Flag);
       NMRABus.Responses.iState := NextState
@@ -336,10 +343,9 @@ begin
   Response := FindStoredComplexResponse(nCode);
   if Response <> nil then
   begin
-    if TryTransmitNMRABusLayerMsg(VariableField, Response^.NodeAlias, Buffer) then
+    if TryTransmitNMRABusLayerMsg(VariableField, Response^.NodeAlias, @Response^.DataBytes, Response^.DataCount, Buffer) then
     begin
       Response^.nCode := CRC_EMPTY;                                             // Safe as the receiver will not be writing to this until it see it is empty
-      Buffer^.DataBytes := Response^.DataBytes;                                 // .............This may not be valid for all Responses.......
       NMRABus.Responses.iState := NextState
     end
   end else
@@ -379,13 +385,10 @@ begin
     if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_NMRABUS_INHIBITED) then          // Next Highest Priority, if detected the main loop needs to change state
     begin
       case NMRABus.Responses.iState of
-        STATE_NMRABUS_RESPONSE_SEND_RID           : HandleCANLayerSimpleResponse(Buffer, FT_RID, SRC_SEND_RID, STATE_NMRABUS_RESPONSE_SEND_AMD);
-        STATE_NMRABUS_RESPONSE_SEND_AMD           : HandleCANLayerSimpleResponse(Buffer, FT_AMD, SRC_SEND_AMD, STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE);
-        STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE : HandleNMRAnetLayerSimpleResponse(Buffer, FT_VERIFIED_NODE_ID_NUMBER, SRC_SEND_VERIFIED_NODE, STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT);
-        STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT :                             // Simple Response
-          begin
-            NMRABus.Responses.iState := STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED_ALL
-          end;
+        STATE_NMRABUS_RESPONSE_SEND_RID                : HandleCANLayerSimpleResponse(Buffer, FT_RID, SRC_SEND_RID, STATE_NMRABUS_RESPONSE_SEND_AMD);
+        STATE_NMRABUS_RESPONSE_SEND_AMD                : HandleCANLayerSimpleResponse(Buffer, FT_AMD, SRC_SEND_AMD, STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE);
+        STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE      : HandleNMRAnetLayerSimpleResponse(Buffer, FT_VERIFIED_NODE_ID_NUMBER, SRC_SEND_VERIFIED_NODE, STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT);
+        STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT   : HandleNMRAnetLayerComplexResponse(Buffer, FT_PROTOCOL_SUPPORT_RESPONSE, CRC_SEND_PROTOCOL_SUPPORT, STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED_ALL);                           // Simple Response
         STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED_ALL :
           begin
             NMRABus.Responses.iState := STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED_ALL
@@ -489,7 +492,7 @@ begin
     STATE_NMRABUS_INITIALIZED :
       begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
-          if TryTransmitNMRABusLayerMsg(FT_INITIALIZATION_COMPLETE, 0, @Buffer) then
+          if TryTransmitNMRABusLayerMsg(FT_INITIALIZATION_COMPLETE, 0, nil, 0, @Buffer) then
           begin
             NMRABus.iState := STATE_NMRABUS_PERMITTED;
             NMRABus.State := NMRABus.State or BS_INITIALIZED and not BS_UNITIALIZED

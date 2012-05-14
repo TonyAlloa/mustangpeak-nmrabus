@@ -78,13 +78,13 @@ const
   FT_UNADDRESSED_MASK               = $0FFFF000;
   FT_INITIALIZATION_COMPLETE        = $08087000;
   FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
-  FT_VERIFY_NODE_ID_NUMBER_NO_DEST  = $088A7000;
+  FT_VERIFY_NODE_ID_NUMBER          = $088A7000;
   FT_VERIFIED_NODE_ID_NUMBER        = $088B7000;
   FT_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
   FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
   
-  FT_PROTOCOL_SUPPORT_INQUIRY       = $08000000;
-  FT_PROTOCOL_SUPPORT_RESPONSE      = $08000000;
+  FT_PROTOCOL_SUPPORT_INQUIRY       = $0E000000;
+  FT_PROTOCOL_SUPPORT_RESPONSE      = $0E000000;
   
   FT_CONSUMER_IDENTIFY              = $08A4F000;                                // Databytes = EventID
   FT_CONSUMER_IDENTIFY_RANGE        = $0825F000;                                // Databytes = EventID
@@ -113,7 +113,7 @@ const
   PIV_PROTOCOL_ID_DISPLAY           = $002000;                                  // vv vv vv vv vv vv
   
   // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
-  MTI_VERIFY_NODE_DEST                 = $0A;                                   // Sub-Type (in first Databyte) for a MTI with a destination in the header
+  MTI_VERIFY_NODE_ID_NUMBER_DEST       = $0A;                                   // Sub-Type (in first Databyte) for a MTI with a destination in the header
   MTI_OPTIONAL_INTERACTION_REJECTED    = $0C;
   MTI_TERMINATE_DUE_TO_ERROR           = $0D;
   // Protocol Support MTIs
@@ -198,6 +198,7 @@ type
   TQueuedResponse = record                                                      // When a message is received that needs a response that contains a destination
     nCode: Word;                                                                // node or needs to decode the DataBytes to understand what to respond with, see CRC_xxxx codes
     NodeAlias: Word;                                                            // Destination the info needed to response is queued up in this structure to be acted on in the main
+    DataCount: Byte;                                                            // Number of Databytes that are valid
     DataBytes: TCAN_DataBytes;                                                  // depends on the nCode, could be EventID,
   end;
   PQueuedResponse = ^TQueuedResponse;

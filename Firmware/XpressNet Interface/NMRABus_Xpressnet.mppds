@@ -38,12 +38,11 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=5
+Count=4
 File0=NMRABus_Xpressnet.mpas
 File1=MCU_Setup_dsPIC4013.mpas
 File2=..\Library\Xpressnet\XpressnetDefines.mpas
-File3=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\XpressnetStateMachine.mpas
-File4=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\XpressnetDefines.mpas
+File3=..\Library\Xpressnet\XpressnetStateMachine.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -52,13 +51,13 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=18
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
-Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
+Count=21
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
+Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
 Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
 Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\
 Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
@@ -71,6 +70,9 @@ Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
 Path15=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
 Path16=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
 Path17=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path18=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path19=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path20=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
 [HEADER_PATH]
 Count=0
 [HEADERS]
@@ -85,5 +87,6 @@ File2=SPI
 File3=CAN
 [EXPANDED NODES]
 Node1=Sources
-Node2=Other Files
-Count=2
+Node2=Output Files
+Node3=Other Files
+Count=3

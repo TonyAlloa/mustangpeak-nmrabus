@@ -140,6 +140,8 @@ begin
   begin
     NMRAnetStateMachine_Process;
     
+    delay_us(1000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
+    
   {  if Loop mod 100000 = 0 then
     begin
       for i := 0 to LEN_DATAGRAM_ARRAY - 1 do
@@ -183,10 +185,10 @@ begin
     
     if NMRABus.iState <> laststate then
     begin
-      IntToStr(NMRABus.iState, s1);
-      UART1_Write_Text(s1 + '  Flags: ');
-      WordToHex(NMRABus.Responses.SimpleResponseFlags, s1);
-      UART1_Write_Text(s1+LF);
+   //   IntToStr(NMRABus.iState, s1);
+   //   UART1_Write_Text(s1 + '  Flags: ');
+   //   WordToHex(NMRABus.Responses.SimpleResponseFlags, s1);
+    //  UART1_Write_Text(s1+LF);
    //   WordToHex(NMRABus.Node_Alias_ID, s1);
    //   UART1_Write_Text(s1+LF);
       laststate := NMRABus.iState
@@ -195,7 +197,6 @@ begin
 
     if NMRAnetCANReceive_Permited then
     begin
-   //   NMRABnetDatagrams_Process;
 
     end;
   end;

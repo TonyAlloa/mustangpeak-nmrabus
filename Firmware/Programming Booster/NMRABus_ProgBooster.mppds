@@ -56,19 +56,22 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=12
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Programming Booster\
-Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Programming Booster\
+Count=15
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Programming Booster\
+Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\Programming Booster\
 Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
 Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
 Path8=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
 Path9=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
 Path10=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
 Path11=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
+Path12=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path13=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path14=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
 [HEADER_PATH]
 Count=0
 [HEADERS]

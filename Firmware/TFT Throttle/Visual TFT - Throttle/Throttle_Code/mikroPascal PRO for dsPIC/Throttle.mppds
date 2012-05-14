@@ -51,13 +51,13 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=14
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
-Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
+Count=18
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
+Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
 Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
 Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\
 Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBuffers\dsPIC33FJ256GP710A\
@@ -66,6 +66,10 @@ Path10=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC33F\
 Path11=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\DMA_Buffers\dsPIC33FJ256GP710A\
 Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
 Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
+Path14=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path15=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC33F\
+Path16=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\DMA_Buffers\dsPIC33FJ256GP710A\
+Path17=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
 [HEADER_PATH]
 Count=0
 [HEADERS]
