@@ -134,6 +134,8 @@ procedure StoreComplexResponse(CANBuffer: PCANBuffer; nCode, NodeAlias: Word; Da
 var
   Buffer: PQueuedResponse;
 begin
+  // SHOULD WE CHECK FOR DUPLICATED RESPONSES IN THE LIST HERE??????????????????????????????????????????????
+  // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
   Buffer := GetComplexResponseBuffer;
   if Buffer <> nil then
   begin
@@ -249,7 +251,7 @@ begin
 //    FT_PRODUCER_IDENTIFIED           : begin end; // TODO
     FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
     FT_EVENT_LEARN                   : begin end; // TODO
-    FT_EVENTS_IDENTIFY_NO_DEST       : begin end; // TODO
+    FT_EVENTS_IDENTIFY               : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED;
     FT_PC_EVENT_REPORT               : begin end; // TODO
   end
 end;
@@ -269,7 +271,7 @@ end;
 procedure ReceivedAddressedMessage(CANBuffer: PCANBuffer);
 var
   Buffer: PQueuedResponse;
-  PIP_Flags: TCAN_DataBytes;
+  DataBytes: TCAN_DataBytes;
 begin
 
   UART1_Write_Text('Addressed'+LF);
@@ -279,21 +281,14 @@ begin
     case CANBuffer^.Databytes[0] of
       MTI_VERIFY_NODE_ID_NUMBER_DEST       : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE;
       MTI_PROTOCOL_SUPPORT_QUERY           : begin
-      
                                                  // Nodes send things like :X1EAAAE8DN2F030405060765;
-                                               PIP_Flags[0] := $2F;
-                                               PIP_Flags[1] := $03;
-                                               PIP_Flags[2] := $04;
-                                               PIP_Flags[3] := $05;
-                                               PIP_Flags[4] := $06;
-                                               PIP_Flags[5] := $07;
-                                               PIP_Flags[6] := $65;
-                                               StoreComplexResponse(CANBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @PIP_Flags, 7);
+                                               NMRAnetUtilities_LoadCANData(DataBytes, $2F, $03, $04, $05, $06, $07, $65, $00); // TODO THIS IS MADE UP>>>>>>>>>>>>>>>>>>>>
+                                               StoreComplexResponse(CANBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
                                              end;
 //      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
 //      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
 //      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
-      MTI_IDENTIFY_EVENTS                  : begin end;  // TODO
+      MTI_IDENTIFY_EVENTS                  : NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED;
       MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
       MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;  // TODO
 //      MTI_DATAGRAM_RECIEVED_OK             : begin end;  // TODO
@@ -302,7 +297,6 @@ begin
 //      MTI_STREAM_INITIATE_REQUEST          : begin end;  // TODO
 //      MTI_STREAMDATA_COMPLETE              : begin end;  // TODO
 //      MTI_STREAMDATA_PROCEED               : begin end;  // TODO
-      MTI_IDENTIFY_EVENTS                  : begin end;  // TODO
     end
   end
 end;

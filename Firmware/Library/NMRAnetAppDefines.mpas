@@ -30,8 +30,18 @@ const
   MAX_SUPPORTED_EVENTS_PRODUCED = 4;
   
   // Defined the Values of the Events that are Consumed and Produced by this Node
-  SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of byte = ($00, $01, $02, $03);
-  SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of byte = ($00, $01, $02, $03);
+  SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
+    ($05, $01, $01, $01, $07, $00, $F0, $01),
+    ($05, $01, $01, $01, $07, $00, $F0, $02),
+    ($05, $01, $01, $01, $07, $00, $F0, $03),
+    ($05, $01, $01, $01, $07, $00, $F0, $04)
+  );
+  SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
+    ($05, $01, $01, $01, $07, $00, $F0, $01),
+    ($05, $01, $01, $01, $07, $00, $F0, $02),
+    ($05, $01, $01, $01, $07, $00, $F0, $03),
+    ($05, $01, $01, $01, $07, $00, $F0, $04)
+  );
   
 implementation
 

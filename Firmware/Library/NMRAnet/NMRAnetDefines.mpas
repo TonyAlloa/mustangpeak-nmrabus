@@ -93,7 +93,7 @@ const
   FT_PRODUCER_IDENTIFY_RANGE        = $0829F000;                                // Databytes = EventID
   FT_PRODUCER_IDENTIFIED            = $082AB000;                                // Databytes = EventID
   FT_EVENTS_IDENTIFY_DEST           = $08000000;                                // Databytes = 2B (see MTI_IDENTIFY_EVENTS)
-  FT_EVENTS_IDENTIFY_NO_DEST        = $08AB7000;
+  FT_EVENTS_IDENTIFY                = $08AB7000;
   FT_EVENT_LEARN                    = $08ACF000;                                // Databytes = EventID
   FT_PC_EVENT_REPORT                = $08ADF000;                                // Infamouse PCER
   
@@ -159,10 +159,9 @@ const
   STATE_NMRABUS_RESPONSE_SEND_AMD                     = 1;
   STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE           = 2;
   STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT        = 3;
-  STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED_ALL = 4;
-  STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED_ALL = 5;
-  STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED     = 6;
-  STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED     = 7;
+  STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED     = 4;
+  STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED     = 5;
+  STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS  = 6;
   
   LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
   
@@ -173,19 +172,18 @@ const
   SRC_SEND_AMD                              = $0008;                            // Send an Alias Map Definition
   // NMRAnet level responses
   SRC_SEND_VERIFIED_NODE                    = $0010;                            // Send a Verified Node message
-  SRC_CONSUMER_IDENTIFIED                   = $0020;                            // Send a Consumer Identifed message for all Event IDs the node can Consume, broadcast
-  SRC_PRODUCER_IDENTIFIED                   = $0040;                            // Send a Producer Identifed message for the Event IDs the node can Produce, broadcast
-
+  SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED      = $0020;                            // Send all Producers/Consumers defined
+  
   // Complex Response Codes (see TQueuedResponse)
   CRC_EMPTY                                 = $0000;                            // Response Queue slot is empty
   CRC_SEND_PROTOCOL_SUPPORT                 = $0001;                            // Protocol Support Response to a destination node
   CRC_CONSUMER_IDENTIFIED                   = $0002;                            // Send a Consumer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
-  CRC_PRODUCER_IDENTIFIED                   = $0003;                            // Send a Producer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
-  CRC_CONSUMER_IDENTIFIED_DEST              = $0004;                            // Send a Consumer Identifed message for all Event IDs the node can Consume to a destination node
-  CRC_PRODUCER_IDENTIFIED_DEST              = $0005;                            // Send a Producer Identifed message for the Event IDs the node can Produce to a destination node
+  CRC_PRODUCER_IDENTIFIED                   = $0004;                            // Send a Producer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
+
 
 type
-  TNodeID = array[0..1] of DWORD;                                                // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
+  TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used
+  TEventID = array[0..7] of Byte;                                               // Is the 48 Bit node ID + 16 Bits of unique Event ID = 64 Bits
   
   // When a message is received on the CAN bus the logic decodes the message and
   // separates the message into different types of Responses.  Some messages require
@@ -209,7 +207,7 @@ type
     List: TQueuedResponseList;                                                  // List of complex Responses to be handled in the NMRABus_Process loop
     SimpleResponseFlags: Word;                                                  // List of simple Responses that do not need any information to respond to in the NMRABus_Process loop.  See SRF_xxx constants
     iState: Byte;                                                               // Statemachine Index
-    iCDI: Byte;                                                                 // CID state for logging into bus
+    Tag: Byte;                                                                  // MultiUse Flag, just be careful state don't overwrite it, Use 1) CID state for logging into bus  Use 2) Tracking the number of Event IDs when sending them all
     BufferOverrunCount: Word;                                                   // Track how many messages we missed
   end;
   
