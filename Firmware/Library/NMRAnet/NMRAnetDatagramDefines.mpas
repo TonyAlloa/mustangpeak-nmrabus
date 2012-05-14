@@ -21,7 +21,7 @@ const
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
   LEN_DATAGRAM_ARRAY = 1;                                                       // How many Datagram buffers to have
-  LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST = 2;                                   // How many Datagram requests to buffer if there is no buffer available to service them
+  LEN_DATAGRAM_BUFFER_OVERFLOW_LIST = 2;                                        // How many Datagram requests to buffer if there is no buffer available to service them
 
   STATE_DATAGRAM_EMPTY               = 0;                                       // The Datagram Packet Buffer is empty
   STATE_DATAGRAM_RECEIVING           = 1;                                       // The Datagram Packet Buffer is currently collecting frames
@@ -43,7 +43,7 @@ const
   
 type  
   TDatagram = array[0..LEN_DATAGRAM-1] of Byte;
-  TDatagramSenderAliasList = array[LEN_DATAGRAM_BUFFER_FULL_RESPONSE_LIST] of Word;
+  TBufferOverflowList = array[LEN_DATAGRAM_BUFFER_OVERFLOW_LIST] of Word;
   
   TDatagramBuffer = record
     DataBytes: TDatagram;                                                       // The bytes sent in the datagram
@@ -60,7 +60,7 @@ type
     List: TDatagramBufferArray;
     iState: Byte;                                                               // State of the Processor
     iBuffer: Byte;                                                              // Index to the next item in the array
-    BufferFullResponseList: TDatagramSenderAliasList;                           // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
+    BufferOverflowList: TBufferOverflowList;                                    // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;
   
 var

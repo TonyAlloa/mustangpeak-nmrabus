@@ -44,8 +44,8 @@ function NMRAnetUtilities_IsAddressedMessageToNode(Packet: PCANBuffer): Boolean;
 function NMRAnetUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
 procedure NMRAnetUtilities_LoadCANData(var DataBytes: TCAN_DataBytes; Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte);
 procedure NMRAnetUtilities_ZeroCANData(var DataBytes: TCAN_DataBytes);
-function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): Word;
-function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): Word;
+function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): DWord;
+function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
 
 
 implementation
@@ -61,12 +61,12 @@ implementation
 procedure NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer);
 begin
   Packet^.DataCount := 6;
-  Packet^.DataBytes[0] := NMRABus.Node_ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
-  Packet^.DataBytes[1] := NMRABus.Node_ID[1] shr 8;
-  Packet^.DataBytes[2] := NMRABus.Node_ID[1];
-  Packet^.DataBytes[3] := NMRABus.Node_ID[0] shr 16;
-  Packet^.DataBytes[4] := NMRABus.Node_ID[0] shr 8;
-  Packet^.DataBytes[5] := NMRABus.Node_ID[0];
+  Packet^.DataBytes[0] := NMRABus.Node.ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
+  Packet^.DataBytes[1] := NMRABus.Node.ID[1] shr 8;
+  Packet^.DataBytes[2] := NMRABus.Node.ID[1];
+  Packet^.DataBytes[3] := NMRABus.Node.ID[0] shr 16;
+  Packet^.DataBytes[4] := NMRABus.Node.ID[0] shr 8;
+  Packet^.DataBytes[5] := NMRABus.Node.ID[0];
 end;
 
 // *****************************************************************************
@@ -81,11 +81,11 @@ procedure NMRAnetUtilities_CreateCANControlFramePacket(VariableField: DWord; Pac
 begin
   Packet^.DataCount := 0;
   Packet^.State := Packet^.State or CBS_EXTENDED;
-  Packet^.ID := $10000000 or VariableField or NMRABus.Node_Alias_ID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
-  if VariableField = FT_CID0 then Packet^.ID := Packet^.ID or (NMRABus.Node_ID[1] and $00FFF000) else
-  if VariableField = FT_CID1 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[1] shl 12) and $00FFF000) else
-  if VariableField = FT_CID2 then Packet^.ID := Packet^.ID or (NMRABus.Node_ID[0] and $00FFF000) else
-  if VariableField = FT_CID3 then Packet^.ID := Packet^.ID or ((NMRABus.Node_ID[0] shl 12) and $00FFF000);
+  Packet^.ID := $10000000 or VariableField or NMRABus.Node.AliasID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
+  if VariableField = FT_CID0 then Packet^.ID := Packet^.ID or (NMRABus.Node.ID[1] and $00FFF000) else
+  if VariableField = FT_CID1 then Packet^.ID := Packet^.ID or ((NMRABus.Node.ID[1] shl 12) and $00FFF000) else
+  if VariableField = FT_CID2 then Packet^.ID := Packet^.ID or (NMRABus.Node.ID[0] and $00FFF000) else
+  if VariableField = FT_CID3 then Packet^.ID := Packet^.ID or ((NMRABus.Node.ID[0] shl 12) and $00FFF000);
   NMRAnetUtilities_ZeroCANData(Packet^.DataBytes);
 
   if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
@@ -104,7 +104,7 @@ procedure NMRAnetUtilities_CreateNMRABusMessagePacket(VariableField: DWord; Dest
 begin
   Packet^.DataCount := 0;
   Packet^.State := Packet^.State or CBS_EXTENDED;
-  Packet^.ID := $10000000 or VariableField or NMRABus.Node_Alias_ID;
+  Packet^.ID := $10000000 or VariableField or NMRABus.Node.AliasID;
   if DestinationAliasID <> 0 then
     Packet^.ID := Packet^.ID or DWORD(DestinationAliasID shl 12);
   NMRAnetUtilities_ZeroCANData(Packet^.DataBytes);
@@ -170,7 +170,7 @@ end;
 // *****************************************************************************
 function NMRAnetUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
 begin
-  Result := (NodeID[1] = NMRABus.Node_ID[1]) and (NodeID[0] = NMRABus.Node_ID[0])
+  Result := (NodeID[1] = NMRABus.Node.ID[1]) and (NodeID[0] = NMRABus.Node.ID[0])
 end;
 
 // *****************************************************************************
@@ -209,7 +209,7 @@ end;
 // *****************************************************************************
 function NMRAnetUtilities_EqualAliasID(AliasID: Word): Boolean;
 begin
-  Result := AliasID = NMRABus.Node_Alias_ID
+  Result := AliasID = NMRABus.Node.AliasID
 end;
 
 // *****************************************************************************
@@ -252,14 +252,14 @@ var
   temp1,              // Upper 24 Bits of temp 48 bit number
   temp2: DWORD;       // Lower 24 Bits of temp 48 Bit number
 begin
-  temp1 := ((NMRABus.Unique_ID_Global_Seed[1] shl 9) or ((NMRABus.Unique_ID_Global_Seed[0] shr 15) and $000001FF)) and $00FFFFFF;   // x(i+1)(2^9 + 1)*x(i) + C  = 2^9 * x(i) + x(i) + C
-  temp2 := (NMRABus.Unique_ID_Global_Seed[0] shl 9) and $00FFFFFF;                                                                  // Calculate 2^9 * x
+  temp1 := ((NMRABus.Node.Seed[1] shl 9) or ((NMRABus.Node.Seed[0] shr 15) and $000001FF)) and $00FFFFFF;   // x(i+1)(2^9 + 1)*x(i) + C  = 2^9 * x(i) + x(i) + C
+  temp2 := (NMRABus.Node.Seed[0] shl 9) and $00FFFFFF;                                                                  // Calculate 2^9 * x
 
-  NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Unique_ID_Global_Seed[0] + temp2 + $7A4BA9;   // Now y = 2^9 * x so all we have left is x(i+1) = y + x + c
-  NMRABus.Unique_ID_Global_Seed[1] := NMRABus.Unique_ID_Global_Seed[1] + temp1 + $1B0CA3;
+  NMRABus.Node.Seed[0] := NMRABus.Node.Seed[0] + temp2 + $7A4BA9;   // Now y = 2^9 * x so all we have left is x(i+1) = y + x + c
+  NMRABus.Node.Seed[1] := NMRABus.Node.Seed[1] + temp1 + $1B0CA3;
 
-  NMRABus.Unique_ID_Global_Seed[1] := (NMRABus.Unique_ID_Global_Seed[1] and $00FFFFFF) or (NMRABus.Unique_ID_Global_Seed[0] and $FF000000) shr 24;   // Handle the carries of the lower 24 bits into the upper
-  NMRABus.Unique_ID_Global_Seed[0] := NMRABus.Unique_ID_Global_Seed[0] and $00FFFFFF;
+  NMRABus.Node.Seed[1] := (NMRABus.Node.Seed[1] and $00FFFFFF) or (NMRABus.Node.Seed[0] and $FF000000) shr 24;   // Handle the carries of the lower 24 bits into the upper
+  NMRABus.Node.Seed[0] := NMRABus.Node.Seed[0] and $00FFFFFF;
 end;
 
 // *****************************************************************************
@@ -272,7 +272,7 @@ end;
 // *****************************************************************************
 function NMRAnetUtilities_GenerateID_Alias_From_Global_Seed: Word;
 begin
-  Result := (NMRABus.Unique_ID_Global_Seed[0] xor NMRABus.Unique_ID_Global_Seed[1] xor (NMRABus.Unique_ID_Global_Seed[0] shr 12) xor (NMRABus.Unique_ID_Global_Seed[1] shr 12)) and $00000FFF;
+  Result := (NMRABus.Node.Seed[0] xor NMRABus.Node.Seed[1] xor (NMRABus.Node.Seed[0] shr 12) xor (NMRABus.Node.Seed[1] shr 12)) and $00000FFF;
 end;
 
 // *****************************************************************************
@@ -287,11 +287,11 @@ procedure NMRAnetUtilities_CreateAliasID(Regenerate: Boolean);
 begin
   if Regenerate then
     NMRAnetUtilities_PsudoRandomNumberGenerator;
-  NMRABus.Node_Alias_ID := NMRAnetUtilities_GenerateID_Alias_From_Global_Seed;
-  if NMRABus.Node_Alias_ID = 0 then
+  NMRABus.Node.AliasID := NMRAnetUtilities_GenerateID_Alias_From_Global_Seed;
+  if NMRABus.Node.AliasID = 0 then
   begin
     NMRAnetUtilities_PsudoRandomNumberGenerator;
-    NMRABus.Node_Alias_ID := NMRAnetUtilities_GenerateID_Alias_From_Global_Seed;
+    NMRABus.Node.AliasID := NMRAnetUtilities_GenerateID_Alias_From_Global_Seed;
   end
 end;
 
@@ -407,7 +407,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): Word;
+function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): DWord;
 begin
   Result := Packet^.DataBytes[3];
   Result := Result shr 8;
@@ -427,7 +427,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): Word;
+function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
 begin
   Result := Packet^.DataBytes[7];
   Result := Result shr 8;

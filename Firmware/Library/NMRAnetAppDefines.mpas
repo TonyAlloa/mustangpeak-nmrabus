@@ -1,0 +1,38 @@
+unit NMRAnetAppDefines;
+
+uses
+  CANDefines,
+  NMRAnetDefines;
+
+const
+{ 
+  PIV_PROTOCOL_ID_PROTOCOL          = $800000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_DATAGRAM          = $400000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_STREAM            = $200000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_CONFIGURATION     = $100000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_RESERVATION       = $080000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_PRODUCER_CONSUMER = $040000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_IDENTIFICATION    = $020000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_TEACH_LEARN       = $010000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_REMOTE_BUTTON     = $008000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_CDI               = $004000;                                  // vv vv vv vv vv vv
+  PIV_PROTOCOL_ID_DISPLAY           = $002000;                                  // vv vv vv vv vv vv
+}
+  SUPPORTED_PROTOCOLS = PIV_PROTOCOL_ID_PROTOCOL or
+                        PIV_PROTOCOL_ID_DATAGRAM or
+                        PIV_PROTOCOL_ID_CONFIGURATION or
+                        PIV_PROTOCOL_ID_RESERVATION or
+                        PIV_PROTOCOL_ID_PRODUCER_CONSUMER or
+                        PIV_PROTOCOL_ID_IDENTIFICATION;                                                      // "or" the PIV_xxx constant to create the code for supported protocols
+          
+  // Set the number of Events that are Consumed and Produced by this Node
+  MAX_SUPPORTED_EVENTS_CONSUMED = 4;
+  MAX_SUPPORTED_EVENTS_PRODUCED = 4;
+  
+  // Defined the Values of the Events that are Consumed and Produced by this Node
+  SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of byte = ($00, $01, $02, $03);
+  SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of byte = ($00, $01, $02, $03);
+  
+implementation
+
+end.

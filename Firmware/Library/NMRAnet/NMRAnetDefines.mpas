@@ -23,7 +23,7 @@ uses
   CANDefines;
 
 const
-  MAX_BUS_LOGIN_TIMEOUT = 201;              // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
+  MAX_BUS_LOGIN_TIMEOUT = 201;                                                  // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
 
   CAN_TX_0 = 0;
   CAN_TX_1 = 1;
@@ -83,6 +83,9 @@ const
   FT_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
   FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
   
+  FT_PROTOCOL_SUPPORT_INQUIRY       = $08000000;
+  FT_PROTOCOL_SUPPORT_RESPONSE      = $08000000;
+  
   FT_CONSUMER_IDENTIFY              = $08A4F000;                                // Databytes = EventID
   FT_CONSUMER_IDENTIFY_RANGE        = $0825F000;                                // Databytes = EventID
   FT_CONSUMER_IDENTIFIED            = $0826B000;                                // Databytes = EventID
@@ -96,9 +99,7 @@ const
   
   MASK_DEST_ALIAS                   = $00FFF000;                                // Masks out just the Destination Alias Address
   MASK_SOURCE_ALIAS                 = $00000FFF;                                // Masks out just the Source Alias Address
-  
-  PIP_PROTOCOL_SUPPORT_INQUIRY      = $08000000;
-  PIP_PROTOCOL_SUPPORT_RESPONSE     = $08000000;
+
   PIV_PROTOCOL_ID_PROTOCOL          = $800000;                                  // vv vv vv vv vv vv
   PIV_PROTOCOL_ID_DATAGRAM          = $400000;                                  // vv vv vv vv vv vv
   PIV_PROTOCOL_ID_STREAM            = $200000;                                  // vv vv vv vv vv vv
@@ -154,28 +155,35 @@ const
   STATE_NMRABUS_TAKE_OFFLINE                = 13;
   STATE_NMRABUS_OFFLINE                     = 14;
   
-  STATE_RESPONSE_START                      = 0;
-  STATE_RESPONSE_SIMPLE_RESPONSE            = 1;
-  STATE_RESPONSE_NEXT_SIMPLE_RESPONSE       = 2;
-  STATE_RESPONSE_COMPLEX_RESPONSE           = 3;
-  STATE_RESPONSE_NEXT_COMPLEX_RESPONSE      = 4;
+  STATE_NMRABUS_RESPONSE_SEND_RID                     = 0;
+  STATE_NMRABUS_RESPONSE_SEND_AMD                     = 1;
+  STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE           = 2;
+  STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT        = 3;
+  STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED_ALL = 4;
+  STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED_ALL = 5;
+  STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED     = 6;
+  STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED     = 7;
   
-  
-  STATE_SIMPLE_RESPONSE_SEND_AMD            = 0;
-  STATE_SIMPLE_RESPONSE_SEND_RID            = 1;
-
   LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
   
-  // CAN responses
-  SRF_DUPLICATE_ALIAS                       = $0001;                            // Duplicate Alais Detected that was not a CID message, need to regenerate an Alias
-  SRF_DUPLICATE_NODE_ID                     = $0002;                            // Send a Procducer/Consumer Message that a Duplicate 48 Bit node ID was detected, very bad...
-  SRF_SEND_RID                              = $0004;                            // Duplicate Alias Detected that was a CID so tell the node we own that Alias
-  SRF_SEND_AMD                              = $0008;                            // Send an Alias Map Definition
+  // Simple Response Codes for NMRAnet CAN responses
+  SRC_DUPLICATE_ALIAS                       = $0001;                            // Duplicate Alais Detected that was not a CID message, need to regenerate an Alias
+  SRC_DUPLICATE_NODE_ID                     = $0002;                            // Send a Procducer/Consumer Message that a Duplicate 48 Bit node ID was detected, very bad...
+  SRC_SEND_RID                              = $0004;                            // Duplicate Alias Detected that was a CID so tell the node we own that Alias
+  SRC_SEND_AMD                              = $0008;                            // Send an Alias Map Definition
   // NMRAnet level responses
-  SRF_SEND_VERIFIED_NODE                    = $0010;                            // Send a Verified Node message
-  SRF_SEND_PROTOCOL_SUPPORT                 = $0020;                            // Send what Protocols we support
+  SRC_SEND_VERIFIED_NODE                    = $0010;                            // Send a Verified Node message
+  SRC_CONSUMER_IDENTIFIED                   = $0020;                            // Send a Consumer Identifed message for all Event IDs the node can Consume, broadcast
+  SRC_PRODUCER_IDENTIFIED                   = $0040;                            // Send a Producer Identifed message for the Event IDs the node can Produce, broadcast
 
-  
+  // Complex Response Codes (see TQueuedResponse)
+  CRC_EMPTY                                 = $0000;                            // Response Queue slot is empty
+  CRC_SEND_PROTOCOL_SUPPORT                 = $0001;                            // Protocol Support Response to a destination node
+  CRC_CONSUMER_IDENTIFIED                   = $0002;                            // Send a Consumer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
+  CRC_PRODUCER_IDENTIFIED                   = $0003;                            // Send a Producer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
+  CRC_CONSUMER_IDENTIFIED_DEST              = $0004;                            // Send a Consumer Identifed message for all Event IDs the node can Consume to a destination node
+  CRC_PRODUCER_IDENTIFIED_DEST              = $0005;                            // Send a Producer Identifed message for the Event IDs the node can Produce to a destination node
+
 type
   TNodeID = array[0..1] of DWORD;                                                // The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1]
   
@@ -188,31 +196,34 @@ type
   // such as the node Alias the response needs to be sent to.  These are stored in the QueuedResponseList
   
   TQueuedResponse = record                                                      // When a message is received that needs a response that contains a destination
-    ResponseCode: Byte;                                                         // node or needs to decode the DataBytes to understand what to respond with
-    DestinationNodeAlias: Word;                                                 // the info needed to response is queued up in this structure to be acted on in the main
-    DataBytes: TCAN_DataBytes;                                                  // NMRABus_Process loop
+    nCode: Word;                                                                // node or needs to decode the DataBytes to understand what to respond with, see CRC_xxxx codes
+    NodeAlias: Word;                                                            // Destination the info needed to response is queued up in this structure to be acted on in the main
+    DataBytes: TCAN_DataBytes;                                                  // depends on the nCode, could be EventID,
   end;
+  PQueuedResponse = ^TQueuedResponse;
   
   TQueuedResponseList = array[0..LEN_QUEUED_RESPONSE_LIST] of TQueuedResponse;      // List of responses the NMRABus_Process loop needs to handle
   
   TQueuedResponses = record
     List: TQueuedResponseList;                                                  // List of complex Responses to be handled in the NMRABus_Process loop
     SimpleResponseFlags: Word;                                                  // List of simple Responses that do not need any information to respond to in the NMRABus_Process loop.  See SRF_xxx constants
-    ListIndex: Byte;                                                            // Next index in the List to Access
-    SimpleIndexMask: Word;                                                      // Next Bit Mask in the SimpleResponseFlags
     iState: Byte;                                                               // Statemachine Index
     iCDI: Byte;                                                                 // CID state for logging into bus
+    BufferOverrunCount: Word;                                                   // Track how many messages we missed
+  end;
+  
+  TNodeInfo = record
+    ID: TNodeID;                                                                // Unique 48 Bit ID for Node
+    Seed: TNodeID;                                                              // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
+    AliasID: Word;                                                              // 12 Bit Alias ID
   end;
 
   TNMRABus = record
-    Node_ID: TNodeID;                           // Unique 48 Bit ID for Node
-    Unique_ID_Global_Seed: TNodeID;             // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
-    Node_Alias_ID: Word;                        // 12 Bit Alias ID
-    LoginTimeCount: Integer;                    // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
-    State: Word;                                // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
-    Interrupt_State: Byte;                      // See the BSI_xxxx flags; State of the Bus Messaging System that is running through the interrupts, these are ONLY CHANGED FROM WITHIN the interrupt and concidered READ-ONLY outside of the interrupt
-    iState: Byte;                               // Statemachine index for the main bus login
-    Responses: TQueuedResponses;                // Responses the NMRABus_Process loop looks at to response to received messages
+    Node: TNodeInfo;                                                            // Information about a Node
+    LoginTimeCount: Integer;                                                    // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
+    State: Word;                                                                // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
+    iState: Byte;                                                               // Statemachine index for the main bus login
+    Responses: TQueuedResponses;                                                // Responses the NMRABus_Process loop looks at to response to received messages
   end;
   
 var
