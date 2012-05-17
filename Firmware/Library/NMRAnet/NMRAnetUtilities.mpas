@@ -30,7 +30,7 @@ procedure NMRAnetUtilities_CreateCANControlFramePacket(VariableField: DWord; Pac
 procedure NMRAnetUtilities_CreateNMRABusMessagePacket(VariableField: DWord; DestinationAliasID: Word; Packet: PCANBuffer);
 function NMRAnetUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
 function NMRAnetUtilities_ExtractSourceAlias(Packet: PCANBuffer): Word;
-procedure NMRAnetUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID);
+procedure NMRAnetUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID; iStartByte: Byte);
 function NMRAnetUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
 function NMRAnetUtilities_CompareNodeIDs(var NodeID1, NodeID2: TNodeID): boolean;
 function NMRAnetUtilities_EqualAliasID(AliasID: Word): Boolean;
@@ -112,7 +112,7 @@ begin
     Packet^.ID := Packet^.ID or DWORD(DestinationAliasID shl 12);
   NMRAnetUtilities_ZeroCANData(Packet^.DataBytes);
 
-  if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
+ if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
     NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
 end;
 
@@ -153,14 +153,14 @@ end;
 //  Requires that the packet contains a valid NodeID in the bytes.
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID);
+procedure NMRAnetUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID; iStartByte: Byte);
 begin
-  NodeID[1] := Packet^.DataBytes[2];
-  NodeID[1] := NodeID[1] or Packet^.DataBytes[1] shl 8;
-  NodeID[1] := NodeID[1] or Packet^.DataBytes[0] shl 16;
-  NodeID[0] := Packet^.DataBytes[5];
-  NodeID[0] := NodeID[0] or Packet^.DataBytes[4] shl 8;
-  NodeID[0] := NodeID[0] or Packet^.DataBytes[3] shl 16;
+  NodeID[1] := Packet^.DataBytes[iStartByte+2];
+  NodeID[1] := NodeID[1] or Packet^.DataBytes[iStartByte+1] shl 8;
+  NodeID[1] := NodeID[1] or Packet^.DataBytes[iStartByte] shl 16;
+  NodeID[0] := Packet^.DataBytes[iStartByte+5];
+  NodeID[0] := NodeID[0] or Packet^.DataBytes[iStartByte+4] shl 8;
+  NodeID[0] := NodeID[0] or Packet^.DataBytes[iStartByte+3] shl 16;
 end;
 
 // *****************************************************************************

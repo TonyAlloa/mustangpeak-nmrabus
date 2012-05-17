@@ -55,9 +55,8 @@ const
   FT_CID4                           = $03000000;                                // non-OpenLCB Protocol
   FT_CID5                           = $02000000;                                // non-OpenLCB Protocol
   FT_CID6                           = $01000000;                                // non-OpenLCB Protocol
-
+  FT_CID_MASK                       = $0F000000;
   
-  FT_CID_MASK                       = $07000000;
   FT_RID                            = $00700000;                                // Reserve ID
   FT_AMD                            = $00701000;                                // Alias Map Definition
   FT_AME                            = $00702000;                                // Alias Mapping Enquiry

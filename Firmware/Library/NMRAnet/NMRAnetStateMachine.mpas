@@ -257,8 +257,6 @@ begin
   Result := False;
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
   begin
-    NMRAnetUtilities_CreateNMRABusMessagePacket(VariableField, DestinationAlias, Buffer);
-    
     if DataBytes <> nil then
     begin
       Buffer^.DataCount := DataCount;
@@ -266,7 +264,7 @@ begin
         Buffer^.DataBytes[i] := DataBytes^[i];
     end else
       Buffer^.DataCount := 0;
-      
+    NMRAnetUtilities_CreateNMRABusMessagePacket(VariableField, DestinationAlias, Buffer);
     if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
     begin
       StartCANMessageEngine();

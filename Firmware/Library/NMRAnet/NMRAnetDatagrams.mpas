@@ -155,13 +155,17 @@ var
   Datagram: PDatagramBuffer;   
   Buffer: TCANBuffer;
 begin
+  if DatagramInfo.iBuffer >= LEN_DATAGRAM_ARRAY then                            // Just validate it...
+    DatagramInfo.iBuffer := 0;
+    
   Datagram := @DatagramInfo.List[DatagramInfo.iBuffer];
   case DatagramInfo.iState of
     STATE_DATAGRAM_PROCESSOR_START :
       begin
         SendAnyBufferFullResponses;
         case Datagram^.iState of
-          STATE_DATAGRAM_RECEIVING          : if Datagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then DatagramInfo.iState := STATE_DATAGRAM_PROCESSOR_ABANDONED;
+          STATE_DATAGRAM_RECEIVING          : if Datagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then 
+                                                DatagramInfo.iState := STATE_DATAGRAM_PROCESSOR_ABANDONED;
           STATE_DATAGRAM_TRANSFER_FULL      : DatagramInfo.iState := STATE_DATAGRAM_PROCESSOR_RESPOND
         else
           DatagramInfo.iState := STATE_DATAGRAM_PROCESSOR_NEXT;
@@ -316,7 +320,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure AddToBufferFullList;
+//  procedure AddToBufferOverflowList;
 //
 //  Parameters:
 //
@@ -324,7 +328,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure AddToBufferFullList(Datagram: PDatagramBuffer);
+procedure AddToBufferOverflowList(Datagram: PDatagramBuffer);
 var
   i: Integer;
 begin
@@ -352,12 +356,21 @@ procedure NMRAnetDatagrams_ProcessReceive(Buffer: PCANBuffer);
 var
   Datagram: PDatagramBuffer;
 begin
+
+UART1_Write_Text('x'+LF);
+
+
   Datagram := PDatagramBuffer( nil);
   case Buffer^.ID and MTI_TYPE_MASK of
     MTI_DATAGRAM_ONLY_FRAME :
       begin
+      
+
         if TryAllocateBuffer(Datagram) then
         begin
+        
+UART1_Write_Text('A'+LF);
+         
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iFrameCount := 0;
           StoreBytes(Datagram, Buffer^, False);
@@ -368,6 +381,9 @@ begin
       begin
         if TryAllocateBuffer(Datagram) then
         begin
+        
+UART1_Write_Text('B'+LF);
+        
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iFrameCount := 0;
           Datagram^.iWatchdog := 0;
@@ -378,17 +394,28 @@ begin
     MTI_DATAGRAM_FRAME :
       begin
         if FindInProcessDatagram(Buffer^.ID and MASK_SOURCE_ALIAS, Datagram) then
+        begin
           if UpdateFrameCount(Datagram) then
-            StoreBytes(Datagram, Buffer^, False)
+          begin
+            StoreBytes(Datagram, Buffer^, False);
+UART1_Write_Text('C'+LF);
+          end
+        end
       end;
     MTI_DATAGRAM_FRAME_END :
       begin
         if FindInProcessDatagram(Buffer^.ID and MASK_SOURCE_ALIAS, Datagram) then
         begin
           if UpdateFrameCount(Datagram) then
-            StoreBytes(Datagram, Buffer^, True)
+          begin
+            StoreBytes(Datagram, Buffer^, True);
+UART1_Write_Text('D'+LF);
+          end
         end else
-          AddToBufferFullList(Datagram);
+        begin
+UART1_Write_Text('E'+LF);
+          AddToBufferOverflowList(Datagram);
+        end
       end;
    end;
 end;
