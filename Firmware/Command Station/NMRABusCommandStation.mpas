@@ -215,7 +215,7 @@ begin
     
 
     
-    if NMRAnetDatagrams_Remove(Datagram) then
+    if NMRAnetDatagrams_ExtractNext(Datagram) then
     begin
       for i := 0 to LEN_DATAGRAM-1 do
       begin
