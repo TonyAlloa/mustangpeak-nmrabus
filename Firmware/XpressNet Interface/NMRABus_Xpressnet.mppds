@@ -38,11 +38,12 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=4
+Count=5
 File0=NMRABus_Xpressnet.mpas
 File1=MCU_Setup_dsPIC4013.mpas
 File2=..\Library\Xpressnet\XpressnetDefines.mpas
 File3=..\Library\Xpressnet\XpressnetStateMachine.mpas
+File4=..\Library\NMRAnet\NMRAnetDatagrams.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

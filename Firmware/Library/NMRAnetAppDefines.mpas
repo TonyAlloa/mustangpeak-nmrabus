@@ -5,26 +5,30 @@ uses
   NMRAnetDefines;
 
 const
-{ 
-  PIV_PROTOCOL_ID_PROTOCOL          = $800000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_DATAGRAM          = $400000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_STREAM            = $200000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_CONFIGURATION     = $100000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_RESERVATION       = $080000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_PRODUCER_CONSUMER = $040000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_IDENTIFICATION    = $020000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_TEACH_LEARN       = $010000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_REMOTE_BUTTON     = $008000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_CDI               = $004000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_DISPLAY           = $002000;                                  // vv vv vv vv vv vv
-}
-  SUPPORTED_PROTOCOLS = PIV_PROTOCOL_ID_PROTOCOL or
-                        PIV_PROTOCOL_ID_DATAGRAM or
-                        PIV_PROTOCOL_ID_CONFIGURATION or
-                        PIV_PROTOCOL_ID_RESERVATION or
-                        PIV_PROTOCOL_ID_PRODUCER_CONSUMER or
-                        PIV_PROTOCOL_ID_IDENTIFICATION;                                                      // "or" the PIV_xxx constant to create the code for supported protocols
-          
+{
+  PIV_PROTOCOL_ID_PROTOCOL: TPIVProtocolValueArray           = ($80, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_DATAGRAM: TPIVProtocolValueArray           = ($40, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_STREAM: TPIVProtocolValueArray             = ($20, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_CONFIGURATION: TPIVProtocolValueArray      = ($10, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_RESERVATION: TPIVProtocolValueArray        = ($08, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_PRODUCER_CONSUMER: TPIVProtocolValueArray  = ($04, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_IDENTIFICATION: TPIVProtocolValueArray     = ($02, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_TEACH_LEARN: TPIVProtocolValueArray        = ($01, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_REMOTE_BUTTON: TPIVProtocolValueArray      = ($00, $80, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_CDI: TPIVProtocolValueArray                = ($00, $40, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_DISPLAY: TPIVProtocolValueArray            = ($00, $20, $00, $00, $00, $00);
+ }
+
+  PIV_SUPPORTED_PROTOCOL_COUNT = 6;    // UPDATED THIS IF ADDING OR SUBTRACTING SUPPORTED PROTOCOLS
+  PIV_SUPPORTED_PROTOCOLS: array[0..PIV_SUPPORTED_PROTOCOL_COUNT-1] of TPIVProtocolValueArray = (
+    ($80, $00, $00, $00, $00, $00),    // PIV_PROTOCOL_ID_PROTOCOL
+    ($40, $00, $00, $00, $00, $00),    // PIV_PROTOCOL_ID_DATAGRAM
+    ($10, $00, $00, $00, $00, $00),    // PIV_PROTOCOL_ID_CONFIGURATION
+    ($04, $00, $00, $00, $00, $00),    //PIV_PROTOCOL_ID_PRODUCER_CONSUMER
+    ($01, $00, $00, $00, $00, $00),    // PIV_PROTOCOL_ID_TEACH_LEARN
+    ($00, $40, $00, $00, $00, $00)     // PIV_PROTOCOL_ID_CDI
+    );
+
   // Set the number of Events that are Consumed and Produced by this Node
   MAX_SUPPORTED_EVENTS_CONSUMED = 4;
   MAX_SUPPORTED_EVENTS_PRODUCED = 4;

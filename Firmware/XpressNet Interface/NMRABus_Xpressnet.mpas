@@ -54,8 +54,6 @@ begin
   T3IF_bit := 0;
   
   XpressnetStateMachine_840ms_TimeTick;
-  EnableCANInterrupt(False);
-  EnableCANInterrupt(True);
 end;
 
 procedure INTERRUPT_Timer_1ms(); iv IVT_ADDR_T2INTERRUPT;
@@ -109,7 +107,7 @@ begin
       
       if NMRAnetCANReceive_Permited then
       begin
-        XpressnetStateMachine_Process;
+    //    XpressnetStateMachine_Process;
       end
     end;
 end.

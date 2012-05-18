@@ -357,7 +357,7 @@ var
   Datagram: PDatagramBuffer;
 begin
 
-UART1_Write_Text('x'+LF);
+//UART1_Write_Text('x'+LF);
 
 
   Datagram := PDatagramBuffer( nil);
@@ -369,7 +369,7 @@ UART1_Write_Text('x'+LF);
         if TryAllocateBuffer(Datagram) then
         begin
         
-UART1_Write_Text('A'+LF);
+//UART1_Write_Text('A'+LF);
          
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iFrameCount := 0;
@@ -382,7 +382,7 @@ UART1_Write_Text('A'+LF);
         if TryAllocateBuffer(Datagram) then
         begin
         
-UART1_Write_Text('B'+LF);
+//UART1_Write_Text('B'+LF);
         
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iFrameCount := 0;
@@ -398,7 +398,7 @@ UART1_Write_Text('B'+LF);
           if UpdateFrameCount(Datagram) then
           begin
             StoreBytes(Datagram, Buffer^, False);
-UART1_Write_Text('C'+LF);
+//UART1_Write_Text('C'+LF);
           end
         end
       end;
@@ -409,11 +409,11 @@ UART1_Write_Text('C'+LF);
           if UpdateFrameCount(Datagram) then
           begin
             StoreBytes(Datagram, Buffer^, True);
-UART1_Write_Text('D'+LF);
+//UART1_Write_Text('D'+LF);
           end
         end else
         begin
-UART1_Write_Text('E'+LF);
+//UART1_Write_Text('E'+LF);
           AddToBufferOverflowList(Datagram);
         end
       end;

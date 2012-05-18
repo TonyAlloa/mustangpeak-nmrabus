@@ -36,6 +36,9 @@ const
   CAN_TX_PRIORITY_1 = 1;
   CAN_TX_PRIORITY_2 = 2;
   CAN_TX_PRIORITY_3 = 3;
+  
+type
+  TPIVProtocolValueArray = array[6] of Byte;
 
 // *****************************************************************************
 //  Extended CAN Frames
@@ -99,17 +102,19 @@ const
   MASK_DEST_ALIAS                   = $00FFF000;                                // Masks out just the Destination Alias Address
   MASK_SOURCE_ALIAS                 = $00000FFF;                                // Masks out just the Source Alias Address
 
-  PIV_PROTOCOL_ID_PROTOCOL          = $800000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_DATAGRAM          = $400000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_STREAM            = $200000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_CONFIGURATION     = $100000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_RESERVATION       = $080000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_PRODUCER_CONSUMER = $040000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_IDENTIFICATION    = $020000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_TEACH_LEARN       = $010000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_REMOTE_BUTTON     = $008000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_CDI               = $004000;                                  // vv vv vv vv vv vv
-  PIV_PROTOCOL_ID_DISPLAY           = $002000;                                  // vv vv vv vv vv vv
+
+  LEN_PIV_PROTOCOL = 6;                                                         // 6 Bytes lone
+  PIV_PROTOCOL_ID_PROTOCOL: TPIVProtocolValueArray           = ($80, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_DATAGRAM: TPIVProtocolValueArray           = ($40, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_STREAM: TPIVProtocolValueArray             = ($20, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_CONFIGURATION: TPIVProtocolValueArray      = ($10, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_RESERVATION: TPIVProtocolValueArray        = ($08, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_PRODUCER_CONSUMER: TPIVProtocolValueArray  = ($04, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_IDENTIFICATION: TPIVProtocolValueArray     = ($02, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_TEACH_LEARN: TPIVProtocolValueArray        = ($01, $00, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_REMOTE_BUTTON: TPIVProtocolValueArray      = ($00, $80, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_CDI: TPIVProtocolValueArray                = ($00, $40, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_DISPLAY: TPIVProtocolValueArray            = ($00, $20, $00, $00, $00, $00);
   
   // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
   MTI_VERIFY_NODE_ID_NUMBER_DEST       = $0A;                                   // Sub-Type (in first Databyte) for a MTI with a destination in the header

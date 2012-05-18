@@ -89,7 +89,6 @@ begin
   if VariableField = FT_CID1 then Packet^.ID := Packet^.ID or ((NMRABus.Node.ID[1] shl 12) and $00FFF000) else
   if VariableField = FT_CID2 then Packet^.ID := Packet^.ID or (NMRABus.Node.ID[0] and $00FFF000) else
   if VariableField = FT_CID3 then Packet^.ID := Packet^.ID or ((NMRABus.Node.ID[0] shl 12) and $00FFF000);
-  NMRAnetUtilities_ZeroCANData(Packet^.DataBytes);
 
   if (VariableField = FT_AMD) or (VariableField = FT_AME) or (VariableField = FT_AMR) then
     NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Packet);
@@ -110,7 +109,6 @@ begin
   Packet^.ID := $10000000 or VariableField or NMRABus.Node.AliasID;
   if DestinationAliasID <> 0 then
     Packet^.ID := Packet^.ID or DWORD(DestinationAliasID shl 12);
-  NMRAnetUtilities_ZeroCANData(Packet^.DataBytes);
 
  if (VariableField = FT_INITIALIZATION_COMPLETE) or (VariableField = FT_VERIFIED_NODE_ID_NUMBER) then
     NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Packet);

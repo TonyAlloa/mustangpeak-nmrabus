@@ -23,6 +23,7 @@ uses
   NMRAnetUtilities,
   NMRAnetDatagrams,
   NMRAnetDatagramDefines,
+  NMRAnetAppDefines,
   CANDefines;
   
 type
@@ -137,9 +138,11 @@ begin
   begin
     Buffer^.nCode := nCode;
     Buffer^.NodeAlias := NodeAlias;
-    Buffer^.DataCount := DataCount;
-    if DataBytes <> nil then
-      Buffer^.DataBytes := DataBytes^
+    if DataBytes <> nil then                                                    // Sender has handled the Bytes already
+    begin
+      Buffer^.DataCount := DataCount;
+      Buffer^.DataBytes := DataBytes^;
+    end
   end else
     Inc(NMRABus.Responses.BufferOverrunCount)
 end;
@@ -294,9 +297,13 @@ end;
 procedure DispatchProtocolSupportInquiry(CANBuffer: PCANBuffer);
 var
   DataBytes: TCAN_DataBytes;
+  i, j: Integer;
 begin
-       // Nodes send things like :X1EAAAE8DN2F030405060765;
-  NMRAnetUtilities_LoadCANData(DataBytes, $2F, $03, $04, $05, $06, $07, $65, $00); // TODO THIS IS MADE UP>>>>>>>>>>>>>>>>>>>>
+  NMRAnetUtilities_ZeroCANData(DataBytes);
+  DataBytes[0] := $2F;
+  for i := 0 to LEN_PIV_PROTOCOL-1 do
+    for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
+      DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
   StoreComplexResponse(CANBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
 end;
 
