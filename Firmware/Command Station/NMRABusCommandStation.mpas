@@ -152,7 +152,7 @@ begin
   begin
     NMRAnetStateMachine_Process;
     
-    delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
+  //  delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
     
   {  if Loop mod 100000 = 0 then
     begin
@@ -203,21 +203,21 @@ begin
       UART1_Write_Text(s1 + '  State: '+LF);
       laststate := DatagramInfo.iState
     end;    }
-    
-   { if NMRABus.iState <> laststate then
+
+   // if NMRABus.iState <> laststate then
     begin
-      IntToStr(NMRABus.iState, s1);
-      UART1_Write_Text(s1 + '  State: '+LF);
-      IntToStr(NMRABus.Responses.iState, s1);
-      UART1_Write_Text(s1 + '  Response State: '+LF);
-      laststate := NMRABus.iState
+   //   IntToStr(NMRABus.iState, s1);
+    //  UART1_Write_Text(s1 + '  State: '+LF);
+   //   IntToStr(NMRABus.Responses.iState, s1);
+   //   UART1_Write_Text(s1 + '  Response State: '+LF);
+    //  laststate := NMRABus.iState
     end;
-    if NMRABus.Responses.iState <> Rlaststate then
+   { if NMRABus.Responses.iState <> Rlaststate then
     begin
       IntToStr(NMRABus.Responses.iState, s1);
       UART1_Write_Text(s1 + '  Response State: '+LF);
       laststate := NMRABus.iState
-    end;  }
+    end;    }
     
 
     if NMRAnetCANReceive_Permited then

@@ -152,8 +152,8 @@ begin
       ICODE_TX0   :
         begin
           TXB0IF_bit := 0;                                                      // Clear Transmitter Interrupt Flag
-          if not StartTransmission then
-            CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
+        //  if not StartTransmission then
+        //    CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
         end;
       ICODE_RX1 :
         begin

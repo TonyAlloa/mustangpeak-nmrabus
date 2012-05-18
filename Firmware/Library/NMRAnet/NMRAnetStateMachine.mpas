@@ -239,7 +239,7 @@ begin
       StartCANMessageEngine();
       Result := True
     end
-  end
+  end ;
 end;
 
 // *****************************************************************************
@@ -470,10 +470,14 @@ end;
 //     Description:
 //
 // *****************************************************************************
+
+var
+  VariableField: DWord;
+
 procedure NMRAnetStateMachine_Process;
 var
   Buffer: TCANBuffer;
-  VariableField: DWord;
+
 begin
   case NMRABus.iState of
     STATE_NMRABUS_START :
@@ -486,7 +490,7 @@ begin
     STATE_NMRABUS_GENERATE_NODE_ALIAS :
       begin
         NMRAnetUtilities_CreateAliasID(False);
-        NMRABus.Responses.Tag := 0;
+        NMRABus.Responses.iCID := 0;
         NMRABus.iState := STATE_NMRABUS_TRANSMIT_CID;
       end;
     STATE_RANDOM_NUMBER_GENERATOR :
@@ -496,20 +500,28 @@ begin
       end;
     STATE_NMRABUS_TRANSMIT_CID :
       begin
-        case NMRABus.Responses.Tag of
+  //    ByteToHex(NMRABus.Responses.iCID, s1);
+   //    UART1_Write_Text(s1);
+    
+        case NMRABus.Responses.iCID of
           0 : VariableField := FT_CID0;   // Queue up
           1 : VariableField := FT_CID1;
           2 : VariableField := FT_CID2;
           3 : VariableField := FT_CID3;
         end;
-        if TryTransmitCANLayerMsg(VariableField, @Buffer) then
+
+      //  LongWordToHex(VariableField, s1);
+       //UART1_Write_Text(s1+LF);
+       
+       
+        if TryTransmitCANLayerMsg(VariableField , @Buffer) then
           NMRABus.iState := STATE_NMRABUS_NEXT_CDI;
       end;
     STATE_NMRABUS_NEXT_CDI :
       begin
-        if NMRABus.Responses.Tag < 3 then
+        if NMRABus.Responses.iCID < 3 then
         begin
-          Inc(NMRABus.Responses.Tag);
+          Inc(NMRABus.Responses.iCID);
           NMRABus.iState := STATE_NMRABUS_TRANSMIT_CID
         end else 
         begin

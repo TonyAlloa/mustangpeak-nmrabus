@@ -367,8 +367,8 @@ begin
 //      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
       MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents(CANBuffer);
       MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
-      MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end   // TODO
-    else
+      MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;   // TODO
+ //   else
       // TODO SEND A Optional Rejected to sender, in draft spec but not in "offical S"
     end
   end
