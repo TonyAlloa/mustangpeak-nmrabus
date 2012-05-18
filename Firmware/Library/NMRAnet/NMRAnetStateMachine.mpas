@@ -18,10 +18,6 @@ unit NMRAnetStateMachine;
 // ******************************************************************************
 
 
-
-
-
-
 // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 //
 // MAY 12, 2012
@@ -60,7 +56,8 @@ type
   
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
-  procedure EnableCANInterrupt(Enable: Boolean); external;
+  procedure LockCANInterrupt; external;
+  procedure UnLockCANInterrupt; external;
   
 var
   TX_CANBufferList: TCANBufferList; external;
@@ -180,9 +177,7 @@ end;
 // *****************************************************************************
 function TestReceivedMsgFlags(Flag: Word): Boolean;
 begin
- // EnableCANInterrupt(False);
   Result := NMRABus.Responses.SimpleResponseFlags and Flag <> 0
- // EnableCANInterrupt(True);
 end;
 
 // *****************************************************************************
@@ -195,9 +190,9 @@ end;
 // *****************************************************************************
 procedure ClearReceivedMsgFlags(Flag: Word);
 begin
-  EnableCANInterrupt(False);
+  LockCANInterrupt;
   NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags and not Flag;
-  EnableCANInterrupt(True);
+  UnLockCANInterrupt;
 end;
 
 // *****************************************************************************
@@ -484,7 +479,7 @@ begin
       begin
         NMRABus.State := BS_INHIBITED or BS_UNITIALIZED;
         FlushLists;
-        while CANStorage_Transmitting do;                                       // Wait for the last transmited packet
+  //      while CANStorage_Transmitting do;                                       // Wait for the last transmited packet
         NMRABus.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS;
       end;
     STATE_NMRABUS_GENERATE_NODE_ALIAS :
@@ -525,7 +520,7 @@ begin
           NMRABus.iState := STATE_NMRABUS_TRANSMIT_CID
         end else 
         begin
-          if not CANStorage_Transmitting then                                   // Wait until the transmission is complete before waiting the 200ms
+          if CAN_Engine.State and CES_TRANSMITTING = 0 then                                   // Wait until the transmission is complete before waiting the 200ms
           begin
             NMRABus.iState := STATE_NMRABUS_WAITSTATE;
             NMRABus.LoginTimeCount := 0;

@@ -182,7 +182,8 @@ function dsPIC33_CAN_RX_Overflow(BufferNumber: Word; Clear: Boolean): Boolean;
 // *****************************************************************************
 // These are exported through the "external" modifier
 // *****************************************************************************
-procedure EnableCANInterrupt(Enable: Boolean);
+procedure LockCANInterrupt;
+procedure UnLockCANInterrupt;
 // *****************************************************************************
 
 procedure StartCANMessageEngine;                                                // Used to start a transmission cycle after a message is placed in a TX Buffer
@@ -253,7 +254,7 @@ begin
   // That would be a race condition that may not start the next message from being sent.  By
   // shutting off the interrupt we can be guarenteed that the interrupt can't not be called
   // during our comparison and any newly added messages will get sent
-  dsPIC33_CAN_TXBufferInterrupt(False);
+  LockCANInterrupt;
 
   // If the CAN_Engine is not transmitting we need to start the transmission of any
   // messages in the buffer list.  If it is already running then the interrupt that
@@ -262,7 +263,15 @@ begin
     StartTransmission;
 
   // Re-enable the Transmit interrupt
-  dsPIC33_CAN_TXBufferInterrupt(True);
+  UnLockCANInterrupt
+end;
+
+procedure dsPIC33_CAN_GlobalInterruptCAN_Event(Enable: Boolean);
+begin
+  if Enable then
+    C1IE_bit := 1
+  else
+    C1IE_bit := 0;
 end;
 
 
@@ -396,18 +405,19 @@ begin
   end
 end;
 
-// *****************************************************************************
-//  function EnableCANInterrupt
-//     Parameters:
-//
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure EnableCANInterrupt(Enable: Boolean);
+
+procedure LockCANInterrupt;
 begin
-  dsPIC33_CAN_GlobalInterruptCAN_Event(Enable);                                 // Enable the CAN Event Interrupt
+  if CAN_Engine.InterruptLockCount = 0 then
+    C1IE_bit := 0;
+  Inc(CAN_Engine.InterruptLockCount);
+end;
+
+procedure UnLockCANInterrupt;
+begin
+  Dec(CAN_Engine.InterruptLockCount);
+  if CAN_Engine.InterruptLockCount = 0 then
+    C1IE_bit := 1;
 end;
 
 // *****************************************************************************
@@ -739,23 +749,6 @@ begin
   FilterHit := C1VEC shr 8
 end;
 
-
-// *****************************************************************************
-//  procedure dsPIC33_CAN_GlobalInterruptCAN_Event;
-//
-//  Parameters: Enabled:  Enables or Disables the CAN Event Interrupt
-//
-//  Result:
-//
-//  Description:  Associated with the IVT_ADDR_CxINTERRUPT
-// *****************************************************************************
-procedure dsPIC33_CAN_GlobalInterruptCAN_Event(Enable: Boolean);
-begin
-  if Enable then
-    C1IE_bit := 1
-  else
-    C1IE_bit := 0;
-end;
 
 // *****************************************************************************
 //  procedure dsPIC33_CAN_GlobalInterruptCAN_RX_Ready;

@@ -22,33 +22,25 @@ uses
   
 {$I Options.inc}
 
-type
-  TCAN_Engine = record
-    State: Word;                            // See the CES_xxx constants
-  end;
-  
-
 procedure CANStorage_Initialize;
 function CANStorage_Head(List: PCANBufferList): PCANBuffer;
 function CANStorage_Tail(List: PCANBufferList): PCANBuffer;
 function CANStorage_IncHead(List: PCANBufferList): Boolean;
 function CANStorage_IncTail(List: PCANBufferList): Boolean;
 procedure CANStorage_FlushList(List: PCANBufferList);
-function CANStorage_Transmitting: Boolean;
+//function CANStorage_Transmitting: Boolean;
 
 function CANStorage_AddToList(List: PCANBufferList; Buffer: PCANBuffer): Boolean;
 function CANStorage_AddToListByParameter(List: PCANBufferList; ID: DWORD; ByteCount, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte; IsExtended: Boolean): Boolean;
 function CANStorage_ExtractFromList(List :PCANBufferList; Buffer: PCANBuffer): Boolean;
 function CANStorage_ListFull(List: PCANBufferList): Boolean;
 
-var
-  CAN_Engine: TCAN_Engine;
-
 implementation
 
 procedure CANStorage_Initialize;
 begin
   CAN_Engine.State := 0;
+  CAN_Engine.InterruptLockCount := 0;
 end;
 
 procedure CANStorage_FlushList(List: PCANBufferList);

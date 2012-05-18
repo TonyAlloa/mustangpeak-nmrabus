@@ -42,10 +42,6 @@ type
   procedure ReceivedOnFilter4(Buffer: PCANBuffer);
   procedure ReceivedOnFilter5(Buffer: PCANBuffer);
   procedure ReceivedOnFilter6(Buffer: PCANBuffer);
-  
-  // defined in the dsPICxx_CAN_Interrupt.mpas file
-  procedure StartCANMessageEngine; external;
-  procedure EnableCANInterrupt(Enable: Boolean); external;
 
 implementation
 

@@ -39,17 +39,14 @@ const
 // *****************************************************************************
 // These are exported through the "external" modifier
 // *****************************************************************************
-procedure EnableCANInterrupt(Enable: Boolean);
+procedure LockCANInterrupt;
+procedure UnLockCANInterrupt;
+procedure StartCANMessageEngine;                                                // Used to start a transmission cycle after a message is placed in a TX Buffer
 // *****************************************************************************
  
-procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
-procedure dsPIC30_Style_Buffer(Direction: Word; CANPtr: ^Word; var Buffer: TCANBuffer);
-
-procedure StartCANMessageEngine;                                                // Used to start a transmission cycle after a message is placed in a TX Buffer
-
-
 implementation
 
+procedure dsPIC30_Style_Buffer(Direction: Word; CANPtr: ^Word; var Buffer: TCANBuffer); forward;
 
 // ****************************************************************************
 // procedure PendingTransmitList;
@@ -120,7 +117,7 @@ begin
   // That would be a race condition that may not start the next message from being sent.  By
   // shutting off the interrupt we can be guarenteed that the interrupt can't not be called
   // during our comparison and any newly added messages will get sent
-  dsPIC30_CAN_TXBufferInterrupt(False);
+  LockCANInterrupt;
 
   // If the CAN_Engine is not transmitting we need to start the transmission of any
   // messages in the buffer list.  If it is already running then the interrupt that
@@ -129,7 +126,7 @@ begin
     StartTransmission;
 
   // Re-enable the Transmit interrupt
-  dsPIC30_CAN_TXBufferInterrupt(True);
+  UnLockCANInterrupt;
 end;
 
 
@@ -172,19 +169,6 @@ begin
       ICODE_WAKE  : begin end;                                                  // Not used
     end;
   end;
-end;
-
-procedure dsPIC30_CAN_TXBufferInterrupt(Enable: Boolean);
-begin
-  if Enable then
-  begin
-     {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
-    TXB0IE_bit := 1
-  end else
-  begin
-     {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
-    TXB0IE_bit := 0
-  end
 end;
 
 // ****************************************************************************
@@ -263,7 +247,7 @@ begin
 end;
 
 // *****************************************************************************
-//  function EnableInterrupt
+//  function LockCANInterrupt
 //     Parameters: Enable:  Enables/Disables the Interrupt for the CAN
 //
 //     Returns:
@@ -271,17 +255,34 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure EnableCANInterrupt(Enable: Boolean);
+procedure LockCANInterrupt;
 begin
-  if Enable then
+  if CAN_Engine.InterruptLockCount = 0 then
   begin
     {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
-    C1IE_bit := 1                  // Enabled the CAN 1 interrupt
-  end else
+    C1IE_bit := 0;                                                            // Disable the CAN 1 interrupt
+  end;
+  Inc(CAN_Engine.InterruptLockCount);
+end;
+
+// *****************************************************************************
+//  function LockCANInterrupt
+//     Parameters: Enable:  Enables/Disables the Interrupt for the CAN
+//
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure UnLockCANInterrupt;
+begin
+  Dec(CAN_Engine.InterruptLockCount);
+  if CAN_Engine.InterruptLockCount <= 0 then
   begin
     {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
-    C1IE_bit := 0                 // Disable the CAN 1 interrupt
-  end
+    C1IE_bit := 1;
+    CAN_Engine.InterruptLockCount := 0;                                       // Enabled the CAN 1 interrupt
+  end;
 end;
 
 end.

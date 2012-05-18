@@ -88,12 +88,21 @@ type
   end;
   PCANBufferList = ^TCANBufferList;
   
+ type
+  TCAN_Engine = record
+    State: Word;                            // See the CES_xxx constants
+    InterruptLockCount: Byte;
+  end;
+  
 var
   TX_CANBuffer: array[0..TX_CAN_BUFFER_LEN-1] of TCANBuffer;
   TX_NMRAnet_Buffer: array[0..TX_NMRANET_BUFFER_LEN-1] of TCANBuffer;
   
   TX_CANBufferList,
   TX_NMRAnetBufferList: TCANBufferList;
+  
+var
+  CAN_Engine: TCAN_Engine;
 
 
 implementation
