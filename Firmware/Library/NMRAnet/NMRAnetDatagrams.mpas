@@ -290,7 +290,12 @@ begin
                                        DatagramInfo.iState := STATE_DATAGRAM_NEXT;
                                      end;
           DGE_FRAME_OUT_OF_ORDER   : if TrySendDatagramResponse(ActiveDatagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_OUT_OF_ORDER, 3, DATAGRAM_EMPTY) then
+                                   begin
                                        DatagramInfo.iState := STATE_DATAGRAM_NEXT;
+                                       
+                                       UART1_Write_Text('Out of Order'+LF);
+                                       
+                                   end;
           DGE_BUFFER_FULL          : if TrySendDatagramResponse(ActiveDatagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_BUFFER_FULL, 3, DATAGRAM_EMPTY) then
                                        DatagramInfo.iState := STATE_DATAGRAM_NEXT;
         end
@@ -379,7 +384,11 @@ begin
     Inc(Datagram^.iFrameCount);                                                 // Next Frame
     Datagram^.iWatchdog := 0;                                                   // Reset the Watchdog since the source connected again
     if Datagram^.iFrameCount >= DATAGRAM_MAX_FRAME_COUNT then                   // Source sent too many frames
+    begin
+      Datagram^.iFrameCount := 0;                                               // Error clear
+      Datagram^.iByteCount := 0;                                                // Error clear
       Datagram^.ErrorCode := DGE_FRAME_OUT_OF_ORDER                             // Ready for a "Frame out of Order" Response
+    end
   end;
   Result := Datagram^.ErrorCode = DGE_NONE
 end;
@@ -397,11 +406,14 @@ procedure StoreBytes(Datagram: PDatagramBuffer; var Buffer: TCANBuffer);
 var
   i: Integer;
 begin
-  for i := 0 to Buffer.DataCount - 1 do
+  if Datagram^.ErrorCode = DGE_NONE then
   begin
-    Datagram^.DataBytes[i + Datagram^.iByteCount] := Buffer.DataBytes[i];
-    Inc(Datagram^.iByteCount);
-  end;
+    for i := 0 to Buffer.DataCount - 1 do
+    begin
+      Datagram^.DataBytes[i + Datagram^.iByteCount] := Buffer.DataBytes[i];
+      Inc(Datagram^.iByteCount);
+    end;
+  end
 end;
 
 // *****************************************************************************
