@@ -427,6 +427,22 @@ end;
 procedure ReceivedDatagramMessage(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
+    NMRAnetDatagrams_ProcessReceive(CANBuffer)
+end;
+
+// ****************************************************************************
+// procedure ReceivedDatagramMessage
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Simple/Complex Response
+//
+// ****************************************************************************
+procedure ReceivedStartingDatagramMessage(CANBuffer: PCANBuffer);
+begin
+  if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
     if not CheckForUnKnownDatagramType(CANBuffer) then
       NMRAnetDatagrams_ProcessReceive(CANBuffer)
 end;
@@ -517,7 +533,7 @@ begin
         MTI_UNADDRESSED              : ReceivedUnAddressedMessage(CANBuffer);
         MTI_RESERVED                 : begin end;
         MTI_DATAGRAM_ONLY_FRAME,
-        MTI_DATAGRAM_FRAME_START,
+        MTI_DATAGRAM_FRAME_START     : ReceivedStartingDatagramMessage(CANBuffer);
         MTI_DATAGRAM_FRAME,
         MTI_DATAGRAM_FRAME_END       : ReceivedDatagramMessage(CANBuffer);
         MTI_ADDRESSED                : ReceivedAddressedMessage(CANBuffer);
