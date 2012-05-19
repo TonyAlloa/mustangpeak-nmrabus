@@ -152,9 +152,7 @@ end;
 //     Parameters:
 //     Returns:
 //
-//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
-//                  Called when a message passes Filter 0 which is defined
-//                  as any CAN level message (bit 26 = 0)
+//     Description:
 //
 // *****************************************************************************
 function CheckForUnKnownMTI(Buffer: PCANBuffer): Boolean;
@@ -167,6 +165,28 @@ begin
     DataBytes[0] := MTI_OPTIONAL_INTERACTION_REJECTED;
     StoreComplexResponse(Buffer, CRC_OPTIONAL_INTERACTION_REJECTED, Buffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
   end
+end;
+
+// *****************************************************************************
+//  procedure CheckForUnKnownDatagramType
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function CheckForUnKnownDatagramType(Buffer: PCANBuffer): Boolean;
+var
+  DataBytes: TCAN_DataBytes;
+begin
+  Result := NMRAnetUtilities_UnknownDatagramType(Buffer^.DataBytes[0]);
+  if Result then
+  begin
+    DataBytes[0] := MTI_DATAGRAM_REJECTED;
+    DataBytes[1] := DATAGRAM_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[0];
+    DataBytes[2] := DATAGRAM_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[1];
+    StoreComplexResponse(Buffer, CRC_OPTIONAL_INTERACTION_REJECTED, Buffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 3);
+  end;
 end;
 
 // ****************************************************************************
@@ -376,17 +396,20 @@ begin
   
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
   begin
-    case CANBuffer^.Databytes[0] of
-      MTI_VERIFY_NODE_ID_NUMBER_DEST       : DispatchVerifyNodeID(CANBuffer);
-      MTI_PROTOCOL_SUPPORT_QUERY           : DispatchProtocolSupportInquiry(CANBuffer);
-//      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
-//      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
-//      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
-      MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents(CANBuffer);
-      MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
-      MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;   // TODO
- //   else
-      // TODO SEND A Optional Rejected to sender, in draft spec but not in "offical S"
+    if not CheckForUnKnownMTI(CANBuffer) then
+    begin
+      case CANBuffer^.Databytes[0] of
+        MTI_VERIFY_NODE_ID_NUMBER_DEST       : DispatchVerifyNodeID(CANBuffer);
+        MTI_PROTOCOL_SUPPORT_QUERY           : DispatchProtocolSupportInquiry(CANBuffer);
+  //      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
+  //      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
+  //      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
+        MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents(CANBuffer);
+        MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
+        MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;   // TODO
+   //   else
+        // TODO SEND A Optional Rejected to sender, in draft spec but not in "offical S"
+      end
     end
   end
 end;
@@ -404,7 +427,8 @@ end;
 procedure ReceivedDatagramMessage(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
-    NMRAnetDatagrams_ProcessReceive(CANBuffer)
+    if not CheckForUnKnownDatagramType(CANBuffer) then
+      NMRAnetDatagrams_ProcessReceive(CANBuffer)
 end;
 
 // ****************************************************************************
@@ -471,11 +495,12 @@ end;
 // *****************************************************************************
 procedure ReceivedOnFilter1(CANBuffer: PCANBuffer);                             // NMRAnet Layer Message
 var
-  DoDefault, 
-  UnknownMTI: Boolean;
+  DoDefault: Boolean;
 begin
 
  // UART1_Write_Text('NMRAnet'+LF);
+ 
+  TMR4 := 0;
 
   DoDefault := True;
   if NMRAnetLayerReceiveHook <> nil then
@@ -488,24 +513,22 @@ begin
 
     if NMRAnetCANReceive_Permited then
     begin
-      UnknownMTI := False;
-      if CANBuffer^.ID and MTI_TYPE_MASK = MTI_ADDRESSED then
-        UnknownMTI := CheckForUnKnownMTI(CANBuffer);
-        
-      if not UnknownMTI then
-      begin
-        case CANBuffer^.ID and MTI_TYPE_MASK of
-          MTI_UNADDRESSED              : ReceivedUnAddressedMessage(CANBuffer);
-          MTI_RESERVED                 : begin end;
-          MTI_DATAGRAM_ONLY_FRAME,
-          MTI_DATAGRAM_FRAME_START,
-          MTI_DATAGRAM_FRAME,
-          MTI_DATAGRAM_FRAME_END       : ReceivedDatagramMessage(CANBuffer);
-          MTI_ADDRESSED                : ReceivedAddressedMessage(CANBuffer);
-          MTI_STREAM_DATA_SEND         : ReceivedStreamMessage(CANBuffer);
-        end;
-      end
+      case CANBuffer^.ID and MTI_TYPE_MASK of
+        MTI_UNADDRESSED              : ReceivedUnAddressedMessage(CANBuffer);
+        MTI_RESERVED                 : begin end;
+        MTI_DATAGRAM_ONLY_FRAME,
+        MTI_DATAGRAM_FRAME_START,
+        MTI_DATAGRAM_FRAME,
+        MTI_DATAGRAM_FRAME_END       : ReceivedDatagramMessage(CANBuffer);
+        MTI_ADDRESSED                : ReceivedAddressedMessage(CANBuffer);
+        MTI_STREAM_DATA_SEND         : ReceivedStreamMessage(CANBuffer);
+      end;
     end;
+  end;
+  
+  if TMR4 > MaxTime_RX then
+  begin
+    MaxTime_RX := TMR4;
   end;
 end;
 

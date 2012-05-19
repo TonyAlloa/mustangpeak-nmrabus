@@ -119,6 +119,11 @@ begin
 
   PinChangeState := PORTF;
   {$ENDIF}
+  
+  
+  TON_T3CON_bit := 1;
+  TON_T4CON_bit := 1;
+
 end;
 
 end.

@@ -250,12 +250,7 @@ var
   ActiveDatagram: PDatagramBuffer;
   Buffer: TCANBuffer;
 begin          
-
-   Exit;
-
-
   ActiveDatagram := @DatagramInfo.List[DatagramInfo.iActiveDatagram];
-
   case DatagramInfo.iState of
     STATE_DATAGRAM_START :
       begin
@@ -398,7 +393,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure StoreBytes(Datagram: PDatagramBuffer; var Buffer: TCANBuffer; IsFull: Boolean);
+procedure StoreBytes(Datagram: PDatagramBuffer; var Buffer: TCANBuffer);
 var
   i: Integer;
 begin
@@ -407,8 +402,6 @@ begin
     Datagram^.DataBytes[i + Datagram^.iByteCount] := Buffer.DataBytes[i];
     Inc(Datagram^.iByteCount);
   end;
-  if IsFull then
-    Datagram^.iState := DATAGRAM_TRANSFER_FULL;                                 // Ready for main statemachine Datagram_Process to handle it from here
 end;
 
 // *****************************************************************************
@@ -460,7 +453,7 @@ begin
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iByteCount := 0;
           Datagram^.iFrameCount := 0;
-          StoreBytes(Datagram, Buffer^, False);
+          StoreBytes(Datagram, Buffer^);
           Datagram^.iState := DATAGRAM_TRANSFER_FULL;                           // Ready for a "Full" Response
         end
       end;
@@ -473,7 +466,7 @@ begin
           Datagram^.iByteCount := 0;
           Datagram^.iFrameCount := 0;
           Datagram^.iWatchdog := 0;
-          StoreBytes(Datagram, Buffer^, False);
+          StoreBytes(Datagram, Buffer^);
           Datagram^.iState := DATAGRAM_RECEIVING;
         end
       end;
@@ -483,7 +476,7 @@ begin
         begin
           if UpdateFrameCount(Datagram) then
           begin
-            StoreBytes(Datagram, Buffer^, False);
+            StoreBytes(Datagram, Buffer^);
 //UART1_Write_Text('C'+LF);
           end
         end
@@ -494,7 +487,8 @@ begin
         begin
           if UpdateFrameCount(Datagram) then
           begin
-            StoreBytes(Datagram, Buffer^, True);
+            StoreBytes(Datagram, Buffer^);
+            Datagram^.iState := DATAGRAM_TRANSFER_FULL;                         // Ready for a "Full" Response
 //UART1_Write_Text('D'+LF);
           end
         end else

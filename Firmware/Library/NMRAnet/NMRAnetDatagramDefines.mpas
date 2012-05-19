@@ -1,4 +1,4 @@
-unit NMRABusDatagramDefines;
+unit NMRAnetDatagramDefines;
 
 uses
   CANDefines,
@@ -11,18 +11,18 @@ type
 const
   DATAGRAM_REJECTED                                : TDatagramErrorCode = ($00, $00);
   // Errors that will cause sender to not retry
-  DATAGRAM_REJECTED_PERMANENT_ERROR                : TDatagramErrorCode = ($01, $00);
-  DATAGRAM_REJECTED_INFORMATION_LOGGED             : TDatagramErrorCode = ($01, $01);
-  DATAGRAM_REJECTED_SOURCE_NOT_PERMITTED           : TDatagramErrorCode = ($01, $02);
-  DATAGRAM_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED  : TDatagramErrorCode = ($01, $04);
+  DATAGRAM_REJECTED_PERMANENT_ERROR                : TDatagramErrorCode = ($10, $00);
+  DATAGRAM_REJECTED_INFORMATION_LOGGED             : TDatagramErrorCode = ($10, $10);
+  DATAGRAM_REJECTED_SOURCE_NOT_PERMITTED           : TDatagramErrorCode = ($10, $20);
+  DATAGRAM_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED  : TDatagramErrorCode = ($10, $40);
   
-  DATAGRAM_REJECTED_BUFFER_FULL                    : TDatagramErrorCode = ($02, $00);
+  DATAGRAM_REJECTED_BUFFER_FULL                    : TDatagramErrorCode = ($20, $00);
   
-  DATAGRAM_REJECTED_OUT_OF_ORDER                   : TDatagramErrorCode = ($06, $00);
+  DATAGRAM_REJECTED_OUT_OF_ORDER                   : TDatagramErrorCode = ($60, $00);
 
-  DATAGRAM_REJECTED_NO_RESENT_MASK                 : TDatagramErrorCode = ($01, $00);
-  DATAGRAM_REJECTED_RESEND_MASK                    : TDatagramErrorCode = ($02, $00);
-  DATAGRAM_REJECTED_TRANSPORT_ERROR_MASK           : TDatagramErrorCode = ($04, $00);
+  DATAGRAM_REJECTED_NO_RESENT_MASK                 : TDatagramErrorCode = ($10, $00);
+  DATAGRAM_REJECTED_RESEND_MASK                    : TDatagramErrorCode = ($20, $00);
+  DATAGRAM_REJECTED_TRANSPORT_ERROR_MASK           : TDatagramErrorCode = ($40, $00);
 
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
@@ -57,6 +57,18 @@ const
   DATAGRAM_TYPE_TRAIN_CONTROL               = $30;                              // Train Control Protocol
   DATAGRAM_TYPE_TWO_BYTE_CMD_MASK           = $E0;                              // Next two bytes are command bytes and not data
   DATAGRAM_TYPE_SIX_BYTE_CMD_MASK           = $F0;                              // Next six bytes are command bytes and not data
+  
+  DATAGRAM_TYPE_KNOWN_LIST_COUNT = 8;
+  DATAGRAM_TYPE_KNOWN_LIST: array[0..DATAGRAM_TYPE_KNOWN_LIST_COUNT-1] of Byte = (
+    DATAGRAM_TYPE_LOG_REQUEST,                                                  // ?? unknown
+    DATAGRAM_TYPE_LOG_REPLY,                                                    // ?? unknown
+    DATAGRAM_TYPE_CONFIGURATION,                                                // Memory Configuration Protocol
+    DATAGRAM_TYPE_REMOTE_BUTTON,                                                // Remote Button Configuration
+    DATAGRAM_TYPE_DISPLAY,                                                      // Display Protocol
+    DATAGRAM_TYPE_TRAIN_CONTROL,                                                // Train Control Protocol
+    DATAGRAM_TYPE_TWO_BYTE_CMD_MASK,                                            // Next two bytes are command bytes and not data
+    DATAGRAM_TYPE_SIX_BYTE_CMD_MASK                                             // Next six bytes are command bytes and not data
+  );
   
 type  
   TDatagram = array[0..LEN_DATAGRAM-1] of Byte;

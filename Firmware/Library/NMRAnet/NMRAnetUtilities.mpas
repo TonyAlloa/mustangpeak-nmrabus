@@ -22,7 +22,8 @@ unit NMRAnetUtilities;
 uses
   NMRAnetAppDefines,
   NMRAnetDefines,
-  CANDefines;
+  CANDefines,
+  NMRAnetDatagramDefines;
 
 
 procedure NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer);
@@ -50,6 +51,7 @@ function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
 function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_UnknownMTI(MTI: Byte): Boolean;
+function NMRAnetUtilities_UnknownDatagramType(DatagramType: Byte): Boolean;
 
 
 implementation
@@ -523,6 +525,31 @@ begin
   while i < MTI_KNOWN_COUNT do
   begin
     if MTI = MTI_KNOWN_LIST[i] then
+    begin
+      Result := False;
+      Exit
+    end;
+    Inc(i)
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetUtilities_UnknownDatagramType
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRAnetUtilities_UnknownDatagramType(DatagramType: Byte): Boolean;
+var
+  i: Integer;
+begin
+  Result := True;
+  i := 0;
+  while i < DATAGRAM_TYPE_KNOWN_LIST_COUNT do
+  begin
+    if DatagramType = DATAGRAM_TYPE_KNOWN_LIST[i] then
     begin
       Result := False;
       Exit

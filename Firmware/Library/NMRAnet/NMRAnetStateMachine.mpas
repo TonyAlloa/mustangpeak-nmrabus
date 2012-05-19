@@ -416,6 +416,8 @@ begin
     NMRABus.Responses.iState := NextState
 end;
 
+
+
 // *****************************************************************************
 //  procedure Responses_Process
 //     Parameters:
@@ -448,7 +450,8 @@ begin
                                                                HandleNMRAnetLayerComplexResponse(Buffer, FT_PRODUCER_IDENTIFIED, CRC_PRODUCER_IDENTIFIED, STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS);
                                                                NMRABus.Responses.Tag := 0;   // Get ready for next state
                                                               end;
-        STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS : HandleNMRALayerSimpleSendAllConsumerProducer(Buffer, STATE_NMRABUS_RESPONSE_SEND_RID)
+        STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS : HandleNMRALayerSimpleSendAllConsumerProducer(Buffer, STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED);
+        STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED: HandleNMRAnetLayerComplexResponse(Buffer, FT_OPTIONAL_INTERACTION_REJECTED, CRC_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_RESPONSE_SEND_RID)
       else
         NMRABus.Responses.iState := STATE_NMRABUS_RESPONSE_SEND_RID;
       end;

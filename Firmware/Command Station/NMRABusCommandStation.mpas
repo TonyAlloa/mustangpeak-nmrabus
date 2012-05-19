@@ -123,6 +123,9 @@ var
   laststate, Rlaststate: word;
   datagram: TDatagram;
   i, j: Integer;
+  
+  s_float: array[23] of char;
+  
 begin
 
   Track_DCC_Out_Pin := 0;
@@ -147,6 +150,8 @@ begin
   Loop := 0;
   laststate := 0;
   Rlaststate := 0;
+  MaxTime_StateMachine := 0;
+  MaxTime_RX := 0;
   
     {
   iArray := 0;
@@ -166,54 +171,23 @@ begin
 
   while (TRUE) do
   begin
+    TMR3 := 0;
     NMRAnetStateMachine_Process;
-    
-    
-   {if iArray > 5 then
+    if TMR3 > MaxTime_StateMachine then
     begin
-      for i := 0 to iArray do
-      begin
-        LongwordToHex('['+x[i].ID+']', s1);
-        UART1_Write_Text(s1+LF);
-      end;
-      iArray := 0;
-    end;    }
-    
-    
-
-    
-    delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
-    
-  {  if Loop mod 100000 = 0 then
-    begin
-      for i := 0 to LEN_DATAGRAM_ARRAY - 1 do
-      begin
-        UART1_Write_Text(LF+LF);
-        WordToHex(DatagramProcessor.iState, s1);
-        s2 := 'Processor State:';
-        UART1_Write_Text(s2+s1);
-        UART1_Write_Text(LF);
-        
-        WordToHex(DatagramList[i].iState, s1);
-        s2 := 'State:';
-        UART1_Write_Text(s2+s1);
-        UART1_Write_Text(LF);
-        
-        WordToHex(DatagramList[i].iWatchdog, s1);
-        s2 := 'Watchdog:';
-        UART1_Write_Text(s2+s1);
-        UART1_Write_Text(LF);
-        
-        WordToHex(DatagramList[i].SourceAlias, s1);
-        s2 := 'Alias:';
-        UART1_Write_Text(s2+s1);
-        UART1_Write_Text(LF);
-
-      end;
+      MaxTime_StateMachine := TMR3;
+      FloatToStr((50e-9*MaxTime_StateMachine)*1e6, s_float);
+      UART1_Write_Text('StateMachine Max: ' + s_float+'us'+LF);
     end;
-    Inc(Loop);     }
     
+    if MaxTime_RX <> Rlaststate then
+    begin
+      FloatToStr((50e-9*MaxTime_RX)*1e6, s_float);
+      UART1_Write_Text('CAN RX Max: ' + s_float+'us'+LF);
+      Rlaststate := MaxTime_RX
+    end;
 
+    delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
     
     if NMRAnetDatagrams_ExtractNext(Datagram) then
     begin
@@ -224,30 +198,6 @@ begin
       end;
     //  UART1_Write_Text(LF);
     end;
-    
-    
-
-  {  if DatagramInfo.iState <> laststate then
-    begin
-      IntToStr(DatagramInfo.iState, s1);
-      UART1_Write_Text(s1 + '  State: '+LF);
-      laststate := DatagramInfo.iState
-    end;    }
-
-   // if NMRABus.iState <> laststate then
-    begin
-   //   IntToStr(NMRABus.iState, s1);
-    //  UART1_Write_Text(s1 + '  State: '+LF);
-   //   IntToStr(NMRABus.Responses.iState, s1);
-   //   UART1_Write_Text(s1 + '  Response State: '+LF);
-    //  laststate := NMRABus.iState
-    end;
-   { if NMRABus.Responses.iState <> Rlaststate then
-    begin
-      IntToStr(NMRABus.Responses.iState, s1);
-      UART1_Write_Text(s1 + '  Response State: '+LF);
-      laststate := NMRABus.iState
-    end;    }
     
 
     if NMRAnetCANReceive_Permited then

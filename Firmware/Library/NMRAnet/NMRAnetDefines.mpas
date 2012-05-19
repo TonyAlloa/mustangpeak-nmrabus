@@ -183,6 +183,7 @@ const
   STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED     = 4;
   STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED     = 5;
   STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS  = 6;
+  STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED = 7;
   
   LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
   
@@ -250,6 +251,9 @@ type
   
 var
   NMRABus: TNMRABus;
+  
+  MaxTime_StateMachine: Word;
+  MaxTime_RX: Word;
 
 implementation
 
