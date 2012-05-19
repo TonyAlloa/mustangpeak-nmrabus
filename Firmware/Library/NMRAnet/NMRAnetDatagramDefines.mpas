@@ -3,6 +3,8 @@ unit NMRAnetDatagramDefines;
 uses
   CANDefines,
   NMRAnetDefines;
+  
+{$I Options.inc}
 
 type
   TDatagramErrorCode = array[0..1] of Byte;
@@ -32,7 +34,7 @@ const
   DATAGRAM_EMPTY               = 0;                                             // The Datagram Packet Buffer is empty
   DATAGRAM_RECEIVING           = 1;                                             // The Datagram Packet Buffer is currently collecting frames
   DATAGRAM_TRANSFER_FULL       = 3;                                             // The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
-  DATAGRAM_READY               = 4;                                             // The Datagram is ready for consumption by the application
+  DATAGRAM_TASK_RESPONDED      = 4;                                             // The task that the Datagramw was sent to do is complete so time to sent the Ok message, helps throttle the sender
 
   STATE_DATAGRAM_START         = 0;                                             // Statemachine states
   STATE_DATAGRAM_ABANDONED     = 1;
@@ -49,25 +51,23 @@ const
   
   // The first byte in a datagram is a command byte that allows datagrams to be "tagged" as special through these codes
   // The first byte is always reserved for this special purpose
-  DATAGRAM_TYPE_LOG_REQUEST                 = $01;                              // ?? unknown
-  DATAGRAM_TYPE_LOG_REPLY                   = $02;                              // ?? unknown
+//  DATAGRAM_TYPE_LOG_REQUEST                 = $01;                              // ?? unknown
+//  DATAGRAM_TYPE_LOG_REPLY                   = $02;                              // ?? unknown
   DATAGRAM_TYPE_CONFIGURATION               = $20;                              // Memory Configuration Protocol
-  DATAGRAM_TYPE_REMOTE_BUTTON               = $21;                              // Remote Button Configuration
-  DATAGRAM_TYPE_DISPLAY                     = $28;                              // Display Protocol
+//  DATAGRAM_TYPE_REMOTE_BUTTON               = $21;                              // Remote Button Configuration
+//  DATAGRAM_TYPE_DISPLAY                     = $28;                              // Display Protocol
   DATAGRAM_TYPE_TRAIN_CONTROL               = $30;                              // Train Control Protocol
   DATAGRAM_TYPE_TWO_BYTE_CMD_MASK           = $E0;                              // Next two bytes are command bytes and not data
   DATAGRAM_TYPE_SIX_BYTE_CMD_MASK           = $F0;                              // Next six bytes are command bytes and not data
   
-  DATAGRAM_TYPE_KNOWN_LIST_COUNT = 8;
+  DATAGRAM_TYPE_KNOWN_LIST_COUNT = 2;
   DATAGRAM_TYPE_KNOWN_LIST: array[0..DATAGRAM_TYPE_KNOWN_LIST_COUNT-1] of Byte = (
-    DATAGRAM_TYPE_LOG_REQUEST,                                                  // ?? unknown
-    DATAGRAM_TYPE_LOG_REPLY,                                                    // ?? unknown
+//    DATAGRAM_TYPE_LOG_REQUEST,                                                  // ?? unknown
+//    DATAGRAM_TYPE_LOG_REPLY,                                                    // ?? unknown
     DATAGRAM_TYPE_CONFIGURATION,                                                // Memory Configuration Protocol
-    DATAGRAM_TYPE_REMOTE_BUTTON,                                                // Remote Button Configuration
-    DATAGRAM_TYPE_DISPLAY,                                                      // Display Protocol
-    DATAGRAM_TYPE_TRAIN_CONTROL,                                                // Train Control Protocol
-    DATAGRAM_TYPE_TWO_BYTE_CMD_MASK,                                            // Next two bytes are command bytes and not data
-    DATAGRAM_TYPE_SIX_BYTE_CMD_MASK                                             // Next six bytes are command bytes and not data
+//    DATAGRAM_TYPE_REMOTE_BUTTON,                                                // Remote Button Configuration
+//    DATAGRAM_TYPE_DISPLAY,                                                      // Display Protocol
+    DATAGRAM_TYPE_TRAIN_CONTROL                                                 // Train Control Protocol
   );
   
 type  
@@ -93,8 +93,14 @@ type
     BufferOverflowList: TBufferOverflowList;                                    // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;
   
+  TDatagramTaskCallbackFunc = function(Datagram: PDatagramBuffer): Boolean;         // Return true to set the Task Complete and allow a response to be sent back to the sender and free the buffer slot
+  PDatagramTaskCallbackFunc = ^TDatagramTaskCallbackFunc;
+
 var
   DatagramInfo: TDatagramInfo;
+  DatagramUnknownCallback: PDatagramTaskCallbackFunc;
+  DatagramTrainControlCallback: PDatagramTaskCallbackFunc;
+  DatagramMemConfigurationCallback: PDatagramTaskCallbackFunc;
   
 implementation
 

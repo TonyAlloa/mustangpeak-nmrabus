@@ -11,7 +11,8 @@ procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_ProcessReceive(Buffer: PCANBuffer);
 procedure NMRAnetDatagrams_Process;
 procedure NMRAnetDatagrams_1ms_TimeTick;
-function NMRAnetDatagrams_ExtractNext(var Datagram: TDatagram): Boolean;
+procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
+
 
 // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
@@ -43,36 +44,35 @@ begin
   DatagramInfo.iActiveDatagram := 0;
   for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST-1 do
     DatagramInfo.BufferOverflowList[i] := 0;
+    
+  DatagramUnknownCallback := PDatagramTaskCallbackFunc(nil);
+  DatagramTrainControlCallback := PDatagramTaskCallbackFunc(nil);
+  DatagramMemConfigurationCallback := PDatagramTaskCallbackFunc(nil);
 end;
+
 
 // *****************************************************************************
 //
-// procedure NMRAnetDatagrams_ExtractNext;
+// procedure NMRAnetDatagrams_SetCallback;
 //
 //  Parameters:
 //                None
 //  Returns:
 //                None
 //  Description:
-//              Pulls the first found Ready Datagram in the Datagram Array
+//              Not really a necessary function just helps future use in reminding
+//              how these Callbacks work.
+//
+//              Callback is the variable int NMRAnetDatagramDefines
+//                           DatagramUnknownCallback: PDatagramTaskCallbackFunc;
+//                           DatagramTrainControlCallback: PDatagramTaskCallbackFunc;
+//                           DatagramMemConfigurationCallback: PDatagramTaskCallbackFunc;
+//                           etc
 //
 // *****************************************************************************
-function NMRAnetDatagrams_ExtractNext(var Datagram: TDatagram): Boolean;
-var
-  i: Integer;
+procedure NMRAnetDatagrams_SetCallback(var Callback: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);
 begin
-  Result := False;
-  i := 0;
-  while (i < LEN_DATAGRAM_ARRAY) and not Result do
-  begin
-    if DatagramInfo.List[i].iState = DATAGRAM_READY then
-    begin
-      Datagram := DatagramInfo.List[i].DataBytes;
-      DatagramInfo.List[i].iState := DATAGRAM_EMPTY;
-      Result := True;
-    end;
-    Inc(i);
-  end
+  Callback := Func
 end;
 
 // *****************************************************************************
@@ -149,7 +149,8 @@ begin
     begin
       if DatagramInfo.BufferOverflowList[i] <> 0 then
       begin
-        TrySendDatagramResponse(Datagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_BUFFER_FULL, 3, DATAGRAM_EMPTY);
+        if TrySendDatagramResponse(Datagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_BUFFER_FULL, 3, DATAGRAM_EMPTY) then
+          DatagramInfo.BufferOverflowList[i] := 0;
         Exit;
       end;
         Inc(i); 
@@ -168,6 +169,7 @@ end;
 // *****************************************************************************
 procedure DispatchSpecialDatagramLogRequest(Datagram: PDatagramBuffer);
 begin
+  Datagram^.iState := DATAGRAM_TASK_RESPONDED
 end;
 
 // *****************************************************************************
@@ -181,6 +183,7 @@ end;
 // *****************************************************************************
 procedure DispatchSpecialDatagramLogReply(Datagram: PDatagramBuffer);
 begin
+  Datagram^.iState := DATAGRAM_TASK_RESPONDED
 end;
 
 // *****************************************************************************
@@ -194,6 +197,12 @@ end;
 // *****************************************************************************
 procedure DispatchSpecialDatagramMemConfiguration(Datagram: PDatagramBuffer);
 begin
+  if DatagramMemConfigurationCallback <> PDatagramTaskCallbackFunc(nil) then
+  begin
+    if DatagramMemConfigurationCallback(Datagram) then
+      Datagram^.iState := DATAGRAM_TASK_RESPONDED
+  end else
+    Datagram^.iState := DATAGRAM_TASK_RESPONDED
 end;
 
 // *****************************************************************************
@@ -207,6 +216,7 @@ end;
 // *****************************************************************************
 procedure DispatchSpecialDatagramRemoteButton(Datagram: PDatagramBuffer);
 begin
+  Datagram^.iState := DATAGRAM_TASK_RESPONDED
 end;
 
 // *****************************************************************************
@@ -220,6 +230,7 @@ end;
 // *****************************************************************************
 procedure DispatchSpecialDatagramDisplay(Datagram: PDatagramBuffer);
 begin
+  Datagram^.iState := DATAGRAM_TASK_RESPONDED
 end;
 
 // *****************************************************************************
@@ -232,7 +243,13 @@ end;
 //  Description:
 // *****************************************************************************
 procedure DispatchSpecialDatagramTrainControl(Datagram: PDatagramBuffer);
-begin
+begin      
+  if DatagramTrainControlCallback <> PDatagramTaskCallbackFunc( nil) then
+  begin
+    if DatagramTrainControlCallback(Datagram) then
+      Datagram^.iState := DATAGRAM_TASK_RESPONDED
+  end else
+    Datagram^.iState := DATAGRAM_TASK_RESPONDED
 end;
 
 
@@ -249,6 +266,8 @@ procedure NMRAnetDatagrams_Process;
 var
   ActiveDatagram: PDatagramBuffer;
   Buffer: TCANBuffer;
+  
+  s1: array[32] of char;
 begin          
   ActiveDatagram := @DatagramInfo.List[DatagramInfo.iActiveDatagram];
   case DatagramInfo.iState of
@@ -268,34 +287,30 @@ begin
       end;
     STATE_DATAGRAM_ABANDONED :
       begin
-        if TrySendDatagramResponse(ActiveDatagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_OUT_OF_ORDER, 2, DATAGRAM_EMPTY) then
+        if TrySendDatagramResponse(ActiveDatagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_OUT_OF_ORDER, 3, DATAGRAM_EMPTY) then
           DatagramInfo.iState := STATE_DATAGRAM_NEXT;
       end;
     STATE_DATAGRAM_RESPOND  :
       begin
         case ActiveDatagram^.ErrorCode of
-          DGE_NONE                 : if TrySendDatagramResponse(ActiveDatagram, MTI_DATAGRAM_RECIEVED_OK, nil, 1, DATAGRAM_READY) then
-                                     begin
-                                     
-                                       // NOTE MAY 16, 2012 may not want to send response until after the datagram is handled, Memory Confguration is a good example
-                                       
-                                       case ActiveDatagram^.Databytes[0] of
-                                         DATAGRAM_TYPE_LOG_REQUEST     : DispatchSpecialDatagramLogRequest(ActiveDatagram);                // ?? unknown
-                                         DATAGRAM_TYPE_LOG_REPLY       : DispatchSpecialDatagramLogReply(ActiveDatagram);                  // ?? unknown
-                                         DATAGRAM_TYPE_CONFIGURATION   : DispatchSpecialDatagramMemConfiguration(ActiveDatagram);          // Memory Configuration Protocol
-                                         DATAGRAM_TYPE_REMOTE_BUTTON   : DispatchSpecialDatagramRemoteButton(ActiveDatagram);              // Remote Button Configuration
-                                         DATAGRAM_TYPE_DISPLAY         : DispatchSpecialDatagramDisplay(ActiveDatagram);                   // Display Protocol
-                                         DATAGRAM_TYPE_TRAIN_CONTROL   : DispatchSpecialDatagramTrainControl(ActiveDatagram);              // Train Control Protocol
-                                       end;
-                                       DatagramInfo.iState := STATE_DATAGRAM_NEXT;
+          DGE_NONE                 :  begin      
+                                        case ActiveDatagram^.Databytes[0] of
+                                      //    DATAGRAM_TYPE_LOG_REQUEST     : DispatchSpecialDatagramLogRequest(ActiveDatagram);                // ?? unknown
+                                      //    DATAGRAM_TYPE_LOG_REPLY       : DispatchSpecialDatagramLogReply(ActiveDatagram);                  // ?? unknown
+                                          DATAGRAM_TYPE_CONFIGURATION   : DispatchSpecialDatagramMemConfiguration(ActiveDatagram);          // Memory Configuration Protocol
+                                      //    DATAGRAM_TYPE_REMOTE_BUTTON   : DispatchSpecialDatagramRemoteButton(ActiveDatagram);              // Remote Button Configuration
+                                      //    DATAGRAM_TYPE_DISPLAY         : DispatchSpecialDatagramDisplay(ActiveDatagram);                   // Display Protocol
+                                          DATAGRAM_TYPE_TRAIN_CONTROL   : DispatchSpecialDatagramTrainControl(ActiveDatagram);              // Train Control Protocol
+                                        end;
+                                        
+                                        if ActiveDatagram^.iState = DATAGRAM_TASK_RESPONDED then
+                                        begin
+                                          if TrySendDatagramResponse(ActiveDatagram, MTI_DATAGRAM_RECIEVED_OK, nil, 1, DATAGRAM_EMPTY) then
+                                            DatagramInfo.iState := STATE_DATAGRAM_NEXT;
+                                        end
                                      end;
           DGE_FRAME_OUT_OF_ORDER   : if TrySendDatagramResponse(ActiveDatagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_OUT_OF_ORDER, 3, DATAGRAM_EMPTY) then
-                                   begin
                                        DatagramInfo.iState := STATE_DATAGRAM_NEXT;
-                                       
-                                       UART1_Write_Text('Out of Order'+LF);
-                                       
-                                   end;
           DGE_BUFFER_FULL          : if TrySendDatagramResponse(ActiveDatagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_BUFFER_FULL, 3, DATAGRAM_EMPTY) then
                                        DatagramInfo.iState := STATE_DATAGRAM_NEXT;
         end
@@ -377,7 +392,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function UpdateFrameCount(Datagram: PDatagramBuffer): Boolean;
+procedure UpdateFrameCount(Datagram: PDatagramBuffer);
 begin
   if Datagram^.ErrorCode = DGE_NONE then                                        // If in Error has already failed this function
   begin
@@ -385,12 +400,11 @@ begin
     Datagram^.iWatchdog := 0;                                                   // Reset the Watchdog since the source connected again
     if Datagram^.iFrameCount >= DATAGRAM_MAX_FRAME_COUNT then                   // Source sent too many frames
     begin
-      Datagram^.iFrameCount := 0;                                               // Error clear
-      Datagram^.iByteCount := 0;                                                // Error clear
+      Datagram^.iFrameCount := 0;
+      Datagram^.iByteCount := 0;
       Datagram^.ErrorCode := DGE_FRAME_OUT_OF_ORDER                             // Ready for a "Frame out of Order" Response
     end
   end;
-  Result := Datagram^.ErrorCode = DGE_NONE
 end;
 
 // *****************************************************************************
@@ -404,13 +418,14 @@ end;
 // *****************************************************************************
 procedure StoreBytes(Datagram: PDatagramBuffer; var Buffer: TCANBuffer);
 var
-  i: Integer;
+  i, Offset: Integer;
 begin
-  if Datagram^.ErrorCode = DGE_NONE then
+  if Datagram^.ErrorCode = DGE_NONE then        // Only store if thre is no error
   begin
+    Offset := Datagram^.iByteCount;
     for i := 0 to Buffer.DataCount - 1 do
     begin
-      Datagram^.DataBytes[i + Datagram^.iByteCount] := Buffer.DataBytes[i];
+      Datagram^.DataBytes[i + Offset] := Buffer.DataBytes[i];
       Inc(Datagram^.iByteCount);
     end;
   end
@@ -453,15 +468,12 @@ procedure NMRAnetDatagrams_ProcessReceive(Buffer: PCANBuffer);
 var
   Datagram: PDatagramBuffer;
 begin
-//UART1_Write_Text('x'+LF);
-
   Datagram := PDatagramBuffer( nil);
   case Buffer^.ID and MTI_TYPE_MASK of
     MTI_DATAGRAM_ONLY_FRAME :
       begin
         if TryAllocateBuffer(Datagram) then
         begin
-//UART1_Write_Text('A'+LF);
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iByteCount := 0;
           Datagram^.iFrameCount := 0;
@@ -473,7 +485,6 @@ begin
       begin
         if TryAllocateBuffer(Datagram) then
         begin
-//UART1_Write_Text('B'+LF);
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iByteCount := 0;
           Datagram^.iFrameCount := 0;
@@ -486,28 +497,19 @@ begin
       begin
         if FindInProcessDatagram(Buffer^.ID and MASK_SOURCE_ALIAS, Datagram) then
         begin
-          if UpdateFrameCount(Datagram) then
-          begin
-            StoreBytes(Datagram, Buffer^);
-//UART1_Write_Text('C'+LF);
-          end
+          UpdateFrameCount(Datagram);
+          StoreBytes(Datagram, Buffer^);
         end
       end;
     MTI_DATAGRAM_FRAME_END :
       begin
         if FindInProcessDatagram(Buffer^.ID and MASK_SOURCE_ALIAS, Datagram) then
         begin
-          if UpdateFrameCount(Datagram) then
-          begin
-            StoreBytes(Datagram, Buffer^);
-            Datagram^.iState := DATAGRAM_TRANSFER_FULL;                         // Ready for a "Full" Response
-//UART1_Write_Text('D'+LF);
-          end
+          UpdateFrameCount(Datagram);
+          StoreBytes(Datagram, Buffer^);
+          Datagram^.iState := DATAGRAM_TRANSFER_FULL;                         // Ready for a "Full" Response
         end else
-        begin
-//UART1_Write_Text('E'+LF);
           AddToBufferOverflowList(Datagram);
-        end
       end;
    end;
 end;
