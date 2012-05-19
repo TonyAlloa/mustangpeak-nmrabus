@@ -180,9 +180,9 @@ begin
     end;    }
     
     
-   // delay_us(600);
+
     
-  //  delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
+    delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
     
   {  if Loop mod 100000 = 0 then
     begin

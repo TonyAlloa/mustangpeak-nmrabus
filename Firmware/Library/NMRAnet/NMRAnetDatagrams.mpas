@@ -147,9 +147,12 @@ begin
     i := 0;
     while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
     begin
-      if TrySendDatagramResponse(Datagram, MTI_DATAGRAM_RECIEVED_OK, nil, 1, DATAGRAM_READY) then
+      if DatagramInfo.BufferOverflowList[i] <> 0 then
+      begin
+        TrySendDatagramResponse(Datagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_REJECTED_BUFFER_FULL, 3, DATAGRAM_EMPTY);
         Exit;
-      Inc(i);
+      end;
+        Inc(i); 
     end;
   end
 end;
@@ -246,7 +249,11 @@ procedure NMRAnetDatagrams_Process;
 var
   ActiveDatagram: PDatagramBuffer;
   Buffer: TCANBuffer;
-begin
+begin          
+
+   Exit;
+
+
   ActiveDatagram := @DatagramInfo.List[DatagramInfo.iActiveDatagram];
 
   case DatagramInfo.iState of

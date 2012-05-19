@@ -257,8 +257,7 @@ begin
     begin
       Buffer^.DataCount := DataCount;
       Buffer^.DataBytes := DataBytes^;
-    end else
-      Buffer^.DataCount := 0;
+    end;
     if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
     begin
       StartCANMessageEngine();
@@ -465,20 +464,17 @@ end;
 //
 // *****************************************************************************
 
-var
-  VariableField: DWord;
-
 procedure NMRAnetStateMachine_Process;
 var
-  Buffer: TCANBuffer;
-
+  Buffer: TCANBuffer;     
+  VariableField: DWord;
 begin
   case NMRABus.iState of
     STATE_NMRABUS_START :
       begin
         NMRABus.State := BS_INHIBITED or BS_UNITIALIZED;
         FlushLists;
-  //      while CANStorage_Transmitting do;                                       // Wait for the last transmited packet
+        while CAN_Engine.State and CES_TRANSMITTING <> 0 do;                             // Wait for the last transmited packet
         NMRABus.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS;
       end;
     STATE_NMRABUS_GENERATE_NODE_ALIAS :
