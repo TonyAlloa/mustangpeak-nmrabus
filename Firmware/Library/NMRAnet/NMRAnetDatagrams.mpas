@@ -448,21 +448,15 @@ procedure NMRAnetDatagrams_ProcessReceive(Buffer: PCANBuffer);
 var
   Datagram: PDatagramBuffer;
 begin
-
 //UART1_Write_Text('x'+LF);
-
 
   Datagram := PDatagramBuffer( nil);
   case Buffer^.ID and MTI_TYPE_MASK of
     MTI_DATAGRAM_ONLY_FRAME :
       begin
-      
-
         if TryAllocateBuffer(Datagram) then
         begin
-        
 //UART1_Write_Text('A'+LF);
-         
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iByteCount := 0;
           Datagram^.iFrameCount := 0;
@@ -474,9 +468,7 @@ begin
       begin
         if TryAllocateBuffer(Datagram) then
         begin
-        
 //UART1_Write_Text('B'+LF);
-        
           Datagram^.SourceAlias := Buffer^.ID and MASK_SOURCE_ALIAS;
           Datagram^.iByteCount := 0;
           Datagram^.iFrameCount := 0;

@@ -136,8 +136,25 @@ const
   MTI_STREAM_INITIATE_REPLY            = $4F;
   MTI_STREAMDATA_PROCEED               = $6A;
   MTI_STREAMDATA_COMPLETE              = $6B;
-
-
+  
+  MTI_KNOWN_COUNT = 14;
+  MTI_KNOWN_LIST: array[0..MTI_KNOWN_COUNT-1] of Byte = (
+     MTI_VERIFY_NODE_ID_NUMBER_DEST,
+     MTI_OPTIONAL_INTERACTION_REJECTED,
+     MTI_TERMINATE_DUE_TO_ERROR,
+     MTI_PROTOCOL_SUPPORT_QUERY,
+     MTI_PROTOCOL_SUPPORT_REPLY,
+     MTI_IDENTIFY_EVENTS,
+     MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST,
+     MTI_SIMPLENODE_IDENTIFY_INFO_REPLY,
+     MTI_DATAGRAM_RECIEVED_OK,
+     MTI_DATAGRAM_REJECTED,
+     MTI_STREAM_INITIATE_REQUEST,
+     MTI_STREAM_INITIATE_REPLY,
+     MTI_STREAMDATA_PROCEED,
+     MTI_STREAMDATA_COMPLETE
+  );
+  
   // NMRABus States
   BS_INHIBITED         = $01;                                                   // CAN Frame Layer is inhibited
   BS_PERMITED          = $02;                                                   // CAN Frame Layer is permitted (Node ID's resolved with bus)
@@ -177,12 +194,13 @@ const
   // NMRAnet level responses
   SRC_SEND_VERIFIED_NODE                    = $0010;                            // Send a Verified Node message
   SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED      = $0020;                            // Send all Producers/Consumers defined
-  
+
   // Complex Response Codes (see TQueuedResponse)
   CRC_EMPTY                                 = $0000;                            // Response Queue slot is empty
   CRC_SEND_PROTOCOL_SUPPORT                 = $0001;                            // Protocol Support Response to a destination node
   CRC_CONSUMER_IDENTIFIED                   = $0002;                            // Send a Consumer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
   CRC_PRODUCER_IDENTIFIED                   = $0004;                            // Send a Producer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
+  CRC_OPTIONAL_INTERACTION_REJECTED         = $0005;                            // Send an Option Interaction Rejected with the passed dest node and Code in the Databytes
 
 
 type

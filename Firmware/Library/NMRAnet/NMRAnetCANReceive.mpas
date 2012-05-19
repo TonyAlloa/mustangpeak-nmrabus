@@ -147,6 +147,28 @@ begin
     Inc(NMRABus.Responses.BufferOverrunCount)
 end;
 
+// *****************************************************************************
+//  procedure CheckForUnKnownMTI
+//     Parameters:
+//     Returns:
+//
+//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
+//                  Called when a message passes Filter 0 which is defined
+//                  as any CAN level message (bit 26 = 0)
+//
+// *****************************************************************************
+function CheckForUnKnownMTI(Buffer: PCANBuffer): Boolean;
+var
+  DataBytes: TCAN_DataBytes;
+begin
+  Result := NMRAnetUtilities_UnknownMTI(Buffer^.DataBytes[0]);
+  if Result then
+  begin
+    DataBytes[0] := MTI_OPTIONAL_INTERACTION_REJECTED;
+    StoreComplexResponse(Buffer, CRC_OPTIONAL_INTERACTION_REJECTED, Buffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
+  end
+end;
+
 // ****************************************************************************
 // procedure DispatchEqualAliasID
 //
@@ -449,7 +471,8 @@ end;
 // *****************************************************************************
 procedure ReceivedOnFilter1(CANBuffer: PCANBuffer);                             // NMRAnet Layer Message
 var
-  DoDefault: Boolean;
+  DoDefault, 
+  UnknownMTI: Boolean;
 begin
 
  // UART1_Write_Text('NMRAnet'+LF);
@@ -465,16 +488,23 @@ begin
 
     if NMRAnetCANReceive_Permited then
     begin
-      case CANBuffer^.ID and MTI_TYPE_MASK of
-        MTI_UNADDRESSED              : ReceivedUnAddressedMessage(CANBuffer);
-        MTI_RESERVED                 : begin end;
-        MTI_DATAGRAM_ONLY_FRAME,
-        MTI_DATAGRAM_FRAME_START,
-        MTI_DATAGRAM_FRAME,
-        MTI_DATAGRAM_FRAME_END       : ReceivedDatagramMessage(CANBuffer);
-        MTI_ADDRESSED                : ReceivedAddressedMessage(CANBuffer);
-        MTI_STREAM_DATA_SEND         : ReceivedStreamMessage(CANBuffer);
-      end;
+      UnknownMTI := False;
+      if CANBuffer^.ID and MTI_TYPE_MASK = MTI_ADDRESSED then
+        UnknownMTI := CheckForUnKnownMTI(CANBuffer);
+        
+      if not UnknownMTI then
+      begin
+        case CANBuffer^.ID and MTI_TYPE_MASK of
+          MTI_UNADDRESSED              : ReceivedUnAddressedMessage(CANBuffer);
+          MTI_RESERVED                 : begin end;
+          MTI_DATAGRAM_ONLY_FRAME,
+          MTI_DATAGRAM_FRAME_START,
+          MTI_DATAGRAM_FRAME,
+          MTI_DATAGRAM_FRAME_END       : ReceivedDatagramMessage(CANBuffer);
+          MTI_ADDRESSED                : ReceivedAddressedMessage(CANBuffer);
+          MTI_STREAM_DATA_SEND         : ReceivedStreamMessage(CANBuffer);
+        end;
+      end
     end;
   end;
 end;

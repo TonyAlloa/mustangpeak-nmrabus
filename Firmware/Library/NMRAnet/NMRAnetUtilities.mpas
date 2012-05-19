@@ -49,6 +49,7 @@ function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): DWord;
 function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
 function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
+function NMRAnetUtilities_UnknownMTI(MTI: Byte): Boolean;
 
 
 implementation
@@ -440,6 +441,14 @@ begin
   Result := Result shr 8;
 end;
 
+// *****************************************************************************
+//  procedure EqualEventID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 function EqualEventID(Event1, Event2: PEventID): Boolean;
 begin
   Result := (Word(Event1^[0]) = Word(Event2^[0])) and (Word(Event1^[2]) = Word(Event2^[2])) and
@@ -447,6 +456,14 @@ begin
 end;
 
 
+// *****************************************************************************
+//  procedure NMRAnetUtilities_SupportsEventAsProducer
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
 var
   i: Integer;
@@ -464,6 +481,14 @@ begin
   end
 end;
 
+// *****************************************************************************
+//  procedure NMRAnetUtilities_SupportsEventAsConsumer
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
 var
   i: Integer;
@@ -475,6 +500,31 @@ begin
     if EqualEventID(@SUPPORTED_EVENTS_CONSUMED[i], DataBytes) then
     begin
       Result := True;
+      Exit
+    end;
+    Inc(i)
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetUtilities_UnknownMTI
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRAnetUtilities_UnknownMTI(MTI: Byte): Boolean;
+var
+  i: Integer;
+begin
+  Result := True;
+  i := 0;
+  while i < MTI_KNOWN_COUNT do
+  begin
+    if MTI = MTI_KNOWN_LIST[i] then
+    begin
+      Result := False;
       Exit
     end;
     Inc(i)
