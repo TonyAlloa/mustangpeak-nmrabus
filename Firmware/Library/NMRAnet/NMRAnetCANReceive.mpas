@@ -167,28 +167,6 @@ begin
   end
 end;
 
-// *****************************************************************************
-//  procedure CheckForUnKnownDatagramType
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function CheckForUnKnownDatagramType(Buffer: PCANBuffer): Boolean;
-var
-  DataBytes: TCAN_DataBytes;
-begin
-  Result := NMRAnetUtilities_UnknownDatagramType(Buffer^.DataBytes[0]);
-  if Result then
-  begin
-    DataBytes[0] := MTI_DATAGRAM_REJECTED;
-    DataBytes[1] := DATAGRAM_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[0];
-    DataBytes[2] := DATAGRAM_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[1];
-    StoreComplexResponse(Buffer, CRC_OPTIONAL_INTERACTION_REJECTED, Buffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 3);
-  end;
-end;
-
 // ****************************************************************************
 // procedure DispatchEqualAliasID
 //
@@ -443,8 +421,7 @@ end;
 procedure ReceivedStartingDatagramMessage(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
-    if not CheckForUnKnownDatagramType(CANBuffer) then
-      NMRAnetDatagrams_ProcessReceiveInterrupt(CANBuffer)
+    NMRAnetDatagrams_ProcessReceiveInterrupt(CANBuffer)
 end;
 
 // ****************************************************************************

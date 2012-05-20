@@ -39,16 +39,13 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=9
+Count=6
 File0=NMRABusCommandStation.mpas
-File1=..\Library\NMRAnet\NMRAnetCANReceive.mpas
-File2=..\Library\NMRAnet\NMRAnetStateMachine.mpas
-File3=..\Library\NMRAnet\NMRAnetDatagrams.mpas
-File4=..\Library\NMRAnet\NMRAnetDatagramDefines.mpas
-File5=..\Library\CANBus\CANStorage.mpas
-File6=..\Library\NMRAnet\NMRAnetDefines.mpas
-File7=..\Library\NMRAnet\NMRAnetUtilities.mpas
-File8=MCU_Setup_dsPIC4013.mpas
+File1=..\Library\NMRAnet\NMRAnetDatagrams.mpas
+File2=..\Library\NMRAnet\NMRAnetDatagramDefines.mpas
+File3=..\Library\NMRAnet\NMRAnetDefines.mpas
+File4=..\Library\NMRAnet\NMRAnetStateMachine.mpas
+File5=..\Library\NMRAnet\NMRAnetUtilities.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -58,15 +55,15 @@ Count=1
 File0=Options.inc
 [SEARCH_PATH]
 Count=9
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Command Station\
+Path3=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path4=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
+Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path6=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path7=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
+Path8=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
 [HEADER_PATH]
 Count=0
 [HEADERS]

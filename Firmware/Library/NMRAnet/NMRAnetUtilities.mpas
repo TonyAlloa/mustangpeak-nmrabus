@@ -51,7 +51,7 @@ function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
 function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_UnknownMTI(MTI: Byte): Boolean;
-function NMRAnetUtilities_UnknownDatagramType(DatagramType: Byte): Boolean;
+procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; var CodeType: TDatagramErrorCode);
 
 implementation
 
@@ -533,29 +533,12 @@ begin
   end
 end;
 
-// *****************************************************************************
-//  procedure NMRAnetUtilities_UnknownDatagramType
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function NMRAnetUtilities_UnknownDatagramType(DatagramType: Byte): Boolean;
-var
-  i: Integer;
+procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; var CodeType: TDatagramErrorCode);
 begin
-  Result := True;
-  i := 0;
-  while i < DATAGRAM_TYPE_KNOWN_LIST_COUNT do
-  begin
-    if DatagramType = DATAGRAM_TYPE_KNOWN_LIST[i] then
-    begin
-      Result := False;
-      Exit
-    end;
-    Inc(i)
-  end
+  Datagram^.iByteCount := 3;
+  Datagram^.DataBytes[0] := MTI;
+  Datagram^.DataBytes[1] := CodeType[0];
+  Datagram^.DataBytes[2] := CodeType[1];
 end;
 
 end.

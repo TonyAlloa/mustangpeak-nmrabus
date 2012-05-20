@@ -104,7 +104,7 @@ var
   delay: word;
 
 
-function TrainControlCallback(Datagram: PDatagramBuffer): Boolean;
+procedure TrainControlCallback(Datagram: PDatagramBuffer);
 var
   j, i: Integer;
 begin
@@ -123,14 +123,10 @@ begin
   
   Inc(delay);
   if delay > 10 then
-  begin
     delay := 0;
-    Result := True;
-  end else
-    Result := False
 end;
 
-function MemConfigurationCallback(Datagram: PDatagramBuffer): Boolean;
+procedure MemConfigurationCallback(Datagram: PDatagramBuffer);
 var
   j, i: Integer;
 begin
@@ -144,8 +140,6 @@ begin
     UART1_Write_Text(s1);
   end;
   UART1_Write_Text(LF);   }
-  
-  Result := True;
 end;
 
 // *******************
@@ -177,8 +171,8 @@ begin
   NMRA_DCC_Initialize;
  // AddressSlots_Initialize;
  
-  NMRAnetDatagrams_SetCallback(DatagramTrainControlCallback, @TrainControlCallback);
-  NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallback, @MemConfigurationCallback);
+  NMRAnetDatagrams_SetSpecialCallback(DatagramTrainControlCallback, @TrainControlCallback);
+  NMRAnetDatagrams_SetSpecialCallback(DatagramMemConfigurationCallback, @MemConfigurationCallback);
   
 
   UART1_Write_Text('Connecting'+LF);

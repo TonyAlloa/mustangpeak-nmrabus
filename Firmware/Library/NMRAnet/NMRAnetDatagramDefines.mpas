@@ -9,117 +9,115 @@ uses
 type
   TDatagramErrorCode = array[0..1] of Byte;
   PDatagramErrorCode = ^TDatagramErrorCode;
-  
-const
-  DATAGRAM_REJECTED                                : TDatagramErrorCode = ($00, $00);
-  // Errors that will cause sender to not retry
-  DATAGRAM_REJECTED_PERMANENT_ERROR                : TDatagramErrorCode = ($10, $00);
-  DATAGRAM_REJECTED_INFORMATION_LOGGED             : TDatagramErrorCode = ($10, $10);
-  DATAGRAM_REJECTED_SOURCE_NOT_PERMITTED           : TDatagramErrorCode = ($10, $20);
-  DATAGRAM_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED  : TDatagramErrorCode = ($10, $40);
-  
-  DATAGRAM_REJECTED_BUFFER_FULL                    : TDatagramErrorCode = ($20, $00);
-  
-  DATAGRAM_REJECTED_OUT_OF_ORDER                   : TDatagramErrorCode = ($60, $00);
 
-  DATAGRAM_REJECTED_NO_RESENT_MASK                 : TDatagramErrorCode = ($10, $00);
-  DATAGRAM_REJECTED_RESEND_MASK                    : TDatagramErrorCode = ($20, $00);
-  DATAGRAM_REJECTED_TRANSPORT_ERROR_MASK           : TDatagramErrorCode = ($40, $00);
+const
+  DATAGRAM_RESULT_REJECTED                                : TDatagramErrorCode = ($00, $00);
+  // Errors that will cause sender to not retry
+  DATAGRAM_RESULT_REJECTED_PERMANENT_ERROR                : TDatagramErrorCode = ($10, $00);
+  DATAGRAM_RESULT_REJECTED_INFORMATION_LOGGED             : TDatagramErrorCode = ($10, $10);
+  DATAGRAM_RESULT_REJECTED_SOURCE_NOT_PERMITTED           : TDatagramErrorCode = ($10, $20);
+  DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED  : TDatagramErrorCode = ($10, $40);
+  
+  DATAGRAM_RESULT_REJECTED_BUFFER_FULL                    : TDatagramErrorCode = ($20, $00);
+  
+  DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER                   : TDatagramErrorCode = ($60, $00);
+
+  DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK                 : TDatagramErrorCode = ($10, $00);
+  DATAGRAM_RESULT_REJECTED_RESEND_MASK                    : TDatagramErrorCode = ($20, $00);
+  DATAGRAM_RESULT_REJECTED_TRANSPORT_ERROR_MASK           : TDatagramErrorCode = ($40, $00);
 
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
-  LEN_DATAGRAM_ARRAY = 2;                                                       // How many Datagram buffers to have
+  LEN_DATAGRAM_RECEIVE_ARRAY = 2;                                               // How many Datagram buffers to have
+  LEN_DATAGRAM_TRANSMIT_ARRAY = 1;                                              // How many Transmit buffer to have
   LEN_DATAGRAM_BUFFER_OVERFLOW_LIST = 2;                                        // How many Datagram requests to buffer if there is no buffer available to service them
 
-  DATAGRAM_EMPTY               = 0;                                             // The Datagram Packet Buffer is empty
-  DATAGRAM_IN_PROCESS          = 1;                                             // The Datagram Packet Buffer is currently collecting/transmitting frames
-  DATAGRAM_TRANSFER_COMPLETE   = 3;                                             // The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
-  DATAGRAM_TASK_RESPONDED      = 4;                                             // The task that the Datagramw was sent to do is complete so time to sent the Ok message, helps throttle the sender
+  // Datagram Buffer States
+  DATAGRAM_BUFFER_EMPTY               = 0;                                      // [RX/TX] The Datagram Packet Buffer is empty
+  DATAGRAM_BUFFER_IN_PROCESS          = 1;                                      // [RX/TX] The Datagram Packet Buffer is currently collecting/transmitting frames
+  DATAGRAM_BUFFER_TRANSFER_COMPLETE   = 3;                                      // [RX/TX] The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
 
-
-
+  // Datagram Receive Statemachine States
   STATE_DATAGRAM_RECEIVE_START         = 0;                                     // Receive Statemachine states
-  STATE_DATAGRAM_RECEIVE_ABANDONED     = 1;
-  STATE_DATAGRAM_RECEIVE_RESPOND       = 2;
-  STATE_DATAGRAM_RECEIVE_NEXT          = 3;
+  STATE_DATAGRAM_RECEIVE_COMPLETE      = 1;
+  STATE_DATAGRAM_SENDING_RESPONSE      = 2;
+  STATE_DATAGRAM_ERROR_RESPONSES       = 3;
+  STATE_DATAGRAM_RECEIVE_NEXT          = 4;
   
+  // Datagram Transmit Statemachine States
   STATE_DATAGRAM_TRANSMIT_START                          = 0;                   // Transmit Statemachine states
   STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME                   = 1;
   STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME = 2;
   STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    = 3;
   STATE_DATAGRAM_TRANSMIT_NEXT_MULTI_FRAME               = 4;
   STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  = 5;
+  STATE_DATAGRAM_TRANSMIT_NEXT                           = 6;
   
 
   DATAGRAM_WATCHDOG_MAX = 10000;                                                // 1ms counts before the datagram is declared abandon
+  DATAGRAM_MAX_RETRY_COUNT = 3;                                                 // Number of try a datagram will try to be resent
   
   DATAGRAM_MAX_FRAME_COUNT = 9;                                                 // Maximum number of Frames (segments) in a Datagram
 
-  DGE_NONE                                 = 0;
-  DGE_FRAME_OUT_OF_ORDER                   = 1;                                 // Datagram Errors
-  DGE_BUFFER_FULL                          = 2;
-  
+
   // The first byte in a datagram is a command byte that allows datagrams to be "tagged" as special through these codes
   // The first byte is always reserved for this special purpose
-//  DATAGRAM_TYPE_LOG_REQUEST                 = $01;                              // ?? unknown
-//  DATAGRAM_TYPE_LOG_REPLY                   = $02;                              // ?? unknown
   DATAGRAM_TYPE_CONFIGURATION               = $20;                              // Memory Configuration Protocol
-//  DATAGRAM_TYPE_REMOTE_BUTTON               = $21;                              // Remote Button Configuration
-//  DATAGRAM_TYPE_DISPLAY                     = $28;                              // Display Protocol
   DATAGRAM_TYPE_TRAIN_CONTROL               = $30;                              // Train Control Protocol
   DATAGRAM_TYPE_TWO_BYTE_CMD_MASK           = $E0;                              // Next two bytes are command bytes and not data
   DATAGRAM_TYPE_SIX_BYTE_CMD_MASK           = $F0;                              // Next six bytes are command bytes and not data
   
-  DATAGRAM_TYPE_KNOWN_LIST_COUNT = 2;
-  DATAGRAM_TYPE_KNOWN_LIST: array[0..DATAGRAM_TYPE_KNOWN_LIST_COUNT-1] of Byte = (
-//    DATAGRAM_TYPE_LOG_REQUEST,                                                  // ?? unknown
-//    DATAGRAM_TYPE_LOG_REPLY,                                                    // ?? unknown
-    DATAGRAM_TYPE_CONFIGURATION,                                                // Memory Configuration Protocol
-//    DATAGRAM_TYPE_REMOTE_BUTTON,                                                // Remote Button Configuration
-//    DATAGRAM_TYPE_DISPLAY,                                                      // Display Protocol
-    DATAGRAM_TYPE_TRAIN_CONTROL                                                 // Train Control Protocol
-  );
-  
-type  
+type
   TDatagram = array[0..LEN_DATAGRAM-1] of Byte;
   TBufferOverflowList = array[LEN_DATAGRAM_BUFFER_OVERFLOW_LIST] of Word;
+  TDatagramError = record
+    MTI: Byte;
+    SubType: TDatagramErrorCode;
+  end;
   
   TDatagramBuffer = record
     DataBytes: TDatagram;                                                       // The bytes sent in the datagram
-    SourceAlias: Word;                                                          // The Node that sent the datagram if this is a RX buffer, else it is the Node that is being sent the datagram if it is a TX buffer
+    Alias: Word;                                                                // The Node that sent the datagram if this is a RX buffer, else it is the Node that is being sent the datagram if it is a TX buffer
     iState: Byte;                                                               // The State of the Packet Buffer see DATAGRAM_xxxx contants
     iByteCount: Byte;                                                           // Counts the number of bytes recevied as they come in,
     iFrameCount: Byte;                                                          // Counts the number of Frames received
     iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message
-    ErrorCode: Byte;                                                            // Tracks any errors that occur, see the DGE_xxxx contants
+    ErrorCode: TDatagramError;                                                  // Tracks any errors that occur
+    iRetransmit: Byte;                                                          // Number of times the Datagram was attempted to transmit before not trying any more
   end;
   
   PDatagramBuffer = ^TDatagramBuffer;
-  TDatagramBufferArray = array[0..LEN_DATAGRAM_ARRAY-1] of TDatagramBuffer;
+  TDatagramReceiveBufferArray = array[0..LEN_DATAGRAM_RECEIVE_ARRAY-1] of TDatagramBuffer;
+  TDatagramTransmitBufferArray = array[0..LEN_DATAGRAM_TRANSMIT_ARRAY-1] of TDatagramBuffer;
 
 
   TDatagramReceive = record
-    List: TDatagramBufferArray;
+    List: TDatagramReceiveBufferArray;
     iState: Byte;                                                               // StateMachine Index
     iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
     BufferOverflowList: TBufferOverflowList;                                    // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;
   
   TDatagramTransmit = record
-    Datagram: TDatagramBuffer;                                                  // Start out with just a single TX buffer
+    List: TDatagramTransmitBufferArray;
+    iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
     iState: Byte;                                                               // StateMachine Index
   end;
   
-  TDatagramTaskCallbackFunc = function(Datagram: PDatagramBuffer): Boolean;         // Return true to set the Task Complete and allow a response to be sent back to the sender and free the buffer slot
+  TDatagramSpecialTaskCallbackFunc = procedure(Datagram: PDatagramBuffer);
+  PDatagramSpecialTaskCallbackFunc = ^TDatagramSpecialTaskCallbackFunc;
+  
+  TDatagramTaskCallbackFunc = procedure(Datagram: PDatagramBuffer; var Handled: Boolean);
   PDatagramTaskCallbackFunc = ^TDatagramTaskCallbackFunc;
 
 var
-  DatagramRecieve: TDatagramReceive;
+  DatagramReceive: TDatagramReceive;
   DatagramTransmit: TDatagramTransmit;
   
-  DatagramUnknownCallback: PDatagramTaskCallbackFunc;
-  DatagramTrainControlCallback: PDatagramTaskCallbackFunc;
-  DatagramMemConfigurationCallback: PDatagramTaskCallbackFunc;
+  
+  DatagramCallback: PDatagramTaskCallbackFunc;
+  DatagramTrainControlCallback: PDatagramSpecialTaskCallbackFunc;
+  DatagramMemConfigurationCallback: PDatagramSpecialTaskCallbackFunc;
   
 implementation
 
