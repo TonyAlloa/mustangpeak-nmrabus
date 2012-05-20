@@ -49,6 +49,9 @@ type
   procedure NMRAnetStateMachine_Disconnect;
   procedure NMRAnetStateMachine_Initialize;
   procedure NMRAnetStateMachine_1ms_Timer;
+  
+  // Exported Functions
+  function TryTransmitNMRABusLayerMsg(VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes; Buffer: PCANBuffer): Boolean;
 
 
   // defined in the user program
@@ -548,8 +551,9 @@ begin
       end;
     STATE_NMRABUS_PERMITTED :
       begin
-        Responses_Process(@Buffer);
-        NMRAnetDatagrams_Process
+        Responses_Process(@Buffer);                                             // Handle auto responses to CAN/NMRAnet messages coming in
+        NMRAnetDatagrams_ProcessReceive;                                        // Handle Datagrams coming in
+        NMRAnetDatagrams_ProcessTransmit;                                       // Handle Datagrams going out
       end;
     STATE_NMRABUS_INHIBITED :
       begin

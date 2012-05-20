@@ -18,6 +18,7 @@ unit CANStorage;
 // ******************************************************************************
 
 uses
+  NMRAnetUtilities,
   CANDefines;
   
 {$I Options.inc}

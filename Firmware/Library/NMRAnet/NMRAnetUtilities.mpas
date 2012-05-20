@@ -53,9 +53,9 @@ function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_UnknownMTI(MTI: Byte): Boolean;
 function NMRAnetUtilities_UnknownDatagramType(DatagramType: Byte): Boolean;
 
-
 implementation
 
+  
 // *****************************************************************************
 //  procedure NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID
 //     Parameters:

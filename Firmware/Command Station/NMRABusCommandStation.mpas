@@ -101,12 +101,15 @@ end;
 var
   s1: array[8] of char;
   s2: array[32] of char;
+  delay: word;
 
 
 function TrainControlCallback(Datagram: PDatagramBuffer): Boolean;
 var
   j, i: Integer;
 begin
+
+
   j := Datagram^.iByteCount;
   UART1_Write_Text('Train Datagram:'+LF);
   ByteToStr(j, s1);
@@ -118,8 +121,13 @@ begin
   end;
   UART1_Write_Text(LF);
   
-      
-  Result := True;
+  Inc(delay);
+  if delay > 10 then
+  begin
+    delay := 0;
+    Result := True;
+  end else
+    Result := False
 end;
 
 function MemConfigurationCallback(Datagram: PDatagramBuffer): Boolean;
@@ -172,7 +180,6 @@ begin
   NMRAnetDatagrams_SetCallback(DatagramTrainControlCallback, @TrainControlCallback);
   NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallback, @MemConfigurationCallback);
   
- // DatagramTrainControlCallback := @TrainControlCallback;
 
   UART1_Write_Text('Connecting'+LF);
   
@@ -181,6 +188,7 @@ begin
   Rlaststate := 0;
   MaxTime_StateMachine := 0;
   MaxTime_RX := 0;
+  delay := 0;
   
 
 

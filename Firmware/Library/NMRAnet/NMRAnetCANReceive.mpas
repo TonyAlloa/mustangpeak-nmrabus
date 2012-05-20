@@ -427,7 +427,7 @@ end;
 procedure ReceivedDatagramMessage(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
-    NMRAnetDatagrams_ProcessReceive(CANBuffer)
+    NMRAnetDatagrams_ProcessReceiveInterrupt(CANBuffer)
 end;
 
 // ****************************************************************************
@@ -444,7 +444,7 @@ procedure ReceivedStartingDatagramMessage(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
     if not CheckForUnKnownDatagramType(CANBuffer) then
-      NMRAnetDatagrams_ProcessReceive(CANBuffer)
+      NMRAnetDatagrams_ProcessReceiveInterrupt(CANBuffer)
 end;
 
 // ****************************************************************************
