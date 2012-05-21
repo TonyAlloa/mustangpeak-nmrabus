@@ -137,24 +137,6 @@ const
   MTI_STREAMDATA_PROCEED               = $6A;
   MTI_STREAMDATA_COMPLETE              = $6B;
   
-  MTI_KNOWN_COUNT = 14;
-  MTI_KNOWN_LIST: array[0..MTI_KNOWN_COUNT-1] of Byte = (
-     MTI_VERIFY_NODE_ID_NUMBER_DEST,
-     MTI_OPTIONAL_INTERACTION_REJECTED,
-     MTI_TERMINATE_DUE_TO_ERROR,
-     MTI_PROTOCOL_SUPPORT_QUERY,
-     MTI_PROTOCOL_SUPPORT_REPLY,
-     MTI_IDENTIFY_EVENTS,
-     MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST,
-     MTI_SIMPLENODE_IDENTIFY_INFO_REPLY,
-     MTI_DATAGRAM_RECIEVED_OK,
-     MTI_DATAGRAM_REJECTED,
-     MTI_STREAM_INITIATE_REQUEST,
-     MTI_STREAM_INITIATE_REPLY,
-     MTI_STREAMDATA_PROCEED,
-     MTI_STREAMDATA_COMPLETE
-  );
-  
   // NMRABus States
   BS_INHIBITED         = $01;                                                   // CAN Frame Layer is inhibited
   BS_PERMITED          = $02;                                                   // CAN Frame Layer is permitted (Node ID's resolved with bus)
@@ -184,6 +166,8 @@ const
   STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED     = 5;
   STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS  = 6;
   STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED = 7;
+  STATE_NMRABUS_DATAGRAM_RECEIVED_OK                  = 8;
+  STATE_NMRABUS_DATAGRAM_REJECTED                     = 9;
   
   LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
   
@@ -202,6 +186,8 @@ const
   CRC_CONSUMER_IDENTIFIED                   = $0002;                            // Send a Consumer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
   CRC_PRODUCER_IDENTIFIED                   = $0004;                            // Send a Producer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
   CRC_OPTIONAL_INTERACTION_REJECTED         = $0005;                            // Send an Option Interaction Rejected with the passed dest node and Code in the Databytes
+  CRC_DATAGRAM_RECEIVED_OK                  = $0006;                            //
+  CRC_DATAGRAM_REJECTED                     = $0007;                            //
 
 
 type

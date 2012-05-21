@@ -419,7 +419,30 @@ begin
     NMRABus.Responses.iState := NextState
 end;
 
-
+// *****************************************************************************
+//  procedure HandleDatagramResponse
+//
+//     Parameters:
+//
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure HandleDatagramResponse(Buffer: PCANBuffer; nCode: Word);
+var
+  Response: PQueuedResponse;
+  ErrorCode: TDatagramErrorCode;
+begin
+  Response := FindStoredComplexResponse(nCode);
+  if Response <> nil then
+  begin
+    ErrorCode[1] := Response^.DataBytes[1];
+    ErrorCode[0] := Response^.DataBytes[2];
+    NMRAnetDatagrams_DispatchTransmissionResponse(Buffer^.ID and MASK_SOURCE_ALIAS, Response^.DataBytes[0], ErrorCode);
+    Response^.nCode := CRC_EMPTY;
+  end
+end;
 
 // *****************************************************************************
 //  procedure Responses_Process
@@ -429,15 +452,6 @@ end;
 //     Description:
 //
 // *****************************************************************************
-
-// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-//
-// MAY 12, 2012
-//
-//  THE PROTOCOL ID PROTOCOL RESULT IS STILL JUST HACKED.  NEED TO UNDERSTAND THE
-//     FLAGS BETTER TO IMPLEMENT
-// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
 procedure Responses_Process(Buffer: PCANBuffer);
 begin
   if not DuplicateDetected(SRC_DUPLICATE_NODE_ID, STATE_NMRABUS_DUPLICATE_FULL_ID) then  // Highest Priority, if detected the main loop needs to change state
@@ -454,7 +468,9 @@ begin
                                                                NMRABus.Responses.Tag := 0;   // Get ready for next state
                                                               end;
         STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS : HandleNMRALayerSimpleSendAllConsumerProducer(Buffer, STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED);
-        STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED: HandleNMRAnetLayerComplexResponse(Buffer, FT_OPTIONAL_INTERACTION_REJECTED, CRC_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_RESPONSE_SEND_RID)
+        STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED: HandleNMRAnetLayerComplexResponse(Buffer, FT_OPTIONAL_INTERACTION_REJECTED, CRC_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_RESPONSE_SEND_RID);
+        STATE_NMRABUS_DATAGRAM_RECEIVED_OK                 : HandleDatagramResponse(Buffer, CRC_DATAGRAM_RECEIVED_OK);
+        STATE_NMRABUS_DATAGRAM_REJECTED                    : HandleDatagramResponse(Buffer, CRC_DATAGRAM_REJECTED)
       else
         NMRABus.Responses.iState := STATE_NMRABUS_RESPONSE_SEND_RID;
       end;

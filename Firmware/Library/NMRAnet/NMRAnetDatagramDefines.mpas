@@ -11,6 +11,8 @@ type
   PDatagramErrorCode = ^TDatagramErrorCode;
 
 const
+  DATAGRAM_RESULT_LO_BYTE = 0;
+  DATAGRAM_RESULT_HI_BYTE = 1;
   DATAGRAM_RESULT_REJECTED                                : TDatagramErrorCode = ($00, $00);
   // Errors that will cause sender to not retry
   DATAGRAM_RESULT_REJECTED_PERMANENT_ERROR                : TDatagramErrorCode = ($10, $00);
@@ -25,6 +27,7 @@ const
   DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK                 : TDatagramErrorCode = ($10, $00);
   DATAGRAM_RESULT_REJECTED_RESEND_MASK                    : TDatagramErrorCode = ($20, $00);
   DATAGRAM_RESULT_REJECTED_TRANSPORT_ERROR_MASK           : TDatagramErrorCode = ($40, $00);
+  DATAGRAM_RESULT_REJECTED_MYSTERY_ERROR_MASK             : TDatagramErrorCode = ($60, $00);
 
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
@@ -35,14 +38,16 @@ const
   // Datagram Buffer States
   DATAGRAM_BUFFER_EMPTY               = 0;                                      // [RX/TX] The Datagram Packet Buffer is empty
   DATAGRAM_BUFFER_IN_PROCESS          = 1;                                      // [RX/TX] The Datagram Packet Buffer is currently collecting/transmitting frames
-  DATAGRAM_BUFFER_TRANSFER_COMPLETE   = 3;                                      // [RX/TX] The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
+  DATAGRAM_BUFFER_TRANSFER_COMPLETE   = 2;                                      // [RX/TX] The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
 
   // Datagram Receive Statemachine States
   STATE_DATAGRAM_RECEIVE_START         = 0;                                     // Receive Statemachine states
   STATE_DATAGRAM_RECEIVE_COMPLETE      = 1;
-  STATE_DATAGRAM_SENDING_RESPONSE      = 2;
-  STATE_DATAGRAM_ERROR_RESPONSES       = 3;
-  STATE_DATAGRAM_RECEIVE_NEXT          = 4;
+  STATE_DATAGRAM_HANDLED_MESSASGE      = 2;
+  STATE_DATAGRAM_UNHANDLED_MESSAGE     = 3;
+  STATE_DATAGRAM_SENDING_RESPONSE      = 4;
+  STATE_DATAGRAM_ERROR_RESPONSES       = 5;
+  STATE_DATAGRAM_RECEIVE_NEXT          = 6;
   
   // Datagram Transmit Statemachine States
   STATE_DATAGRAM_TRANSMIT_START                          = 0;                   // Transmit Statemachine states
@@ -104,9 +109,6 @@ type
     iState: Byte;                                                               // StateMachine Index
   end;
   
-  TDatagramSpecialTaskCallbackFunc = procedure(Datagram: PDatagramBuffer);
-  PDatagramSpecialTaskCallbackFunc = ^TDatagramSpecialTaskCallbackFunc;
-  
   TDatagramTaskCallbackFunc = procedure(Datagram: PDatagramBuffer; var Handled: Boolean);
   PDatagramTaskCallbackFunc = ^TDatagramTaskCallbackFunc;
 
@@ -116,8 +118,8 @@ var
   
   
   DatagramCallback: PDatagramTaskCallbackFunc;
-  DatagramTrainControlCallback: PDatagramSpecialTaskCallbackFunc;
-  DatagramMemConfigurationCallback: PDatagramSpecialTaskCallbackFunc;
+  DatagramTrainControlCallback: PDatagramTaskCallbackFunc;
+  DatagramMemConfigurationCallback: PDatagramTaskCallbackFunc;
   
 implementation
 

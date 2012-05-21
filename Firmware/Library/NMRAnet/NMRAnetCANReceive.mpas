@@ -147,26 +147,6 @@ begin
     Inc(NMRABus.Responses.BufferOverrunCount)
 end;
 
-// *****************************************************************************
-//  procedure CheckForUnKnownMTI
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function CheckForUnKnownMTI(Buffer: PCANBuffer): Boolean;
-var
-  DataBytes: TCAN_DataBytes;
-begin
-  Result := NMRAnetUtilities_UnknownMTI(Buffer^.DataBytes[0]);
-  if Result then
-  begin
-    DataBytes[0] := MTI_OPTIONAL_INTERACTION_REJECTED;
-    StoreComplexResponse(Buffer, CRC_OPTIONAL_INTERACTION_REJECTED, Buffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
-  end
-end;
-
 // ****************************************************************************
 // procedure DispatchEqualAliasID
 //
@@ -305,6 +285,41 @@ begin
 end;
 
 // ****************************************************************************
+// procedure DispatchDatagramReceivedOk
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Simple Response
+//
+// ****************************************************************************
+procedure DispatchDatagramReceivedOk(CANBuffer: PCANBuffer);
+var
+  DataBytes: TCAN_DataBytes;
+begin
+  StoreComplexResponse(CANBuffer, CRC_DATAGRAM_RECEIVED_OK, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
+end;
+
+// ****************************************************************************
+// procedure DispatchDatagramRejected
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Simple Response
+//
+// ****************************************************************************
+procedure DispatchDatagramRejected(CANBuffer: PCANBuffer);
+var
+  DataBytes: TCAN_DataBytes;
+begin
+  DataBytes := CANBuffer^.DataBytes;
+  StoreComplexResponse(CANBuffer, CRC_DATAGRAM_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 3);
+end;
+
+// ****************************************************************************
 // procedure DispatchProtocolSupportInquiry
 //
 //  Response Layer:
@@ -367,27 +382,28 @@ end;
 // ****************************************************************************
 procedure ReceivedAddressedMessage(CANBuffer: PCANBuffer);
 var
-  Buffer: PQueuedResponse;
+  DataBytes: TCAN_DataBytes;
 begin
 
  // UART1_Write_Text('Addressed'+LF);
   
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
   begin
-    if not CheckForUnKnownMTI(CANBuffer) then
-    begin
-      case CANBuffer^.Databytes[0] of
-        MTI_VERIFY_NODE_ID_NUMBER_DEST       : DispatchVerifyNodeID(CANBuffer);
-        MTI_PROTOCOL_SUPPORT_QUERY           : DispatchProtocolSupportInquiry(CANBuffer);
-  //      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
-  //      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
-  //      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
-        MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents(CANBuffer);
-        MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
-        MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;   // TODO
-   //   else
-        // TODO SEND A Optional Rejected to sender, in draft spec but not in "offical S"
-      end
+    case CANBuffer^.Databytes[0] of
+      MTI_VERIFY_NODE_ID_NUMBER_DEST       : DispatchVerifyNodeID(CANBuffer);
+      MTI_PROTOCOL_SUPPORT_QUERY           : DispatchProtocolSupportInquiry(CANBuffer);
+//      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
+//      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
+//      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
+      MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents(CANBuffer);
+      MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
+      MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;   // TODO
+      MTI_DATAGRAM_RECIEVED_OK             : DispatchDatagramReceivedOk(CANBuffer);
+      MTI_DATAGRAM_REJECTED                : DispatchDatagramRejected(CANBuffer)
+    else begin
+        DataBytes[0] := MTI_OPTIONAL_INTERACTION_REJECTED;
+        StoreComplexResponse(CANBuffer, CRC_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
+      end;
     end
   end
 end;
