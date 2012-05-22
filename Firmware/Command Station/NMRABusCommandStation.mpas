@@ -120,7 +120,7 @@ begin
       DatagramTransmit.List[0].Databytes[6] := $06;
       DatagramTransmit.List[0].Databytes[7] := $07;
       DatagramTransmit.List[0].iByteCount := 8;
-      DatagramTransmit.List[0].Alias := $02F;
+      DatagramTransmit.List[0].Alias := $A9D;
       DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
       UART1_Write_Text('Transmitting'+LF);
 
@@ -169,7 +169,6 @@ var
   s_float: array[23] of char;
   
 begin
-
   Track_DCC_Out_Pin := 0;
   Track_DCC_Out_Pin := 0;
   Track_DCC_Out_Pin_Direction := 0;      // Output
@@ -203,7 +202,7 @@ begin
 
   while (TRUE) do
   begin
-    TMR3 := 0;
+  //  TMR3 := 0;
     NMRAnetStateMachine_Process;
   
   {  if TMR3 > MaxTime_StateMachine then

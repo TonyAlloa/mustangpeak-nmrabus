@@ -302,7 +302,8 @@ procedure NMRAnetDatagrams_DispatchTransmissionResponse(Alias: Word; MTI: Byte; 
 var
   TransmitDatagram: PDatagramBuffer;
 begin
-UART1_Write_Text('Rx Response'+LF);
+
+UART1_Write_Text('Rx Response: ');
 
   if FindMatchingInProcessTransmitDatagram(Alias, TransmitDatagram) then            // See if the response datagram is the response for a datagram we sent and are waiting for
   begin
@@ -341,7 +342,7 @@ begin
       begin
         if ActiveDatagram^.iState <> DATAGRAM_BUFFER_EMPTY then
         begin
-          UART1_Write_Text('Tx Starting'+LF);
+     //     UART1_Write_Text('Tx Starting'+LF);
           ActiveDatagram^.iReTransmit := 0;
           if ActiveDatagram^.iByteCount < 9 then                      // It is a single Frame Datagram
             DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME
@@ -352,7 +353,7 @@ begin
       
     STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME :
       begin
-        UART1_Write_Text('Tx Single'+LF);
+    //    UART1_Write_Text('Tx Single'+LF);
         if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
         begin
           for i := 0 to ActiveDatagram^.iByteCount - 1 do                       // Copy the Data into the CAN Buffer
@@ -360,7 +361,7 @@ begin
           Buffer.DataCount := ActiveDatagram^.iByteCount;                       // Copy the Size of the Data into the CAN Buffer
           if TryTransmitNMRABusLayerMsg(MTI_DATAGRAM_ONLY_FRAME, ActiveDatagram^.Alias, 0, nil, @Buffer) then
           begin
-            UART1_Write_Text('Tx Sent'+LF);
+   ///         UART1_Write_Text('Tx Sent'+LF);
             ActiveDatagram^.iWatchdog := 0;
             DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME;
            end
@@ -371,6 +372,9 @@ begin
       begin
         if ActiveDatagram^.iState = DATAGRAM_BUFFER_TRANSFER_COMPLETE then      // DATAGRAM_BUFFER_TRANSFER_COMPLETE will be set by the ProcessReceive when the destination node Responds to the datagram
         begin
+        
+          UART1_Write_Text('Waiting Complete'+LF);
+          
           case ActiveDatagram^.ErrorCode.MTI of
              MTI_DATAGRAM_RECIEVED_OK :
                begin
@@ -379,7 +383,7 @@ begin
                end;
              MTI_DATAGRAM_REJECTED :                                            // Rejected, decode what the issue was
                begin
-                 UART1_Write_Text('Waiting Reject'+LF);
+          //       UART1_Write_Text('Waiting Reject'+LF);
                  case ActiveDatagram^.ErrorCode.SubType[DATAGRAM_RESULT_HI_BYTE] of
                    DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK[DATAGRAM_RESULT_HI_BYTE] :
                      begin
@@ -418,7 +422,7 @@ begin
         end else
           if ActiveDatagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then
           begin
-            UART1_Write_Text('Waiting Single Timeout'+LF);
+     //       UART1_Write_Text('Waiting Single Timeout'+LF);
             Inc(ActiveDatagram^.iRetransmit);
             if ActiveDatagram^.iRetransmit >= DATAGRAM_MAX_RETRY_COUNT then
             begin
@@ -431,19 +435,19 @@ begin
       
     STATE_DATAGRAM_TRANSMIT_MULTI_FRAME :
       begin
-        UART1_Write_Text('Multi'+LF);
+    //    UART1_Write_Text('Multi'+LF);
         DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_MULTI_FRAME;
       end;
       
     STATE_DATAGRAM_TRANSMIT_NEXT_MULTI_FRAME :
       begin
-        UART1_Write_Text('Multi Next'+LF);
+    //    UART1_Write_Text('Multi Next'+LF);
          DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME;
       end;
       
     STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME :
       begin
-        UART1_Write_Text('Waiting Multi');
+    //    UART1_Write_Text('Waiting Multi');
         DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_NEXT;
      //   WaitingForDatagramResponse(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_MULTI_FRAME, STATE_DATAGRAM_TRANSMIT_NEXT);
       end;
