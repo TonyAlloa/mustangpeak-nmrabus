@@ -84,8 +84,8 @@ Count=0
 Count=4
 File0=Conversions
 File1=String
-File2=SPI
-File3=CAN
+File2=CAN
+File3=UART
 [EXPANDED NODES]
 Node1=Sources
 Node2=Output Files

@@ -91,7 +91,7 @@ begin
   for i := 0 to LEN_QUEUED_RESPONSE_LIST - 1 do
   begin
     NMRABus.Responses.List[i].nCode := CRC_EMPTY;
-    NMRABus.Responses.List[i].NodeAlias := 0;
+    NMRABus.Responses.List[i].Alias := 0;
     NMRABus.Responses.List[i].DataCount := 0;
     for j := 0 to CAN_DATA_LEN - 1 do
       NMRABus.Responses.List[i].DataBytes[j] := 0;
@@ -321,14 +321,9 @@ end;
 procedure HandleCANLayerSimpleResponse(Buffer: PCANBuffer; VariableField: DWord; Flag: Word; NextState: Byte);
 begin
   if TestReceivedMsgFlags(Flag) then
-  begin
     if TryTransmitCANLayerMsg(VariableField, Buffer) then
-    begin
       ClearReceivedMsgFlags(Flag);
-      NMRABus.Responses.iState := NextState
-    end
-  end else
-    NMRABus.Responses.iState := NextState
+  NMRABus.Responses.iState := NextState
 end;
 
 // *****************************************************************************
@@ -347,14 +342,9 @@ end;
 procedure HandleNMRAnetLayerSimpleResponse(Buffer: PCANBuffer; VariableField: DWord; Flag: Word; NextState: Byte);
 begin
   if TestReceivedMsgFlags(Flag) then
-  begin
     if TryTransmitNMRABusLayerMsg(VariableField, 0, 0, nil, Buffer) then
-    begin
       ClearReceivedMsgFlags(Flag);
-      NMRABus.Responses.iState := NextState
-    end
-  end else
-    NMRABus.Responses.iState := NextState
+  NMRABus.Responses.iState := NextState
 end;
 
 // *****************************************************************************
@@ -388,7 +378,7 @@ begin
       NMRABus.Responses.iState := NextState
     end
   end else
-    NMRABus.Responses.iState := NextState
+    NMRABus.Responses.iState := NextState                                       // Can't skip over this one until done with all sending
 end;
 
 // *****************************************************************************
@@ -409,14 +399,9 @@ var
 begin
   Response := FindStoredComplexResponse(nCode);
   if Response <> nil then
-  begin
-    if TryTransmitNMRABusLayerMsg(VariableField, Response^.NodeAlias, Response^.DataCount, @Response^.DataBytes, Buffer) then
-    begin
+    if TryTransmitNMRABusLayerMsg(VariableField, Response^.Alias, Response^.DataCount, @Response^.DataBytes, Buffer) then
       Response^.nCode := CRC_EMPTY;
-      NMRABus.Responses.iState := NextState
-    end
-  end else
-    NMRABus.Responses.iState := NextState
+  NMRABus.Responses.iState := NextState
 end;
 
 // *****************************************************************************
@@ -432,15 +417,29 @@ end;
 procedure HandleDatagramResponse(nCode: Word; NextState: Byte);
 var
   Response: PQueuedResponse;
+  Datagram: PDatagramBuffer;
   ErrorCode: TDatagramErrorCode;
+  i: Integer;
 begin
-  Response := FindStoredComplexResponse(nCode);
+  Response := FindStoredComplexResponse(nCode);                                 // Look for Datagram Responses from Nodes this node sent a Datagram to
   if Response <> nil then
   begin
-    ErrorCode[1] := Response^.DataBytes[1];
-    ErrorCode[0] := Response^.DataBytes[2];
-    NMRAnetDatagrams_DispatchTransmissionResponse(Response^.NodeAlias, Response^.DataBytes[0], ErrorCode);
-    Response^.nCode := CRC_EMPTY;
+    i := 0;                                                                     // A node is responding to a Datagram this node sent
+    while i < LEN_DATAGRAM_TRANSMIT_ARRAY do
+    begin
+      Datagram := @DatagramTransmit.List[i];
+      if Datagram^.iState = DATAGRAM_BUFFER_IN_PROCESS then                     // Only look for transmit buffers that have Datagram Tranmissions in Process
+        if NMRAnetUtilities_CompareAliasIDs(DatagramTransmit.List[i].Alias, Response^.Alias) then
+        begin                                                                   // The alias that sent the response (OK/Rejected) is in the list of Nodes that we sent a Datagram to!
+          Datagram^.ErrorCode.MTI := Response^.DataBytes[0];                    // Copy over the results that destination node passed in the received Datagram Result message
+          Datagram^.ErrorCode.SubType[0] := Response^.DataBytes[2];
+          Datagram^.ErrorCode.SubType[1] := Response^.DataBytes[1];
+          Datagram^.iState := DATAGRAM_BUFFER_TRANSFER_COMPLETE;
+          Response^.nCode := CRC_EMPTY;
+          Exit;
+        end
+      Inc(i)
+    end
   end;
   NMRABus.Responses.iState := NextState
 end;

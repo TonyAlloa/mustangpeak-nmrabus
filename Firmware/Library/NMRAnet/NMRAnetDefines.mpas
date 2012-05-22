@@ -204,7 +204,7 @@ type
   
   TQueuedResponse = record                                                      // When a message is received that needs a response that contains a destination
     nCode: Word;                                                                // node or needs to decode the DataBytes to understand what to respond with, see CRC_xxxx codes
-    NodeAlias: Word;                                                            // Destination the info needed to response is queued up in this structure to be acted on in the main
+    Alias: Word;                                                                // Destination the info needed to response is queued up in this structure to be acted on in the main
     DataCount: Byte;                                                            // Number of Databytes that are valid
     DataBytes: TCAN_DataBytes;                                                  // depends on the nCode, could be EventID,
   end;

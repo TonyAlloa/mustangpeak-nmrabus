@@ -133,15 +133,20 @@ var
 begin
   // SHOULD WE CHECK FOR DUPLICATED RESPONSES IN THE LIST HERE??????????????????????????????????????????????
   // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-  Buffer := GetComplexResponseBuffer;
+  
+  Buffer := GetComplexResponseBuffer;                                           // Get a free Response Buffer
   if Buffer <> nil then
   begin
-    Buffer^.nCode := nCode;
-    Buffer^.NodeAlias := NodeAlias;
-    if DataBytes <> nil then                                                    // Sender has handled the Bytes already
+  
+ // UART1_Write_Text('CAN Response'+LF);
+  
+  
+    Buffer^.nCode := nCode;                                                     // Store the Code of the Response
+    Buffer^.Alias := NodeAlias;                                                 // Store the Node that sent the message that requires a response (if applicable for the Response)
+    if DataBytes <> nil then
     begin
-      Buffer^.DataCount := DataCount;
-      Buffer^.DataBytes := DataBytes^;
+      Buffer^.DataCount := DataCount;                                           // Store the DataCount for the DataBytes sent in the CAN message (if applicable for the Response)
+      Buffer^.DataBytes := DataBytes^;                                          // Store the actual DataBytes sent in the CAN message (if applicable for the Response)
     end
   end else
     Inc(NMRABus.Responses.BufferOverrunCount)
@@ -295,10 +300,8 @@ end;
 //
 // ****************************************************************************
 procedure DispatchDatagramReceivedOk(CANBuffer: PCANBuffer);
-var
-  DataBytes: TCAN_DataBytes;
 begin
-  StoreComplexResponse(CANBuffer, CRC_DATAGRAM_RECEIVED_OK, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
+  StoreComplexResponse(CANBuffer, CRC_DATAGRAM_RECEIVED_OK, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 1);
 end;
 
 // ****************************************************************************
@@ -312,11 +315,8 @@ end;
 //
 // ****************************************************************************
 procedure DispatchDatagramRejected(CANBuffer: PCANBuffer);
-var
-  DataBytes: TCAN_DataBytes;
 begin
-  DataBytes := CANBuffer^.DataBytes;
-  StoreComplexResponse(CANBuffer, CRC_DATAGRAM_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 3);
+  StoreComplexResponse(CANBuffer, CRC_DATAGRAM_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 3);
 end;
 
 // ****************************************************************************

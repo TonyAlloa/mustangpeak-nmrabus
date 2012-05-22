@@ -11,7 +11,6 @@ procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_ProcessReceiveInterrupt(Buffer: PCANBuffer);
 procedure NMRAnetDatagrams_ProcessReceive;
 procedure NMRAnetDatagrams_ProcessTransmit;
-procedure NMRAnetDatagrams_DispatchTransmissionResponse(Alias: Word; MTI: Byte; var ErrorCode: TDatagramErrorCode);
 procedure NMRAnetDatagrams_1ms_TimeTick;
 procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
 
@@ -136,7 +135,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function FindMatchingInProcessTransmitDatagram(Alias: Word; var Datagram: PDatagramBuffer): Boolean;
+function NMRAnetDatagrams_FindMatchingInProcessTransmitDatagram(Alias: Word; var Datagram: PDatagramBuffer): Boolean;
 var
   i: Integer;
 begin
@@ -289,33 +288,6 @@ begin
     DatagramReceive.iState := NextUnHandledState
 end;
 
-// *****************************************************************************
-//  procedure NMRAnetDatagrams_DispatchTransmissionResponse;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-procedure NMRAnetDatagrams_DispatchTransmissionResponse(Alias: Word; MTI: Byte; var ErrorCode: TDatagramErrorCode);
-var
-  TransmitDatagram: PDatagramBuffer;
-begin
-
-UART1_Write_Text('Rx Response: ');
-
-  if FindMatchingInProcessTransmitDatagram(Alias, TransmitDatagram) then            // See if the response datagram is the response for a datagram we sent and are waiting for
-  begin
-  
-   UART1_Write_Text('Matching'+LF);
-   
-    TransmitDatagram^.ErrorCode.MTI := MTI;                                     // Copy over the results that destination node passed in the received Datagram Result message
-    TransmitDatagram^.ErrorCode.SubType := ErrorCode;
-    TransmitDatagram^.iState := DATAGRAM_BUFFER_TRANSFER_COMPLETE;
-  end;
-end;
-
 
 // *****************************************************************************
 //  procedure NMRAnetDatagrams_ProcessTransmit;
@@ -368,17 +340,14 @@ begin
         end
       end;
       
-    STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME :  
+    STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME :  // DATAGRAM_BUFFER_TRANSFER_COMPLETE will be set by NMRAnetStateMachine.HandleDatagramResponse when the target datagram responds
       begin
-        if ActiveDatagram^.iState = DATAGRAM_BUFFER_TRANSFER_COMPLETE then      // DATAGRAM_BUFFER_TRANSFER_COMPLETE will be set by the ProcessReceive when the destination node Responds to the datagram
+        if ActiveDatagram^.iState = DATAGRAM_BUFFER_TRANSFER_COMPLETE then
         begin
-        
-          UART1_Write_Text('Waiting Complete'+LF);
-          
           case ActiveDatagram^.ErrorCode.MTI of
              MTI_DATAGRAM_RECIEVED_OK :
                begin
-                  UART1_Write_Text('Waiting Ok'+LF);
+     //             UART1_Write_Text('Waiting Ok'+LF);
                   DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_NEXT;
                end;
              MTI_DATAGRAM_REJECTED :                                            // Rejected, decode what the issue was
@@ -413,16 +382,13 @@ begin
                        end; // case
                      end;
                  end;
-
-               DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_NEXT;
-               ActiveDatagram^.iState := DATAGRAM_BUFFER_EMPTY;
-               
-             end;
+               end;
            end; // case
+           DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_NEXT;
+           ActiveDatagram^.iState := DATAGRAM_BUFFER_EMPTY;
         end else
           if ActiveDatagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then
           begin
-     //       UART1_Write_Text('Waiting Single Timeout'+LF);
             Inc(ActiveDatagram^.iRetransmit);
             if ActiveDatagram^.iRetransmit >= DATAGRAM_MAX_RETRY_COUNT then
             begin
