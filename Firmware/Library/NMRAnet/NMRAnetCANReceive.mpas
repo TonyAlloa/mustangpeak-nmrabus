@@ -227,7 +227,7 @@ end;
 procedure DispatchEventProducerIdenitify(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes) then
-    StoreComplexResponse(CANBuffer, CRC_PRODUCER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 7);
+    StoreComplexResponse(CANBuffer, CRC_PRODUCER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -243,7 +243,7 @@ end;
 procedure DispatchEventConsumerIdenitify(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes) then
-    StoreComplexResponse(CANBuffer, CRC_CONSUMER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 7);
+    StoreComplexResponse(CANBuffer, CRC_CONSUMER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************

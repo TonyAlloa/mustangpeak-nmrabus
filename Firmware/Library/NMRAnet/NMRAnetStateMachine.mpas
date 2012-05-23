@@ -51,7 +51,7 @@ type
   procedure NMRAnetStateMachine_1ms_Timer;
   
   // Exported Functions
-  function TryTransmitNMRABusLayerMsg(VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes; Buffer: PCANBuffer): Boolean;
+  function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
 
 
   // defined in the user program
@@ -68,9 +68,6 @@ var
 
 
 implementation
-
-var
-  s1: array[32] of char;
 
 
 // *****************************************************************************
@@ -248,19 +245,14 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function TryTransmitNMRABusLayerMsg(VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes; Buffer: PCANBuffer): Boolean;
+function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
 var
   i: Integer;
 begin
   Result := False;
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
   begin
-    NMRAnetUtilities_CreateNMRABusMessagePacket(VariableField, DestinationAlias, Buffer);
-    if DataBytes <> nil then
-    begin
-      Buffer^.DataCount := DataCount;
-      Buffer^.DataBytes := DataBytes^;
-    end;
+    NMRAnetUtilities_CreateNMRABusMessagePacket(Buffer, VariableField, DestinationAlias, DataCount, DataBytes);
     if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
     begin
       StartCANMessageEngine();
@@ -342,7 +334,7 @@ end;
 procedure HandleNMRAnetLayerSimpleResponse(Buffer: PCANBuffer; VariableField: DWord; Flag: Word; NextState: Byte);
 begin
   if TestReceivedMsgFlags(Flag) then
-    if TryTransmitNMRABusLayerMsg(VariableField, 0, 0, nil, Buffer) then
+    if TryTransmitNMRABusLayerMsg(Buffer, VariableField, 0, 0, nil) then
       ClearReceivedMsgFlags(Flag);
   NMRABus.Responses.iState := NextState
 end;
@@ -365,12 +357,12 @@ begin
   begin
     if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS_PRODUCED then
     begin
-      if TryTransmitNMRABusLayerMsg(FT_PRODUCER_IDENTIFIED, 0, 8, @SUPPORTED_EVENTS_PRODUCED[NMRABus.Responses.Tag], Buffer) then
+      if TryTransmitNMRABusLayerMsg(Buffer, FT_PRODUCER_IDENTIFIED, 0, 8, @SUPPORTED_EVENTS_PRODUCED[NMRABus.Responses.Tag]) then
         Inc(NMRABus.Responses.Tag);
     end else
     if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS then
     begin
-      if TryTransmitNMRABusLayerMsg(FT_CONSUMER_IDENTIFIED, 0, 8, @SUPPORTED_EVENTS_CONSUMED[NMRABus.Responses.Tag-MAX_SUPPORTED_EVENTS_PRODUCED], Buffer) then
+      if TryTransmitNMRABusLayerMsg(Buffer, FT_CONSUMER_IDENTIFIED, 0, 8, @SUPPORTED_EVENTS_CONSUMED[NMRABus.Responses.Tag-MAX_SUPPORTED_EVENTS_PRODUCED]) then
         Inc(NMRABus.Responses.Tag);
     end else
     begin
@@ -399,7 +391,7 @@ var
 begin
   Response := FindStoredComplexResponse(nCode);
   if Response <> nil then
-    if TryTransmitNMRABusLayerMsg(VariableField, Response^.Alias, Response^.DataCount, @Response^.DataBytes, Buffer) then
+    if TryTransmitNMRABusLayerMsg(Buffer, VariableField, Response^.Alias, Response^.DataCount, @Response^.DataBytes) then
       Response^.nCode := CRC_EMPTY;
   NMRABus.Responses.iState := NextState
 end;
@@ -561,7 +553,7 @@ begin
     STATE_NMRABUS_INITIALIZED :
       begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
-          if TryTransmitNMRABusLayerMsg(FT_INITIALIZATION_COMPLETE, 0, 0, nil, @Buffer) then
+          if TryTransmitNMRABusLayerMsg(@Buffer, FT_INITIALIZATION_COMPLETE, 0, 0, nil) then
           begin
             NMRABus.iState := STATE_NMRABUS_PERMITTED;
             NMRABus.State := NMRABus.State or BS_INITIALIZED and not BS_UNITIALIZED

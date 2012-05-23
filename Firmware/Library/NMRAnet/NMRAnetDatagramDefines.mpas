@@ -52,11 +52,9 @@ const
   // Datagram Transmit Statemachine States
   STATE_DATAGRAM_TRANSMIT_START                          = 0;                   // Transmit Statemachine states
   STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME                   = 1;
-  STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME = 2;
+  STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE              = 2;
   STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    = 3;
-  STATE_DATAGRAM_TRANSMIT_NEXT_MULTI_FRAME               = 4;
-  STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  = 5;
-  STATE_DATAGRAM_TRANSMIT_NEXT                           = 6;
+  STATE_DATAGRAM_TRANSMIT_NEXT                           = 4;
   
 
   DATAGRAM_WATCHDOG_MAX = 10000;                                                // 1ms counts before the datagram is declared abandon

@@ -110,34 +110,13 @@ var
 begin
   Handled := True;
   
-  
-      DatagramTransmit.List[0].Databytes[0] := $20;
-      DatagramTransmit.List[0].Databytes[1] := $10;
-      DatagramTransmit.List[0].Databytes[2] := $02;
-      DatagramTransmit.List[0].Databytes[3] := $03;
-      DatagramTransmit.List[0].Databytes[4] := $04;
-      DatagramTransmit.List[0].Databytes[5] := $05;
-      DatagramTransmit.List[0].Databytes[6] := $06;
-      DatagramTransmit.List[0].Databytes[7] := $07;
-      DatagramTransmit.List[0].iByteCount := 8;
-      DatagramTransmit.List[0].Alias := $E44;
-      DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
-  //    UART1_Write_Text('Transmitting'+LF);
+  DatagramTransmit.List[0].Databytes[0] := $20;
+  for i := 1 to Datagram^.DataBytes[1] do
+    DatagramTransmit.List[0].Databytes[i] := i;
+  DatagramTransmit.List[0].iByteCount := Datagram^.DataBytes[1] + 1;
+  DatagramTransmit.List[0].Alias := $ee9;
+  DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
 
- { j := Datagram^.iByteCount;
-  UART1_Write_Text('Train Datagram:'+LF);
-  ByteToStr(j, s1);
-  UART1_Write_Text('  ByteCount: '+s1+' Data: ');
-  for i := 0 to j-1 do
-  begin
-    ByteToHex(Datagram^.DataBytes[i], s1);
-    UART1_Write_Text(s1);
-  end;
-  UART1_Write_Text(LF);      }
-  
-  Inc(delay);
-  if delay > 10 then
-    delay := 0;
 end;
 
 procedure MemConfigurationCallback(Datagram: PDatagramBuffer; var Handled: Boolean);
@@ -154,7 +133,7 @@ begin
     ByteToHex(Datagram^.DataBytes[i], s1);
     UART1_Write_Text(s1);
   end;
-  UART1_Write_Text(LF);    }
+  UART1_Write_Text(LF);  }
 end;
 
 // *******************
@@ -163,7 +142,6 @@ end;
 var
   Packet: TCANBuffer;
   DCC_Message: TDCCPacket;
-  Loop: DWord;
   laststate, Rlaststate: word;
   
   s_float: array[23] of char;
@@ -189,9 +167,8 @@ begin
   NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallback, @MemConfigurationCallback);
   
 
-  UART1_Write_Text('Connecting'+LF);
+ // UART1_Write_Text('Connecting'+LF);
   
-  Loop := 0;
   laststate := 0;
   Rlaststate := 0;
   MaxTime_StateMachine := 0;
@@ -202,6 +179,16 @@ begin
 
   while (TRUE) do
   begin
+  
+
+    {   if laststate <> DatagramTransmit.iState then
+       begin
+         ByteToStr(DatagramTransmit.iState, s1);
+         UART1_Write_Text(s1+LF);
+         laststate := DatagramTransmit.iState
+       end;    }
+       
+       
     TMR3 := 0;
     NMRAnetStateMachine_Process;
   
@@ -224,33 +211,6 @@ begin
     if NMRAnetCANReceive_Permited then
     begin
     
- {   if Loop = 6000 then
-    begin
-      DatagramTransmit.List[0].Databytes[0] := $20;
-      DatagramTransmit.List[0].Databytes[1] := $10;
-      DatagramTransmit.List[0].Databytes[2] := $02;
-      DatagramTransmit.List[0].Databytes[3] := $03;
-      DatagramTransmit.List[0].Databytes[4] := $04;
-      DatagramTransmit.List[0].Databytes[5] := $05;
-      DatagramTransmit.List[0].Databytes[6] := $06;
-      DatagramTransmit.List[0].Databytes[7] := $07;
-      DatagramTransmit.List[0].iByteCount := 8;
-      DatagramTransmit.List[0].Alias := $02F;
-      DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
-      Loop := 6003;
-      UART1_Write_Text('Transmitting'+LF);
-    end;
-    if Loop < 6000 then
-      Inc(Loop);  }
-      
-       if laststate <> DatagramTransmit.iState then
-       begin
-         ByteToStr(DatagramTransmit.iState, s1);
-         UART1_Write_Text(s1+LF);
-         laststate := DatagramTransmit.iState
-       end;
-
-
     end;
   end;
 end.
