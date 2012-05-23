@@ -437,7 +437,7 @@ begin
           Datagram^.iState := DATAGRAM_BUFFER_TRANSFER_COMPLETE;
           Response^.nCode := CRC_EMPTY;
           Exit;
-        end
+        end;
       Inc(i)
     end
   end;

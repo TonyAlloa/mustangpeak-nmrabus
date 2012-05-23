@@ -303,6 +303,7 @@ var
   Buffer: TCANBuffer;
   ActiveDatagram: PDatagramBuffer;
   i: Integer;
+  Offset: Word;
   
   s1: array[32] of char;
 begin
@@ -316,6 +317,7 @@ begin
         begin
      //     UART1_Write_Text('Tx Starting'+LF);
           ActiveDatagram^.iReTransmit := 0;
+          ActiveDatagram^.iFrameCount := 0;
           if ActiveDatagram^.iByteCount < 9 then                      // It is a single Frame Datagram
             DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME
           else
@@ -401,13 +403,30 @@ begin
       
     STATE_DATAGRAM_TRANSMIT_MULTI_FRAME :
       begin
-    //    UART1_Write_Text('Multi'+LF);
-        DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_MULTI_FRAME;
+    //    UART1_Write_Text('Tx Multi'+LF);
+        if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
+        begin
+          Offset := ActiveDatagram^.iFrameCount * 8;
+          i := 0;
+          while ( (i + Offset) < ActiveDatagram^.iByteCount) and (i < 8) do
+          begin
+            Buffer.DataBytes[i] := ActiveDatagram^.DataBytes[i+Offset];
+            Inc(i)
+          end;
+          Buffer.DataCount := ActiveDatagram^.iByteCount;                       // Copy the Size of the Data into the CAN Buffer
+          if TryTransmitNMRABusLayerMsg(MTI_DATAGRAM_FRAME_START, ActiveDatagram^.Alias, 0, nil, @Buffer) then
+          begin
+   ///         UART1_Write_Text('Tx Sent'+LF);
+            ActiveDatagram^.iWatchdog := 0;
+            DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_NEXT_MULTI_FRAME;
+           end
+        end
       end;
       
     STATE_DATAGRAM_TRANSMIT_NEXT_MULTI_FRAME :
       begin
     //    UART1_Write_Text('Multi Next'+LF);
+
          DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME;
       end;
       

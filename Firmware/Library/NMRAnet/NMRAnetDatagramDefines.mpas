@@ -84,7 +84,7 @@ type
     DataBytes: TDatagram;                                                       // The bytes sent in the datagram
     Alias: Word;                                                                // The Node that sent the datagram if this is a RX buffer, else it is the Node that is being sent the datagram if it is a TX buffer
     iState: Byte;                                                               // The State of the Packet Buffer see DATAGRAM_xxxx contants
-    iByteCount: Byte;                                                           // Counts the number of bytes recevied as they come in,
+    iByteCount: Byte;                                                           // Counts the number of bytes recevied as they come in/go out,
     iFrameCount: Byte;                                                          // Counts the number of Frames received
     iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message
     ErrorCode: TDatagramError;                                                  // Tracks any errors that occur
