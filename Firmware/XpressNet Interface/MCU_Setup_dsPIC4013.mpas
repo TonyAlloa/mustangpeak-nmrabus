@@ -58,7 +58,7 @@ begin
   {$ENDIF}
 
   LATD0_bit := 0;
-  TRISD0_bit := 0; // Output
+  TRISD0_bit := 0; // Output                                                    // Xpressent RS485 Direction
   
   LATD3_bit := 0;
   TRISD3_bit := 0;

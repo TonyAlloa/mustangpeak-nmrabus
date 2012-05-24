@@ -21,33 +21,27 @@ const
 
   PIV_SUPPORTED_PROTOCOL_COUNT = 6;    // UPDATED THIS IF ADDING OR SUBTRACTING SUPPORTED PROTOCOLS
   PIV_SUPPORTED_PROTOCOLS: array[0..PIV_SUPPORTED_PROTOCOL_COUNT-1] of TPIVProtocolValueArray = (
-    ($80, $00, $00, $00, $00, $00),    // PIV_PROTOCOL_ID_PROTOCOL
-    ($40, $00, $00, $00, $00, $00),    // PIV_PROTOCOL_ID_DATAGRAM
-    ($10, $00, $00, $00, $00, $00),    // PIV_PROTOCOL_ID_CONFIGURATION
-    ($04, $00, $00, $00, $00, $00),    //PIV_PROTOCOL_ID_PRODUCER_CONSUMER
-    ($01, $00, $00, $00, $00, $00),    // PIV_PROTOCOL_ID_TEACH_LEARN
-    ($00, $40, $00, $00, $00, $00)     // PIV_PROTOCOL_ID_CDI
+    ($80, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_PROTOCOL
+    ($40, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_DATAGRAM
+    ($10, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_CONFIGURATION
+    ($04, $00, $00, $00, $00, $00),                                             //PIV_PROTOCOL_ID_PRODUCER_CONSUMER
+    ($01, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_TEACH_LEARN
+    ($00, $40, $00, $00, $00, $00)                                              // PIV_PROTOCOL_ID_CDI
     );
 
   // Set the number of Events that are Consumed and Produced by this Node
-  MAX_SUPPORTED_EVENTS_CONSUMED = 4;
-  MAX_SUPPORTED_EVENTS_PRODUCED = 4;
-
+  MAX_SUPPORTED_EVENTS_CONSUMED = 2;
+  MAX_SUPPORTED_EVENTS_PRODUCED = 2;
+  MAX_SUPPORTED_EVENTS = MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED;
   // Defined the Values of the Events that are Consumed and Produced by this Node
   SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
-    ($05, $01, $01, $01, $07, $00, $F0, $01),
-    ($05, $01, $01, $01, $07, $00, $F0, $02),
-    ($05, $01, $01, $01, $07, $00, $F0, $03),
-    ($05, $01, $01, $01, $07, $00, $F0, $04)
+    ($05, $01, $01, $01, $07, $05, $00, $01),
+    ($05, $01, $01, $01, $07, $05, $00, $02)
   );
   SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
-    ($05, $01, $01, $01, $07, $00, $F0, $10),
-    ($05, $01, $01, $01, $07, $00, $F0, $20),
-    ($05, $01, $01, $01, $07, $00, $F0, $30),
-    ($05, $01, $01, $01, $07, $00, $F0, $40)
+    ($05, $01, $01, $01, $07, $05, $00, $10),
+    ($05, $01, $01, $01, $07, $05, $00, $20)
   );
-  
-  MAX_SUPPORTED_EVENTS = MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED;
   
 implementation
 
