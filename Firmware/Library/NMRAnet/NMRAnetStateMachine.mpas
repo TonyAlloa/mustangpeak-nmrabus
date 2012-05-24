@@ -246,8 +246,6 @@ end;
 //
 // *****************************************************************************
 function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
-var
-  i: Integer;
 begin
   Result := False;
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
@@ -410,7 +408,6 @@ procedure HandleDatagramResponse(nCode: Word; NextState: Byte);
 var
   Response: PQueuedResponse;
   Datagram: PDatagramBuffer;
-  ErrorCode: TDatagramErrorCode;
   i: Integer;
 begin
   Response := FindStoredComplexResponse(nCode);                                 // Look for Datagram Responses from Nodes this node sent a Datagram to
@@ -555,9 +552,16 @@ begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
           if TryTransmitNMRABusLayerMsg(@Buffer, FT_INITIALIZATION_COMPLETE, 0, 0, nil) then
           begin
-            NMRABus.iState := STATE_NMRABUS_PERMITTED;
+            NMRABus.iState := STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS;
             NMRABus.State := NMRABus.State or BS_INITIALIZED and not BS_UNITIALIZED
           end
+      end;
+    STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS :
+      begin
+        LockCANInterrupt;
+        NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED;
+        UnLockCANInterrupt;
+        NMRABus.iState := STATE_NMRABUS_PERMITTED;
       end;
     STATE_NMRABUS_PERMITTED :
       begin

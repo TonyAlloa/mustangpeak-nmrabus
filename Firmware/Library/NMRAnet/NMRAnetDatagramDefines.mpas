@@ -27,7 +27,6 @@ const
   DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK                 : TDatagramErrorCode = ($10, $00);
   DATAGRAM_RESULT_REJECTED_RESEND_MASK                    : TDatagramErrorCode = ($20, $00);
   DATAGRAM_RESULT_REJECTED_TRANSPORT_ERROR_MASK           : TDatagramErrorCode = ($40, $00);
-  DATAGRAM_RESULT_REJECTED_MYSTERY_ERROR_MASK             : TDatagramErrorCode = ($60, $00);
 
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
@@ -52,9 +51,10 @@ const
   // Datagram Transmit Statemachine States
   STATE_DATAGRAM_TRANSMIT_START                          = 0;                   // Transmit Statemachine states
   STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME                   = 1;
-  STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE              = 2;
+  STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME = 2;
   STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    = 3;
-  STATE_DATAGRAM_TRANSMIT_NEXT                           = 4;
+  STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  = 4;
+  STATE_DATAGRAM_TRANSMIT_NEXT                           = 5;
   
 
   DATAGRAM_WATCHDOG_MAX = 10000;                                                // 1ms counts before the datagram is declared abandon

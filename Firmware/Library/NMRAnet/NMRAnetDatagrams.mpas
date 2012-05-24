@@ -287,6 +287,164 @@ begin
     DatagramReceive.iState := NextUnHandledState
 end;
 
+// *****************************************************************************
+//  procedure TransmitClassifyDatagram;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure TransmitClassifyDatagram(Datagram: PDatagramBuffer; NextState_Single, NextState_Multi: Byte);
+begin
+  if Datagram^.iState <> DATAGRAM_BUFFER_EMPTY then
+  begin
+    Datagram^.iReTransmit := 0;
+    Datagram^.iFrameCount := 0;
+    if Datagram^.iByteCount < 9 then                      // It is a single Frame Datagram
+      DatagramTransmit.iState := NextState_Single
+    else
+      DatagramTransmit.iState := NextState_Multi
+  end
+end;
+procedure TransmitSingleDatagram(Buffer: PCANBuffer; Datagram: PDatagramBuffer; NextState: Byte);
+begin
+  if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
+  begin
+    if TryTransmitNMRABusLayerMsg(Buffer, MTI_DATAGRAM_ONLY_FRAME, Datagram^.Alias, Datagram^.iByteCount, PCAN_DataBytes( @Datagram^.DataBytes[0])) then
+    begin
+      Datagram^.iWatchdog := 0;
+      DatagramTransmit.iState := NextState
+     end
+  end
+end;
+
+// *****************************************************************************
+//  procedure TransmitMultiDatagram;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure TransmitMultiDatagram(Buffer: PCANBuffer; Datagram: PDatagramBuffer; NextState: Byte);
+var
+  Count: Byte;
+  MTI: DWord;
+begin
+  if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
+  begin
+    Count := 8;                                                                 // Take a guess
+    if Datagram^.iFrameCount = 0 then                                           // Calculate the MTI value for the Frame to be sent
+      MTI := MTI_DATAGRAM_FRAME_START
+    else
+    if Datagram^.iFrameCount = (Datagram^.iByteCount - 1) div 8 then
+    begin
+      Count := Datagram^.iByteCount - (Datagram^.iFrameCount * 8);
+      MTI := MTI_DATAGRAM_FRAME_END
+    end else
+      MTI := MTI_DATAGRAM_FRAME;
+
+    if TryTransmitNMRABusLayerMsg(Buffer, MTI, Datagram^.Alias, Count, PCAN_DataBytes( @Datagram^.DataBytes[Datagram^.iFrameCount * 8])) then
+    begin
+      Inc(Datagram^.iFrameCount);
+      Datagram^.iWatchdog := 0;
+      if MTI = MTI_DATAGRAM_FRAME_END then
+        DatagramTransmit.iState := NextState;
+     end
+  end
+end;
+
+// *****************************************************************************
+//  procedure TransmitWaitForResponse;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure TransmitWaitForResponse(Datagram: PDatagramBuffer; NextState_Okay, NextState_Retry, NextState_Bailout: Byte);
+begin
+  // DATAGRAM_BUFFER_TRANSFER_COMPLETE will be set by NMRAnetStateMachine.HandleDatagramResponse when the target datagram responds
+  if Datagram^.iState = DATAGRAM_BUFFER_TRANSFER_COMPLETE then
+  begin
+    case Datagram^.ErrorCode.MTI of
+       MTI_DATAGRAM_RECIEVED_OK :
+         begin
+           Datagram^.iState := DATAGRAM_BUFFER_EMPTY;
+           DatagramTransmit.iState := NextState_Okay;
+         end;
+       MTI_DATAGRAM_REJECTED :                                            // Rejected, decode what the issue was
+         begin
+           if DATAGRAM_RESULT_REJECTED_RESEND_MASK[DATAGRAM_RESULT_HI_BYTE] and Datagram^.ErrorCode.SubType[DATAGRAM_RESULT_HI_BYTE] <> 0 then
+           begin
+             // Try to Resend
+             if Datagram^.iRetransmit < DATAGRAM_MAX_RETRY_COUNT then
+             begin
+               Datagram^.iWatchdog := 0;
+               DatagramTransmit.iState := NextState_Retry
+             end else 
+             begin
+               Datagram^.iState := DATAGRAM_BUFFER_EMPTY;
+               DatagramTransmit.iState := NextState_Bailout;
+             end;
+           end else
+           if DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK[DATAGRAM_RESULT_HI_BYTE] and Datagram^.ErrorCode.SubType[DATAGRAM_RESULT_HI_BYTE] <> 0 then
+           begin
+             // Don't Resend
+             
+             // TODO: STORE A LIST OF NODES TO NOT SEND TO????????
+             
+             DatagramTransmit.iState := NextState_Bailout;
+             Datagram^.iState := DATAGRAM_BUFFER_EMPTY;
+           end else
+           begin
+             // Don't know what happended
+             DatagramTransmit.iState := NextState_Bailout;
+             Datagram^.iState := DATAGRAM_BUFFER_EMPTY;
+           end;
+         end;
+     end; // case
+  end else
+  begin
+    if Datagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then
+    begin
+      Inc(Datagram^.iRetransmit);
+      if Datagram^.iRetransmit >= DATAGRAM_MAX_RETRY_COUNT then
+      begin
+        Datagram^.iState := DATAGRAM_BUFFER_EMPTY;
+        DatagramTransmit.iState := NextState_Bailout;
+      end else
+      begin
+        Datagram^.iWatchdog := 0;
+        Datagram^.iFrameCount := 0;
+        DatagramTransmit.iState := NextState_Retry
+      end
+    end
+  end
+end;
+
+// *****************************************************************************
+//  procedure TransmitNext;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure TransmitNext(NextState: Byte);
+begin
+  Inc(DatagramTransmit.iActiveDatagram);
+  if DatagramTransmit.iActiveDatagram >= LEN_DATAGRAM_TRANSMIT_ARRAY then
+    DatagramTransmit.iActiveDatagram := 0;
+  DatagramTransmit.iState := NextState
+end;
+
+
 
 // *****************************************************************************
 //  procedure NMRAnetDatagrams_ProcessTransmit;
@@ -301,129 +459,16 @@ procedure NMRAnetDatagrams_ProcessTransmit;
 var
   Buffer: TCANBuffer;
   ActiveDatagram: PDatagramBuffer;
-  MTI: DWord;
-  CAN_DataBytes: PCAN_DataBytes;
-  Count: Byte;
 begin
   ActiveDatagram := @DatagramTransmit.List[DatagramTransmit.iActiveDatagram];
   
   case DatagramTransmit.iState of
-  
-    STATE_DATAGRAM_TRANSMIT_START :
-      begin
-        if ActiveDatagram^.iState <> DATAGRAM_BUFFER_EMPTY then
-        begin
-          ActiveDatagram^.iReTransmit := 0;
-          ActiveDatagram^.iFrameCount := 0;
-          if ActiveDatagram^.iByteCount < 9 then                      // It is a single Frame Datagram
-            DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME
-          else
-            DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_MULTI_FRAME
-        end
-      end;
-      
-    STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME :
-      begin
-        if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
-        begin
-          if TryTransmitNMRABusLayerMsg(@Buffer, MTI_DATAGRAM_ONLY_FRAME, ActiveDatagram^.Alias, ActiveDatagram^.iByteCount, @ActiveDatagram^.DataBytes[0]) then
-          begin
-            ActiveDatagram^.iWatchdog := 0;
-            DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE
-           end
-        end
-      end;
-      
-    STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE :
-      begin   // DATAGRAM_BUFFER_TRANSFER_COMPLETE will be set by NMRAnetStateMachine.HandleDatagramResponse when the target datagram responds
-        if ActiveDatagram^.iState = DATAGRAM_BUFFER_TRANSFER_COMPLETE then
-        begin
-          case ActiveDatagram^.ErrorCode.MTI of
-             MTI_DATAGRAM_RECIEVED_OK :
-               begin
-                  DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_NEXT;
-               end;
-             MTI_DATAGRAM_REJECTED :                                            // Rejected, decode what the issue was
-               begin
-                 case ActiveDatagram^.ErrorCode.SubType[DATAGRAM_RESULT_HI_BYTE] of
-                   DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK[DATAGRAM_RESULT_HI_BYTE] :
-                     begin
-                       case ActiveDatagram^.ErrorCode.SubType[DATAGRAM_RESULT_LO_BYTE] of
-                          DATAGRAM_RESULT_REJECTED_PERMANENT_ERROR[DATAGRAM_RESULT_LO_BYTE]               : begin end;
-                         DATAGRAM_RESULT_REJECTED_INFORMATION_LOGGED[DATAGRAM_RESULT_LO_BYTE]            : begin end;
-                        DATAGRAM_RESULT_REJECTED_SOURCE_NOT_PERMITTED[DATAGRAM_RESULT_LO_BYTE]          : begin end;
-                         DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[DATAGRAM_RESULT_LO_BYTE] : begin end;
-                       end; // case
-                     end;
-                    DATAGRAM_RESULT_REJECTED_RESEND_MASK[DATAGRAM_RESULT_HI_BYTE] :
-                     begin
-                       case ActiveDatagram^.ErrorCode.SubType[DATAGRAM_RESULT_LO_BYTE] of
-                         DATAGRAM_RESULT_REJECTED_BUFFER_FULL[DATAGRAM_RESULT_LO_BYTE]                   : begin end;
-                       end; // case
-                     end;
-                   DATAGRAM_RESULT_REJECTED_TRANSPORT_ERROR_MASK [DATAGRAM_RESULT_HI_BYTE] :
-                     begin
-                      // case Datagram^.ErrorCode.SubType[1] of
-                      //   Nothing Defined by the spec yet
-                       // end; // case
-                     end;
-                   DATAGRAM_RESULT_REJECTED_MYSTERY_ERROR_MASK[DATAGRAM_RESULT_HI_BYTE] :
-                     begin
-                       case ActiveDatagram^.ErrorCode.SubType[DATAGRAM_RESULT_LO_BYTE] of
-                         DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER[DATAGRAM_RESULT_LO_BYTE]                  : begin end;
-                       end; // case
-                     end;
-                 end;
-               end;
-           end; // case
-           DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_NEXT;
-           ActiveDatagram^.iState := DATAGRAM_BUFFER_EMPTY;
-        end else
-          if ActiveDatagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then
-          begin
-            Inc(ActiveDatagram^.iRetransmit);
-            if ActiveDatagram^.iRetransmit >= DATAGRAM_MAX_RETRY_COUNT then
-            begin
-              ActiveDatagram^.iState := DATAGRAM_BUFFER_EMPTY;
-              DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_NEXT
-            end else
-              DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME
-          end;
-      end;
-      
-    STATE_DATAGRAM_TRANSMIT_MULTI_FRAME :
-      begin
-        if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
-        begin
-          Count := 8;                                                           // Take a guess
-          if ActiveDatagram^.iFrameCount = 0 then                               // Calculate the MTI value for the Frame to be sent
-            MTI := MTI_DATAGRAM_FRAME_START
-          else
-          if ActiveDatagram^.iFrameCount = (ActiveDatagram^.iByteCount - 1) div 8 then
-          begin
-            Count := ActiveDatagram^.iByteCount - (ActiveDatagram^.iFrameCount * 8);
-            MTI := MTI_DATAGRAM_FRAME_END
-          end else
-            MTI := MTI_DATAGRAM_FRAME;
-          
-          CAN_DataBytes := @ActiveDatagram^.DataBytes[ActiveDatagram^.iFrameCount * 8];
-          if TryTransmitNMRABusLayerMsg(@Buffer, MTI, ActiveDatagram^.Alias, Count, CAN_DataBytes) then
-          begin
-            Inc(ActiveDatagram^.iFrameCount);
-            ActiveDatagram^.iWatchdog := 0;
-            if MTI = MTI_DATAGRAM_FRAME_END then
-              DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE;
-           end
-        end
-      end;
-      
-    STATE_DATAGRAM_TRANSMIT_NEXT :
-      begin
-        Inc(DatagramTransmit.iActiveDatagram);
-        if DatagramTransmit.iActiveDatagram >= LEN_DATAGRAM_TRANSMIT_ARRAY then
-          DatagramTransmit.iActiveDatagram := 0;
-        DatagramTransmit.iState := STATE_DATAGRAM_TRANSMIT_START
-      end
+    STATE_DATAGRAM_TRANSMIT_START                          : TransmitClassifyDatagram(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME, STATE_DATAGRAM_TRANSMIT_MULTI_FRAME);
+    STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME                   : TransmitSingleDatagram(@Buffer, ActiveDatagram, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME);
+    STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME : TransmitWaitForResponse(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_NEXT, STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME, STATE_DATAGRAM_TRANSMIT_NEXT);
+    STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    : TransmitSingleDatagram(@Buffer, ActiveDatagram, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME);
+    STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  : TransmitWaitForResponse(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_NEXT, STATE_DATAGRAM_TRANSMIT_MULTI_FRAME, STATE_DATAGRAM_TRANSMIT_NEXT);
+    STATE_DATAGRAM_TRANSMIT_NEXT                           : TransmitNext(STATE_DATAGRAM_TRANSMIT_START)
    else
      DatagramTransmit.iState := STATE_DATAGRAM_RECEIVE_START;
    end;
@@ -451,7 +496,6 @@ end;
 procedure NMRAnetDatagrams_ProcessReceive;
 var
   ActiveDatagram: PDatagramBuffer;
-  Buffer: TCANBuffer;
 begin
   ActiveDatagram := @DatagramReceive.List[DatagramReceive.iActiveDatagram];
   case DatagramReceive.iState of

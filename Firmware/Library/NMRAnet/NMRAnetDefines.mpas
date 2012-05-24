@@ -152,11 +152,12 @@ const
   STATE_NMRABUS_SEND_LOGIN_RID              = 6;
   STATE_NMRABUS_SEND_LOGIN_AMD              = 8;
   STATE_NMRABUS_INITIALIZED                 = 9;
-  STATE_NMRABUS_PERMITTED                   = 10;
-  STATE_NMRABUS_INHIBITED                   = 11;
-  STATE_NMRABUS_DUPLICATE_FULL_ID           = 12;
-  STATE_NMRABUS_TAKE_OFFLINE                = 13;
-  STATE_NMRABUS_OFFLINE                     = 14;
+  STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS       = 10;
+  STATE_NMRABUS_PERMITTED                   = 11;
+  STATE_NMRABUS_INHIBITED                   = 12;
+  STATE_NMRABUS_DUPLICATE_FULL_ID           = 13;
+  STATE_NMRABUS_TAKE_OFFLINE                = 14;
+  STATE_NMRABUS_OFFLINE                     = 15;
   
   STATE_NMRABUS_RESPONSE_SEND_RID                     = 0;
   STATE_NMRABUS_RESPONSE_SEND_AMD                     = 1;

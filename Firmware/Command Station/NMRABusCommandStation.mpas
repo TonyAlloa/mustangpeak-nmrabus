@@ -106,11 +106,11 @@ var
 
 procedure TrainControlCallback(Datagram: PDatagramBuffer; var Handled: Boolean);
 var
-  j, i: Integer;
+  i: Integer;
 begin
   Handled := True;
   
-  DatagramTransmit.List[0].Databytes[0] := $20;
+  DatagramTransmit.List[0].Databytes[0] := $C0;
   for i := 1 to Datagram^.DataBytes[1] do
     DatagramTransmit.List[0].Databytes[i] := i;
   DatagramTransmit.List[0].iByteCount := Datagram^.DataBytes[1] + 1;
@@ -120,8 +120,8 @@ begin
 end;
 
 procedure MemConfigurationCallback(Datagram: PDatagramBuffer; var Handled: Boolean);
-var
-  j, i: Integer;
+//var
+ // j, i: Integer;
 begin
   Handled := True;
  { j := Datagram^.iByteCount;
@@ -195,13 +195,13 @@ begin
     if TMR3 > MaxTime_StateMachine then
     begin
       MaxTime_StateMachine := TMR3;
-      FloatToStr((50e-9*MaxTime_StateMachine)*1e6, s_float);
+      FloatToStr((50e-9*double( MaxTime_StateMachine))*1e6, s_float);
       UART1_Write_Text('StateMachine Max: ' + s_float+'us'+LF);
     end;
     
     if MaxTime_RX <> Rlaststate then
     begin
-      FloatToStr((50e-9*MaxTime_RX)*1e6, s_float);
+      FloatToStr((50e-9*double( MaxTime_RX))*1e6, s_float);
       UART1_Write_Text('CAN RX Max: ' + s_float+'us'+LF);
       Rlaststate := MaxTime_RX
     end;

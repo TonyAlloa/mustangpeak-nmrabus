@@ -457,27 +457,19 @@ end;
 // *****************************************************************************
 function EqualEventID(Event1, Event2: PEventID): Boolean;
 var
-  s1: array[32] of char;
+  i: Integer;
 begin
-  LongwordToHex(Event1^, s1);
-  UART1_Write_Text('Event1: '+s1);
-  LongwordToHex(Event2^, s1);
-  UART1_Write_Text('Event2: '+s1);
-
-
-  Result := (Event1^[0] = Event2^[0]) and
-            (Event1^[1] = Event2^[1]) and
-            (Event1^[2] = Event2^[2]) and
-            (Event1^[3] = Event2^[3]) and
-            (Event1^[4] = Event2^[4]) and
-            (Event1^[5] = Event2^[5]) and
-            (Event1^[6] = Event2^[6]) and
-            (Event1^[7] = Event2^[7])
-
-            
-            
- // Result := (Word(Event1^[0]) = Word(Event2^[0])) and (Word(Event1^[2]) = Word(Event2^[2])) and
- //           (Word(Event1^[4]) = Word(Event2^[4])) and (Word(Event1^[6]) = Word(Event2^[6]))
+  Result := True;
+  i := 0;
+  while (i < 8) and Result do
+  begin
+    if Event1^[i] <> Event2^[i] then
+    begin
+      Result := False;
+      Break
+    end;
+    Inc(i);
+  end;
 end;
 
 
@@ -495,15 +487,15 @@ var
 begin
   Result := False;
   i := 0;
-  while (i < MAX_SUPPORTED_EVENTS_PRODUCED) and not Result do
+  while (i < MAX_SUPPORTED_EVENTS_PRODUCED) do
   begin
     if EqualEventID(@SUPPORTED_EVENTS_PRODUCED[i], DataBytes) then
     begin
       Result := True;
-      Exit
+      Break
     end;
     Inc(i)
-  end
+  end;
 end;
 
 // *****************************************************************************

@@ -115,7 +115,7 @@ begin
   // This version is MUCH faster than the ME library
   // We have waited for the SPI to empty before returning so the buffer is empty on entry
   Result := SPI1BUF;       // Force the SPIRBF flag to clear
-  nop;
+  Dummy := 0;
   SPI1BUF := Dummy;   // This will set the SPITBF flag until the byte is written into the output latch to be sent.
   while SPIRBF_bit = 0 do;
   Result := SPI1BUF;
@@ -189,6 +189,7 @@ begin
   begin
     {$IFDEF dsPIC30F}
     // Much faster than ME Libraries
+    Dummy := 0;
     SPI1BUF := Dummy;          // This will set the SPITBF flag until the byte is written into the output latch to be sent.
     while SPIRBF_bit = 0 do;
     Buffer^ := SPI1BUF;

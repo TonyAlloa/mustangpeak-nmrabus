@@ -105,7 +105,7 @@ end;
 // ****************************************************************************
 function GetComplexResponseBuffer: PQueuedResponse;
 var
-  i, Count: Integer;
+  i: Integer;
 begin
   Result := nil; 
   i := 0;
@@ -127,7 +127,7 @@ end;
 //
 //
 // ****************************************************************************
-procedure StoreComplexResponse(CANBuffer: PCANBuffer; nCode, NodeAlias: Word; DataBytes: PCAN_DataBytes; DataCount: Byte);
+procedure StoreComplexResponse(nCode, NodeAlias: Word; DataBytes: PCAN_DataBytes; DataCount: Byte);
 var
   Buffer: PQueuedResponse;
 begin
@@ -137,10 +137,6 @@ begin
   Buffer := GetComplexResponseBuffer;                                           // Get a free Response Buffer
   if Buffer <> nil then
   begin
-  
- // UART1_Write_Text('CAN Response'+LF);
-  
-  
     Buffer^.nCode := nCode;                                                     // Store the Code of the Response
     Buffer^.Alias := NodeAlias;                                                 // Store the Node that sent the message that requires a response (if applicable for the Response)
     if DataBytes <> nil then
@@ -227,7 +223,7 @@ end;
 procedure DispatchEventProducerIdenitify(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes) then
-    StoreComplexResponse(CANBuffer, CRC_PRODUCER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 8);
+    StoreComplexResponse(CRC_PRODUCER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -243,7 +239,7 @@ end;
 procedure DispatchEventConsumerIdenitify(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes) then
-    StoreComplexResponse(CANBuffer, CRC_CONSUMER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 8);
+    StoreComplexResponse(CRC_CONSUMER_IDENTIFIED, 0, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -284,7 +280,7 @@ end;
 //                 Simple Response
 //
 // ****************************************************************************
-procedure DispatchIdentifyEvents(CANBuffer: PCANBuffer);
+procedure DispatchIdentifyEvents;
 begin
    NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED;
 end;
@@ -301,7 +297,7 @@ end;
 // ****************************************************************************
 procedure DispatchDatagramReceivedOk(CANBuffer: PCANBuffer);
 begin
-  StoreComplexResponse(CANBuffer, CRC_DATAGRAM_RECEIVED_OK, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 1);
+  StoreComplexResponse(CRC_DATAGRAM_RECEIVED_OK, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 1);
 end;
 
 // ****************************************************************************
@@ -316,7 +312,7 @@ end;
 // ****************************************************************************
 procedure DispatchDatagramRejected(CANBuffer: PCANBuffer);
 begin
-  StoreComplexResponse(CANBuffer, CRC_DATAGRAM_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 3);
+  StoreComplexResponse(CRC_DATAGRAM_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 3);
 end;
 
 // ****************************************************************************
@@ -339,7 +335,7 @@ begin
   for i := 0 to LEN_PIV_PROTOCOL-1 do
     for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
       DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
-  StoreComplexResponse(CANBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
+  StoreComplexResponse(CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
 end;
 
 // ****************************************************************************
@@ -363,7 +359,7 @@ begin
  //   FT_PRODUCER_IDENTIFIED           : begin end; // TODO
  //   FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
     FT_EVENT_LEARN                   : begin end; // TODO
-    FT_EVENTS_IDENTIFY               : DispatchIdentifyEvents(CANBuffer);
+    FT_EVENTS_IDENTIFY               : DispatchIdentifyEvents;
     FT_PC_EVENT_REPORT               : begin end; // TODO
   end
 end;
@@ -395,14 +391,14 @@ begin
 //      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
 //      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
 //      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
-      MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents(CANBuffer);
+      MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents;
       MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
       MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;   // TODO
       MTI_DATAGRAM_RECIEVED_OK             : DispatchDatagramReceivedOk(CANBuffer);
       MTI_DATAGRAM_REJECTED                : DispatchDatagramRejected(CANBuffer)
     else begin
         DataBytes[0] := MTI_OPTIONAL_INTERACTION_REJECTED;
-        StoreComplexResponse(CANBuffer, CRC_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
+        StoreComplexResponse(CRC_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
       end;
     end
   end
