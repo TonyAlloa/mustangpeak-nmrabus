@@ -11,8 +11,6 @@ type
   PDatagramErrorCode = ^TDatagramErrorCode;
 
 const
-  DATAGRAM_RESULT_LO_BYTE = 0;
-  DATAGRAM_RESULT_HI_BYTE = 1;
   DATAGRAM_RESULT_REJECTED                                : TDatagramErrorCode = ($00, $00);
   // Errors that will cause sender to not retry
   DATAGRAM_RESULT_REJECTED_PERMANENT_ERROR                : TDatagramErrorCode = ($10, $00);

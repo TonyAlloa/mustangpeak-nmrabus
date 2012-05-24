@@ -314,6 +314,7 @@ begin
   begin
     if TryTransmitNMRABusLayerMsg(Buffer, MTI_DATAGRAM_ONLY_FRAME, Datagram^.Alias, Datagram^.iByteCount, PCAN_DataBytes( @Datagram^.DataBytes[0])) then
     begin
+      Inc(Datagram^.iRetransmit);
       Datagram^.iWatchdog := 0;
       DatagramTransmit.iState := NextState
      end
@@ -352,8 +353,11 @@ begin
       Inc(Datagram^.iFrameCount);
       Datagram^.iWatchdog := 0;
       if MTI = MTI_DATAGRAM_FRAME_END then
+      begin
+        Inc(Datagram^.iRetransmit);
         DatagramTransmit.iState := NextState;
-     end
+      end
+    end
   end
 end;
 
@@ -379,12 +383,15 @@ begin
          end;
        MTI_DATAGRAM_REJECTED :                                            // Rejected, decode what the issue was
          begin
-           if DATAGRAM_RESULT_REJECTED_RESEND_MASK[DATAGRAM_RESULT_HI_BYTE] and Datagram^.ErrorCode.SubType[DATAGRAM_RESULT_HI_BYTE] <> 0 then
-           begin
+
+           if DATAGRAM_RESULT_REJECTED_RESEND_MASK[0] and Datagram^.ErrorCode.SubType[1] <> 0 then
+           begin    
              // Try to Resend
              if Datagram^.iRetransmit < DATAGRAM_MAX_RETRY_COUNT then
              begin
                Datagram^.iWatchdog := 0;
+               Datagram^.iFrameCount := 0;
+               Datagram^.iState := DATAGRAM_BUFFER_IN_PROCESS;
                DatagramTransmit.iState := NextState_Retry
              end else 
              begin
@@ -392,10 +399,10 @@ begin
                DatagramTransmit.iState := NextState_Bailout;
              end;
            end else
-           if DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK[DATAGRAM_RESULT_HI_BYTE] and Datagram^.ErrorCode.SubType[DATAGRAM_RESULT_HI_BYTE] <> 0 then
+           if DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK[0] and Datagram^.ErrorCode.SubType[1] <> 0 then
            begin
              // Don't Resend
-             
+
              // TODO: STORE A LIST OF NODES TO NOT SEND TO????????
              
              DatagramTransmit.iState := NextState_Bailout;
@@ -412,7 +419,6 @@ begin
   begin
     if Datagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then
     begin
-      Inc(Datagram^.iRetransmit);
       if Datagram^.iRetransmit >= DATAGRAM_MAX_RETRY_COUNT then
       begin
         Datagram^.iState := DATAGRAM_BUFFER_EMPTY;
@@ -466,7 +472,7 @@ begin
     STATE_DATAGRAM_TRANSMIT_START                          : TransmitClassifyDatagram(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME, STATE_DATAGRAM_TRANSMIT_MULTI_FRAME);
     STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME                   : TransmitSingleDatagram(@Buffer, ActiveDatagram, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME);
     STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME : TransmitWaitForResponse(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_NEXT, STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME, STATE_DATAGRAM_TRANSMIT_NEXT);
-    STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    : TransmitSingleDatagram(@Buffer, ActiveDatagram, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME);
+    STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    : TransmitMultiDatagram(@Buffer, ActiveDatagram, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME);
     STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  : TransmitWaitForResponse(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_NEXT, STATE_DATAGRAM_TRANSMIT_MULTI_FRAME, STATE_DATAGRAM_TRANSMIT_NEXT);
     STATE_DATAGRAM_TRANSMIT_NEXT                           : TransmitNext(STATE_DATAGRAM_TRANSMIT_START)
    else

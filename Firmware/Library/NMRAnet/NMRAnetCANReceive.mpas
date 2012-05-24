@@ -468,7 +468,7 @@ var
   DoDefault: Boolean;
 begin
 
-// UART1_Write_Text('CAN'+LF);
+ //UART1_Write_Text('CAN'+LF);
 
   DoDefault := True;
   if CANLayerReceiveHook <> nil then
@@ -503,7 +503,7 @@ var
   DoDefault: Boolean;
 begin
 
- // UART1_Write_Text('NMRAnet'+LF);
+  //UART1_Write_Text('NMRAnet'+LF);
  
   TMR4 := 0;
 

@@ -424,11 +424,12 @@ begin
           Datagram^.ErrorCode.SubType[0] := Response^.DataBytes[2];
           Datagram^.ErrorCode.SubType[1] := Response^.DataBytes[1];
           Datagram^.iState := DATAGRAM_BUFFER_TRANSFER_COMPLETE;
-          Response^.nCode := CRC_EMPTY;
+          Response^.nCode := CRC_EMPTY;                                         // Free the response
           Exit;
         end;
       Inc(i)
-    end
+    end;
+    Response^.nCode := CRC_EMPTY;                                               // The response was found but there was no matching transmiting nodes
   end;
   NMRABus.Responses.iState := NextState
 end;
@@ -442,7 +443,10 @@ end;
 //
 // *****************************************************************************
 procedure Responses_Process(Buffer: PCANBuffer);
-begin
+begin   
+
+
+
   if not DuplicateDetected(SRC_DUPLICATE_NODE_ID, STATE_NMRABUS_DUPLICATE_FULL_ID) then  // Highest Priority, if detected the main loop needs to change state
     if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_NMRABUS_INHIBITED) then          // Next Highest Priority, if detected the main loop needs to change state
     begin
