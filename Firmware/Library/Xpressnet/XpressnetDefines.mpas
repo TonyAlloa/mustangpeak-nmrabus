@@ -74,7 +74,7 @@ const
   XPRESSNET_MAX_DATA_BYTE  = 15;   // Max number of data bytes in a XpressNet message (exclusve of the Call Byte, Header Byte, and XOR Byte)
   XPRESSNET_BUS_HUNG_COUNT = 2;    // 3.2ms counts and the bus is declared hung. (added 1 since we can't be sure when in the timer we started this covers if the timer interrupts right after we set the flag to 0) See: StartXpressNetHungWatchdog for analysis of the max time of a device transaction
   XPRESSNET_PC_HUNG_COUNT  = 100;  // 3.2 ms counts and the PC interface is declared hung. (added 1 since we can't be sure when in the timer we started this covers if the timer interrupts right after we set the flag to 0)
-  REDISCOVERY_TIME         = 1;    // = Slow timer count (840ms * REDISCOVERY_TIME = time to rescan for new Devices)
+  REDISCOVERY_TIME         = 5;    // = Slow timer count (840ms * REDISCOVERY_TIME = time to rescan for new Devices)
   
   XDS_XPRESSNET_DEVICE_INACTIVE                            = $00;  // not Active, not Acknowledging
   XDS_XPRESSNET_DEVICE_ACTIVE                              = $01;  // Indicates the Device is active on the bus

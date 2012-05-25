@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRABus_Xpressnet.mpas
+Value=..\Library\Xpressnet\XpressnetStateMachine.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -44,10 +44,10 @@ File0=NMRABus_Xpressnet.mpas
 File1=..\Library\Xpressnet\XpressnetDefines.mpas
 File2=..\Library\Xpressnet\XpressnetStateMachine.mpas
 File3=..\Library\NMRAnet\NMRAnetDatagrams.mpas
-File4=..\Command Station\NMRABusCommandStation.mpas
-File5=..\Library\NMRAnet\NMRAnetCANReceive.mpas
-File6=MCU_Setup_dsPIC4013.mpas
-File7=NMRAnetAppDefines.mpas
+File4=..\Library\NMRAnet\NMRAnetCANReceive.mpas
+File5=NMRAnetAppDefines.mpas
+File6=..\Library\NMRAnet\NMRAnetStateMachine.mpas
+File7=..\Library\NMRAnet\NMRAnetDatagramDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

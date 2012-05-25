@@ -443,10 +443,7 @@ end;
 //
 // *****************************************************************************
 procedure Responses_Process(Buffer: PCANBuffer);
-begin   
-
-
-
+begin
   if not DuplicateDetected(SRC_DUPLICATE_NODE_ID, STATE_NMRABUS_DUPLICATE_FULL_ID) then  // Highest Priority, if detected the main loop needs to change state
     if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_NMRABUS_INHIBITED) then          // Next Highest Priority, if detected the main loop needs to change state
     begin

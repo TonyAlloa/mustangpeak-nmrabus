@@ -1,6 +1,8 @@
 unit XpressnetStateMachine;
 
 uses
+  NMRAnetStateMachine,
+  NMRAnetDatagramDefines,
   NMRAnetCANReceive,
   XpressnetDefines;
 
@@ -11,7 +13,7 @@ const
   STATE_RECEIVEDEVICEMESSAGE = 3;
   STATE_HANDLEMESSAGE = 4;
   STATE_QUERYDATABASE = 5;
-  STATE_XPRESSNETREPLYBRANCH = 6;
+  STATE_XPRESSNETREPLY = 6;
   STATE_SENDDEVICEREPLY = 7;
   STATE_SENDDEVICEERROR = 8;
   STATE_DEVICEACKRESPONSE = 9;
@@ -79,21 +81,22 @@ var
   i: Integer;
 begin
   Result := ID_NO_DEVICE;
-  if iDevice <> ID_NO_DEVICE then
-  begin
-    i := iDevice;
-    repeat
-      Inc(i);
-      if i > ID_MAX_DEVICE then
-        i := ID_MIN_DEVICE;
-      if XpressnetStateMachineInfo.DeviceList[i].State and XDS_XPRESSNET_DEVICE_ACTIVE <> 0 then
-   //     if not Device_InServiceMode(i) then
-        begin
-          Result := i;
-          Exit
-        end;
-    until i = iDevice;
-  end
+  
+  if iDevice = ID_NO_DEVICE then
+    iDevice := ID_MIN_DEVICE;
+
+  i := iDevice;
+  repeat
+    Inc(i);
+    if i > ID_MAX_DEVICE then
+      i := ID_MIN_DEVICE;
+    if XpressnetStateMachineInfo.DeviceList[i].State and XDS_XPRESSNET_DEVICE_ACTIVE <> 0 then
+ //     if not Device_InServiceMode(i) then
+      begin
+        Result := i;
+        Exit
+      end;
+  until i = iDevice;
 end;
 
 // ****************************************************************************
@@ -138,26 +141,26 @@ begin
   XpressnetStateMachineInfo.RS485.XORFailed := False;
 end;
 
-procedure SendTransferErrorMessage;
+procedure SendTransferErrorMessage(Device: Byte);
 begin
   Xpressnet_RS485_Select := 1;
-  WriteXpressNetByte(CALLBYTE_TRANSFER_ERRORS or XpressnetStateMachineInfo.iActiveDevice, True, @U2TXREG, @U2STA); // 011AAAAA
+  WriteXpressNetByte(CALLBYTE_TRANSFER_ERRORS or Device, True, @U2TXREG, @U2STA); // 011AAAAA
   WriteXpressNetByte($80, False, @U2TXREG, @U2STA);                                                                // 10000000
   WriteXpressNetByte($E1, False, @U2TXREG, @U2STA);                                                                // 11100001
   Xpressnet_RS485_Select := 0;
 end;
 
-procedure SendAckRequestMessage;
+procedure SendAckRequestMessage(Device: Byte);
 begin
   Xpressnet_RS485_Select := 1;                                                                                     // Select the 485 chip to transmit mode
-  WriteXpressNetByte( InsertHiBitParity(CALLBYTE_REQUEST_ACK_FROM_DEVICE or XpressnetStateMachineInfo.iActiveDevice), True, @U2TXREG, @U2STA);  // 000AAAAA
+  WriteXpressNetByte( InsertHiBitParity(CALLBYTE_REQUEST_ACK_FROM_DEVICE or Device), True, @U2TXREG, @U2STA);  // 000AAAAA
   Xpressnet_RS485_Select := 0;
 end;
 
-procedure SendInquiryMessage;
+procedure SendInquiryMessage(Device: Byte);
 begin
   Xpressnet_RS485_Select := 1;                                                                              // Select the 485 chip to transmit mode
-  WriteXpressNetByte( InsertHiBitParity(CALLBYTE_INQUIRY or XpressnetStateMachineInfo.iActiveDevice), True, @U2TXREG, @U2STA);  // Write to the Bus for a query
+  WriteXpressNetByte( InsertHiBitParity(CALLBYTE_INQUIRY or Device), True, @U2TXREG, @U2STA);  // Write to the Bus for a query
   Xpressnet_RS485_Select := 0;                                                                              // Select the 485 chip to receive mode ASAP
 end;
 
@@ -197,7 +200,6 @@ begin
     XpressnetStateMachineInfo.iState := DetectedState;
   end else
   begin                                                                                                     // No so set it device inactive and exit to the next device
-    XpressnetStateMachineInfo.DeviceList[XpressnetStateMachineInfo.iActiveDevice].State := XDS_XPRESSNET_DEVICE_INACTIVE;
     XpressnetStateMachineInfo.iState := NoDetectedState;
   end;
 end;
@@ -284,6 +286,7 @@ begin
         if XpressnetStateMachineInfo.iActiveDevice > ID_MAX_DEVICE then
         begin
           XpressnetStateMachineInfo.Discovering := False;
+          XpressnetStateMachineInfo.DiscoveryCount := 0;
           XpressnetStateMachineInfo.iActiveDevice := FirstActiveDevice;
           XpressnetStateMachineInfo.iState := STATE_ENUMERATEACTIVEDEVICES;
         end else
@@ -292,8 +295,8 @@ begin
     STATE_SENDDEVICEINQUIRY :
       begin
         PrepareUARTReceiver;
-        SendInquiryMessage;
-        Delay_us(120);                                                                                            // A bit of a hack to save another timer.  Just wait for the Xpressent spec timeout then check if a UART transfer has started
+        SendInquiryMessage(XpressnetStateMachineInfo.iActiveDevice);
+        Delay_us(120);                                                          // A bit of a hack to save another timer.  Just wait for the Xpressent spec timeout then check if a UART transfer has started
         DetectDeviceResponse(STATE_WAITFORDEVICEMESSAGE, STATE_TESTFORDISCOVERYMODE);
       end;
     STATE_WAITFORDEVICEMESSAGE :
@@ -312,25 +315,26 @@ begin
       end;
     STATE_HANDLEMESSAGE :
       begin
-        XpressnetStateMachineInfo.DeviceList[XpressnetStateMachineInfo.iActiveDevice].State := XDS_XPRESSNET_DEVICE_ACTIVE;
-    //    XpressNet_HandleDeviceInstruction( @XpressnetStateMachineInfo.RS485.XpressnetData, XpressnetStateMachineInfo.iActiveDevice);
-        {
-          if MessageRequiresDatabaseInfo then
+        XpressnetStateMachineInfo.DeviceList[XpressnetStateMachineInfo.iActiveDevice].State := XpressnetStateMachineInfo.DeviceList[XpressnetStateMachineInfo.iActiveDevice].State or XDS_XPRESSNET_DEVICE_ACTIVE;
+        
+        XpressNet_HandleDeviceInstruction( @XpressnetStateMachineInfo.RS485.XpressnetData, XpressnetStateMachineInfo.iActiveDevice);
+
+        //  if MessageRequiresDatabaseInfo then
             XpressnetStateMachineInfo.iState := STATE_QUERYDATABASE
-          else
-            XpressnetStateMachineInfo.iState := STATE_TESTFORDISCOVERYMODE
-        }
+        //  else
+       //     XpressnetStateMachineInfo.iState := STATE_TESTFORDISCOVERYMODE
+
       end;
     STATE_QUERYDATABASE :
       begin
         if NMRAnetCANReceive_Permited then
         begin
           // Send NMRANet message here......
-          XpressnetStateMachineInfo.iState := STATE_XPRESSNETREPLYBRANCH;
+          XpressnetStateMachineInfo.iState := STATE_XPRESSNETREPLY;
         end else
           XpressnetStateMachineInfo.iState := STATE_DISCOVERDEVICES;
       end;
-    STATE_XPRESSNETREPLYBRANCH :
+    STATE_XPRESSNETREPLY :
       begin
         // NMRANet message received here....
         // if ReplyNeeded then
@@ -347,8 +351,8 @@ begin
     STATE_SENDDEVICEERROR :
       begin
         PrepareUARTReceiver;
-        SendTransferErrorMessage;
-        SendAckRequestMessage;
+        SendTransferErrorMessage(XpressnetStateMachineInfo.iActiveDevice);
+        SendAckRequestMessage(XpressnetStateMachineInfo.iActiveDevice);
         Delay_us(120);                                                                                            // A bit of a hack to save another timer.  Just wait for the Xpressent spec timeout then check if a UART transfer has started
         DetectDeviceResponse(STATE_WAITFORACKRESPONSE, STATE_TESTFORDISCOVERYMODE);
       end;
@@ -362,7 +366,7 @@ begin
     STATE_DEVICEACKRESPONSE :
       begin
         if XpressnetStateMachineInfo.RS485.XORFailed then
-          XpressnetStateMachineInfo.DeviceList[XpressnetStateMachineInfo.iActiveDevice].State := XDS_XPRESSNET_DEVICE_INACTIVE;
+          XpressnetStateMachineInfo.DeviceList[XpressnetStateMachineInfo.iActiveDevice].State := XpressnetStateMachineInfo.DeviceList[XpressnetStateMachineInfo.iActiveDevice].State and not XDS_XPRESSNET_DEVICE_INACTIVE;
         XpressnetStateMachineInfo.iState := STATE_TESTFORDISCOVERYMODE
       end;
     STATE_TESTFORDISCOVERYMODE :
@@ -378,10 +382,15 @@ begin
       end;
     STATE_ENUMERATEACTIVEDEVICES :
       begin
+        XpressnetStateMachineInfo.iActiveDevice := NextAvailableDevice(XpressnetStateMachineInfo.iActiveDevice);
         if XpressnetStateMachineInfo.iActiveDevice <> ID_NO_DEVICE then
         begin
-          XpressnetStateMachineInfo.iActiveDevice := NextAvailableDevice(XpressnetStateMachineInfo.iActiveDevice);
-        end
+          XpressnetStateMachineInfo.iState := STATE_SENDDEVICEINQUIRY
+        end;
+        
+        if XpressnetStateMachineInfo.DiscoveryCount >= REDISCOVERY_TIME then
+          XpressnetStateMachineInfo.iState := STATE_DISCOVERDEVICES
+
       end;
   end;
 end;
@@ -2347,7 +2356,21 @@ end;
 //
 // *****************************************************************************
 procedure XpressNet_HandleDeviceInstruction(XpressNetMessage: PXpressNetMessage; iDevice: Byte);
+var
+  i: Integer;
 begin
+   DatagramTransmit.List[0].DataBytes[0] := $20;
+   DatagramTransmit.List[0].DataBytes[1] := XpressnetMessage^.DataCount;
+   DatagramTransmit.List[0].DataBytes[2] := XpressNetMessage^.Instruction;
+   for i := 0 to XpressnetMessage^.DataCount do
+     DatagramTransmit.List[0].DataBytes[i+3] := XpressnetMessage^.Bytes[i];
+   DatagramTransmit.List[0].iByteCount := XpressnetMessage^.DataCount + 3;
+   DatagramTransmit.List[0].Alias := $641;
+   DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;               // Kick it off.
+   while DatagramTransmit.List[0].iState <> DATAGRAM_BUFFER_EMPTY do
+     NMRAnetStateMachine_Process;
+
+
   // Divide and Conquer
   case XpressNetMessage^.Instruction of
     %00100000:  // 0010 xxxx {$2x}

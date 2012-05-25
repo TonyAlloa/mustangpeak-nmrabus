@@ -97,7 +97,7 @@ end;
 // *******************
 var
   StateTracker: Byte;
-  
+  i: Byte;
 begin
   CANStorage_Initialize;
   MCU_Setup_Initialize;
@@ -114,16 +114,22 @@ begin
       if NMRAnetCANReceive_Permited then
       begin
       
-        LATD3_bit := not LATD3_bit;
+
         
 
-        if XpressnetStateMachineInfo.iState <> StateTracker then
+     {   if XpressnetStateMachineInfo.iState <> StateTracker then
         begin
           if DatagramTransmit.List[0].iState = DATAGRAM_BUFFER_EMPTY then
           begin
-            DatagramTransmit.List[0].Databytes[0] := $FF;
+            DatagramTransmit.List[0].Databytes[0] := $20;
             DatagramTransmit.List[0].Databytes[1] := XpressnetStateMachineInfo.iState;
-            DatagramTransmit.List[0].iByteCount := 1 + 1;
+
+        //    for i := 0 to 31 do
+        //    begin
+              DatagramTransmit.List[0].Databytes[2] := XpressnetStateMachineInfo.DeviceList[1].State;
+        //    end;
+            
+            DatagramTransmit.List[0].iByteCount := 3;
             DatagramTransmit.List[0].Alias := $641;
             DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
             StateTracker := XpressnetStateMachineInfo.iState;
@@ -132,7 +138,7 @@ begin
         
         while DatagramTransmit.List[0].iState <> DATAGRAM_BUFFER_EMPTY do
           NMRAnetStateMachine_Process;
-
+     }
         XpressnetStateMachine_Process;                                          // May want this outside of Permited block, look at the statemachine
 
       
