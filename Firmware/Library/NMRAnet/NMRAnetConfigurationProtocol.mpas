@@ -1,0 +1,27 @@
+unit NMRAnetConfigurationProtocol;
+
+const
+  CONFIG_WRITE_MASK      = $00;
+  CONFIG_READ_MASK       = $40;
+  CONFIG_CMD_MASK        = $80;
+  
+  CONFIG_OPTIONS         = $00;
+  CONFIG_ADDRESS_SPACE   = $04;
+  CONFIG_LOCK            = $08;
+  CONFIG_UNIQUE_ID       = $0C;
+  CONFIG_FREEZE          = $20;
+  CONFIG_INDICATE        = $24;
+  CONFIG_UPDATE_COMPLETE = $28;
+  CONFIG_REBOOT          = $29;
+  CONFIG_REINITIALIZE    = $2A;
+  
+  MEM_CDI                = $03;                                                 // Configuration Definition Information memory location
+  MEM_ALL                = $02;                                                 // All memory
+  MEM_CONFIG             = $01;                                                 // Basic Configuration space
+  MEM_NONE               = $00;                                                 // None, not sure what to do with this
+
+
+
+implementation
+
+end.

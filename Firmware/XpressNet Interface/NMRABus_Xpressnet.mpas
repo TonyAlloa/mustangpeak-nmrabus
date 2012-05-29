@@ -18,6 +18,7 @@ program NMRABus_Xpressnet;
 // *****************************************************************************
 
 uses
+  NMRAnetEventDefines,
   NMRAnetStateMachine,
   MCU_Setup_dsPIC4013,
   CANDefines,
@@ -29,6 +30,9 @@ uses
   NodeIDs;
 
 {$I Options.inc}
+
+var
+  MainLoopState: Byte;
 
 // ****************************************************************************
 // procedure GetUniqueIDFunc
@@ -91,20 +95,64 @@ begin
 end;
 {$ENDIF}
 
+procedure ComplexResponseCallback(Response: PQueuedResponse);
+var
+ ResponseNodeID: TNodeID;
+begin
+  case Response^.nCode of
+    CRC_PRODUCER_IDENTIFIED :
+      begin
+        if NMRAnetUtilities_EqualEventID(@Response^.DataBytes, @EVENT_LC_DISTRICT_NODE) then
+          XpressnetStateMachineInfo.CommandStationAlias := Response^.Alias
+        else
+        if NMRAnetUtilities_EqualEventID(@Response^.DataBytes, @EVENT_LC_PROGRAMMING_NODE) then
+          XpressnetStateMachineInfo.ProgrammerAlias := Response^.Alias
+      end;
+    CRC_AMR :
+      begin
+        NMRAnetUtilities_PacketBytesToNodeID(@Response^.DataBytes, ResponseNodeID, 0);
+        
+      {  if NMRAnetUtilities_CompareAliasIDs(Response^.Alias, XpressnetStateMachineInfo.CommandStationAlias) or
+           NMRAnetUtilities_CompareNodeIDs(ResponseNodeID, XpressnetStateMachineInfo.CommandStationNodeID) then
+        begin
+          XpressnetStateMachineInfo.CommandStationAlias := 0;
+          MainLoopState := 0;
+        end;
+        if NMRAnetUtilities_CompareAliasIDs(Response^.Alias, XpressnetStateMachineInfo.ProgrammerAlias) or
+           NMRAnetUtilities_CompareNodeIDs(ResponseNodeID, XpressnetStateMachineInfo.ProgrammerNodeID) then
+        begin
+          XpressnetStateMachineInfo.ProgrammerAlias := 0;
+          MainLoopState := 0;
+        end       }
+      end;
+    CRC_AMD :
+      begin
+         // Check Node ID here and update Alias if necessary
+      end;
+  end;
+end;
+
+procedure SimpleResponseCallback(Response: Word);
+begin
+
+end;
+
 
 // *******************
 // MAIN LOOP
 // *******************
 var
-  StateTracker: Byte;
-  i: Byte;
+  Buffer: TCANBuffer;
 begin
   CANStorage_Initialize;
   MCU_Setup_Initialize;
   NMRAnetStateMachine_Initialize;
   XpressnetStateMachine_Initialize;
   
-  StateTracker := $FF;
+  NMRAnetStateMachine_SetComplexCallbackFunc(@ComplexResponseCallback);
+  NMRAnetStateMachine_SetSimpleCallbackFunc(@SimpleResponseCallback);
+  
+  MainLoopState := 0;
 
   while (TRUE) do
     begin
@@ -113,35 +161,31 @@ begin
       
       if NMRAnetCANReceive_Permited then
       begin
-      
-
-        
-
-     {   if XpressnetStateMachineInfo.iState <> StateTracker then
-        begin
-          if DatagramTransmit.List[0].iState = DATAGRAM_BUFFER_EMPTY then
-          begin
-            DatagramTransmit.List[0].Databytes[0] := $20;
-            DatagramTransmit.List[0].Databytes[1] := XpressnetStateMachineInfo.iState;
-
-        //    for i := 0 to 31 do
-        //    begin
-              DatagramTransmit.List[0].Databytes[2] := XpressnetStateMachineInfo.DeviceList[1].State;
-        //    end;
-            
-            DatagramTransmit.List[0].iByteCount := 3;
-            DatagramTransmit.List[0].Alias := $641;
-            DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
-            StateTracker := XpressnetStateMachineInfo.iState;
-          end;
-        end;  
-        
-        while DatagramTransmit.List[0].iState <> DATAGRAM_BUFFER_EMPTY do
-          NMRAnetStateMachine_Process;
-     }
-        XpressnetStateMachine_Process;                                          // May want this outside of Permited block, look at the statemachine
-
-      
+        case MainLoopState of
+          0: begin
+               // Gather Command Stations Nodes
+               if NMRAnetStateMachine_TrySendIdentifyProducer(@Buffer, NMRABus.Node.AliasID, @EVENT_LC_DISTRICT_NODE) then
+                 MainLoopState := 1;
+             end;
+          1: begin
+               if XpressnetStateMachineInfo.CommandStationAlias <> 0 then
+                 if NMRAnetStateMachine_TrySendVerifyNodeID(@Buffer, XpressnetStateMachineInfo.CommandStationAlias, NMRABus.Node.AliasID) then
+                   MainLoopState := 2;     // Need to send AMD to get the Node ID for the CS
+             end;
+          2: begin
+               // Gather Programming Stations Nodes
+               if NMRAnetStateMachine_TrySendIdentifyProducer(@Buffer, NMRABus.Node.AliasID, @EVENT_LC_PROGRAMMING_NODE) then
+                 MainLoopState := 3;
+             end;
+          3: begin
+               if XpressnetStateMachineInfo.ProgrammerAlias <> 0 then
+                 if NMRAnetStateMachine_TrySendVerifyNodeID(@Buffer, XpressnetStateMachineInfo.ProgrammerAlias, NMRABus.Node.AliasID) then
+                   MainLoopState := 4;   // Need to send AMD to get the Node ID for the Programmer
+             end;
+          4: begin
+               XpressnetStateMachine_Process;                                            // May want this outside of Permited block, look at the statemachine
+             end;
+        end;
       end
     end;
 end.

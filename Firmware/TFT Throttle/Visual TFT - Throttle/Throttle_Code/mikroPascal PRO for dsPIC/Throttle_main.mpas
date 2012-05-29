@@ -66,7 +66,7 @@ begin
   begin
     NMRAnetStateMachine_Process;
     
-    Delay_us(2000);  // USB-CAN Board can't keep up
+    Delay_us(600);  // USB-CAN Board can't keep up
 
     if NMRAnetCANReceive_Permited then
     begin

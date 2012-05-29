@@ -78,7 +78,11 @@ begin
   while (TRUE) do
     begin
       NMRAnetStateMachine_Process;
-
+      
+      LATD3_bit := not LATD3_bit;
+      
+      Delay_us(600);  // Too fast for the OLCB USB-CAN board
+      
       if NMRAnetCANReceive_Permited then
       begin
 

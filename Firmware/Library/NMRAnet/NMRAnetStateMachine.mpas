@@ -27,6 +27,7 @@ unit NMRAnetStateMachine;
 // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 uses
+  NMRAnetEventDefines,
   NMRAnetAppDefines,
   NMRAnetDefines,
   NMRAnetUtilities,
@@ -38,21 +39,21 @@ uses
 
 {$I Options.inc}
 
-type
-  TDatagramPacketHandlerFunc = procedure(DatagramBuffer: PDatagramBuffer; var DoDefault: Boolean);
-  PDatagramPacketHandlerFunc = ^TDatagramPacketHandlerFunc;
-  TStreamPacketHandlerFunc = procedure(CANBuffer: PCANBuffer; var DoDefault: Boolean);
-  PStreamPacketHandlerFunc = ^TStreamPacketHandlerFunc;
-
 
   procedure NMRAnetStateMachine_Process;
   procedure NMRAnetStateMachine_Disconnect;
   procedure NMRAnetStateMachine_Initialize;
   procedure NMRAnetStateMachine_1ms_Timer;
+  procedure NMRAnetStateMachine_SetSimpleCallbackFunc(CallBack: PSimpleResponseCallbackFunc);
+  procedure NMRAnetStateMachine_SetComplexCallbackFunc(CallBack: PComplexResponseCallbackFunc);
+  function NMRAnetStateMachine_TrySendIdentifyProducer(Buffer: PCANBuffer; SourceAliasID: Word; EventID: PEventID): Boolean;
+  function NMRAnetStateMachine_TrySendIdentifyConsumer(Buffer: PCANBuffer; SourceAliasID: Word; EventID: PEventID): Boolean;
+  function NMRAnetStateMachine_TrySendIdentifyEvents(Buffer: PCANBuffer; SourceAliasID: Word): Boolean;
+  function NMRAnetStateMachine_TrySendAliasMapEnquiry(Buffer: PCANBuffer; SourceAliasID: Word): Boolean;
+  function NMRAnetStateMachine_TrySendVerifyNodeID(Buffer: PCANBuffer; DestinationAliasID, SourceAliasID: Word): Boolean;
   
   // Exported Functions
-  function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
-
+  function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias, SourceAliasID: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
 
   // defined in the user program
   procedure GetUniqueIDFunc(var HiID, LoID: DWord); external;
@@ -69,6 +70,44 @@ var
 
 implementation
 
+
+function NMRAnetStateMachine_TrySendIdentifyProducer(Buffer: PCANBuffer; SourceAliasID: Word; EventID: PEventID): Boolean;
+//var
+//  BrokenBuffer: TCANBUffer;   BUG IN VERSION 5.60 with this
+begin
+  Result := TryTransmitNMRABusLayerMsg(Buffer, FT_PRODUCER_IDENDIFY, 0, SourceAliasID, EVENT_ARRAY_LENGTH, PCAN_DataBytes( EventID));
+end;
+
+function NMRAnetStateMachine_TrySendIdentifyConsumer(Buffer: PCANBuffer; SourceAliasID: Word; EventID: PEventID): Boolean;
+//var
+//  Buffer: TCANBUffer;   BUG IN VERSION 5.60 with this
+begin
+  Result := TryTransmitNMRABusLayerMsg(Buffer, FT_CONSUMER_IDENTIFY, 0, SourceAliasID, EVENT_ARRAY_LENGTH,  PCAN_DataBytes( EventID));
+end;
+
+function NMRAnetStateMachine_TrySendIdentifyEvents(Buffer: PCANBuffer; SourceAliasID: Word): Boolean;
+//var
+//  Buffer: TCANBUffer;   BUG IN VERSION 5.60 with this
+begin
+  Result := TryTransmitNMRABusLayerMsg(Buffer, FT_EVENTS_IDENTIFY, 0, SourceAliasID, 0, nil);
+end;
+
+function NMRAnetStateMachine_TrySendAliasMapEnquiry(Buffer: PCANBuffer; SourceAliasID: Word): Boolean;
+begin
+  Result := TryTransmitNMRABusLayerMsg(Buffer, FT_AME, 0, SourceAliasID, 0, nil);
+end;
+
+function NMRAnetStateMachine_TrySendVerifyNodeID(Buffer: PCANBuffer; DestinationAliasID, SourceAliasID: Word): Boolean;
+var
+  DataBytes: TCAN_DataBytes;
+begin
+  if DestinationAliasID <> 0 then
+  begin
+    DataBytes[0] := MTI_VERIFY_NODE_ID_NUMBER_DEST;
+    Result := TryTransmitNMRABusLayerMsg(Buffer, FT_VERIFY_NODE_ID_NUMBER_DEST, DestinationAliasID, SourceAliasID, 1, @DataBytes);
+  end else
+    Result := TryTransmitNMRABusLayerMsg(Buffer, FT_VERIFY_NODE_ID_NUMBER, 0, SourceAliasID, 0, nil);
+end;
 
 // *****************************************************************************
 //  procedure FlushResponseList
@@ -138,10 +177,38 @@ end;
 //     Description:
 //
 // *****************************************************************************
+procedure NMRAnetStateMachine_SetSimpleCallbackFunc(CallBack: PSimpleResponseCallbackFunc);
+begin
+  SimpleResponseCallbackFunc := Callback;
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetStateMachine_Initialize
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRAnetStateMachine_SetComplexCallbackFunc(CallBack: PComplexResponseCallbackFunc);
+begin
+  ComplexResponseCallbackFunc := Callback;
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetStateMachine_Initialize
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRAnetStateMachine_Initialize;
 begin
   NMRAnetDatagrams_Initialize;
   NMRAnetCANReceive_Initialize;
+  SimpleResponseCallbackFunc := PSimpleResponseCallbackFunc( nil);
+  ComplexResponseCallbackFunc := PComplexResponseCallbackFunc( nil);
   NMRABus.State := 0;
   GetUniqueIDFunc(NMRABus.Node.ID[1], NMRABus.Node.ID[0]);
   NMRABus.Node.Seed[0] := NMRABus.Node.ID[0];
@@ -223,12 +290,12 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function TryTransmitCANLayerMsg(VariableField: DWord; Buffer: PCANBuffer): Boolean;
+function TryTransmitCANLayerMsg(VariableField: DWord; SourceAliasID: Word; Buffer: PCANBuffer): Boolean;
 begin
   Result := False;
   if not CANStorage_ListFull(@TX_CANBufferList) then
   begin
-    NMRAnetUtilities_CreateCANControlFramePacket(VariableField, Buffer);
+    NMRAnetUtilities_CreateCANControlFramePacket(Buffer, VariableField, SourceAliasID);
     if CANStorage_AddToList(@TX_CANBufferList, Buffer) then
     begin
       StartCANMessageEngine();
@@ -245,12 +312,12 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
+function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias, SourceAliasID: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
 begin
   Result := False;
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
   begin
-    NMRAnetUtilities_CreateNMRABusMessagePacket(Buffer, VariableField, DestinationAlias, DataCount, DataBytes);
+    NMRAnetUtilities_CreateNMRABusMessagePacket(Buffer, VariableField, DestinationAlias, SourceAliasID, DataCount, DataBytes);
     if CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer) then
     begin
       StartCANMessageEngine();
@@ -308,10 +375,10 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure HandleCANLayerSimpleResponse(Buffer: PCANBuffer; VariableField: DWord; Flag: Word; NextState: Byte);
+procedure HandleCANLayerSimpleResponse(Buffer: PCANBuffer; VariableField: DWord; SourceAliasID: Word; Flag: Word; NextState: Byte);
 begin
   if TestReceivedMsgFlags(Flag) then
-    if TryTransmitCANLayerMsg(VariableField, Buffer) then
+    if TryTransmitCANLayerMsg(VariableField, SourceAliasID, Buffer) then
       ClearReceivedMsgFlags(Flag);
   NMRABus.Responses.iState := NextState
 end;
@@ -329,11 +396,16 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure HandleNMRAnetLayerSimpleResponse(Buffer: PCANBuffer; VariableField: DWord; Flag: Word; NextState: Byte);
+procedure HandleNMRAnetLayerSimpleResponse(Buffer: PCANBuffer; VariableField: DWord; SourceAliasID: Word; Flag: Word; NextState: Byte);
 begin
   if TestReceivedMsgFlags(Flag) then
-    if TryTransmitNMRABusLayerMsg(Buffer, VariableField, 0, 0, nil) then
+    if TryTransmitNMRABusLayerMsg(Buffer, VariableField, 0, SourceAliasID, 0, nil) then
+    begin
+      if SimpleResponseCallbackFunc <> nil then
+        SimpleResponseCallbackFunc(Flag);
       ClearReceivedMsgFlags(Flag);
+    end;
+
   NMRABus.Responses.iState := NextState
 end;
 
@@ -349,21 +421,23 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure HandleNMRALayerSimpleSendAllConsumerProducer(Buffer: PCANBuffer; NextState: Byte);
+procedure HandleNMRALayerSimpleSendAllConsumerProducer(Buffer: PCANBuffer; SourceAliasID: Word; NextState: Byte);
 begin
   if TestReceivedMsgFlags(SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED) then
   begin
     if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS_PRODUCED then
     begin
-      if TryTransmitNMRABusLayerMsg(Buffer, FT_PRODUCER_IDENTIFIED, 0, 8, @SUPPORTED_EVENTS_PRODUCED[NMRABus.Responses.Tag]) then
+      if TryTransmitNMRABusLayerMsg(Buffer, FT_PRODUCER_IDENTIFIED, 0, SourceAliasID, 8, @SUPPORTED_EVENTS_PRODUCED[NMRABus.Responses.Tag]) then
         Inc(NMRABus.Responses.Tag);
     end else
     if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS then
     begin
-      if TryTransmitNMRABusLayerMsg(Buffer, FT_CONSUMER_IDENTIFIED, 0, 8, @SUPPORTED_EVENTS_CONSUMED[NMRABus.Responses.Tag-MAX_SUPPORTED_EVENTS_PRODUCED]) then
+      if TryTransmitNMRABusLayerMsg(Buffer, FT_CONSUMER_IDENTIFIED, 0, SourceAliasID, 8, @SUPPORTED_EVENTS_CONSUMED[NMRABus.Responses.Tag-MAX_SUPPORTED_EVENTS_PRODUCED]) then
         Inc(NMRABus.Responses.Tag);
     end else
     begin
+      if SimpleResponseCallbackFunc <> nil then
+        SimpleResponseCallbackFunc(SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED);
       ClearReceivedMsgFlags(SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED);              // Done
       NMRABus.Responses.iState := NextState
     end
@@ -383,14 +457,18 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure HandleNMRAnetLayerComplexResponse(Buffer: PCANBuffer; VariableField: DWord; nCode: Word; NextState: Byte);
+procedure HandleNMRAnetLayerComplexResponse(Buffer: PCANBuffer; VariableField: DWord; SourceAliasID, nCode: Word; NextState: Byte);
 var
   Response: PQueuedResponse;
 begin
   Response := FindStoredComplexResponse(nCode);
   if Response <> nil then
-    if TryTransmitNMRABusLayerMsg(Buffer, VariableField, Response^.Alias, Response^.DataCount, @Response^.DataBytes) then
+    if TryTransmitNMRABusLayerMsg(Buffer, VariableField, Response^.Alias, SourceAliasID, Response^.DataCount, @Response^.DataBytes) then
+    begin
+      if ComplexResponseCallbackFunc <> nil then
+        ComplexResponseCallbackFunc(Response);
       Response^.nCode := CRC_EMPTY;
+    end;
   NMRABus.Responses.iState := NextState
 end;
 
@@ -435,6 +513,30 @@ begin
 end;
 
 // *****************************************************************************
+//  procedure HandleMessageResponse
+//
+//     Parameters:
+//
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure HandleMessageResponse(nCode: Word; NextState: Byte);
+var
+  Response: PQueuedResponse;
+begin
+  Response := FindStoredComplexResponse(nCode);                                 // Look for Datagram Responses from Nodes this node sent a Datagram to
+  if Response <> nil then
+  begin
+    if ComplexResponseCallbackFunc <> nil then
+      ComplexResponseCallbackFunc(Response);
+    Response^.nCode := CRC_EMPTY;
+  end;
+  NMRABus.Responses.iState := NextState
+end;
+
+// *****************************************************************************
 //  procedure Responses_Process
 //     Parameters:
 //     Returns:
@@ -442,27 +544,31 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure Responses_Process(Buffer: PCANBuffer);
+procedure Responses_Process(Buffer: PCANBuffer; SourceAliasID: Word);
 begin
   if not DuplicateDetected(SRC_DUPLICATE_NODE_ID, STATE_NMRABUS_DUPLICATE_FULL_ID) then  // Highest Priority, if detected the main loop needs to change state
     if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_NMRABUS_INHIBITED) then          // Next Highest Priority, if detected the main loop needs to change state
     begin
       case NMRABus.Responses.iState of
         // These responses needs a response message sent
-        STATE_NMRABUS_RESPONSE_SEND_RID                    : HandleCANLayerSimpleResponse(Buffer, FT_RID, SRC_SEND_RID, STATE_NMRABUS_RESPONSE_SEND_AMD);
-        STATE_NMRABUS_RESPONSE_SEND_AMD                    : HandleCANLayerSimpleResponse(Buffer, FT_AMD, SRC_SEND_AMD, STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE);
-        STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE          : HandleNMRAnetLayerSimpleResponse(Buffer, FT_VERIFIED_NODE_ID_NUMBER, SRC_SEND_VERIFIED_NODE, STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT);
-        STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT       : HandleNMRAnetLayerComplexResponse(Buffer, FT_PROTOCOL_SUPPORT_RESPONSE, CRC_SEND_PROTOCOL_SUPPORT, STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED);                           // Simple Response
-        STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED    : HandleNMRAnetLayerComplexResponse(Buffer, FT_CONSUMER_IDENTIFIED, CRC_CONSUMER_IDENTIFIED, STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED);
+        STATE_NMRABUS_RESPONSE_SEND_RID                    : HandleCANLayerSimpleResponse(Buffer, FT_RID, SourceAliasID, SRC_SEND_RID, STATE_NMRABUS_RESPONSE_SEND_AMD);
+        STATE_NMRABUS_RESPONSE_SEND_AMD                    : HandleCANLayerSimpleResponse(Buffer, FT_AMD, SourceAliasID, SRC_SEND_AMD, STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE);
+        STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE          : HandleNMRAnetLayerSimpleResponse(Buffer, FT_VERIFIED_NODE_ID_NUMBER, SourceAliasID, SRC_SEND_VERIFIED_NODE, STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT);
+        STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT       : HandleNMRAnetLayerComplexResponse(Buffer, FT_PROTOCOL_SUPPORT_RESPONSE, SourceAliasID, CRC_SEND_PROTOCOL_SUPPORT, STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED);                           // Simple Response
+        STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED    : HandleNMRAnetLayerComplexResponse(Buffer, FT_CONSUMER_IDENTIFIED, SourceAliasID, CRC_SEND_CONSUMER_IDENTIFIED, STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED);
         STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED    : begin 
-                                                               HandleNMRAnetLayerComplexResponse(Buffer, FT_PRODUCER_IDENTIFIED, CRC_PRODUCER_IDENTIFIED, STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS);
+                                                               HandleNMRAnetLayerComplexResponse(Buffer, FT_PRODUCER_IDENTIFIED, SourceAliasID, CRC_SEND_PRODUCER_IDENTIFIED, STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS);
                                                                NMRABus.Responses.Tag := 0;   // Get ready for next state
                                                               end;
-        STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS : HandleNMRALayerSimpleSendAllConsumerProducer(Buffer, STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED);
-        STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED: HandleNMRAnetLayerComplexResponse(Buffer, FT_OPTIONAL_INTERACTION_REJECTED, CRC_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_DATAGRAM_RECEIVED_OK);
+        STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS : HandleNMRALayerSimpleSendAllConsumerProducer(Buffer, SourceAliasID, STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED);
+        STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED: HandleNMRAnetLayerComplexResponse(Buffer, FT_OPTIONAL_INTERACTION_REJECTED, SourceAliasID, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_DATAGRAM_RECEIVED_OK);
         // These responses do NOT need a response message sent
         STATE_NMRABUS_DATAGRAM_RECEIVED_OK                 : HandleDatagramResponse(CRC_DATAGRAM_RECEIVED_OK, STATE_NMRABUS_DATAGRAM_REJECTED);
-        STATE_NMRABUS_DATAGRAM_REJECTED                    : HandleDatagramResponse(CRC_DATAGRAM_REJECTED, STATE_NMRABUS_RESPONSE_SEND_RID)
+        STATE_NMRABUS_DATAGRAM_REJECTED                    : HandleDatagramResponse(CRC_DATAGRAM_REJECTED, STATE_NMRABUS_RESPONSE_CONSUMER_IDENTIFIED);
+        STATE_NMRABUS_RESPONSE_CONSUMER_IDENTIFIED         : HandleMessageResponse(CRC_CONSUMER_IDENTIFIED, STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED);
+        STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED         : HandleMessageResponse(CRC_PRODUCER_IDENTIFIED, STATE_NMRABUS_RESPONSE_AMR);
+        STATE_NMRABUS_RESPONSE_AMR                         : HandleMessageResponse(CRC_AMR, STATE_NMRABUS_RESPONSE_AMD);
+        STATE_NMRABUS_RESPONSE_AMD                         : HandleMessageResponse(CRC_AMD, STATE_NMRABUS_RESPONSE_SEND_RID)
       else
         NMRABus.Responses.iState := STATE_NMRABUS_RESPONSE_SEND_RID;
       end;
@@ -493,13 +599,13 @@ begin
       end;
     STATE_NMRABUS_GENERATE_NODE_ALIAS :
       begin
-        NMRAnetUtilities_CreateAliasID(False);
+        NMRABus.Node.AliasID := NMRAnetUtilities_CreateAliasID(NMRABus.Node.Seed, False);
         NMRABus.Responses.iCID := 0;
         NMRABus.iState := STATE_NMRABUS_TRANSMIT_CID;
       end;
     STATE_RANDOM_NUMBER_GENERATOR :
       begin
-        NMRAnetUtilities_PsudoRandomNumberGenerator;
+        NMRAnetUtilities_PsudoRandomNumberGeneratorOnSeed(NMRABus.Node.Seed);
         NMRABus.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS;
       end;
     STATE_NMRABUS_TRANSMIT_CID :
@@ -510,7 +616,7 @@ begin
           2 : VariableField := FT_CID2;
           3 : VariableField := FT_CID3;
         end;
-        if TryTransmitCANLayerMsg(VariableField , @Buffer) then
+        if TryTransmitCANLayerMsg(VariableField, NMRABus.Node.AliasID, @Buffer) then
           NMRABus.iState := STATE_NMRABUS_NEXT_CDI;
       end;
     STATE_NMRABUS_NEXT_CDI :
@@ -536,13 +642,13 @@ begin
     STATE_NMRABUS_SEND_LOGIN_RID :
       begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
-          if TryTransmitCANLayerMsg(FT_RID, @Buffer) then
+          if TryTransmitCANLayerMsg(FT_RID, NMRABus.Node.AliasID, @Buffer) then
             NMRABus.iState := STATE_NMRABUS_SEND_LOGIN_AMD;
       end;
     STATE_NMRABUS_SEND_LOGIN_AMD :
       begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
-          if TryTransmitCANLayerMsg(FT_AMD, @Buffer) then
+          if TryTransmitCANLayerMsg(FT_AMD, NMRABus.Node.AliasID, @Buffer) then
           begin
             NMRABus.State := NMRABus.State or BS_PERMITED and not BS_INHIBITED;
             NMRABus.iState := STATE_NMRABUS_INITIALIZED
@@ -551,7 +657,7 @@ begin
     STATE_NMRABUS_INITIALIZED :
       begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
-          if TryTransmitNMRABusLayerMsg(@Buffer, FT_INITIALIZATION_COMPLETE, 0, 0, nil) then
+          if TryTransmitNMRABusLayerMsg(@Buffer, FT_INITIALIZATION_COMPLETE, 0, NMRABus.Node.AliasID, 0, nil) then
           begin
             NMRABus.iState := STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS;
             NMRABus.State := NMRABus.State or BS_INITIALIZED and not BS_UNITIALIZED
@@ -566,13 +672,13 @@ begin
       end;
     STATE_NMRABUS_PERMITTED :
       begin
-        Responses_Process(@Buffer);                                             // Handle auto responses to CAN/NMRAnet messages coming in
+        Responses_Process(@Buffer, NMRABus.Node.AliasID);                       // Handle auto responses to CAN/NMRAnet messages coming in
         NMRAnetDatagrams_ProcessReceive;                                        // Handle Datagrams coming in
-        NMRAnetDatagrams_ProcessTransmit;                                       // Handle Datagrams going out
+        NMRAnetDatagrams_ProcessTransmit(NMRABus.Node.AliasID);                 // Handle Datagrams going out
       end;
     STATE_NMRABUS_INHIBITED :
       begin
-        if TryTransmitCANLayerMsg(FT_AMR, @Buffer) then
+        if TryTransmitCANLayerMsg(FT_AMR, NMRABus.Node.AliasID, @Buffer) then
         begin
           FlushLists;
           FlushResponses;
@@ -582,7 +688,7 @@ begin
       end;
     STATE_NMRABUS_DUPLICATE_FULL_ID :
       begin
-        if TryTransmitCANLayerMsg(FT_AMR, @Buffer) then
+        if TryTransmitCANLayerMsg(FT_AMR, NMRABus.Node.AliasID, @Buffer) then
         begin
           FlushLists;
           FlushResponses;

@@ -31,11 +31,13 @@ const
   
 
   MUSTANGPEAK_COMMANDSTATION_ID_0_LO     = $00010700;  // The Bottom 3 Bytes
-  MUSTANGPEAK_TRACKBOOSTER_ID_0_LO       = $00010701;  // The Bottom 3 Bytes
-  MUSTANGPEAK_ACCESSORYBOOSTER_ID_0_LO   = $00010702;  // The Bottom 3 Bytes
-  MUSTANGPEAK_PROGRAMMINGBOOSTER_ID_0_LO = $00010703;  // The Bottom 3 Bytes
-  MUSTANGPEAK_TFT_THROTTLE_ID_0_LO       = $00010704;  // The Bottom 3 Bytes
-  MUSTANGPEAK_XPRESSNET_ID_0_LO          = $00010705;  // The Bottom 3 Bytes
+  // vNodes for Train Control            = $00010701 - $00010781 (128 Possibilities)
+  
+  MUSTANGPEAK_TRACKBOOSTER_ID_0_LO       = $00010782;  // The Bottom 3 Bytes
+  MUSTANGPEAK_ACCESSORYBOOSTER_ID_0_LO   = $00010783;  // The Bottom 3 Bytes
+  MUSTANGPEAK_PROGRAMMINGBOOSTER_ID_0_LO = $00010784;  // The Bottom 3 Bytes
+  MUSTANGPEAK_TFT_THROTTLE_ID_0_LO       = $00010785;  // The Bottom 3 Bytes
+  MUSTANGPEAK_XPRESSNET_ID_0_LO          = $00010786;  // The Bottom 3 Bytes
 
 implementation
 

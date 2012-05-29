@@ -17,6 +17,7 @@ program NMRABusCommandStation;
 // ******************************************************************************
  
 uses
+  NMRAnetMobileNode,
   NMRAnetStateMachine,
   NMRAnetDefines,
   NMRAnetDCC,
@@ -24,6 +25,7 @@ uses
   CANStorage,
   MCU_Setup_dsPIC4013,
   _25AAxxxx,
+  NMRAnetEventDefines,
  // NMRABusNodeItems,
  // NMRAnetUtilities,
  // NMRABusAddressSlots,
@@ -146,7 +148,13 @@ var
   
   s_float: array[23] of char;
   
+  xx: Word;
+  rr: real;
+  ii: Integer;
+  ii2: Integer;
+  
 begin
+
   Track_DCC_Out_Pin := 0;
   Track_DCC_Out_Pin := 0;
   Track_DCC_Out_Pin_Direction := 0;      // Output
@@ -156,12 +164,11 @@ begin
   TRISD0_bit := 0;        // Debugging output
 
   _25AAxxxx_Initialize;
- // NMRABusNodeItems_Initialize;
   CANStorage_Initialize;
   NMRAnetStateMachine_Initialize;
   MCU_Setup_Initialize;
   NMRA_DCC_Initialize;
- // AddressSlots_Initialize;
+  NMRAnetMobileNode_Initialize;
  
   NMRAnetDatagrams_SetCallback(DatagramTrainControlCallback, @TrainControlCallback);
   NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallback, @MemConfigurationCallback);
@@ -175,10 +182,13 @@ begin
   MaxTime_RX := 0;
   delay := 0;
   
+ // NMRAnetMobileNode_InitializeEEPROM;
+  
 
 
   while (TRUE) do
   begin
+
   
 
     {   if laststate <> DatagramTransmit.iState then
@@ -205,11 +215,19 @@ begin
       UART1_Write_Text('CAN RX Max: ' + s_float+'us'+LF);
       Rlaststate := MaxTime_RX
     end;  }
+    
 
-    delay_us(600);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
+
+    delay_us(1000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
 
     if NMRAnetCANReceive_Permited then
     begin
+      if delay > 1000 then
+      begin
+    //   SendIdentifyProducer(NMRABus.Node.AliasID, @EVENT_LC_DISTRICT_NODE);
+       delay := 0;
+      end;
+      Inc(delay);
     
     end;
   end;

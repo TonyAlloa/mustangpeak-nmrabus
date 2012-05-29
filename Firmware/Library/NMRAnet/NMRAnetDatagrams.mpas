@@ -10,7 +10,7 @@ uses
 procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_ProcessReceiveInterrupt(Buffer: PCANBuffer);
 procedure NMRAnetDatagrams_ProcessReceive;
-procedure NMRAnetDatagrams_ProcessTransmit;
+procedure NMRAnetDatagrams_ProcessTransmit(SourceAlias: Word);
 procedure NMRAnetDatagrams_1ms_TimeTick;
 procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
 
@@ -18,7 +18,8 @@ procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func
   procedure StartCANMessageEngine; external;
   procedure EnableCANInterrupt(Enable: Boolean); external;
 // defined in the NMRAnetStateMachine.mpas file
-  function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean; external;
+
+  function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias, SourceAliasID: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean; external;
 
 implementation
 
@@ -163,14 +164,14 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function TrySendDatagramResponse(Datagram: PDatagramBuffer; NextDatagramState: Byte): Boolean;
+function TrySendDatagramResponse(Datagram: PDatagramBuffer; SourceAliasID: Word; NextDatagramState: Byte): Boolean;
 var
   Buffer: TCANBuffer;
 begin
   Result := False;
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
   begin
-    NMRAnetUtilities_CreateNMRABusMessagePacket(@Buffer, MTI_ADDRESSED, Datagram^.Alias, Datagram^.iByteCount, nil);
+    NMRAnetUtilities_CreateNMRABusMessagePacket(@Buffer, MTI_ADDRESSED, Datagram^.Alias, SourceAliasID, Datagram^.iByteCount, nil);
     Buffer.DataBytes[0] := Datagram^.ErrorCode.MTI;
     Buffer.DataBytes[1] := Datagram^.ErrorCode.SubType[0];
     Buffer.DataBytes[2] := Datagram^.ErrorCode.SubType[1];
@@ -193,7 +194,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure SendBufferFullResponses;
+procedure SendBufferFullResponses(SourceAliasID: Word);
 var
   i: Integer;
   Datagram: TDatagramBuffer;
@@ -207,7 +208,7 @@ begin
       begin
         Datagram.Alias := DatagramReceive.BufferOverflowList[i];
         NMRANetUtilities_LoadDatagramResultBytes(@Datagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
-        if TrySendDatagramResponse(@Datagram, DATAGRAM_BUFFER_EMPTY) then
+        if TrySendDatagramResponse(@Datagram, SourceAliasID, DATAGRAM_BUFFER_EMPTY) then
           DatagramReceive.BufferOverflowList[i] := 0;
         Exit;
       end;
@@ -308,11 +309,22 @@ begin
       DatagramTransmit.iState := NextState_Multi
   end
 end;
-procedure TransmitSingleDatagram(Buffer: PCANBuffer; Datagram: PDatagramBuffer; NextState: Byte);
+
+
+// *****************************************************************************
+//  procedure TransmitClassifyDatagram;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure TransmitSingleDatagram(Buffer: PCANBuffer; Datagram: PDatagramBuffer; SourceAliasID: Word; NextState: Byte);
 begin
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
   begin
-    if TryTransmitNMRABusLayerMsg(Buffer, MTI_DATAGRAM_ONLY_FRAME, Datagram^.Alias, Datagram^.iByteCount, PCAN_DataBytes( @Datagram^.DataBytes[0])) then
+    if TryTransmitNMRABusLayerMsg(Buffer, MTI_DATAGRAM_ONLY_FRAME, Datagram^.Alias, SourceAliasID, Datagram^.iByteCount, PCAN_DataBytes( @Datagram^.DataBytes[0]) ) then
     begin
       Inc(Datagram^.iRetransmit);
       Datagram^.iWatchdog := 0;
@@ -330,7 +342,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure TransmitMultiDatagram(Buffer: PCANBuffer; Datagram: PDatagramBuffer; NextState: Byte);
+procedure TransmitMultiDatagram(Buffer: PCANBuffer; Datagram: PDatagramBuffer; SourceAlias: Word; NextState: Byte);
 var
   Count: Byte;
   MTI: DWord;
@@ -348,7 +360,7 @@ begin
     end else
       MTI := MTI_DATAGRAM_FRAME;
 
-    if TryTransmitNMRABusLayerMsg(Buffer, MTI, Datagram^.Alias, Count, PCAN_DataBytes( @Datagram^.DataBytes[Datagram^.iFrameCount * 8])) then
+    if TryTransmitNMRABusLayerMsg(Buffer, MTI, Datagram^.Alias, SourceAlias, Count, PCAN_DataBytes( @Datagram^.DataBytes[Datagram^.iFrameCount * 8])) then
     begin
       Inc(Datagram^.iFrameCount);
       Datagram^.iWatchdog := 0;
@@ -461,7 +473,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRAnetDatagrams_ProcessTransmit;
+procedure NMRAnetDatagrams_ProcessTransmit(SourceAlias: Word);
 var
   Buffer: TCANBuffer;
   ActiveDatagram: PDatagramBuffer;
@@ -470,9 +482,9 @@ begin
   
   case DatagramTransmit.iState of
     STATE_DATAGRAM_TRANSMIT_START                          : TransmitClassifyDatagram(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME, STATE_DATAGRAM_TRANSMIT_MULTI_FRAME);
-    STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME                   : TransmitSingleDatagram(@Buffer, ActiveDatagram, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME);
+    STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME                   : TransmitSingleDatagram(@Buffer, ActiveDatagram, SourceAlias, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME);
     STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME : TransmitWaitForResponse(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_NEXT, STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME, STATE_DATAGRAM_TRANSMIT_NEXT);
-    STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    : TransmitMultiDatagram(@Buffer, ActiveDatagram, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME);
+    STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    : TransmitMultiDatagram(@Buffer, ActiveDatagram, SourceAlias, STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME);
     STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  : TransmitWaitForResponse(ActiveDatagram, STATE_DATAGRAM_TRANSMIT_NEXT, STATE_DATAGRAM_TRANSMIT_MULTI_FRAME, STATE_DATAGRAM_TRANSMIT_NEXT);
     STATE_DATAGRAM_TRANSMIT_NEXT                           : TransmitNext(STATE_DATAGRAM_TRANSMIT_START)
    else
@@ -547,13 +559,13 @@ begin
       
     STATE_DATAGRAM_SENDING_RESPONSE  :     // Make sure the ErrorCode informatoin is preloaded into the Datagram before entering this State
       begin
-        if TrySendDatagramResponse(ActiveDatagram, DATAGRAM_BUFFER_EMPTY) then
+        if TrySendDatagramResponse(ActiveDatagram, NMRABus.Node.AliasID, DATAGRAM_BUFFER_EMPTY) then
           DatagramReceive.iState := STATE_DATAGRAM_ERROR_RESPONSES;
       end;
       
     STATE_DATAGRAM_ERROR_RESPONSES  :
       begin
-        SendBufferFullResponses;
+        SendBufferFullResponses(NMRABus.Node.AliasID);
         DatagramReceive.iState := STATE_DATAGRAM_RECEIVE_NEXT
       end;
       

@@ -20,6 +20,7 @@ unit NMRAnetUtilities;
 {$I Options.inc}
 
 uses
+  NMRAnetEventDefines,
   NMRAnetAppDefines,
   NMRAnetDefines,
   CANDefines,
@@ -27,21 +28,20 @@ uses
 
 
 procedure NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Packet: PCANBuffer);
-procedure NMRAnetUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
-procedure NMRAnetUtilities_CreateNMRABusMessagePacket(Packet: PCANBuffer; VariableField: DWord; DestinationAliasID: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
+procedure NMRAnetUtilities_CreateCANControlFramePacket(Packet: PCANBuffer; VariableField: DWord; SourceAliasID: Word);
+procedure NMRAnetUtilities_CreateNMRABusMessagePacket(Packet: PCANBuffer; VariableField: DWord; SourceAliasID: Word; DestinationAliasID: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
 function NMRAnetUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
 function NMRAnetUtilities_ExtractSourceAlias(Packet: PCANBuffer): Word;
-procedure NMRAnetUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID; iStartByte: Byte);
+procedure NMRAnetUtilities_PacketBytesToNodeID(DataBytes: PCAN_DataBytes; var NodeID: TNodeID; iStartByte: Byte);
 function NMRAnetUtilities_EqualNodeID(var NodeID: TNodeID): boolean;
 function NMRAnetUtilities_CompareNodeIDs(var NodeID1, NodeID2: TNodeID): boolean;
 function NMRAnetUtilities_EqualAliasID(AliasID: Word): Boolean;
 function NMRAnetUtilities_CompareAliasIDs(AliasID1, AliasID2: Word): Boolean;
 function NMRAnetUtilities_EqualDestinationAlias(Packet: PCANBuffer): Boolean;
 procedure NMRAnetUtilities_LoadNodeID(var NodeID: TNodeID; Upper, Lower: DWORD);
-procedure NMRAnetUtilities_PsudoRandomNumberGenerator;
-function NMRAnetUtilities_GenerateID_Alias_From_Global_Seed: Word;
-procedure NMRAnetUtilities_CreateAliasID(Regenerate: Boolean);
-procedure NMRAnetUtilities_RecreateAliasID;
+procedure NMRAnetUtilities_PsudoRandomNumberGeneratorOnSeed(var Seed: TNodeID);
+function NMRAnetUtilities_CreateAliasID(var Seed: TNodeID; Regenerate: Boolean): Word;
+function NMRAnetUtilities_RecreateAliasID(var Seed: TNodeID): Word;
 function NMRAnetUtilities_IsAddressedMessageToNode(Packet: PCANBuffer): Boolean;
 function NMRAnetUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
 procedure NMRAnetUtilities_LoadCANData(var DataBytes: TCAN_DataBytes; Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte);
@@ -50,6 +50,7 @@ function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): DWord;
 function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
 function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
+function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 
 implementation
@@ -82,11 +83,11 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_CreateCANControlFramePacket(VariableField: DWord; Packet: PCANBuffer);
+procedure NMRAnetUtilities_CreateCANControlFramePacket(Packet: PCANBuffer; VariableField: DWord; SourceAliasID: Word);
 begin
   Packet^.DataCount := 0;
   Packet^.State := Packet^.State or CBS_EXTENDED;
-  Packet^.ID := $10000000 or VariableField or NMRABus.Node.AliasID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
+  Packet^.ID := $10000000 or VariableField or SourceAliasID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
   if VariableField = FT_CID0 then Packet^.ID := Packet^.ID or (NMRABus.Node.ID[1] and $00FFF000) else
   if VariableField = FT_CID1 then Packet^.ID := Packet^.ID or ((NMRABus.Node.ID[1] shl 12) and $00FFF000) else
   if VariableField = FT_CID2 then Packet^.ID := Packet^.ID or (NMRABus.Node.ID[0] and $00FFF000) else
@@ -104,7 +105,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_CreateNMRABusMessagePacket(Packet: PCANBuffer; VariableField: DWord; DestinationAliasID: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
+procedure NMRAnetUtilities_CreateNMRABusMessagePacket(Packet: PCANBuffer; VariableField: DWord; DestinationAliasID: Word; SourceAliasID: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
 begin
   Packet^.DataCount := ByteCount;
   if DataBytes <> nil then
@@ -113,7 +114,7 @@ begin
     Packet^.DataBytes := DataBytes^;
   end;
   Packet^.State := Packet^.State or CBS_EXTENDED;
-  Packet^.ID := $10000000 or VariableField or NMRABus.Node.AliasID;
+  Packet^.ID := $10000000 or VariableField or SourceAliasID;
   if DestinationAliasID <> 0 then
     Packet^.ID := Packet^.ID or DWORD(DestinationAliasID shl 12);
 
@@ -158,14 +159,14 @@ end;
 //  Requires that the packet contains a valid NodeID in the bytes.
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_PacketBytesToNodeID(Packet: PCANBuffer; var NodeID: TNodeID; iStartByte: Byte);
+procedure NMRAnetUtilities_PacketBytesToNodeID(DataBytes: PCAN_DataBytes; var NodeID: TNodeID; iStartByte: Byte);
 begin
-  NodeID[1] := Packet^.DataBytes[iStartByte+2];
-  NodeID[1] := NodeID[1] or Packet^.DataBytes[iStartByte+1] shl 8;
-  NodeID[1] := NodeID[1] or Packet^.DataBytes[iStartByte] shl 16;
-  NodeID[0] := Packet^.DataBytes[iStartByte+5];
-  NodeID[0] := NodeID[0] or Packet^.DataBytes[iStartByte+4] shl 8;
-  NodeID[0] := NodeID[0] or Packet^.DataBytes[iStartByte+3] shl 16;
+  NodeID[1] := DataBytes^[iStartByte+2];
+  NodeID[1] := NodeID[1] or DataBytes^[iStartByte+1] shl 8;
+  NodeID[1] := NodeID[1] or DataBytes^[iStartByte] shl 16;
+  NodeID[0] := DataBytes^[iStartByte+5];
+  NodeID[0] := NodeID[0] or DataBytes^[iStartByte+4] shl 8;
+  NodeID[0] := NodeID[0] or DataBytes^[iStartByte+3] shl 16;
 end;
 
 // *****************************************************************************
@@ -255,19 +256,19 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_PsudoRandomNumberGenerator;
+procedure NMRAnetUtilities_PsudoRandomNumberGeneratorOnSeed(var Seed: TNodeID);
 var
   temp1,              // Upper 24 Bits of temp 48 bit number
   temp2: DWORD;       // Lower 24 Bits of temp 48 Bit number
 begin
-  temp1 := ((NMRABus.Node.Seed[1] shl 9) or ((NMRABus.Node.Seed[0] shr 15) and $000001FF)) and $00FFFFFF;   // x(i+1)(2^9 + 1)*x(i) + C  = 2^9 * x(i) + x(i) + C
-  temp2 := (NMRABus.Node.Seed[0] shl 9) and $00FFFFFF;                                                                  // Calculate 2^9 * x
+  temp1 := ((Seed[1] shl 9) or ((Seed[0] shr 15) and $000001FF)) and $00FFFFFF;   // x(i+1)(2^9 + 1)*x(i) + C  = 2^9 * x(i) + x(i) + C
+  temp2 := (Seed[0] shl 9) and $00FFFFFF;                                                                  // Calculate 2^9 * x
 
-  NMRABus.Node.Seed[0] := NMRABus.Node.Seed[0] + temp2 + $7A4BA9;   // Now y = 2^9 * x so all we have left is x(i+1) = y + x + c
-  NMRABus.Node.Seed[1] := NMRABus.Node.Seed[1] + temp1 + $1B0CA3;
+  Seed[0] := Seed[0] + temp2 + $7A4BA9;   // Now y = 2^9 * x so all we have left is x(i+1) = y + x + c
+  Seed[1] := Seed[1] + temp1 + $1B0CA3;
 
-  NMRABus.Node.Seed[1] := (NMRABus.Node.Seed[1] and $00FFFFFF) or (NMRABus.Node.Seed[0] and $FF000000) shr 24;   // Handle the carries of the lower 24 bits into the upper
-  NMRABus.Node.Seed[0] := NMRABus.Node.Seed[0] and $00FFFFFF;
+  Seed[1] := (Seed[1] and $00FFFFFF) or (Seed[0] and $FF000000) shr 24;   // Handle the carries of the lower 24 bits into the upper
+  Seed[0] := Seed[0] and $00FFFFFF;
 end;
 
 // *****************************************************************************
@@ -278,9 +279,9 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_GenerateID_Alias_From_Global_Seed: Word;
+function NMRAnetUtilities_GenerateID_Alias_From_Seed(var Seed: TNodeID): Word;
 begin
-  Result := (NMRABus.Node.Seed[0] xor NMRABus.Node.Seed[1] xor (NMRABus.Node.Seed[0] shr 12) xor (NMRABus.Node.Seed[1] shr 12)) and $00000FFF;
+  Result := (Seed[0] xor Seed[1] xor (Seed[0] shr 12) xor (Seed[1] shr 12)) and $00000FFF;
 end;
 
 // *****************************************************************************
@@ -291,15 +292,15 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_CreateAliasID(Regenerate: Boolean);
+function NMRAnetUtilities_CreateAliasID(var Seed: TNodeID; Regenerate: Boolean): Word;
 begin
   if Regenerate then
-    NMRAnetUtilities_PsudoRandomNumberGenerator;
-  NMRABus.Node.AliasID := NMRAnetUtilities_GenerateID_Alias_From_Global_Seed;
-  if NMRABus.Node.AliasID = 0 then
+    NMRAnetUtilities_PsudoRandomNumberGeneratorOnSeed(Seed);
+  Result := NMRAnetUtilities_GenerateID_Alias_From_Seed(Seed);
+  if Result = 0 then
   begin
-    NMRAnetUtilities_PsudoRandomNumberGenerator;
-    NMRABus.Node.AliasID := NMRAnetUtilities_GenerateID_Alias_From_Global_Seed;
+    NMRAnetUtilities_PsudoRandomNumberGeneratorOnSeed(Seed);
+    Result := NMRAnetUtilities_GenerateID_Alias_From_Seed(Seed);
   end
 end;
 
@@ -311,9 +312,9 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_RecreateAliasID;
+function NMRAnetUtilities_RecreateAliasID(var Seed: TNodeID): Word;
 begin
-  NMRAnetUtilities_CreateAliasID(True)
+  Result := NMRAnetUtilities_CreateAliasID(Seed, True)
 end;
 
 // *****************************************************************************
@@ -448,14 +449,14 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure EqualEventID
+//  procedure NMRAnetUtilities_EqualEventID
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-function EqualEventID(Event1, Event2: PEventID): Boolean;
+function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 var
   i: Integer;
 begin
@@ -489,7 +490,7 @@ begin
   i := 0;
   while (i < MAX_SUPPORTED_EVENTS_PRODUCED) do
   begin
-    if EqualEventID(@SUPPORTED_EVENTS_PRODUCED[i], DataBytes) then
+    if NMRAnetUtilities_EqualEventID(@SUPPORTED_EVENTS_PRODUCED[i], DataBytes) then
     begin
       Result := True;
       Break
@@ -514,7 +515,7 @@ begin
   i := 0;
   while (i < MAX_SUPPORTED_EVENTS_CONSUMED) and not Result do
   begin
-    if EqualEventID(@SUPPORTED_EVENTS_CONSUMED[i], DataBytes) then
+    if NMRAnetUtilities_EqualEventID(@SUPPORTED_EVENTS_CONSUMED[i], DataBytes) then
     begin
       Result := True;
       Exit
