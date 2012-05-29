@@ -119,8 +119,8 @@ type
     DiscoveryCount: Byte;                 // Counts (typically 840ms steps) between rediscovery intervals
     WatchdogCount: Byte;                  // Counts (typically 840ms steps) before the Xpressnet Bus is declared hung
     RS485: TUARTReception;                // Hold information about the UART reception on the XpressnetBus
-    CommandStationAlias: Word;
-    ProgrammerAlias: Word;
+    CommandStationNode: TNodeIDs;         // Command Station connected to the Xpressnet Node
+    ProgrammerNode: TNodeIDs;             // Programmer Connected to the Xpressnet Node
   end;
   PXpressnetStateMachineInfo = ^TXpressnetStateMachineInfo;
 

@@ -292,6 +292,21 @@ begin
 end;
 
 // ****************************************************************************
+// procedure DispatchPCEventReportIdenitified
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Complex Response
+//
+// ****************************************************************************
+procedure DispatchPCEventReportIdenitified(CANBuffer: PCANBuffer);
+begin
+  StoreComplexResponse(CRC_PC_EVENT_REPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+end;
+
+// ****************************************************************************
 // procedure DispatchVerifyNodeID
 //
 //  Response Layer:
@@ -319,6 +334,21 @@ begin
     if NMRAnetUtilities_EqualNodeID(NodeID) then                                  // If addressed to us then respond
      NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_VERIFIED_NODE
   end;
+end;
+
+// ****************************************************************************
+// procedure DispatchVerifiedNodeID
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Simple Response
+//
+// ****************************************************************************
+procedure DispatchVerifiedNodeID(CANBuffer: PCANBuffer);
+begin
+  StoreComplexResponse(CRC_VERIFIED_NODE_ID, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -403,6 +433,7 @@ procedure ReceivedUnAddressedMessage(CANBuffer: PCANBuffer);
 begin
   case CANBuffer^.ID and FT_UNADDRESSED_MASK of
     FT_VERIFY_NODE_ID_NUMBER         : DispatchVerifyNodeID(CANBuffer);
+    FT_VERIFIED_NODE_ID_NUMBER       : DispatchVerifiedNodeID(CANBuffer);
     FT_CONSUMER_IDENTIFY             : DispatchEventConsumerIdenitify(CANBuffer);
     FT_CONSUMER_IDENTIFIED           : DispatchEventConsumerIdenitified(CANBuffer);
  //   FT_CONSUMER_IDENTIFY_RANGE       : begin end; // TODO
@@ -411,7 +442,7 @@ begin
  //   FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
     FT_EVENT_LEARN                   : begin end; // TODO
     FT_EVENTS_IDENTIFY               : DispatchIdentifyEvents;
-    FT_PC_EVENT_REPORT               : begin end; // TODO
+    FT_PC_EVENT_REPORT               : DispatchPCEventReportIdenitified(CANBuffer);
   end
 end;
 

@@ -24,20 +24,17 @@ type
   PEventID = ^TEventID;
   
 const
-  EVENT_EMERGENCY_STOP_ALL: TEventID = ($01, $00, $00, $00, $00, $00, $FF, $FF);
-  EVENT_LOG_ENTRY_RECORDED: TEventID = ($01 ,$00, $00, $00, $00, $00, $FF, $F8);
-  EVENT_IDENT_BUTTON_PRESSED: TEventID = ($01, $00, $00, $00, $00, $00, $FE, $00);
-  EVENT_DUPLICATE_ID_DETECTED: TEventID = ($01, $00, $00, $00, $00, $00, $02, $01);
+  EVENT_EMERGENCY_STOP_ALL: TEventID = ($01, $10, $00, $00, $00, $00, $FF, $FF);
+  EVENT_LOG_ENTRY_RECORDED: TEventID = ($01 ,$10, $00, $00, $00, $00, $FF, $F8);
+  EVENT_IDENT_BUTTON_PRESSED: TEventID = ($01, $10, $00, $00, $00, $00, $FE, $00);
+  EVENT_DUPLICATE_ID_DETECTED: TEventID = ($01, $10, $00, $00, $00, $00, $02, $01);
   
   // Proposed idea, number not officially assigned
-  EVENT_LC_DISTRICT_NODE: TEventID = ($01, $00, $00, $00, $00, $00, $01, $00);
-  EVENT_LC_PROGRAMMING_NODE: TEventID = ($01, $00, $00, $00, $00, $00, $01, $01);
-  EVENT_LC_STATIC_NODE: TEventID = ($01, $00, $00, $00, $00, $00, $01, $02);
-  EVENT_LC_MOBILE_NODE: TEventID = ($01, $00, $00, $00, $00, $00, $01, $03);
-  EVENT_LC_CONTROLLER_NODE: TEventID = ($01, $00, $00, $00, $00, $00, $01, $04);
-  
-
-
+  EVENT_LC_DISTRICT_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $00);
+  EVENT_LC_PROGRAMMING_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $01);
+  EVENT_LC_STATIC_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $02);
+  EVENT_LC_MOBILE_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $03);
+  EVENT_LC_CONTROLLER_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $04);
 
   
 implementation

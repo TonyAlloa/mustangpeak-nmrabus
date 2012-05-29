@@ -53,8 +53,14 @@ begin
   XpressnetStateMachineInfo.iActiveDevice := 0;
   XpressnetStateMachineInfo.DiscoveryCount := 0;
   XpressnetStateMachineInfo.WatchdogCount := 0;
-  XpressnetStateMachineInfo.CommandStationAlias := 0;
-  XpressnetStateMachineInfo.ProgrammerAlias := 0;
+  XpressnetStateMachineInfo.CommandStationNode.AliasID := 0;
+  XpressnetStateMachineInfo.CommandStationNode.ID[0] := 0;
+  XpressnetStateMachineInfo.CommandStationNode.ID[1] := 0;
+  XpressnetStateMachineInfo.CommandStationNode.State := 0;
+  XpressnetStateMachineInfo.ProgrammerNode.AliasID := 0;
+  XpressnetStateMachineInfo.ProgrammerNode.ID[0] := 0;
+  XpressnetStateMachineInfo.ProgrammerNode.ID[1] := 0;
+  XpressnetStateMachineInfo.ProgrammerNode.State := 0;
   
   // Device ID Initialization
   for i := ID_MIN_DEVICE to ID_MAX_DEVICE do
@@ -2368,7 +2374,7 @@ begin
    for i := 0 to XpressnetMessage^.DataCount do
      DatagramTransmit.List[0].DataBytes[i+3] := XpressnetMessage^.Bytes[i];
    DatagramTransmit.List[0].iByteCount := XpressnetMessage^.DataCount + 3;
-   DatagramTransmit.List[0].Alias := XpressnetStateMachineInfo.CommandStationAlias;
+   DatagramTransmit.List[0].Alias := XpressnetStateMachineInfo.CommandStationNode.AliasID;
    DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;               // Kick it off.
    while DatagramTransmit.List[0].iState <> DATAGRAM_BUFFER_EMPTY do
      NMRAnetStateMachine_Process;

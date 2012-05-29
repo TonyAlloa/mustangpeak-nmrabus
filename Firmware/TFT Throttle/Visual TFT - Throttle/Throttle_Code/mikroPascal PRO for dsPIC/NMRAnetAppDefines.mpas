@@ -32,15 +32,15 @@ const
 
   // Set the number of Events that are Consumed and Produced by this Node
   MAX_SUPPORTED_EVENTS_CONSUMED = 1;
-  MAX_SUPPORTED_EVENTS_PRODUCED = 1;
+  MAX_SUPPORTED_EVENTS_PRODUCED = 2;
   MAX_SUPPORTED_EVENTS = MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED;
   // Defined the Values of the Events that are Consumed and Produced by this Node
   SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
     ($05, $01, $01, $01, $07, $00, $FF, $FF)
   );
   SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
-    ($01, $00, $00, $00, $00, $00, $01, $04)                                   // EVENT_LC_CONTROLLER_NODE
-
+    ($01, $10, $00, $00, $00, $00, $01, $04),                                  // EVENT_LC_CONTROLLER_NODE
+    ($01, $10, $00, $00, $00, $00, $FF, $FF)                                   // EVENT_EMERGENCY_STOP
   );
   
 implementation

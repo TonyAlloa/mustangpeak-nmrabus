@@ -30,21 +30,16 @@ const
     );
 
   // Set the number of Events that are Consumed and Produced by this Node
-  MAX_SUPPORTED_EVENTS_CONSUMED = 4;
-  MAX_SUPPORTED_EVENTS_PRODUCED = 4;
+  MAX_SUPPORTED_EVENTS_CONSUMED = 1;
+  MAX_SUPPORTED_EVENTS_PRODUCED = 1;
   MAX_SUPPORTED_EVENTS = MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED;
   // Defined the Values of the Events that are Consumed and Produced by this Node
   SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
     ($05, $01, $01, $01, $07, $00, $F0, $01),
-    ($05, $01, $01, $01, $07, $00, $F0, $02),
-    ($05, $01, $01, $01, $07, $00, $F0, $03),
-    ($05, $01, $01, $01, $07, $00, $F0, $04)
   );
   SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
-    ($05, $01, $01, $01, $07, $00, $F0, $10),
-    ($05, $01, $01, $01, $07, $00, $F0, $20),
-    ($05, $01, $01, $01, $07, $00, $F0, $30),
-    ($05, $01, $01, $01, $07, $00, $F0, $40)
+    ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // This node supports Emergency Stop
+
   );
   
 implementation

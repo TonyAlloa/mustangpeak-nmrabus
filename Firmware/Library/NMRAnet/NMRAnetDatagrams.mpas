@@ -5,7 +5,8 @@ uses
   CANDefines,
   CANStorage,
   NMRAnetDefines,
-  NMRAnetDatagramDefines;
+  NMRAnetDatagramDefines,
+  NMRAnetConfigurationProtocol;
 
 procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_ProcessReceiveInterrupt(Buffer: PCANBuffer);
@@ -234,6 +235,8 @@ begin
   Handled := False;
   if DatagramMemConfigurationCallback <> PDatagramTaskCallbackFunc(nil) then
     DatagramMemConfigurationCallback(Datagram, Handled);
+  
+  NMRAnetConfigurationProtocol_HandleDatagram(Datagram);
     
   if Handled then
     DatagramReceive.iState := NextHandledState

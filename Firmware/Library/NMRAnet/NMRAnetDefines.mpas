@@ -173,6 +173,8 @@ const
   STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED          = 11;
   STATE_NMRABUS_RESPONSE_AMR                          = 12;
   STATE_NMRABUS_RESPONSE_AMD                          = 13;
+  STATE_NMRABUS_RESPONSE_PC_EVENT_REPORT              = 14;
+  STATE_NMRABUS_VERIFIED_NODE_ID                      = 15;
   
   LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
   
@@ -199,7 +201,8 @@ const
   CRC_PRODUCER_IDENTIFIED                   = $0009;                            // Received a Producer Identified message addressed to us
   CRC_AMR                                   = $0010;                            // Received a Alias Map Reset
   CRC_AMD                                   = $0011;                            // Received an Alias Map Definition that did NOT have a duplicate ID to ours (that would force a SRC_DUPLICATE_NODE_ID Response
-
+  CRC_PC_EVENT_REPORT                       = $0012;                            // Received a Producer Consumer Event Report
+  CRC_VERIFIED_NODE_ID                      = $0013;                            // Received a Verified Node ID Message
 
 type
   TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used
@@ -228,6 +231,16 @@ type
     Tag: Byte;                                                                  // MultiUse Flag, just be careful state don't overwrite it, Use 1) CID state for logging into bus  Use 2) Tracking the number of Event IDs when sending them all
     iCID: Byte;
     BufferOverrunCount: Word;                                                   // Track how many messages we missed
+  end;
+  
+const
+  NIDS_VERIFIED         = $0001;                                                // Node ID is verified
+
+type
+  TNodeIDs = record
+    ID: TNodeID;
+    AliasID: Word;
+    State: Word;                                                                // See the NIDS_xxxx constants
   end;
   
   TNodeInfo = record

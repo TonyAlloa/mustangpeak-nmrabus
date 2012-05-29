@@ -39,7 +39,7 @@ const
     ($05, $01, $01, $01, $07, $00, $F0, $FF)
   );
   SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
-    ($05, $01, $01, $01, $07, $00, $F0, $FF)
+    ($01, $01, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
   );
   
 implementation

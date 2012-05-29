@@ -35,7 +35,9 @@ uses
   CANStorage,
   CANDefines,
   NMRAnetDatagrams,
-  NMRAnetDatagramDefines;
+  NMRAnetDatagramDefines,
+  NMRAnetConfigurationProtocol,
+  NMRAnetConfigurationProtocolDefines;
 
 {$I Options.inc}
 
@@ -207,6 +209,7 @@ procedure NMRAnetStateMachine_Initialize;
 begin
   NMRAnetDatagrams_Initialize;
   NMRAnetCANReceive_Initialize;
+  NMRAnetConfigurationProtocol_Initialize;
   SimpleResponseCallbackFunc := PSimpleResponseCallbackFunc( nil);
   ComplexResponseCallbackFunc := PComplexResponseCallbackFunc( nil);
   NMRABus.State := 0;
@@ -473,7 +476,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure HandleDatagramResponse
+//  procedure DispatchDatagramResponse
 //
 //     Parameters:
 //
@@ -482,7 +485,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure HandleDatagramResponse(nCode: Word; NextState: Byte);
+procedure DispatchDatagramResponse(nCode: Word; NextState: Byte);
 var
   Response: PQueuedResponse;
   Datagram: PDatagramBuffer;
@@ -513,7 +516,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure HandleMessageResponse
+//  procedure DispatchMessageResponse
 //
 //     Parameters:
 //
@@ -522,7 +525,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure HandleMessageResponse(nCode: Word; NextState: Byte);
+procedure DispatchMessageResponse(nCode: Word; NextState: Byte);
 var
   Response: PQueuedResponse;
 begin
@@ -562,13 +565,15 @@ begin
                                                               end;
         STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS : HandleNMRALayerSimpleSendAllConsumerProducer(Buffer, SourceAliasID, STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED);
         STATE_NMRABUS_RESPOND_OPTIONAL_INTERACTION_REJECTED: HandleNMRAnetLayerComplexResponse(Buffer, FT_OPTIONAL_INTERACTION_REJECTED, SourceAliasID, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_DATAGRAM_RECEIVED_OK);
-        // These responses do NOT need a response message sent
-        STATE_NMRABUS_DATAGRAM_RECEIVED_OK                 : HandleDatagramResponse(CRC_DATAGRAM_RECEIVED_OK, STATE_NMRABUS_DATAGRAM_REJECTED);
-        STATE_NMRABUS_DATAGRAM_REJECTED                    : HandleDatagramResponse(CRC_DATAGRAM_REJECTED, STATE_NMRABUS_RESPONSE_CONSUMER_IDENTIFIED);
-        STATE_NMRABUS_RESPONSE_CONSUMER_IDENTIFIED         : HandleMessageResponse(CRC_CONSUMER_IDENTIFIED, STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED);
-        STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED         : HandleMessageResponse(CRC_PRODUCER_IDENTIFIED, STATE_NMRABUS_RESPONSE_AMR);
-        STATE_NMRABUS_RESPONSE_AMR                         : HandleMessageResponse(CRC_AMR, STATE_NMRABUS_RESPONSE_AMD);
-        STATE_NMRABUS_RESPONSE_AMD                         : HandleMessageResponse(CRC_AMD, STATE_NMRABUS_RESPONSE_SEND_RID)
+        // These responses do NOT need a predefined response message sent
+        STATE_NMRABUS_DATAGRAM_RECEIVED_OK                 : DispatchDatagramResponse(CRC_DATAGRAM_RECEIVED_OK, STATE_NMRABUS_DATAGRAM_REJECTED);
+        STATE_NMRABUS_DATAGRAM_REJECTED                    : DispatchDatagramResponse(CRC_DATAGRAM_REJECTED, STATE_NMRABUS_RESPONSE_CONSUMER_IDENTIFIED);
+        STATE_NMRABUS_RESPONSE_CONSUMER_IDENTIFIED         : DispatchMessageResponse(CRC_CONSUMER_IDENTIFIED, STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED);
+        STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED         : DispatchMessageResponse(CRC_PRODUCER_IDENTIFIED, STATE_NMRABUS_RESPONSE_AMR);
+        STATE_NMRABUS_RESPONSE_AMR                         : DispatchMessageResponse(CRC_AMR, STATE_NMRABUS_RESPONSE_AMD);
+        STATE_NMRABUS_RESPONSE_AMD                         : DispatchMessageResponse(CRC_AMD, STATE_NMRABUS_RESPONSE_PC_EVENT_REPORT);
+        STATE_NMRABUS_RESPONSE_PC_EVENT_REPORT             : DispatchMessageResponse(CRC_PC_EVENT_REPORT, STATE_NMRABUS_VERIFIED_NODE_ID);
+        STATE_NMRABUS_VERIFIED_NODE_ID                     : DispatchMessageResponse(CRC_VERIFIED_NODE_ID, STATE_NMRABUS_RESPONSE_SEND_RID)
       else
         NMRABus.Responses.iState := STATE_NMRABUS_RESPONSE_SEND_RID;
       end;
@@ -675,6 +680,7 @@ begin
         Responses_Process(@Buffer, NMRABus.Node.AliasID);                       // Handle auto responses to CAN/NMRAnet messages coming in
         NMRAnetDatagrams_ProcessReceive;                                        // Handle Datagrams coming in
         NMRAnetDatagrams_ProcessTransmit(NMRABus.Node.AliasID);                 // Handle Datagrams going out
+        NMRAnetConfigurationProtocol_Process;
       end;
     STATE_NMRABUS_INHIBITED :
       begin
