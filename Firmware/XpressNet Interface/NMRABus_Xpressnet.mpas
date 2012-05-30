@@ -107,7 +107,7 @@ var
  NodeID: TNodeID;
 begin
   case Response^.nCode of
-    CRC_PRODUCER_IDENTIFIED : begin      LATD3_bit := 1;
+    CRC_PRODUCER_IDENTIFIED : begin
                                 case MainLoopState of
                                   STATE_VERIFY_COMMANDSTATIONS :
                                     begin
@@ -123,7 +123,7 @@ begin
                               end;
       CRC_VERIFIED_NODE_ID : begin
                                 case MainLoopState of
-                                  STATE_VERIFY_COMMANDSTATIONS :
+                                  STATE_GATHER_PROGRAMMERS :
                                     begin
                                       if Response^.Alias = XpressnetStateMachineInfo.CommandStationNode.AliasID then
                                       begin
@@ -133,7 +133,7 @@ begin
                                         XpressnetStateMachineInfo.CommandStationNode.State := XpressnetStateMachineInfo.CommandStationNode.State or NIDS_VERIFIED;
                                       end
                                     end;
-                                  STATE_VERIFY_PROGRAMMERS :
+                                  STATE_INITIALIAZE :
                                     begin
                                       if Response^.Alias = XpressnetStateMachineInfo.ProgrammerNode.AliasID then
                                       begin

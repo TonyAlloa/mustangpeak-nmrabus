@@ -117,7 +117,7 @@ begin
     DatagramTransmit.List[0].Databytes[i] := i;
   DatagramTransmit.List[0].iByteCount := Datagram^.DataBytes[1] + 1;
   DatagramTransmit.List[0].Alias := $ee9;
-  DatagramTransmit.List[0].iState := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
+  DatagramTransmit.List[0].State := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
 
 end;
 

@@ -44,16 +44,14 @@ const
   STATE_DATAGRAM_UNHANDLED_MESSAGE     = 3;
   STATE_DATAGRAM_SENDING_RESPONSE      = 4;
   STATE_DATAGRAM_ERROR_RESPONSES       = 5;
-  STATE_DATAGRAM_RECEIVE_NEXT          = 6;
-  
+
   // Datagram Transmit Statemachine States
   STATE_DATAGRAM_TRANSMIT_START                          = 0;                   // Transmit Statemachine states
   STATE_DATAGRAM_TRANSMIT_SINGLE_FRAME                   = 1;
   STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_SINGLE_FRAME = 2;
   STATE_DATAGRAM_TRANSMIT_MULTI_FRAME                    = 3;
   STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  = 4;
-  STATE_DATAGRAM_TRANSMIT_NEXT                           = 5;
-  
+
 
   DATAGRAM_WATCHDOG_MAX = 10000;                                                // 1ms counts before the datagram is declared abandon
   DATAGRAM_MAX_RETRY_COUNT = 3;                                                 // Number of try a datagram will try to be resent
@@ -70,7 +68,10 @@ const
   
 type
   TDatagram = array[0..LEN_DATAGRAM-1] of Byte;
+  PDatagram = ^TDatagram;
+  
   TBufferOverflowList = array[LEN_DATAGRAM_BUFFER_OVERFLOW_LIST] of Word;
+  
   TDatagramError = record
     MTI: Byte;
     SubType: TDatagramErrorCode;
@@ -79,12 +80,13 @@ type
   TDatagramBuffer = record
     DataBytes: TDatagram;                                                       // The bytes sent in the datagram
     Alias: Word;                                                                // The Source Node that sent the datagram if this is a RX buffer, else it is the Target Node that is being sent
-    iState: Byte;                                                               // The State of the Packet Buffer see DATAGRAM_xxxx contants
+    State: Byte;                                                                // The State of the Packet Buffer see DATAGRAM_xxxx contants
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit
     iFrameCount: Byte;                                                          // Counts the number of Frames received/transmitted
     iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message or during transmit the Target Node never responds
     ErrorCode: TDatagramError;                                                  // Tracks any errors that occur through the MTI/Error Codes send as the first few bytes in the datagram
     iRetransmit: Byte;                                                          // Number of times the Datagram was attempted to transmit use to test before not trying any more
+    iStateMachine: Byte;                                                        // Each Datagram Buffer holds it own place in the global statemachine, this allow interleaving and no deadlock when a target node is not responding
   end;
   
   PDatagramBuffer = ^TDatagramBuffer;
@@ -92,17 +94,15 @@ type
   TDatagramTransmitBufferArray = array[0..LEN_DATAGRAM_TRANSMIT_ARRAY-1] of TDatagramBuffer;
 
 
-  TDatagramReceive = record
+  TDatagramReceive = record                                                     // Buffer to hold the datagram coming into the node
     List: TDatagramReceiveBufferArray;
-    iState: Byte;                                                               // StateMachine Index
     iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
     BufferOverflowList: TBufferOverflowList;                                    // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;
   
-  TDatagramTransmit = record
+  TDatagramTransmit = record                                                    // Buffer to hold datagrams being send by the node
     List: TDatagramTransmitBufferArray;
     iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
-    iState: Byte;                                                               // StateMachine Index
   end;
   
   TDatagramTaskCallbackFunc = procedure(Datagram: PDatagramBuffer; var Handled: Boolean);

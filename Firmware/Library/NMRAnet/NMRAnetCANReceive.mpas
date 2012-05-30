@@ -182,8 +182,8 @@ procedure DispatchAliasMappingDefinition(CANBuffer: PCANBuffer);
 var
   NodeID: TNodeID;
 begin
-  NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);                 // Extract the 48 Bit ID
-  if NMRAnetUtilities_EqualNodeID(NodeID) then                                  // If address is duplicate then we need to respond
+  NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);       // Extract the 48 Bit ID
+  if NMRAnetUtilities_EqualNodeID(NodeID) then                                  // If address is duplicate then we need to respond with critical error
     NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_DUPLICATE_NODE_ID
   else
     StoreComplexResponse(CRC_AMD, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 6);
@@ -222,8 +222,8 @@ var
 begin
   if CANBuffer^.DataCount = 6 then
   begin
-    NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);              // Extract the 48 Bit ID
-    if NMRAnetUtilities_EqualNodeID(NodeID) then                          // If addressed to us then respond
+    NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);     // Extract the 48 Bit ID
+    if NMRAnetUtilities_EqualNodeID(NodeID) then                                // If addressed to us then respond
       NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_AMD;
   end else
     NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_AMD;
