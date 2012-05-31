@@ -483,10 +483,13 @@ end;
 //
 // *****************************************************************************
 function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
+{$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
 var
   i: Integer;
+{$ENDIF}
 begin
   Result := False;
+  {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
   i := 0;
   while (i < MAX_SUPPORTED_EVENTS_PRODUCED) do
   begin
@@ -497,6 +500,7 @@ begin
     end;
     Inc(i)
   end;
+  {$ENDIF}
 end;
 
 // *****************************************************************************
@@ -508,10 +512,13 @@ end;
 //
 // *****************************************************************************
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
+{$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
 var
   i: Integer;
+{$ENDIF}
 begin
   Result := False;
+  {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
   i := 0;
   while (i < MAX_SUPPORTED_EVENTS_CONSUMED) and not Result do
   begin
@@ -522,6 +529,7 @@ begin
     end;
     Inc(i)
   end
+  {$ENDIF}
 end;
 
 

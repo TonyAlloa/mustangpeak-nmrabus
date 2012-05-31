@@ -24,9 +24,14 @@ uses
   CANStorage,
   NMRAnetStateMachine;
   
+const
+  STATE_SPLASH_SCREEN = 0;
+  STATE_GATHER_NODES  = 1;
+  STATE_RUN           = 2;
+  
 var
-  CANLayerCount,
-  NMRABusLayerCount: Word;
+  MainState: Byte;
+  i: Integer;
   
 procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 begin
@@ -51,26 +56,48 @@ begin
   dsPIC33_CAN_Initialize;
   MCU_Setup_Initialize;
   NMRAnetStateMachine_Initialize;
+  
+  MainState := STATE_SPLASH_SCREEN;
+  BoxRoundProgressBar.Width := 0;
+  i := 0;
 
   Start_TP();
-  
-
- // Base := $79E0;
-  Base := $7800;
-  //Base := $7800;
-  Offset := 0;
-  ECAN_RegPage := 0;
-  DMA_RegPage := 0;
 
   while (TRUE) do
   begin
+    Check_TP;
+    
     NMRAnetStateMachine_Process;
     
     Delay_us(600);  // USB-CAN Board can't keep up
 
     if NMRAnetCANReceive_Permited then
     begin
+      case MainState of
+        STATE_SPLASH_SCREEN :
+          begin
+            Inc(i);
+            if i = 20 then
+            begin
+              BoxRoundProgressBar.Width := BoxRoundProgressBar.Width + 1;
+              DrawRoundBox(@BoxRoundProgressBar);
+              i := 0;
+            end;
+            
+            if BoxRoundProgressBar.Width >= 150 then
+            begin
+              DrawScreen(ScreenDetectingNodesScreenID);
+              MainState := STATE_GATHER_NODES;
+            end;
+          end;
+        STATE_GATHER_NODES :
+          begin
 
+          end;
+        STATE_RUN          :
+          begin
+          end;
+      end;
     end
   end;
 

@@ -16,3 +16,6 @@
 {.$DEFINE ENABLE_LOOP_FOREVER_ON_TRAP}  // Enables the Trap Interrupts on the MCU, uses the dsPICxx_Traps.mpas file
 
 {$FIX_NESTED_INTERRUPT_SILICON_BUG}    // Add code to fix a silicon bug in nested Interrupts
+
+{.$DEFINE SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
+{$DEFINE SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}

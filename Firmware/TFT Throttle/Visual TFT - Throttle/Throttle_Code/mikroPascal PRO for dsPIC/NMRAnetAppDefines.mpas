@@ -4,6 +4,8 @@ uses
   NMRAnetEventDefines,
   CANDefines,
   NMRAnetDefines;
+  
+{$I Options.inc}
 
 const
 {
@@ -16,32 +18,38 @@ const
   PIV_PROTOCOL_ID_IDENTIFICATION: TPIVProtocolValueArray     = ($02, $00, $00, $00, $00, $00);
   PIV_PROTOCOL_ID_TEACH_LEARN: TPIVProtocolValueArray        = ($01, $00, $00, $00, $00, $00);
   PIV_PROTOCOL_ID_REMOTE_BUTTON: TPIVProtocolValueArray      = ($00, $80, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_CDI: TPIVProtocolValueArray                = ($00, $40, $00, $00, $00, $00);
+  PIV_PROTOCOL_ID_ACDI: TPIVProtocolValueArray               = ($00, $40, $00, $00, $00, $00);
   PIV_PROTOCOL_ID_DISPLAY: TPIVProtocolValueArray            = ($00, $20, $00, $00, $00, $00);
  }
 
-  PIV_SUPPORTED_PROTOCOL_COUNT = 6;    // UPDATED THIS IF ADDING OR SUBTRACTING SUPPORTED PROTOCOLS
+  PIV_SUPPORTED_PROTOCOL_COUNT = 4;    // UPDATED THIS IF ADDING OR SUBTRACTING SUPPORTED PROTOCOLS
   PIV_SUPPORTED_PROTOCOLS: array[0..PIV_SUPPORTED_PROTOCOL_COUNT-1] of TPIVProtocolValueArray = (
     ($80, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_PROTOCOL
     ($40, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_DATAGRAM
-    ($10, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_CONFIGURATION
-    ($04, $00, $00, $00, $00, $00),                                             //PIV_PROTOCOL_ID_PRODUCER_CONSUMER
-    ($01, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_TEACH_LEARN
-    ($00, $40, $00, $00, $00, $00)                                              // PIV_PROTOCOL_ID_CDI
+    ($04, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_PRODUCER_CONSUMER
+    ($00, $40, $00, $00, $00, $00)                                              // PIV_PROTOCOL_ID_ACDI
     );
 
+  // SET THIS DEFINES IN OPTIONS.INC
   // Set the number of Events that are Consumed and Produced by this Node
-  MAX_SUPPORTED_EVENTS_CONSUMED = 1;
-  MAX_SUPPORTED_EVENTS_PRODUCED = 2;
-  MAX_SUPPORTED_EVENTS = MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED;
+  {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT} MAX_SUPPORTED_EVENTS_CONSUMED = 1; {$ELSE} MAX_SUPPORTED_EVENTS_CONSUMED = 0; {$ENDIF}
+  {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT} MAX_SUPPORTED_EVENTS_PRODUCED = 2; {$ELSE} MAX_SUPPORTED_EVENTS_PRODUCED = 0; {$ENDIF}
+  
+    MAX_SUPPORTED_EVENTS = MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED;
+  
   // Defined the Values of the Events that are Consumed and Produced by this Node
+  {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
   SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
     ($05, $01, $01, $01, $07, $00, $FF, $FF)
   );
+  {$ENDIF}
+  
+  {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
   SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
     ($01, $10, $00, $00, $00, $00, $01, $04),                                  // EVENT_LC_CONTROLLER_NODE
     ($01, $10, $00, $00, $00, $00, $FF, $FF)                                   // EVENT_EMERGENCY_STOP
   );
+  {$ENDIF}
   
 implementation
 

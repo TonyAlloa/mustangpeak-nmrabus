@@ -428,16 +428,20 @@ procedure SendNMRALayerSimpleSendAllConsumerProducer(Buffer: PCANBuffer; SourceA
 begin
   if TestReceivedMsgFlags(SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED) then
   begin
+    {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
     if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS_PRODUCED then
     begin
       if TryTransmitNMRABusLayerMsg(Buffer, FT_PRODUCER_IDENTIFIED, 0, SourceAliasID, 8, @SUPPORTED_EVENTS_PRODUCED[NMRABus.Responses.Tag]) then
         Inc(NMRABus.Responses.Tag);
     end else
+    {$ENDIF}
+    {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
     if NMRABus.Responses.Tag < MAX_SUPPORTED_EVENTS then
     begin
       if TryTransmitNMRABusLayerMsg(Buffer, FT_CONSUMER_IDENTIFIED, 0, SourceAliasID, 8, @SUPPORTED_EVENTS_CONSUMED[NMRABus.Responses.Tag-MAX_SUPPORTED_EVENTS_PRODUCED]) then
         Inc(NMRABus.Responses.Tag);
     end else
+    {$ENDIF}
     begin
       if SimpleResponseCallbackFunc <> nil then
         SimpleResponseCallbackFunc(SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED);
