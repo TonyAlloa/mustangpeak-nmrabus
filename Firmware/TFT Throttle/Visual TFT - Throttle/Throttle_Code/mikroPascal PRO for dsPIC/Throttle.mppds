@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\Command Station\NMRAnetAppDefines.mpas
+Value=Throttle_resources.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -42,19 +42,12 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=12
+Count=5
 File0=Throttle_main.mpas
-File1=..\..\..\..\Library\NMRAnet\NMRAnetStateMachine.mpas
-File2=..\..\..\..\Library\dsPIC33F\dsPIC33_CAN.mpas
-File3=..\..\..\..\Library\CANBus\CANDefines.mpas
-File4=MCU_Setup_dsPIC33FJ256GP710A.mpas
-File5=..\..\..\..\Library\NMRAnet\NMRAnetDatagrams.mpas
-File6=NMRAnetAppDefines.mpas
-File7=Throttle_driver.mpas
-File8=..\..\..\..\Library\NMRAnet\NMRAnetConfigurationProtocol.mpas
-File9=Throttle_events_code.mpas
-File10=Throttle_objects.mpas
-File11=..\..\..\..\Command Station\NMRAnetAppDefines.mpas
+File1=Throttle_driver.mpas
+File2=Throttle_events_code.mpas
+File3=Throttle_objects.mpas
+File4=Throttle_resources.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -64,12 +57,12 @@ Count=1
 File0=Options.inc
 [SEARCH_PATH]
 Count=18
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
-Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\TFT Throttle\Visual TFT - Throttle\Throttle_Code\mikroPascal PRO for dsPIC\
 Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
 Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC33FJ256GP710A\
 Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBuffers\dsPIC33FJ256GP710A\
@@ -102,5 +95,6 @@ File8=ECAN
 File9=Button
 [EXPANDED NODES]
 Node1=Sources
-Node2=Other Files
-Count=2
+Node2=Output Files
+Node3=Other Files
+Count=3

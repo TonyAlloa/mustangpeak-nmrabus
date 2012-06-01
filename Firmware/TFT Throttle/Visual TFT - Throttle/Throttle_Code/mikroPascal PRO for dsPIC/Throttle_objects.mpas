@@ -4,6 +4,34 @@ type TOnEventPtr = procedure();
 
 type TBytePtr = ^byte;
 
+type TButton = record
+  OwnerScreenID        : word;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Pen_Width            : byte;
+  Pen_Color            : word;
+  Visible              : byte;
+  Active               : byte;
+  Transparent          : byte;
+  Caption              : ^char;
+  Fontname             : ^ const far byte;
+  Font_Color           : word;
+  Gradient             : byte;
+  Gradient_Orientation : byte;
+  Gradient_Start_Color : word;
+  Gradient_End_Color   : word;
+  Color                : word;
+  PressColEnabled      : byte;
+  Press_Color          : word;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
+
 type TButton_Round = record
   OwnerScreenID        : word;
   Order                : byte;
@@ -49,6 +77,49 @@ type TCLabel = record
   OnClickPtr           : ^TOnEventPtr;
   OnPressPtr           : ^TOnEventPtr;
 end; code; far;
+
+type TImage = record
+  OwnerScreenID        : word;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Picture_Name         : ^ const far byte;
+  Visible              : byte;
+  Active               : byte;
+  Picture_Type         : byte;
+  Picture_Ratio        : byte;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
+
+type TBox = record
+  OwnerScreenID        : word;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Pen_Width            : byte;
+  Pen_Color            : word;
+  Visible              : byte;
+  Active               : byte;
+  Transparent          : byte;
+  Gradient             : byte;
+  Gradient_Orientation : byte;
+  Gradient_Start_Color : word;
+  Gradient_End_Color   : word;
+  Color                : word;
+  PressColEnabled      : byte;
+  Press_Color          : word;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
 
 type TCBox = record
   OwnerScreenID        : word;
@@ -132,6 +203,8 @@ type TCScreen = record
   ObjectsCount               : byte;
   CLabelsCount               : word;
   CLabels                    : ^ const code far ^TCLabel;
+  ImagesCount                : word;
+  Images                     : ^ const code far ^TImage;
   CBoxesCount                : word;
   CBoxes                     : ^ const code far ^TCBox;
   Boxes_RoundCount           : word;
@@ -143,10 +216,14 @@ type TScreen = record
   Width                      : word;
   Height                     : word;
   ObjectsCount               : byte;
+  ButtonsCount               : word;
+  Buttons                    : ^ const code far ^TButton;
   Buttons_RoundCount         : word;
   Buttons_Round              : ^ const code far ^TButton_Round;
   CLabelsCount               : word;
   CLabels                    : ^ const code far ^TCLabel;
+  BoxesCount                 : word;
+  Boxes                      : ^ const code far ^TBox;
   CBoxesCount                : word;
   CBoxes                     : ^ const code far ^TCBox;
   CBoxes_RoundCount          : word;
@@ -158,10 +235,16 @@ type TMyScreen = record
   Width                      : word;
   Height                     : word;
   ObjectsCount               : byte;
+  ButtonsCount               : word;
+  Buttons                    : ^ const code far ^TButton;
   Buttons_RoundCount         : word;
   Buttons_Round              : ^ const code far ^TButton_Round;
   CLabelsCount               : word;
   CLabels                    : ^ const code far ^TCLabel;
+  ImagesCount                : word;
+  Images                     : ^ const code far ^TImage;
+  BoxesCount                 : word;
+  Boxes                      : ^ const code far ^TBox;
   CBoxesCount                : word;
   CBoxes                     : ^ const code far ^TCBox;
   Boxes_RoundCount           : word;
