@@ -32,28 +32,18 @@ type TButton = record
   OnPressPtr           : ^TOnEventPtr;
 end;
 
-type TButton_Round = record
+type TLabel = record
   OwnerScreenID        : word;
   Order                : byte;
   Left                 : word;
   Top                  : word;
   Width                : word;
   Height               : word;
-  Pen_Width            : byte;
-  Pen_Color            : word;
-  Visible              : byte;
-  Active               : byte;
-  Transparent          : byte;
   Caption              : ^char;
   Fontname             : ^ const far byte;
   Font_Color           : word;
-  Gradient             : byte;
-  Gradient_Orientation : byte;
-  Gradient_Start_Color : word;
-  Gradient_End_Color   : word;
-  Color                : word;
-  PressColEnabled      : byte;
-  Press_Color          : word;
+  Visible              : byte;
+  Active               : byte;
   OnUpPtr              : ^TOnEventPtr;
   OnDownPtr            : ^TOnEventPtr;
   OnClickPtr           : ^TOnEventPtr;
@@ -171,31 +161,6 @@ type TBox_Round = record
   OnPressPtr           : ^TOnEventPtr;
 end;
 
-type TCBox_Round = record
-  OwnerScreenID        : word;
-  Order                : byte;
-  Left                 : word;
-  Top                  : word;
-  Width                : word;
-  Height               : word;
-  Pen_Width            : byte;
-  Pen_Color            : word;
-  Visible              : byte;
-  Active               : byte;
-  Transparent          : byte;
-  Gradient             : byte;
-  Gradient_Orientation : byte;
-  Gradient_Start_Color : word;
-  Gradient_End_Color   : word;
-  Color                : word;
-  PressColEnabled      : byte;
-  Press_Color          : word;
-  OnUpPtr              : ^TOnEventPtr;
-  OnDownPtr            : ^TOnEventPtr;
-  OnClickPtr           : ^TOnEventPtr;
-  OnPressPtr           : ^TOnEventPtr;
-end; code; far;
-
 type TCScreen = record
   Color                      : word;
   Width                      : word;
@@ -218,16 +183,14 @@ type TScreen = record
   ObjectsCount               : byte;
   ButtonsCount               : word;
   Buttons                    : ^ const code far ^TButton;
-  Buttons_RoundCount         : word;
-  Buttons_Round              : ^ const code far ^TButton_Round;
+  LabelsCount                : word;
+  Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;
   CLabels                    : ^ const code far ^TCLabel;
   BoxesCount                 : word;
   Boxes                      : ^ const code far ^TBox;
-  CBoxesCount                : word;
-  CBoxes                     : ^ const code far ^TCBox;
-  CBoxes_RoundCount          : word;
-  CBoxes_Round               : ^ const code far ^TCBox_Round;
+  Boxes_RoundCount           : word;
+  Boxes_Round                : ^ const code far ^TBox_Round;
 end;
 
 type TMyScreen = record
@@ -237,8 +200,8 @@ type TMyScreen = record
   ObjectsCount               : byte;
   ButtonsCount               : word;
   Buttons                    : ^ const code far ^TButton;
-  Buttons_RoundCount         : word;
-  Buttons_Round              : ^ const code far ^TButton_Round;
+  LabelsCount                : word;
+  Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;
   CLabels                    : ^ const code far ^TCLabel;
   ImagesCount                : word;
@@ -249,8 +212,6 @@ type TMyScreen = record
   CBoxes                     : ^ const code far ^TCBox;
   Boxes_RoundCount           : word;
   Boxes_Round                : ^ const code far ^TBox_Round;
-  CBoxes_RoundCount          : word;
-  CBoxes_Round               : ^ const code far ^TCBox_Round;
 end;
 
 

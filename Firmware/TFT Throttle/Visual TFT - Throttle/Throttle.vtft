@@ -1830,8 +1830,8 @@ object TatDiagram
     PressColor = clBlack
     Ratio = 0
     PicturePath = 
-      'C:\Users\Jim\Desktop\NMRABus\Firmware\Resources\Images\OpenLCB.b' +
-      'mp'
+      'C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Resources' +
+      '\Images\OpenLCB.bmp'
     Static_ = False
     PictureWidth = 0
     PictureHeight = 0
@@ -1889,14 +1889,18 @@ object TatDiagram
   TopRuler.Size = 16
   TopRuler.AutoFactor = True
   TopRuler.GridColor = clBlack
-  Zoom = 80
+  Zoom = 119
   BorderColor = clGray
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
-  ActiveLayers = 4
+  ActiveLayers = 7
   Layers = <
     item
       LayerName = 'Layer0'
+      Visible = False
+    end
+    item
+      LayerName = 'Dropdown'
     end>
   LinkCursor = crHandPoint
   PanCursor = crHandPoint
@@ -1931,16 +1935,14 @@ object TatDiagram
   BorderStyle = bsSingle
   Color = clGray
   ParentColor = False
-  object Box1: TDgrBox
+  object BoxBkGnd: TDgrBox
     Tag = 1
-    Left = 0.379999999999999900
-    Top = 2.090006775689355000
     Width = 480.000000000000000000
     Height = 640.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
-    Color = clBlack
-    SelColor = clBlack
+    Color = clSilver
+    SelColor = clSilver
     ClipText = False
     TextCells = <
       item
@@ -1977,9 +1979,9 @@ object TatDiagram
     Shadow.Transparency = 0
     Hint = 'Double click on Box to add a handler.'
     ParentShowHint = True
-    Gradient.Direction = grBottomTop
-    Gradient.StartColor = clGray
-    Gradient.EndColor = 2105376
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = 2105376
+    Gradient.EndColor = clGray
     Gradient.Visible = True
     BitmapMode = bmStretch
     BitmapTransparent = False
@@ -1994,12 +1996,12 @@ object TatDiagram
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = True
+    Static_ = False
     Collapsed = False
   end
   object Label7: TDgrLabel
     Tag = 1
-    Left = 4.032796720000001000
+    Left = 4.000000000000000000
     Top = 18.999964338477070000
     Width = 459.000000000000000000
     Height = 30.000000000000000000
@@ -2301,17 +2303,17 @@ object TatDiagram
     EndChar = 127
     Collapsed = False
   end
-  object BoxRound2: TDgrBoxRound
+  object BoxRoundCmdStations: TDgrBoxRound
     Tag = 1
     Left = 12.000000000000000000
-    Top = 66.000000000000000000
+    Top = 56.000000000000000000
     Width = 450.000000000000000000
-    Height = 54.000000000000000000
+    Height = 76.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
-    Pen.Color = clGray
+    Pen.Color = clSilver
     Pen.Width = 2
     ClipText = False
     TextCells = <
@@ -2324,7 +2326,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = False
+        RotateFont = True
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -2365,23 +2367,24 @@ object TatDiagram
     Layer = 0
     LayerName = 'Layer0'
     Transparency = 0
+    OnClick = 'BoxRoundCmdStationsClick'
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = True
+    PressColorEnabled = False
+    Static_ = False
     Collapsed = False
   end
-  object BoxRound4: TDgrBoxRound
+  object BoxRoundAccyNodes: TDgrBoxRound
     Tag = 1
     Left = 12.000000000000000000
-    Top = 224.000000000000000000
+    Top = 548.000000000000000000
     Width = 450.000000000000000000
-    Height = 54.000000000000000000
+    Height = 76.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
-    Pen.Color = clGray
+    Pen.Color = clSilver
     Pen.Width = 2
     ClipText = False
     TextCells = <
@@ -2394,7 +2397,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = False
+        RotateFont = True
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -2435,33 +2438,40 @@ object TatDiagram
     Layer = 0
     LayerName = 'Layer0'
     Transparency = 0
+    OnClick = 'BoxRoundAccyNodesClick'
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = True
+    PressColorEnabled = False
+    Static_ = False
     Collapsed = False
   end
-  object BoxRound6: TDgrBoxRound
+  object LabelCmdStationNodes: TDgrLabel
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 397.090042437212300000
-    Width = 450.000000000000000000
-    Height = 52.000000000000000000
+    Left = 18.000000000000000000
+    Top = 80.000000000000000000
+    Width = 211.440000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
-    Pen.Color = clGray
-    Pen.Width = 2
-    ClipText = False
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -32
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Ophir District'
         Clip = False
-        WordWrap = True
-        DControlFont = True
+        WordWrap = False
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = False
@@ -2473,31 +2483,31 @@ object TatDiagram
         Visible = True
         Transparency = 0
       end>
-    Restrictions = [crNoRotation]
+    Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -11
+    Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
-    MinWidth = 5
-    MinHeight = 5
+    MinWidth = 40
+    MinHeight = 40
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 2
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
-    Hint = 
-      'Double click on Box to add a handler. You can '#13#10'change a box rou' +
-      'ndnes by changing a Round Radius '#13#10'property in Object Inspector'
     ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
+    Gradient.EndColor = clYellow
     Gradient.Visible = False
     BitmapMode = bmStretch
     BitmapTransparent = False
-    MetaFile.Data = {04000000}
+    Metafile.Data = {04000000}
     PictureMode = pmStretch
     Transparent = False
     Cursor = crDefault
@@ -2505,23 +2515,99 @@ object TatDiagram
     Layer = 0
     LayerName = 'Layer0'
     Transparency = 0
-    GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
     Collapsed = False
   end
-  object BoxRound8: TDgrBoxRound
+  object LabelAccyNodes: TDgrLabel
+    Tag = 1
+    Left = 18.000000000000000000
+    Top = 570.000000000000000000
+    Width = 181.840000000000000000
+    Height = 36.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -32
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Turnout 34'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -32
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 40
+    MinHeight = 40
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 32
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    Metafile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    PressColor = clBlack
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    Collapsed = False
+  end
+  object BoxRoundProgStations: TDgrBoxRound
     Tag = 1
     Left = 12.000000000000000000
-    Top = 556.000000000000000000
+    Top = 215.090042437212300000
     Width = 450.000000000000000000
-    Height = 54.000000000000000000
+    Height = 76.000000000000030000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
-    Pen.Color = clGray
+    Pen.Color = clSilver
     Pen.Width = 2
     ClipText = False
     TextCells = <
@@ -2534,7 +2620,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = False
+        RotateFont = True
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -2575,55 +2661,36 @@ object TatDiagram
     Layer = 0
     LayerName = 'Layer0'
     Transparency = 0
+    OnClick = 'BoxRoundProgStationsClick'
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = True
+    PressColorEnabled = False
+    Static_ = False
     Collapsed = False
   end
-  object ButtonRound1: TDgrButtonRound
+  object BoxRoundTrainNodes: TDgrBoxRound
     Tag = 1
-    Left = 382.000000000000000000
-    Top = 68.000000000000000000
-    Width = 78.000000000000000000
-    Height = 50.000000000000000000
+    Left = 12.000000000000000000
+    Top = 388.000000000000000000
+    Width = 450.000000000000000000
+    Height = 76.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
-    Color = clSilver
-    SelColor = clSilver
+    Color = clWhite
+    SelColor = clWhite
+    Pen.Color = clSilver
+    Pen.Width = 2
     ClipText = False
     TextCells = <
       item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -21
-        Font.Name = 'Tahoma'
-        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
-        Text = '...'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end
-      item
-        DControlAngle = True
         Clip = False
         WordWrap = True
         DControlFont = True
         Alignment = taCenter
-        VertAlign = vaTop
+        VertAlign = vaCenter
         RotateFont = True
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
@@ -2636,23 +2703,25 @@ object TatDiagram
     Restrictions = [crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -21
+    Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
     MinWidth = 5
-    MinHeight = 24
+    MinHeight = 5
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 0
+    Shadow.HOffset = 2
     Shadow.VOffset = 1
     Shadow.Transparency = 0
-    Hint = 'Double click on Round button to add handler.'
+    Hint = 
+      'Double click on Box to add a handler. You can '#13#10'change a box rou' +
+      'ndnes by changing a Round Radius '#13#10'property in Object Inspector'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
-    Gradient.StartColor = clSilver
-    Gradient.EndColor = clGray
-    Gradient.Visible = True
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = False
     BitmapMode = bmStretch
     BitmapTransparent = False
     MetaFile.Data = {04000000}
@@ -2663,58 +2732,43 @@ object TatDiagram
     Layer = 0
     LayerName = 'Layer0'
     Transparency = 0
+    OnClick = 'BoxRoundTrainNodesClick'
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = True
+    PressColorEnabled = False
     Static_ = False
-    StartChar = 32
-    EndChar = 127
     Collapsed = False
   end
-  object ButtonRound2: TDgrButtonRound
+  object LabelProgNodes: TDgrLabel
     Tag = 1
-    Left = 382.000000000000000000
-    Top = 226.000000000000000000
-    Width = 78.000000000000000000
-    Height = 50.000000000000000000
+    Left = 18.000000000000000000
+    Top = 234.000000000000000000
+    Width = 178.600000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
-    Color = clSilver
-    SelColor = clSilver
-    ClipText = False
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
     TextCells = <
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -21
+        Font.Height = -32
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Text = '...'
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Rico Siding'
         Clip = False
         WordWrap = False
         DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end
-      item
-        DControlAngle = True
-        Clip = False
-        WordWrap = True
-        DControlFont = True
-        Alignment = taCenter
-        VertAlign = vaTop
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -2723,29 +2777,31 @@ object TatDiagram
         Visible = True
         Transparency = 0
       end>
-    Restrictions = [crNoRotation]
+    Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -21
+    Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
-    MinWidth = 5
-    MinHeight = 24
+    MinWidth = 40
+    MinHeight = 40
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 0
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
-    Hint = 'Double click on Round button to add handler.'
     ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
     Gradient.Direction = grTopBottom
-    Gradient.StartColor = clSilver
-    Gradient.EndColor = clGray
-    Gradient.Visible = True
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
     BitmapMode = bmStretch
     BitmapTransparent = False
-    MetaFile.Data = {04000000}
+    Metafile.Data = {04000000}
     PictureMode = pmStretch
     Transparent = False
     Cursor = crDefault
@@ -2753,58 +2809,42 @@ object TatDiagram
     Layer = 0
     LayerName = 'Layer0'
     Transparency = 0
-    GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = True
     Static_ = False
     StartChar = 32
     EndChar = 127
     Collapsed = False
   end
-  object ButtonRound3: TDgrButtonRound
+  object LabelTrainNodes: TDgrLabel
     Tag = 1
-    Left = 384.000000000000000000
-    Top = 398.000000000000000000
-    Width = 78.000000000000000000
-    Height = 50.000000000000000000
+    Left = 18.000000000000000000
+    Top = 412.000000000000000000
+    Width = 232.600000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
-    Color = clSilver
-    SelColor = clSilver
-    ClipText = False
+    Color = clWhite
+    SelColor = clWhite
+    Shape = bsNoShape
+    LinkPoints = <>
+    ClipText = True
     TextCells = <
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -21
+        Font.Height = -32
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Text = '...'
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'RGS 455 - K27'
         Clip = False
         WordWrap = False
         DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end
-      item
-        DControlAngle = True
-        Clip = False
-        WordWrap = True
-        DControlFont = True
-        Alignment = taCenter
-        VertAlign = vaTop
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -2813,29 +2853,31 @@ object TatDiagram
         Visible = True
         Transparency = 0
       end>
-    Restrictions = [crNoRotation]
+    Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -21
+    Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
-    MinWidth = 5
-    MinHeight = 24
+    MinWidth = 40
+    MinHeight = 40
     Shadow.Visible = False
     Shadow.Color = clGray
-    Shadow.HOffset = 0
+    Shadow.HOffset = 32
     Shadow.VOffset = 1
     Shadow.Transparency = 0
-    Hint = 'Double click on Round button to add handler.'
     ParentShowHint = True
+    Hint = 
+      'Double click on Label to add handler. You can '#13#10'change a label c' +
+      'aption by changing a caption '#13#10'property in Object Inspector'
     Gradient.Direction = grTopBottom
-    Gradient.StartColor = clSilver
-    Gradient.EndColor = clGray
-    Gradient.Visible = True
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
     BitmapMode = bmStretch
     BitmapTransparent = False
-    MetaFile.Data = {04000000}
+    Metafile.Data = {04000000}
     PictureMode = pmStretch
     Transparent = False
     Cursor = crDefault
@@ -2843,116 +2885,21 @@ object TatDiagram
     Layer = 0
     LayerName = 'Layer0'
     Transparency = 0
-    GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = True
     Static_ = False
     StartChar = 32
     EndChar = 127
     Collapsed = False
   end
-  object ButtonRound4: TDgrButtonRound
+  object BoxDropDownFrame: TDgrBox
     Tag = 1
-    Left = 382.000000000000000000
-    Top = 558.000000000000000000
-    Width = 78.000000000000000000
-    Height = 50.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clSilver
-    SelColor = clSilver
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -21
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Text = '...'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end
-      item
-        DControlAngle = True
-        Clip = False
-        WordWrap = True
-        DControlFont = True
-        Alignment = taCenter
-        VertAlign = vaTop
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -21
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 5
-    MinHeight = 24
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 0
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 'Double click on Round button to add handler.'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clSilver
-    Gradient.EndColor = clGray
-    Gradient.Visible = True
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object Box2: TDgrBox
-    Tag = 1
-    Left = 20.000000000000000000
-    Top = 122.000000000000000000
-    Width = 434.000000000000000000
-    Height = 324.000000000000000000
+    Width = 478.000000000000000000
+    Height = 638.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
     Pen.Color = clGray
-    Pen.Width = 3
     ClipText = False
     TextCells = <
       item
@@ -2974,7 +2921,12 @@ object TatDiagram
         Transparency = 0
       end>
     Restrictions = [crNoRotation]
-    DiagramFont = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
     MinWidth = 5
     MinHeight = 5
     Shadow.Visible = False
@@ -2992,34 +2944,34 @@ object TatDiagram
     BitmapTransparent = False
     MetaFile.Data = {04000000}
     PictureMode = pmStretch
-    Transparent = False
+    Transparent = True
     Cursor = crDefault
     Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
+    Layer = 1
+    LayerName = 'Dropdown'
     Transparency = 0
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
-    Static_ = True
+    Static_ = False
     Collapsed = False
   end
-  object Button1: TDgrButton
+  object ButtonDropDownItem0: TDgrButton
     Tag = 1
-    Left = 22.000000000000000000
-    Top = 124.000000000000000000
-    Width = 384.000000000000000000
-    Height = 64.000000000000000000
+    Top = 8.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
+    Pen.Color = clGray
     ClipText = False
     TextCells = <
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -21
+        Font.Height = -32
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3031,7 +2983,7 @@ object TatDiagram
         DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -3043,16 +2995,16 @@ object TatDiagram
     Restrictions = [crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -21
+    Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
     MinWidth = 5
-    MinHeight = 24
+    MinHeight = 36
     Shadow.Visible = False
     Shadow.Color = clSilver
     Shadow.HOffset = 0
-    Shadow.VOffset = 1
+    Shadow.VOffset = 0
     Shadow.Transparency = 0
     Hint = 'Double click on button to add handler.'
     ParentShowHint = True
@@ -3067,27 +3019,29 @@ object TatDiagram
     Transparent = False
     Cursor = crDefault
     Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
+    Layer = 1
+    LayerName = 'Dropdown'
     Transparency = 0
+    OnClick = 'ButtonDropDownItem0Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
-    StartChar = 32
+    StartChar = 0
     EndChar = 127
     Collapsed = False
   end
-  object Box3: TDgrBox
+  object BoxDropdownScrollbar: TDgrBox
     Tag = 1
-    Left = 406.000000000000000000
-    Top = 124.000000000000000000
+    Left = 430.000000000000000000
+    Top = 8.000000000000000000
     Width = 46.000000000000000000
-    Height = 320.000000000000000000
+    Height = 620.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
     SelColor = clSilver
+    Pen.Color = clGray
     ClipText = False
     TextCells = <
       item
@@ -3099,7 +3053,7 @@ object TatDiagram
         DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -3109,13 +3063,18 @@ object TatDiagram
         Transparency = 0
       end>
     Restrictions = [crNoRotation]
-    DiagramFont = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
     MinWidth = 5
     MinHeight = 5
     Shadow.Visible = False
     Shadow.Color = clGray
     Shadow.HOffset = 2
-    Shadow.VOffset = 1
+    Shadow.VOffset = 0
     Shadow.Transparency = 0
     Hint = 'Double click on Box to add a handler.'
     ParentShowHint = True
@@ -3130,8 +3089,8 @@ object TatDiagram
     Transparent = False
     Cursor = crDefault
     Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
+    Layer = 1
+    LayerName = 'Dropdown'
     Transparency = 0
     GradientBackup = False
     PressColor = clBlack
@@ -3139,22 +3098,22 @@ object TatDiagram
     Static_ = False
     Collapsed = False
   end
-  object Button2: TDgrButton
+  object ButtonDropDownItem1: TDgrButton
     Tag = 1
-    Left = 22.000000000000000000
-    Top = 188.000000000000000000
-    Width = 384.000000000000000000
-    Height = 64.000000000000000000
+    Top = 70.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
+    Pen.Color = clGray
     ClipText = False
     TextCells = <
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -21
+        Font.Height = -32
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3166,7 +3125,7 @@ object TatDiagram
         DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -3178,16 +3137,16 @@ object TatDiagram
     Restrictions = [crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -21
+    Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
     MinWidth = 5
-    MinHeight = 24
+    MinHeight = 36
     Shadow.Visible = False
     Shadow.Color = clSilver
     Shadow.HOffset = 0
-    Shadow.VOffset = 1
+    Shadow.VOffset = 0
     Shadow.Transparency = 0
     Hint = 'Double click on button to add handler.'
     ParentShowHint = True
@@ -3202,33 +3161,34 @@ object TatDiagram
     Transparent = False
     Cursor = crDefault
     Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
+    Layer = 1
+    LayerName = 'Dropdown'
     Transparency = 0
+    OnClick = 'ButtonDropdownItem1Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
-    StartChar = 32
+    StartChar = 0
     EndChar = 127
     Collapsed = False
   end
-  object Button3: TDgrButton
+  object ButtonDropDownItem2: TDgrButton
     Tag = 1
-    Left = 22.000000000000000000
-    Top = 252.000000000000000000
-    Width = 384.000000000000000000
-    Height = 64.000000000000000000
+    Top = 132.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
+    Pen.Color = clGray
     ClipText = False
     TextCells = <
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -21
+        Font.Height = -32
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3240,7 +3200,7 @@ object TatDiagram
         DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -3252,16 +3212,16 @@ object TatDiagram
     Restrictions = [crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -21
+    Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
     MinWidth = 5
-    MinHeight = 24
+    MinHeight = 36
     Shadow.Visible = False
     Shadow.Color = clSilver
     Shadow.HOffset = 0
-    Shadow.VOffset = 1
+    Shadow.VOffset = 0
     Shadow.Transparency = 0
     Hint = 'Double click on button to add handler.'
     ParentShowHint = True
@@ -3276,23 +3236,23 @@ object TatDiagram
     Transparent = False
     Cursor = crDefault
     Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
+    Layer = 1
+    LayerName = 'Dropdown'
     Transparency = 0
+    OnClick = 'ButtonDropdownItem2Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
-    StartChar = 32
+    StartChar = 0
     EndChar = 127
     Collapsed = False
   end
-  object Button4: TDgrButton
+  object ButtonDropDownItem3: TDgrButton
     Tag = 1
-    Left = 22.000000000000000000
-    Top = 316.000000000000000000
-    Width = 384.000000000000000000
-    Height = 64.000000000000000000
+    Top = 194.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3302,7 +3262,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -21
+        Font.Height = -32
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3314,7 +3274,7 @@ object TatDiagram
         DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -3326,16 +3286,16 @@ object TatDiagram
     Restrictions = [crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -21
+    Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
     MinWidth = 5
-    MinHeight = 24
+    MinHeight = 36
     Shadow.Visible = False
     Shadow.Color = clSilver
     Shadow.HOffset = 0
-    Shadow.VOffset = 1
+    Shadow.VOffset = 0
     Shadow.Transparency = 0
     Hint = 'Double click on button to add handler.'
     ParentShowHint = True
@@ -3350,33 +3310,184 @@ object TatDiagram
     Transparent = False
     Cursor = crDefault
     Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
+    Layer = 1
+    LayerName = 'Dropdown'
     Transparency = 0
+    OnClick = 'ButtonDropdownItem3Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
-    StartChar = 32
+    StartChar = 0
     EndChar = 127
     Collapsed = False
   end
-  object Button5: TDgrButton
+  object ButtonDropDownItem4: TDgrButton
     Tag = 1
-    Left = 22.000000000000000000
+    Top = 256.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Pen.Color = clGray
+    ClipText = False
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -32
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -32
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 36
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 0
+    Shadow.Transparency = 0
+    Hint = 'Double click on button to add handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 1
+    LayerName = 'Dropdown'
+    Transparency = 0
+    OnClick = 'ButtonDropdownItem4Click'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object ButtonDropDownItem5: TDgrButton
+    Tag = 1
+    Top = 318.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Pen.Color = clGray
+    ClipText = False
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -32
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -32
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 36
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 0
+    Shadow.Transparency = 0
+    Hint = 'Double click on button to add handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 1
+    LayerName = 'Dropdown'
+    Transparency = 0
+    OnClick = 'ButtonDropdownItem5Click'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object ButtonDropDownItem6: TDgrButton
+    Tag = 1
     Top = 380.000000000000000000
-    Width = 384.000000000000000000
-    Height = 64.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
     SelColor = clWhite
+    Pen.Color = clGray
     ClipText = False
     TextCells = <
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -21
+        Font.Height = -32
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3388,7 +3499,7 @@ object TatDiagram
         DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = True
+        RotateFont = False
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -3400,16 +3511,16 @@ object TatDiagram
     Restrictions = [crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -21
+    Font.Height = -32
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
     MinWidth = 5
-    MinHeight = 24
+    MinHeight = 36
     Shadow.Visible = False
     Shadow.Color = clSilver
     Shadow.HOffset = 0
-    Shadow.VOffset = 1
+    Shadow.VOffset = 0
     Shadow.Transparency = 0
     Hint = 'Double click on button to add handler.'
     ParentShowHint = True
@@ -3424,14 +3535,240 @@ object TatDiagram
     Transparent = False
     Cursor = crDefault
     Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
+    Layer = 1
+    LayerName = 'Dropdown'
     Transparency = 0
+    OnClick = 'ButtonDropdownItem6Click'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
-    StartChar = 32
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object ButtonDropDownItem7: TDgrButton
+    Tag = 1
+    Top = 442.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Pen.Color = clGray
+    ClipText = False
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -32
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -32
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 36
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 0
+    Shadow.Transparency = 0
+    Hint = 'Double click on button to add handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 1
+    LayerName = 'Dropdown'
+    Transparency = 0
+    OnClick = 'ButtonDropdownItem7Click'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object ButtonDropDownItem8: TDgrButton
+    Tag = 1
+    Top = 504.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Pen.Color = clGray
+    ClipText = False
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -32
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -32
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 36
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 0
+    Shadow.Transparency = 0
+    Hint = 'Double click on button to add handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 1
+    LayerName = 'Dropdown'
+    Transparency = 0
+    OnClick = 'ButtonDropdownItem8Click'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 0
+    EndChar = 127
+    Collapsed = False
+  end
+  object ButtonDropDownItem9: TDgrButton
+    Tag = 1
+    Top = 566.000000000000000000
+    Width = 428.000000000000000000
+    Height = 62.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clWhite
+    SelColor = clWhite
+    Pen.Color = clGray
+    ClipText = False
+    TextCells = <
+      item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -32
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Text'
+        Clip = False
+        WordWrap = False
+        DControlFont = False
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -32
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 36
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 0
+    Shadow.Transparency = 0
+    Hint = 'Double click on button to add handler.'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clSilver
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 1
+    LayerName = 'Dropdown'
+    Transparency = 0
+    OnClick = 'ButtonDropDownItem9Click'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 0
     EndChar = 127
     Collapsed = False
   end
@@ -3449,7 +3786,7 @@ SCREEN_SECTION
 		ScreenGridColor=clBlack
 
 	ScreenName=ScreenDetectingNodes
-		CurrentLayer=0
+		CurrentLayer=1
 		StartScreen=False
 		StaticScreen=False
 		ScreenColor=clGray
@@ -3599,11 +3936,11 @@ end;
 GET_DATA_CODE_END
 
 THRESHOLD     = 800
-XMIN          = 149
-XMAX          = 776
-YMIN          = 68
-YMAX          = 765
-CALIBRATION   = Manual
+XMIN          = 157
+XMAX          = 780
+YMIN          = 85
+YMAX          = 749
+CALIBRATION   = Preset
 TP_ENABLE     = 1
 
 RSRC_FORMAT   = CODE

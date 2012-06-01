@@ -77,7 +77,7 @@ begin
         STATE_SPLASH_SCREEN :
           begin
             Inc(i);
-            if i = 20 then
+            if i = 2 then
             begin
               BoxRoundProgressBar.Width := BoxRoundProgressBar.Width + 1;
               DrawRoundBox(@BoxRoundProgressBar);
