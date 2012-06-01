@@ -20,7 +20,6 @@ procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func
   procedure StartCANMessageEngine; external;
   procedure EnableCANInterrupt(Enable: Boolean); external;
 // defined in the NMRAnetStateMachine.mpas file
-
   function TryTransmitNMRABusLayerMsg(Buffer: PCANBuffer; VariableField: DWord; DestinationAlias, SourceAliasID: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean; external;
 
 implementation
@@ -237,7 +236,7 @@ begin
       if DatagramReceive.BufferOverflowList[i] <> 0 then
       begin
         Datagram.Alias := DatagramReceive.BufferOverflowList[i];
-        NMRANetUtilities_LoadDatagramResultBytes(@Datagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
+        NMRANetUtilities_LoadDatagramResultBytes(@Datagram, MTI_TYPE_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
         if TrySendDatagramResponse(@Datagram, SourceAliasID, DATAGRAM_BUFFER_EMPTY) then
           DatagramReceive.BufferOverflowList[i] := 0;
         Exit;
@@ -420,12 +419,12 @@ begin
   if Datagram^.State = DATAGRAM_BUFFER_TRANSFER_COMPLETE then
   begin
     case Datagram^.ErrorCode.MTI of
-       MTI_DATAGRAM_RECIEVED_OK :
+       MTI_TYPE_DATAGRAM_RECIEVED_OK :
          begin
            Datagram^.State := DATAGRAM_BUFFER_EMPTY;
            Datagram^.iStateMachine := NextState_Okay;
          end;
-       MTI_DATAGRAM_REJECTED :                                            // Rejected, decode what the issue was
+       MTI_TYPE_DATAGRAM_REJECTED :                                            // Rejected, decode what the issue was
          begin
 
            if DATAGRAM_RESULT_REJECTED_RESEND_MASK[0] and Datagram^.ErrorCode.SubType[1] <> 0 then
@@ -515,7 +514,7 @@ procedure ProcessAbandonedDatagram(Datagram: PDatagramBuffer; AbandonState, Next
 begin
   if Datagram^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then
   begin
-    NMRANetUtilities_LoadDatagramResultBytes(Datagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER);
+    NMRANetUtilities_LoadDatagramResultBytes(Datagram, MTI_TYPE_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER);
     Datagram^.iStateMachine := AbandonState    // Too long between datagram frames, it is abandoned
   end else
     Datagram^.iStateMachine := NextState;
@@ -530,7 +529,14 @@ end;
 //
 //  Description: The StateMachine index is stored within each Datagram Buffer. As
 //               such a hung datagram due to a non-responsve target will not hang up
-//               other datagrams being dealt with
+//               other datagrams being dealt with.
+//               The CAN layer interrupt handles the CAN recipt of the datgram over many frames
+//               Once the datagram is complete it sets the DATAGRAM_BUFFER_TRANSFER_COMPLETE
+//               state of the datagram and that is the end. The main loop statemachine detects
+//               the DATAGRAM_BUFFER_TRANSFER_COMPLETE flag and then dispatches it depending on
+//               its code, necessary responses to the sender are also handled automatically here.
+//               It also detect if the DATAGRAM_BUFFER_IN_PROCESS flag has been set
+//               too long and if so calls it abandon then frees the buffer
 // *****************************************************************************
 procedure NMRAnetDatagrams_ProcessReceive;
 var
@@ -553,8 +559,10 @@ begin
 
       STATE_DATAGRAM_RECEIVE_COMPLETE  :             // ProcessReceiveInterrupt has completed the datagram on the CAN layer
         begin                                        // it has filled in the ErrorCode within that Statemachine during Receive
+        //  if ActiveDatagram^.ErrorCode.MTI and DATAGRAM_TYPE_TWO_BYTE_CMD_MASK <>
+        //  if ActiveDatagram^.ErrorCode.MTI and DATAGRAM_TYPE_SIX_BYTE_CMD_MASK <>     TODO DEALING WITH THIS CASES. JUNE 1 2012 NO KNOWN USES DEFINED
           case ActiveDatagram^.ErrorCode.MTI of
-            MTI_DATAGRAM_RECIEVED_OK : begin
+            MTI_TYPE_DATAGRAM_RECIEVED_OK : begin
                                           case ActiveDatagram^.Databytes[0] of
                                             DATAGRAM_TYPE_CONFIGURATION   : DispatchSpecialDatagramMemConfiguration(ActiveDatagram, STATE_DATAGRAM_HANDLED_MESSASGE, STATE_DATAGRAM_UNHANDLED_MESSAGE);      // Memory Configuration Protocol
                                             DATAGRAM_TYPE_TRAIN_CONTROL   : DispatchSpecialDatagramTrainControl(ActiveDatagram, STATE_DATAGRAM_HANDLED_MESSASGE, STATE_DATAGRAM_UNHANDLED_MESSAGE)          // Train Control Protocol
@@ -562,7 +570,7 @@ begin
                                              DispatchDatagram(ActiveDatagram, STATE_DATAGRAM_HANDLED_MESSASGE, STATE_DATAGRAM_UNHANDLED_MESSAGE);  // Return Not Accepted for any datagram types not handled
                                           end;
              end;
-            MTI_DATAGRAM_REJECTED    : begin
+            MTI_TYPE_DATAGRAM_REJECTED    : begin
                                            ActiveDatagram^.iStateMachine := STATE_DATAGRAM_SENDING_RESPONSE; // The Receive Statemachine has already loaded up the ErrorCode field with the reason for the Rejection
                                        end;
           end
@@ -570,13 +578,13 @@ begin
 
       STATE_DATAGRAM_HANDLED_MESSASGE :
         begin
-          NMRANetUtilities_LoadDatagramResultBytes(ActiveDatagram, MTI_DATAGRAM_RECIEVED_OK, nil);
+          NMRANetUtilities_LoadDatagramResultBytes(ActiveDatagram, MTI_TYPE_DATAGRAM_RECIEVED_OK, nil);
           ActiveDatagram^.iStateMachine := STATE_DATAGRAM_SENDING_RESPONSE;
         end;
 
       STATE_DATAGRAM_UNHANDLED_MESSAGE :
         begin
-          NMRANetUtilities_LoadDatagramResultBytes(ActiveDatagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED);
+          NMRANetUtilities_LoadDatagramResultBytes(ActiveDatagram, MTI_TYPE_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED);
           ActiveDatagram^.iStateMachine := STATE_DATAGRAM_SENDING_RESPONSE;
         end;
 
@@ -639,13 +647,13 @@ end;
 // *****************************************************************************
 procedure UpdateFrameCount(Datagram: PDatagramBuffer);
 begin
-  if Datagram^.ErrorCode.MTI = MTI_DATAGRAM_RECIEVED_OK then                     // If in Error has already failed this function
+  if Datagram^.ErrorCode.MTI = MTI_TYPE_DATAGRAM_RECIEVED_OK then                     // If in Error has already failed this function
   begin
     Inc(Datagram^.iFrameCount);                                                 // Next Frame
     Datagram^.iWatchdog := 0;                                                   // Reset the Watchdog since the source connected again
     if Datagram^.iFrameCount >= DATAGRAM_MAX_FRAME_COUNT then                   // Source sent too many frames
     begin
-      NMRANetUtilities_LoadDatagramResultBytes(Datagram, MTI_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER); // Ready for a "Frame out of Order" Response
+      NMRANetUtilities_LoadDatagramResultBytes(Datagram, MTI_TYPE_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER); // Ready for a "Frame out of Order" Response
       Datagram^.iFrameCount := 0;
     end
   end;
@@ -664,7 +672,7 @@ procedure StoreBytes(Datagram: PDatagramBuffer; var Buffer: TCANBuffer);
 var
   i, Offset: Integer;
 begin
-  if Datagram^.ErrorCode.MTI = MTI_DATAGRAM_RECIEVED_OK then        // Only store if thre is no error
+  if Datagram^.ErrorCode.MTI = MTI_TYPE_DATAGRAM_RECIEVED_OK then        // Only store if thre is no error
   begin
     Offset := Datagram^.iByteCount;
     for i := 0 to Buffer.DataCount - 1 do
@@ -719,7 +727,7 @@ begin
     if DatagramReceive.List[i].State = DATAGRAM_BUFFER_EMPTY then
     begin                                                                       // Grab the first empty buffer
       Datagram := @DatagramReceive.List[i];                                     // It is NOT initialized
-      Datagram^.ErrorCode.MTI := MTI_DATAGRAM_RECIEVED_OK;
+      Datagram^.ErrorCode.MTI := MTI_TYPE_DATAGRAM_RECIEVED_OK;
       Result := True
     end;
     Inc(i);

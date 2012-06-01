@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRABus_Xpressnet.mpas
+Value=NMRAnetAppDefines.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -39,8 +39,11 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=1
+Count=4
 File0=NMRABus_Xpressnet.mpas
+File1=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
+File2=NMRAnetAppDefines.mpas
+File3=..\Command Station\NMRAnetAppDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

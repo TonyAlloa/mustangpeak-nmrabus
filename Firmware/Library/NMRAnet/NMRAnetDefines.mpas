@@ -99,6 +99,8 @@ const
   FT_EVENT_LEARN                    = $08ACF000;                                // Databytes = EventID
   FT_PC_EVENT_REPORT                = $08ADF000;                                // Infamouse PCER
   
+  FT_PROTOCOL_ACDI                  = $0E000000;
+  
   MASK_DEST_ALIAS                   = $00FFF000;                                // Masks out just the Destination Alias Address
   MASK_SOURCE_ALIAS                 = $00000FFF;                                // Masks out just the Source Alias Address
 
@@ -117,26 +119,26 @@ const
   PIV_PROTOCOL_ID_DISPLAY: TPIVProtocolValueArray            = ($00, $20, $00, $00, $00, $00);
   
   // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
-  MTI_VERIFY_NODE_ID_NUMBER_DEST       = $0A;                                   // Sub-Type (in first Databyte) for a MTI with a destination in the header
-  MTI_OPTIONAL_INTERACTION_REJECTED    = $0C;
-  MTI_TERMINATE_DUE_TO_ERROR           = $0D;
+  MTI_TYPE_VERIFY_NODE_ID_NUMBER_DEST       = $0A;                                   // Sub-Type (in first Databyte) for a MTI with a destination in the header
+  MTI_TYPE_OPTIONAL_INTERACTION_REJECTED    = $0C;
+  MTI_TYPE_TERMINATE_DUE_TO_ERROR           = $0D;
   // Protocol Support MTIs
-  MTI_PROTOCOL_SUPPORT_QUERY           = $2E;
-  MTI_PROTOCOL_SUPPORT_REPLY           = $2F;                                   // Datagram DataBytes: 2F xx vv vv vv vv vv vv
+  MTI_TYPE_PROTOCOL_SUPPORT_QUERY           = $2E;
+  MTI_TYPE_PROTOCOL_SUPPORT_REPLY           = $2F;                                   // Datagram DataBytes: 2F xx vv vv vv vv vv vv
   // Event Exchange MTIs
-  MTI_IDENTIFY_EVENTS                  = $2B;
-  // Other MTIs
-  MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;
-  MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;
+  MTI_TYPE_IDENTIFY_EVENTS                  = $2B;
+  // Abbreviated Configuration Decription Information
+  MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;                              // Abbreviated Configuration Decription Information Request, make sure set PIP value if supported
+  MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;                              // Abbreviated Configuration Decription Information Reply
   // Datagram MTIs
-  MTI_DATAGRAM_RECIEVED_OK             = $4C;
-  MTI_DATAGRAM_REJECTED                = $4D;
+  MTI_TYPE_DATAGRAM_RECIEVED_OK             = $4C;
+  MTI_TYPE_DATAGRAM_REJECTED                = $4D;
   // Stream MTIs
-  MTI_STREAM_INITIATE_REQUEST          = $4E;
-  MTI_STREAM_INITIATE_REPLY            = $4F;
-  MTI_STREAMDATA_PROCEED               = $6A;
-  MTI_STREAMDATA_COMPLETE              = $6B;
-  
+  MTI_TYPE_STREAM_INITIATE_REQUEST          = $4E;
+  MTI_TYPE_STREAM_INITIATE_REPLY            = $4F;
+  MTI_TYPE_STREAMDATA_PROCEED               = $6A;
+  MTI_TYPE_STREAMDATA_COMPLETE              = $6B;
+
   // NMRABus States
   BS_INHIBITED         = $01;                                                   // CAN Frame Layer is inhibited
   BS_PERMITED          = $02;                                                   // CAN Frame Layer is permitted (Node ID's resolved with bus)
@@ -175,6 +177,8 @@ const
   STATE_NMRABUS_RESPONSE_AMD                                = 13;
   STATE_NMRABUS_RESPONSE_PC_EVENT_REPORT                    = 14;
   STATE_NMRABUS_VERIFIED_NODE_ID                            = 15;
+  STATE_NMRABUS_ACDI_REQUEST                                = 16;
+  STATE_NMRABUS_ACDI_REPLY                                  = 17;
   
   LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
   
@@ -199,10 +203,12 @@ const
   CRC_DATAGRAM_REJECTED                     = $0007;                            //
   CRC_CONSUMER_IDENTIFIED                   = $0008;                            // Received a Consumer Idendified message addressed to us
   CRC_PRODUCER_IDENTIFIED                   = $0009;                            // Received a Producer Identified message addressed to us
-  CRC_AMR                                   = $0010;                            // Received a Alias Map Reset
-  CRC_AMD                                   = $0011;                            // Received an Alias Map Definition that did NOT have a duplicate ID to ours (that would force a SRC_DUPLICATE_NODE_ID Response
-  CRC_PC_EVENT_REPORT                       = $0012;                            // Received a Producer Consumer Event Report
-  CRC_VERIFIED_NODE_ID                      = $0013;                            // Received a Verified Node ID Message
+  CRC_AMR                                   = $000A;                            // Received a Alias Map Reset
+  CRC_AMD                                   = $000B;                            // Received an Alias Map Definition that did NOT have a duplicate ID to ours (that would force a SRC_DUPLICATE_NODE_ID Response
+  CRC_PC_EVENT_REPORT                       = $000C;                            // Received a Producer Consumer Event Report
+  CRC_VERIFIED_NODE_ID                      = $000D;                            // Received a Verified Node ID Message
+  CRC_ACDI_REQUEST                          = $000E;                            // Recevied a Abbreviated Configuration Description Information Request
+  CRC_ACDI_REPLY                            = $000F;                            // Recevied a Abbreviated Configuration Description Information Reply
 
 type
   TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used

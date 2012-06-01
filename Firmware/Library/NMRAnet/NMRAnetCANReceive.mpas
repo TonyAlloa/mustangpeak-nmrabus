@@ -397,6 +397,38 @@ begin
 end;
 
 // ****************************************************************************
+// procedure DispatchAbbreviatedCDIRequest
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Simple Response
+//
+// ****************************************************************************
+procedure DispatchAbbreviatedCDIRequest(CANBuffer: PCANBuffer);
+begin
+  StoreComplexResponse(CRC_ACDI_REQUEST, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 0);
+end;
+
+// ****************************************************************************
+// procedure DispatchAbbreviatedCDIReply
+//
+//  Response Layer:
+//                 NMRAnet Layer
+//
+//  Response Type:
+//                 Simple Response
+//
+// ****************************************************************************
+procedure DispatchAbbreviatedCDIReply(CANBuffer: PCANBuffer);
+begin
+  StoreComplexResponse(CRC_ACDI_REPLY, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+end;
+
+
+
+// ****************************************************************************
 // procedure DispatchProtocolSupportInquiry
 //
 //  Response Layer:
@@ -467,19 +499,21 @@ begin
   
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
   begin
+  //  UART1_Write_Text('To Us'+LF);
+    
     case CANBuffer^.Databytes[0] of
-      MTI_VERIFY_NODE_ID_NUMBER_DEST       : DispatchVerifyNodeID(CANBuffer);
-      MTI_PROTOCOL_SUPPORT_QUERY           : DispatchProtocolSupportInquiry(CANBuffer);
+      MTI_TYPE_VERIFY_NODE_ID_NUMBER_DEST       : DispatchVerifyNodeID(CANBuffer);
+      MTI_TYPE_PROTOCOL_SUPPORT_QUERY           : DispatchProtocolSupportInquiry(CANBuffer);
 //      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
 //      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
 //      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
-      MTI_IDENTIFY_EVENTS                  : DispatchIdentifyEvents;
-      MTI_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // TODO
-      MTI_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;   // TODO
-      MTI_DATAGRAM_RECIEVED_OK             : DispatchDatagramReceivedOk(CANBuffer);
-      MTI_DATAGRAM_REJECTED                : DispatchDatagramRejected(CANBuffer)
+      MTI_TYPE_IDENTIFY_EVENTS                  : DispatchIdentifyEvents;
+      MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REQUEST : DispatchAbbreviatedCDIRequest(CANBuffer);
+      MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REPLY   : DispatchAbbreviatedCDIReply(CANBuffer);
+      MTI_TYPE_DATAGRAM_RECIEVED_OK             : DispatchDatagramReceivedOk(CANBuffer);
+      MTI_TYPE_DATAGRAM_REJECTED                : DispatchDatagramRejected(CANBuffer)
     else begin
-        DataBytes[0] := MTI_OPTIONAL_INTERACTION_REJECTED;
+        DataBytes[0] := MTI_TYPE_OPTIONAL_INTERACTION_REJECTED;
         StoreComplexResponse(CRC_SEND_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
       end;
     end

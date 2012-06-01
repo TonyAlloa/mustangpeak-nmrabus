@@ -1,0 +1,56 @@
+unit NMRAnetAbbreviatedConfigurationProtocolDefines;
+
+const
+  ADCDI_VERSION = 1;
+  
+const
+  // Buffer State
+  ACDI_BUFFER_STATE_EMPTY                                  = 0;
+  ACDI_BUFFER_STATE_PROCESSING                             = 1;
+  
+  // Statemachine State
+  STATE_ACDI_START                                         = 0;
+  STATE_ACDI_TRANSMIT_CHARS                                = 1;
+
+  LEN_ACDI_BUFFER_ARRAY                                    = 4;                 // Can send up to 4 requests for ACDI at the same time
+  
+  ACDI_VERSION                                             = 1;
+  
+  ACDI_TRANSFER_MFG                                        = 1;
+  ACDI_MFG_NULL                                            = 2;
+  ACDI_TRANSFER_MFG_NAME                                   = 3;
+  ACDI_MFG_NAME_NULL                                       = 4;
+  ACDI_TRANSMFER_MFG_HW_VER                                = 5;
+  ACDI_MFG_HW_NULL                                         = 6;
+  ACDI_TRANSFER_MFG_SW_VER                                 = 7;
+  ACDI_MFG_SW_NULL                                         = 8;
+  ACDI_TRANSFER_USER_NAME                                  = 9;
+  ACDI_USER_NAME_NULL                                      = 10;
+  ACDI_TRANSMFER_USER_DESC                                 = 11;
+  ACDI_USER_DESC_NULL                                      = 12;
+  ACDI_TRANSFER_COMPLETE                                   = 13;
+  
+type
+
+  TACDI_Buffer = record   
+    iNextChar: Word;                                                            // Next character is stored for the ACDI string
+    DestAlias: Word;                                                            // Who to send it to
+    SourceAlias: Word;                                                          // Who is sending it
+    iState: Byte;                                                               // Statemachine Index of buffer
+    State: Byte;                                                                // State of the buffer see the ACDI_STATE_xxxx constants
+    iTransferState: Byte;                                                       // Flags Complete Transfer for each string   See ACDI_COMPLETE_xxxx flags
+  end;
+  PACDI_Buffer = ^TACDI_Buffer;
+  
+  TACDI_BufferInfo = record
+    List: array[0..LEN_ACDI_BUFFER_ARRAY-1] of TACDI_Buffer;
+    iActiveBuffer: Byte;
+  end;
+  
+var
+   ACDI_BufferList: TACDI_BufferInfo;
+
+
+implementation
+
+end.

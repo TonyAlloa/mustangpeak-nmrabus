@@ -37,7 +37,9 @@ uses
   NMRAnetDatagrams,
   NMRAnetDatagramDefines,
   NMRAnetConfigurationProtocol,
-  NMRAnetConfigurationProtocolDefines;
+  NMRAnetConfigurationProtocolDefines,
+  NMRAnetAbbreviatedConfigurationProtocol,
+  NMRAnetAbbreviatedConfigurationProtocolDefines;
 
 {$I Options.inc}
 
@@ -105,7 +107,7 @@ var
 begin
   if DestinationAliasID <> 0 then
   begin
-    DataBytes[0] := MTI_VERIFY_NODE_ID_NUMBER_DEST;
+    DataBytes[0] := MTI_TYPE_VERIFY_NODE_ID_NUMBER_DEST;
     Result := TryTransmitNMRABusLayerMsg(Buffer, FT_VERIFY_NODE_ID_NUMBER_DEST, DestinationAliasID, SourceAliasID, 1, @DataBytes);
   end else
     Result := TryTransmitNMRABusLayerMsg(Buffer, FT_VERIFY_NODE_ID_NUMBER, 0, SourceAliasID, 0, nil);
@@ -210,6 +212,7 @@ begin
   NMRAnetDatagrams_Initialize;
   NMRAnetCANReceive_Initialize;
   NMRAnetConfigurationProtocol_Initialize;
+  NMRAnetAbbreviatedConfigurationProtocol_Initialize;
   SimpleResponseCallbackFunc := PSimpleResponseCallbackFunc( nil);
   ComplexResponseCallbackFunc := PComplexResponseCallbackFunc( nil);
   NMRABus.State := 0;
@@ -487,6 +490,22 @@ begin
     NMRABus.Responses.iState := NextState
 end;
 
+procedure SendACDI_Request(nCode, SourceAliasID: Word; NextState: Byte);
+var
+  Response: PQueuedResponse;
+begin
+  Response := FindStoredComplexResponse(nCode);                                 // Look for Datagram Responses from Nodes this node sent a Datagram to
+  if Response <> nil then
+  begin
+    if NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(SourceAliasID, Response^.Alias) then
+    begin
+      Response^.nCode := CRC_EMPTY;
+    end;
+  end;
+  NMRABus.Responses.iState := NextState
+end;
+
+
 // *****************************************************************************
 //  procedure DispatchDatagramResponse
 //
@@ -580,7 +599,8 @@ begin
                                                                      NMRABus.Responses.Tag := 0;   // Get ready for next state
                                                                     end;
         STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS        : SendNMRALayerSimpleSendAllConsumerProducer(Buffer, SourceAliasID, STATE_NMRABUS_RESPONSE_SEND_OPTIONAL_INTERACTION_REJECTED);
-        STATE_NMRABUS_RESPONSE_SEND_OPTIONAL_INTERACTION_REJECTED : SendNMRAnetLayerComplexResponse(Buffer, FT_OPTIONAL_INTERACTION_REJECTED, ADDRESSED, SourceAliasID, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_DATAGRAM_RECEIVED_OK);
+        STATE_NMRABUS_RESPONSE_SEND_OPTIONAL_INTERACTION_REJECTED : SendNMRAnetLayerComplexResponse(Buffer, FT_OPTIONAL_INTERACTION_REJECTED, ADDRESSED, SourceAliasID, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_ACDI_REQUEST);
+        STATE_NMRABUS_ACDI_REQUEST                                : SendACDI_Request(CRC_ACDI_REQUEST, SourceAliasID, STATE_NMRABUS_DATAGRAM_RECEIVED_OK);
         
         // These responses do NOT need a predefined response message sent
         STATE_NMRABUS_DATAGRAM_RECEIVED_OK                        : DispatchDatagramResponse(CRC_DATAGRAM_RECEIVED_OK, STATE_NMRABUS_DATAGRAM_REJECTED);
@@ -591,6 +611,12 @@ begin
         STATE_NMRABUS_RESPONSE_AMD                                : DispatchMessageResponse(CRC_AMD, STATE_NMRABUS_RESPONSE_PC_EVENT_REPORT);
         STATE_NMRABUS_RESPONSE_PC_EVENT_REPORT                    : DispatchMessageResponse(CRC_PC_EVENT_REPORT, STATE_NMRABUS_VERIFIED_NODE_ID);
         STATE_NMRABUS_VERIFIED_NODE_ID                            : DispatchMessageResponse(CRC_VERIFIED_NODE_ID, STATE_NMRABUS_RESPONSE_SEND_RID)
+
+   //     STATE_NMRABUS_ACDI_REPLY                                  :
+        
+        
+    //    CRC_ACDI_REQUEST
+        
       else
         NMRABus.Responses.iState := STATE_NMRABUS_RESPONSE_SEND_RID;
       end;
@@ -698,6 +724,7 @@ begin
         NMRAnetDatagrams_ProcessReceive;                                        // Handle Datagrams coming in
         NMRAnetDatagrams_ProcessTransmit(NMRABus.Node.AliasID);                 // Handle Datagrams going out
         NMRAnetConfigurationProtocol_Process;
+        NMRAnetAbbreviatedConfigurationProtocol_Process;
       end;
     STATE_NMRABUS_INHIBITED :
       begin

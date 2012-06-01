@@ -8,19 +8,14 @@ uses
 {$I Options.inc}
 
 const
-{
-  PIV_PROTOCOL_ID_PROTOCOL: TPIVProtocolValueArray           = ($80, $00, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_DATAGRAM: TPIVProtocolValueArray           = ($40, $00, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_STREAM: TPIVProtocolValueArray             = ($20, $00, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_CONFIGURATION: TPIVProtocolValueArray      = ($10, $00, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_RESERVATION: TPIVProtocolValueArray        = ($08, $00, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_PRODUCER_CONSUMER: TPIVProtocolValueArray  = ($04, $00, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_IDENTIFICATION: TPIVProtocolValueArray     = ($02, $00, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_TEACH_LEARN: TPIVProtocolValueArray        = ($01, $00, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_REMOTE_BUTTON: TPIVProtocolValueArray      = ($00, $80, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_CDI: TPIVProtocolValueArray                = ($00, $40, $00, $00, $00, $00);
-  PIV_PROTOCOL_ID_DISPLAY: TPIVProtocolValueArray            = ($00, $20, $00, $00, $00, $00);
- }
+
+  ABBREVIATED_CDI_MFG = 'Mustangpeak';
+  ABBREVIATED_CDI_MFG_NAME = 'DCC Programming Booster';
+  ABBREVIATED_CDI_MFG_HW_VER = '1.0.0';
+  ABBREVIATED_CDI_MFG_SW_VER = '0.0.1';
+
+  ABBREVIATED_CDI_USER_NAME = 'Rico District';
+  ABBREVIATED_CDI_USER_DISC = 'Mustangpeak DCC Programming Booster Prototype';
 
   PIV_SUPPORTED_PROTOCOL_COUNT = 4;    // UPDATED THIS IF ADDING OR SUBTRACTING SUPPORTED PROTOCOLS
   PIV_SUPPORTED_PROTOCOLS: array[0..PIV_SUPPORTED_PROTOCOL_COUNT-1] of TPIVProtocolValueArray = (
