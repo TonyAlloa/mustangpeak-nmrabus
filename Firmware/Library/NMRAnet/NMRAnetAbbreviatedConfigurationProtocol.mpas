@@ -19,6 +19,14 @@ function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(SourceAlias, Dest
 
 implementation
 
+// *****************************************************************************
+//  procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize;
 var
   i: Integer;
@@ -34,6 +42,14 @@ begin
   end;
 end;
 
+// *****************************************************************************
+//  procedure NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(SourceAlias, DestAlias: Word): Boolean;
 var
   i: Integer;
@@ -54,6 +70,69 @@ begin
   end;
 end;
 
+// *****************************************************************************
+//  procedure NullChar
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NullChar(CANBuffer: PCANBuffer; Buffer: PACDI_Buffer; NextState: Byte);
+begin
+  CANBuffer^.DataBytes[CANBuffer^.DataCount] := #0;
+  Buffer^.iNextChar := 0;
+  Inc(CANBuffer^.DataCount);
+  Buffer^.iTransferState := NextState;
+end;
+
+// *****************************************************************************
+//  procedure LoadChars
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure LoadChars(CANBuffer: PCANBuffer; Buffer: PACDI_Buffer; Str: ^Char; StringLen: Word; NextState: Byte);
+begin
+  if Buffer^.iNextChar < StringLen then
+  begin
+    CANBuffer^.DataBytes[CANBuffer^.DataCount] := Str^;
+    Inc(Str);
+    Inc(Buffer^.iNextChar);
+    Inc(CANBuffer^.DataCount);
+  end else
+    Buffer^.iTransferState := NextState;
+end;
+
+// *****************************************************************************
+//  procedure CheckForVersionInsertion
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure CheckForVersionInsertion(CANBuffer: PCANBuffer; Buffer: PACDI_Buffer; TestState: Byte);
+begin
+  // First part of the Constant Manufacturing Section needs Version ID
+  if (Buffer^.iNextChar = 0) and (Buffer^.iTransferState = TestState) then
+  begin
+    CANBuffer^.DataBytes[CANBuffer^.DataCount] := ACDI_VERSION;
+    Inc(CANBuffer^.DataCount);
+  end;
+end;
+
+
+// *****************************************************************************
+//  procedure NMRAnetAbbreviatedConfigurationProtocol_Process
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRAnetAbbreviatedConfigurationProtocol_Process;
 var
   ActiveBuffer: PACDI_Buffer;
@@ -74,138 +153,36 @@ begin
       begin
         if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
         begin
-
           Buffer.DataCount := 0;
           Buffer.DataBytes[Buffer.DataCount] := MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REPLY;
           Inc(Buffer.DataCount);
-          
-          // First part of the Constant Manufacturing Section needs Version ID
-          if (ActiveBuffer^.iNextChar = 0) and (ActiveBuffer^.iTransferState = ACDI_TRANSFER_MFG) then
-          begin
-            Buffer.DataBytes[Buffer.DataCount] := ACDI_VERSION;
-            Inc(Buffer.DataCount);
-          end;
+
+          CheckForVersionInsertion(@Buffer, ActiveBuffer, ACDI_TRANSFER_MFG);    // First part of the Constant Manufacturing Section needs Version ID
           
           while (ActiveBuffer^.iTransferState <> ACDI_TRANSFER_COMPLETE) and (Buffer.DataCount < 8) do
           begin
-            // First part of the User Section needs the Version ID as well
-            if (ActiveBuffer^.iNextChar = 0) and (ActiveBuffer^.iTransferState = ACDI_TRANSFER_USER_NAME) then
-            begin
-              Buffer.DataBytes[Buffer.DataCount] := ACDI_VERSION;
-              Inc(Buffer.DataCount);
-            end;
+            CheckForVersionInsertion(@Buffer, ActiveBuffer, ACDI_TRANSFER_USER_NAME);       // First part of the User Section needs the Version ID as well
 
-          
             case ActiveBuffer^.iTransferState of
-              ACDI_TRANSFER_MFG :
-                begin
-                  if ActiveBuffer^.iNextChar < Length(ABBREVIATED_CDI_MFG) then
-                  begin
-                    Buffer.DataBytes[Buffer.DataCount] := ABBREVIATED_CDI_MFG[ActiveBuffer^.iNextChar];
-                    Inc(ActiveBuffer^.iNextChar);
-                    Inc(Buffer.DataCount);
-                  end else
-                    ActiveBuffer^.iTransferState := ACDI_MFG_NULL;
-                end;
-              ACDI_MFG_NULL :
-              begin
-                Buffer.DataBytes[Buffer.DataCount] := #0;
-                ActiveBuffer^.iNextChar := 0;
-                Inc(Buffer.DataCount);
-                ActiveBuffer^.iTransferState := ACDI_TRANSFER_MFG_NAME;
-              end;
-              ACDI_TRANSFER_MFG_NAME :
-                begin
-                  if ActiveBuffer^.iNextChar < Length(ABBREVIATED_CDI_MFG_NAME) then
-                  begin
-                    Buffer.DataBytes[Buffer.DataCount] := ABBREVIATED_CDI_MFG_NAME[ActiveBuffer^.iNextChar];
-                    Inc(ActiveBuffer^.iNextChar);
-                    Inc(Buffer.DataCount);
-                  end else
-                    ActiveBuffer^.iTransferState := ACDI_MFG_NAME_NULL;
-                end;
-              ACDI_MFG_NAME_NULL :
-                begin
-                  Buffer.DataBytes[Buffer.DataCount] := #0;
-                  ActiveBuffer^.iNextChar := 0;
-                  Inc(Buffer.DataCount);
-                  ActiveBuffer^.iTransferState := ACDI_TRANSMFER_MFG_HW_VER;
-                end;
-              ACDI_TRANSMFER_MFG_HW_VER :
-                begin
-                  if ActiveBuffer^.iNextChar < Length(ABBREVIATED_CDI_MFG_HW_VER) then
-                  begin
-                    Buffer.DataBytes[Buffer.DataCount] := ABBREVIATED_CDI_MFG_HW_VER[ActiveBuffer^.iNextChar];
-                    Inc(ActiveBuffer^.iNextChar);
-                    Inc(Buffer.DataCount);
-                  end else
-                    ActiveBuffer^.iTransferState := ACDI_MFG_HW_NULL;
-                end;
-              ACDI_MFG_HW_NULL :
-                begin
-                  Buffer.DataBytes[Buffer.DataCount] := #0;
-                  ActiveBuffer^.iNextChar := 0;
-                  Inc(Buffer.DataCount);
-                  ActiveBuffer^.iTransferState := ACDI_TRANSFER_MFG_SW_VER
-                end;
-              ACDI_TRANSFER_MFG_SW_VER :
-                begin
-                  if ActiveBuffer^.iNextChar <Length(ABBREVIATED_CDI_MFG_SW_VER) then
-                  begin
-                    Buffer.DataBytes[Buffer.DataCount] := ABBREVIATED_CDI_MFG_SW_VER[ActiveBuffer^.iNextChar];
-                    Inc(ActiveBuffer^.iNextChar);
-                    Inc(Buffer.DataCount);
-                  end else
-                    ActiveBuffer^.iTransferState := ACDI_MFG_SW_NULL;
-                end;
-              ACDI_MFG_SW_NULL :
-                begin
-                  Buffer.DataBytes[Buffer.DataCount] := #0;
-                  ActiveBuffer^.iNextChar := 0;
-                  Inc(Buffer.DataCount);
-                  ActiveBuffer^.iTransferState := ACDI_TRANSFER_USER_NAME;
-                end;
-              ACDI_TRANSFER_USER_NAME :
-                begin
-                  if ActiveBuffer^.iNextChar < Length(ABBREVIATED_CDI_USER_NAME) then
-                  begin
-                    Buffer.DataBytes[Buffer.DataCount] := ABBREVIATED_CDI_USER_NAME[ActiveBuffer^.iNextChar];
-                    Inc(ActiveBuffer^.iNextChar);
-                    Inc(Buffer.DataCount);
-                  end else
-                    ActiveBuffer^.iTransferState := ACDI_USER_NAME_NULL;
-                end;
-              ACDI_USER_NAME_NULL :
-                begin
-                  Buffer.DataBytes[Buffer.DataCount] := #0;
-                  ActiveBuffer^.iNextChar := 0;
-                  Inc(Buffer.DataCount);
-                  ActiveBuffer^.iTransferState := ACDI_TRANSMFER_USER_DESC;
-                end;
-              ACDI_TRANSMFER_USER_DESC :
-                begin
-                  if ActiveBuffer^.iNextChar < Length(ABBREVIATED_CDI_USER_DISC) then
-                  begin
-                    Buffer.DataBytes[Buffer.DataCount] := ABBREVIATED_CDI_USER_DISC[ActiveBuffer^.iNextChar];
-                    Inc(ActiveBuffer^.iNextChar);
-                    Inc(Buffer.DataCount);
-                  end else
-                    ActiveBuffer^.iTransferState := ACDI_USER_DESC_NULL;
-                end;
-              ACDI_USER_DESC_NULL :
-                begin
-                  Buffer.DataBytes[Buffer.DataCount] := #0;
-                  ActiveBuffer^.iNextChar := 0;
-                  Inc(Buffer.DataCount);
-                  ActiveBuffer^.iTransferState := ACDI_TRANSFER_COMPLETE;
-                end;
+              ACDI_TRANSFER_MFG         : LoadChars(@Buffer, ActiveBuffer, @ABBREVIATED_CDI_MFG[ActiveBuffer^.iNextChar], Length(ABBREVIATED_CDI_MFG), ACDI_MFG_NULL);
+              ACDI_MFG_NULL             : NullChar(@Buffer, ActiveBuffer, ACDI_TRANSFER_MFG_NAME);
+              ACDI_TRANSFER_MFG_NAME    : LoadChars(@Buffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_NAME[ActiveBuffer^.iNextChar], Length(ABBREVIATED_CDI_MFG_NAME), ACDI_MFG_NAME_NULL);
+              ACDI_MFG_NAME_NULL        : NullChar(@Buffer, ActiveBuffer, ACDI_TRANSMFER_MFG_HW_VER);
+              ACDI_TRANSMFER_MFG_HW_VER : LoadChars(@Buffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_HW_VER[ActiveBuffer^.iNextChar], Length(ABBREVIATED_CDI_MFG_HW_VER), ACDI_MFG_HW_NULL);
+              ACDI_MFG_HW_NULL          : NullChar(@Buffer, ActiveBuffer, ACDI_TRANSFER_MFG_SW_VER);
+              ACDI_TRANSFER_MFG_SW_VER  : LoadChars(@Buffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_SW_VER[ActiveBuffer^.iNextChar], Length(ABBREVIATED_CDI_MFG_SW_VER), ACDI_MFG_SW_NULL);
+              ACDI_MFG_SW_NULL          : NullChar(@Buffer, ActiveBuffer, ACDI_TRANSFER_USER_NAME);
+              ACDI_TRANSFER_USER_NAME   : LoadChars(@Buffer, ActiveBuffer, @ABBREVIATED_CDI_USER_NAME[ActiveBuffer^.iNextChar], Length(ABBREVIATED_CDI_USER_NAME), ACDI_USER_NAME_NULL);
+              ACDI_USER_NAME_NULL       : NullChar(@Buffer, ActiveBuffer, ACDI_TRANSMFER_USER_DESC);
+              ACDI_TRANSMFER_USER_DESC  : LoadChars(@Buffer, ActiveBuffer, @ABBREVIATED_CDI_USER_DISC[ActiveBuffer^.iNextChar], Length(ABBREVIATED_CDI_USER_DISC), ACDI_USER_DESC_NULL);
+              ACDI_USER_DESC_NULL       : NullChar(@Buffer, ActiveBuffer, ACDI_TRANSFER_COMPLETE);
             end;
           end;
           
           NMRAnetUtilities_CreateNMRABusMessagePacket(@Buffer, FT_PROTOCOL_ACDI, ActiveBuffer^.DestAlias, ActiveBuffer^.SourceAlias, Buffer.DataCount, nil);
           CANStorage_AddToList(@TX_NMRAnetBufferList, @Buffer);
           StartCANMessageEngine();
-          
+
           if Buffer.DataCount < 8 then
           begin
             ActiveBuffer^.State := ACDI_BUFFER_STATE_EMPTY;
@@ -220,6 +197,14 @@ begin
     ACDI_BufferList.iActiveBuffer := 0;
 end;
 
+// *****************************************************************************
+//  procedure NMRAnetAbbreviatedConfigurationProtocol_ProcessReceive
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRAnetAbbreviatedConfigurationProtocol_ProcessReceive;
 begin
 end;

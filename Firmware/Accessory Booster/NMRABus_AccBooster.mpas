@@ -77,6 +77,8 @@ begin
 
   while (TRUE) do
     begin
+      Delay_us(2000);
+      
       NMRAnetStateMachine_Process;
 
       if NMRAnetCANReceive_Permited then

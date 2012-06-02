@@ -101,6 +101,14 @@ begin
   Result := TryTransmitNMRABusLayerMsg(Buffer, FT_AME, 0, SourceAliasID, 0, nil);
 end;
 
+// *****************************************************************************
+//  procedure NMRAnetStateMachine_TrySendVerifyNodeID
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 function NMRAnetStateMachine_TrySendVerifyNodeID(Buffer: PCANBuffer; DestinationAliasID, SourceAliasID: Word): Boolean;
 var
   DataBytes: TCAN_DataBytes;

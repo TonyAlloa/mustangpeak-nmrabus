@@ -197,9 +197,11 @@ begin
   NMRAnetStateMachine_SetSimpleCallbackFunc(@SimpleResponseCallback);
   
   MainLoopState := 0;
-
+  
   while (TRUE) do
     begin
+    
+      Delay_us(2000);
     
       NMRAnetStateMachine_Process;
       
