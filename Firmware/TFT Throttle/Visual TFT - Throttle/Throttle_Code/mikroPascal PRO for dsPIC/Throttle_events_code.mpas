@@ -6,16 +6,7 @@ procedure BoxRoundCmdStationsClick();
 procedure BoxRoundAccyNodesClick();
 procedure BoxRoundProgStationsClick();
 procedure BoxRoundTrainNodesClick();
-procedure ButtonDropDownItem0Click();
-procedure ButtonDropdownItem1Click();
-procedure ButtonDropdownItem2Click();
-procedure ButtonDropdownItem3Click();
-procedure ButtonDropdownItem4Click();
-procedure ButtonDropdownItem5Click();
-procedure ButtonDropdownItem6Click();
-procedure ButtonDropdownItem7Click();
-procedure ButtonDropdownItem8Click();
-procedure ButtonDropDownItem9Click();
+procedure BoxRoundConsistNodesClick();
 //--------------------- Externals ---------------------//
 const Bkgnd : TCBox; code; far; external;
 const Label2 : TCLabel; code; far; external;
@@ -43,32 +34,33 @@ var LabelProgNodes : TLabel; external;
 var LabelProgNodes_Caption : string[32]; external;
 var LabelTrainNodes : TLabel; external;
 var LabelTrainNodes_Caption : string[32]; external;
-var BoxDropDownFrame : TBox; external;
-var ButtonDropDownItem0 : TButton; external;
-var ButtonDropDownItem0_Caption : string[4]; external;
-var BoxDropdownScrollbar : TBox; external;
-var ButtonDropDownItem1 : TButton; external;
-var ButtonDropDownItem1_Caption : string[4]; external;
-var ButtonDropDownItem2 : TButton; external;
-var ButtonDropDownItem2_Caption : string[4]; external;
-var ButtonDropDownItem3 : TButton; external;
-var ButtonDropDownItem3_Caption : string[4]; external;
-var ButtonDropDownItem4 : TButton; external;
-var ButtonDropDownItem4_Caption : string[4]; external;
-var ButtonDropDownItem5 : TButton; external;
-var ButtonDropDownItem5_Caption : string[4]; external;
-var ButtonDropDownItem6 : TButton; external;
-var ButtonDropDownItem6_Caption : string[4]; external;
-var ButtonDropDownItem7 : TButton; external;
-var ButtonDropDownItem7_Caption : string[4]; external;
-var ButtonDropDownItem8 : TButton; external;
-var ButtonDropDownItem8_Caption : string[4]; external;
-var ButtonDropDownItem9 : TButton; external;
-var ButtonDropDownItem9_Caption : string[4]; external;
+const Label9 : TCLabel; code; far; external;
+var BoxRound2 : TBox_Round; external;
+var Label10 : TLabel; external;
+var Label10_Caption : string[32]; external;
+var Box1 : TBox; external;
+var BoxRoundItem1 : TBox_Round; external;
+var BoxRoundItem4 : TBox_Round; external;
+var LabelItem1 : TLabel; external;
+var LabelItem1_Caption : string[16]; external;
+var LabelItem4 : TLabel; external;
+var LabelItem4_Caption : string[16]; external;
+var BoxRoundItem2 : TBox_Round; external;
+var BoxRoundItem3 : TBox_Round; external;
+var LabelItem2 : TLabel; external;
+var LabelItem2_Caption : string[16]; external;
+var LabelItem3 : TLabel; external;
+var LabelItem3_Caption : string[16]; external;
+var BoxRoundItem6 : TBox_Round; external;
+var LabelItem6 : TLabel; external;
+var LabelItem6_Caption : string[16]; external;
+var BoxRoundItem5 : TBox_Round; external;
+var LabelItem5 : TLabel; external;
+var LabelItem5_Caption : string[16]; external;
 const ScreenStart           : TCScreen; code; far;  external;
 var ScreenDetectingNodes           : TScreen; external;
+var ScreenNodeSelect           : TScreen; external;
 procedure DrawScreen(aScreenID : word); external;
-procedure DrawButton(Abutton : ^TButton); external;
 procedure DrawLabel(ALabel : ^TLabel); external;
 procedure DrawCLabel(ALabel : ^TCLabel); external;
 procedure DrawImage(AImage : ^TImage); external;
@@ -88,60 +80,9 @@ implementation
 
 procedure ShowDropDown(Active: Byte);
 begin
-  BoxDropdownScrollbar.Visible := Active;
-  ButtonDropdownItem0.Visible := Active;  
-  ButtonDropdownItem1.Visible := Active;  
-  ButtonDropdownItem2.Visible := Active;
-  ButtonDropdownItem3.Visible := Active;
-  ButtonDropdownItem4.Visible := Active;
-  ButtonDropdownItem5.Visible := Active;
-  ButtonDropdownItem6.Visible := Active;
-  ButtonDropdownItem7.Visible := Active;
-  ButtonDropdownItem8.Visible := Active;
-  ButtonDropdownItem9.Visible := Active;
-  BoxDropdownFrame.Visible := Active;
-  
-  ButtonDropdownItem0.Active := Active;  
-  ButtonDropdownItem1.Active := Active;  
-  ButtonDropdownItem2.Active := Active;
-  ButtonDropdownItem3.Active := Active;
-  ButtonDropdownItem4.Active := Active;
-  ButtonDropdownItem5.Active := Active;
-  ButtonDropdownItem6.Active := Active;  
-  ButtonDropdownItem7.Active := Active;  
-  ButtonDropdownItem8.Active := Active;  
-  ButtonDropdownItem9.Active := Active;   
-  BoxDropdownScrollbar.Active := Active;
-  BoxDropdownFrame.Active := Active;
-  
   if Active = 1 then
   begin
-    BoxRoundCmdStations.Active := 0;
-    BoxRoundProgStations.Active := 0;
-    BoxRoundTrainNodes.Active := 0;
-    BoxRoundAccyNodes.Active := 0;
-  end else
-  begin
-    BoxRoundCmdStations.Active := 1;
-    BoxRoundProgStations.Active := 1;
-    BoxRoundTrainNodes.Active := 1;
-    BoxRoundAccyNodes.Active := 1;
-  end;
-  
-  if Active = 1 then
-  begin
-    DrawBox(@BoxDropdownFrame);
-    DrawBox(@BoxDropdownScrollbar);
-    DrawButton(@ButtonDropdownItem0);
-    DrawButton(@ButtonDropdownItem1);
-    DrawButton(@ButtonDropdownItem2);
-    DrawButton(@ButtonDropdownItem3);
-    DrawButton(@ButtonDropdownItem4);
-    DrawButton(@ButtonDropdownItem5);
-    DrawButton(@ButtonDropdownItem6);
-    DrawButton(@ButtonDropdownItem7);
-    DrawButton(@ButtonDropdownItem8);
-    DrawButton(@ButtonDropdownItem9);
+    DrawScreen(ScreenNodeSelectScreenID);
   end else
   begin  
     DrawScreen(ScreenDetectingNodesScreenID);
@@ -151,56 +92,6 @@ end;
 //----------------- End of User code ------------------//
 
 // Event Handlers
-
-procedure ButtonDropDownItem0Click();
-begin
-  ShowDropDown(0);  
-end;
-
-procedure ButtonDropdownItem1Click();
-begin
-  ShowDropDown(False);
-end;
-
-procedure ButtonDropdownItem2Click();
-begin
-  ShowDropDown(False);
-end;
-
-procedure ButtonDropdownItem3Click();
-begin
-  ShowDropDown(False);
-end;
-
-procedure ButtonDropdownItem4Click();
-begin
-  ShowDropDown(False);
-end;
-
-procedure ButtonDropdownItem5Click();
-begin
-  ShowDropDown(False);
-end;
-
-procedure ButtonDropdownItem6Click();
-begin
-  ShowDropDown(0);  
-end;
-
-procedure ButtonDropdownItem7Click();
-begin
-  ShowDropDown(0);  
-end;
-
-procedure ButtonDropdownItem8Click();
-begin
-  ShowDropDown(0);  
-end;
-
-procedure ButtonDropDownItem9Click();
-begin
-  ShowDropDown(0);  
-end;
 
 procedure BoxRoundCmdStationsClick();
 begin
@@ -218,6 +109,11 @@ begin
 end;
 
 procedure BoxRoundAccyNodesClick();
+begin
+  ShowDropDown(1);  
+end;
+
+procedure BoxRoundConsistNodesClick();
 begin
   ShowDropDown(1);  
 end;

@@ -4,34 +4,6 @@ type TOnEventPtr = procedure();
 
 type TBytePtr = ^byte;
 
-type TButton = record
-  OwnerScreenID        : word;
-  Order                : byte;
-  Left                 : word;
-  Top                  : word;
-  Width                : word;
-  Height               : word;
-  Pen_Width            : byte;
-  Pen_Color            : word;
-  Visible              : byte;
-  Active               : byte;
-  Transparent          : byte;
-  Caption              : ^char;
-  Fontname             : ^ const far byte;
-  Font_Color           : word;
-  Gradient             : byte;
-  Gradient_Orientation : byte;
-  Gradient_Start_Color : word;
-  Gradient_End_Color   : word;
-  Color                : word;
-  PressColEnabled      : byte;
-  Press_Color          : word;
-  OnUpPtr              : ^TOnEventPtr;
-  OnDownPtr            : ^TOnEventPtr;
-  OnClickPtr           : ^TOnEventPtr;
-  OnPressPtr           : ^TOnEventPtr;
-end;
-
 type TLabel = record
   OwnerScreenID        : word;
   Order                : byte;
@@ -181,8 +153,6 @@ type TScreen = record
   Width                      : word;
   Height                     : word;
   ObjectsCount               : byte;
-  ButtonsCount               : word;
-  Buttons                    : ^ const code far ^TButton;
   LabelsCount                : word;
   Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;
@@ -198,8 +168,6 @@ type TMyScreen = record
   Width                      : word;
   Height                     : word;
   ObjectsCount               : byte;
-  ButtonsCount               : word;
-  Buttons                    : ^ const code far ^TButton;
   LabelsCount                : word;
   Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;
@@ -217,6 +185,7 @@ end;
 
   const ScreenStartScreenID = 32768;
   const ScreenDetectingNodesScreenID = 0;
+  const ScreenNodeSelectScreenID = 1;
 
 implementation
 

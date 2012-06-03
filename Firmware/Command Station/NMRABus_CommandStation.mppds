@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRABusCommandStation.mpas
+Value=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -48,11 +48,11 @@ ActiveImageIndex=-1
 Count=7
 File0=NMRABusCommandStation.mpas
 File1=..\Library\NMRAnet\NMRAnetDefines.mpas
-File2=..\Library\NMRAnetDCCSystem\NMRAnetMobileNode.mpas
-File3=..\Library\NMRAnet\NMRAnetUtilities.mpas
-File4=..\Library\NMRAnet\NMRAnetStateMachine.mpas
-File5=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
-File6=MCU_Setup_dsPIC4013.mpas
+File2=..\Library\NMRAnet\NMRAnetStateMachine.mpas
+File3=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
+File4=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocolDefines.mpas
+File5=..\Library\NMRAnet\NMRAnetCANReceive.mpas
+File6=..\Library\CANBus\CANDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

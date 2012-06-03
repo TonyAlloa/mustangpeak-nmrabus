@@ -19,6 +19,8 @@ unit NMRAnetCANReceive;
 // ******************************************************************************
 
 uses
+  NMRAnetAbbreviatedConfigurationProtocol,
+  NMRAnetAbbreviatedConfigurationProtocolDefines,
   NMRAnetDefines,
   NMRAnetUtilities,
   NMRAnetDatagrams,
@@ -363,7 +365,7 @@ end;
 // ****************************************************************************
 procedure DispatchIdentifyEvents;
 begin
-   NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED;
+   NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED;
 end;
 
 // ****************************************************************************
@@ -403,7 +405,7 @@ end;
 //                 NMRAnet Layer
 //
 //  Response Type:
-//                 Simple Response
+//                 Complex Response only because the Sender Alias is needed
 //
 // ****************************************************************************
 procedure DispatchAbbreviatedCDIRequest(CANBuffer: PCANBuffer);
@@ -418,12 +420,21 @@ end;
 //                 NMRAnet Layer
 //
 //  Response Type:
-//                 Simple Response
+//                 Complex Response
 //
 // ****************************************************************************
 procedure DispatchAbbreviatedCDIReply(CANBuffer: PCANBuffer);
+var
+  ActiveBuffer: PACDI_ReceiveBuffer;
+  DataBytes: TCAN_DataBytes;
 begin
-  StoreComplexResponse(CRC_ACDI_REPLY, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+  ActiveBuffer := PACDI_ReceiveBuffer( nil);
+  if NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(ActiveBuffer, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes) then
+  begin
+    DataBytes[0] := Lo( ActiveBuffer);                                         // Slip the buffer address in through the DataBytes
+    DataBytes[1] := Hi( ActiveBuffer);
+    StoreComplexResponse(CRC_ACDI_REPLY, ActiveBuffer^.SourceAlias, @DataBytes, 2);
+  end
 end;
 
 

@@ -190,7 +190,7 @@ const
   // CAN Messages received that require no response
   // NMRAnet level responses
   SRC_SEND_VERIFIED_NODE                    = $0010;                            // Send a Verified Node message
-  SRC_ALL_CONSUMER_PRODUCER_IDENTIFIED      = $0020;                            // Send all Producers/Consumers defined
+  SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED = $0020;                            // Send all Producers/Consumers defined
 
   // Complex Response Codes (see TQueuedResponse)
   CRC_EMPTY                                 = $0000;                            // Response Queue slot is empty
@@ -264,7 +264,7 @@ type
   end;
   
 type
-  TSimpleResponseCallbackFunc = procedure(Response: Word);
+  TSimpleResponseCallbackFunc = procedure(Response: Word);                      // Response is the SRC_xxxx code of the response
   PSimpleResponseCallbackFunc = ^TSimpleResponseCallbackFunc;
   TComplexResponseCallbackFunc = procedure(Response: PQueuedResponse);
   PComplexResponseCallbackFunc = ^TComplexResponseCallbackFunc;
