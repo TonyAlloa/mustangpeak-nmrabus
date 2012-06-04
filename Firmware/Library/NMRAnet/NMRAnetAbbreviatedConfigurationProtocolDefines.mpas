@@ -10,6 +10,7 @@ const
   ACDI_LEN_USER_NAME = 32;                                                      // User Node Name String Length
   ACDI_LEN_USER_DESC = 32;                                                      // User Description Length
     
+  ACDI_WATCHDOG_MAX = 10000;                                                    // How many milliseconds between valid 53 frames before we declare it abandon
   
 const
   // Buffer State

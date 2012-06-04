@@ -17,15 +17,6 @@ unit NMRAnetStateMachine;
 //
 // ******************************************************************************
 
-
-// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-//
-// MAY 12, 2012
-//
-//  THE PROTOCOL ID PROTOCOL RESULT IS STILL JUST HACKED.  NEED TO UNDERSTAND THE
-//     FLAGS BETTER TO IMPLEMENT
-// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
 uses
   NMRAnetEventDefines,
   NMRAnetAppDefines,
@@ -44,8 +35,8 @@ uses
 {$I Options.inc}
 
 
-  procedure NMRAnetStateMachine_Process;
-  procedure NMRAnetStateMachine_Disconnect;
+  procedure NMRAnetStateMachine_Process(NodeBuffer: PNMRAnetNodeBuffer);
+  procedure NMRAnetStateMachine_Disconnect(NodeBuffer: PNMRAnetNodeBuffer);
   procedure NMRAnetStateMachine_Initialize;
   procedure NMRAnetStateMachine_1ms_Timer;
   
@@ -239,13 +230,13 @@ begin
   NMRAnetAbbreviatedConfigurationProtocol_Initialize;
   SimpleResponseCallbackFunc := PSimpleResponseCallbackFunc( nil);
   ComplexResponseCallbackFunc := PComplexResponseCallbackFunc( nil);
-  NMRABus.State := 0;
-  GetUniqueIDFunc(NMRABus.Node.ID[1], NMRABus.Node.ID[0]);
-  NMRABus.Node.Seed[0] := NMRABus.Node.ID[0];
-  NMRABus.Node.Seed[1] := NMRABus.Node.ID[1];
-  NMRABus.iState := STATE_NMRABUS_START;
+  NMRAnetNodeBuffer.State := 0;
+  GetUniqueIDFunc(NMRAnetNodeBuffer.Node.ID[1], NMRAnetNodeBuffer.Node.ID[0]);
+  NMRAnetNodeBuffer.Node.Seed[0] := NMRAnetNodeBuffer.Node.ID[0];
+  NMRAnetNodeBuffer.Node.Seed[1] := NMRAnetNodeBuffer.Node.ID[1];
+  NMRAnetNodeBuffer.iState := STATE_NMRABUS_START;
   FlushResponses;
-  NMRABus.Responses.BufferOverrunCount := 0;
+  NMRAnetNodeBuffer.Responses.BufferOverrunCount := 0;
   NMRAnetStateMachine_InitializeList(@TX_CANBufferList, @TX_CANBuffer, TX_CAN_BUFFER_LEN);
   NMRAnetStateMachine_InitializeList(@TX_NMRAnetBufferList, @TX_NMRAnet_Buffer, TX_NMRANET_BUFFER_LEN);
 end;
@@ -262,6 +253,7 @@ procedure NMRAnetStateMachine_1ms_Timer;
 begin
   Inc(NMRABus.LoginTimeCount);
   NMRAnetDatagrams_1ms_TimeTick;
+  NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick;
 end;
 
 // *****************************************************************************
@@ -688,74 +680,74 @@ end;
 //
 // *****************************************************************************
 
-procedure NMRAnetStateMachine_Process;
+procedure NMRAnetStateMachine_Process(NodeBuffer: PNMRAnetNodeBuffer);
 var
   Buffer: TCANBuffer;     
   VariableField: DWord;
 begin
-  case NMRABus.iState of
+  case NodeBuffer.iState of
     STATE_NMRABUS_START :
       begin
-        NMRABus.State := BS_INHIBITED or BS_UNITIALIZED;
+        NodeBuffer.State := BS_INHIBITED or BS_UNITIALIZED;
         FlushLists;
         while CAN_Engine.State and CES_TRANSMITTING <> 0 do;                             // Wait for the last transmited packet
-        NMRABus.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS;
+        NodeBuffer.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS;
       end;
     STATE_NMRABUS_GENERATE_NODE_ALIAS :
       begin
-        NMRABus.Node.AliasID := NMRAnetUtilities_CreateAliasID(NMRABus.Node.Seed, False);
-        NMRABus.Responses.iCID := 0;
-        NMRABus.iState := STATE_NMRABUS_TRANSMIT_CID;
+        NodeBuffer.Node.AliasID := NMRAnetUtilities_CreateAliasID(NodeBuffer.Node.Seed, False);
+        NodeBuffer.Responses.iCID := 0;
+        NodeBuffer.iState := STATE_NMRABUS_TRANSMIT_CID;
       end;
     STATE_RANDOM_NUMBER_GENERATOR :
       begin
-        NMRAnetUtilities_PsudoRandomNumberGeneratorOnSeed(NMRABus.Node.Seed);
-        NMRABus.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS;
+        NMRAnetUtilities_PsudoRandomNumberGeneratorOnSeed(NodeBuffer.Node.Seed);
+        NodeBuffer.iState := STATE_NMRABUS_GENERATE_NODE_ALIAS;
       end;
     STATE_NMRABUS_TRANSMIT_CID :
       begin
-        case NMRABus.Responses.iCID of
+        case NodeBuffer.Responses.iCID of
           0 : VariableField := FT_CID0;   // Queue up
           1 : VariableField := FT_CID1;
           2 : VariableField := FT_CID2;
           3 : VariableField := FT_CID3;
         end;
-        if TryTransmitCANLayerMsg(VariableField, NMRABus.Node.AliasID, @Buffer) then
-          NMRABus.iState := STATE_NMRABUS_NEXT_CDI;
+        if TryTransmitCANLayerMsg(VariableField, NodeBuffer.Node.AliasID, @Buffer) then
+          NodeBuffer.iState := STATE_NMRABUS_NEXT_CDI;
       end;
     STATE_NMRABUS_NEXT_CDI :
       begin
-        if NMRABus.Responses.iCID < 3 then
+        if NodeBuffer.Responses.iCID < 3 then
         begin
-          Inc(NMRABus.Responses.iCID);
-          NMRABus.iState := STATE_NMRABUS_TRANSMIT_CID
+          Inc(NodeBuffer.Responses.iCID);
+          NodeBuffer.iState := STATE_NMRABUS_TRANSMIT_CID
         end else 
         begin
           if CAN_Engine.State and CES_TRANSMITTING = 0 then     // Wait until the transmission is complete before waiting the 200ms
           begin
-            NMRABus.iState := STATE_NMRABUS_WAITSTATE;
-            NMRABus.LoginTimeCount := 0;
+            NodeBuffer.iState := STATE_NMRABUS_WAITSTATE;
+            NodeBuffer.LoginTimeCount := 0;
           end
         end
       end;
     STATE_NMRABUS_WAITSTATE :
       begin
-        if NMRABus.LoginTimeCount > MAX_BUS_LOGIN_TIMEOUT then
-          NMRABus.iState := STATE_NMRABUS_SEND_LOGIN_RID;
+        if NodeBuffer.LoginTimeCount > MAX_BUS_LOGIN_TIMEOUT then
+          NodeBuffer.iState := STATE_NMRABUS_SEND_LOGIN_RID;
       end;
     STATE_NMRABUS_SEND_LOGIN_RID :
       begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
-          if TryTransmitCANLayerMsg(FT_RID, NMRABus.Node.AliasID, @Buffer) then
-            NMRABus.iState := STATE_NMRABUS_SEND_LOGIN_AMD;
+          if TryTransmitCANLayerMsg(FT_RID, NodeBuffer.Node.AliasID, @Buffer) then
+            NodeBuffer.iState := STATE_NMRABUS_SEND_LOGIN_AMD;
       end;
     STATE_NMRABUS_SEND_LOGIN_AMD :
       begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
-          if TryTransmitCANLayerMsg(FT_AMD, NMRABus.Node.AliasID, @Buffer) then
+          if TryTransmitCANLayerMsg(FT_AMD, NodeBuffer.Node.AliasID, @Buffer) then
           begin
-            NMRABus.State := NMRABus.State or BS_PERMITED and not BS_INHIBITED;
-            NMRABus.iState := STATE_NMRABUS_INITIALIZED
+            NodeBuffer.State := NodeBuffer.State or BS_PERMITED and not BS_INHIBITED;
+            NodeBuffer.iState := STATE_NMRABUS_INITIALIZED
           end
       end;
     STATE_NMRABUS_INITIALIZED :
@@ -763,43 +755,43 @@ begin
         if not DuplicateDetected(SRC_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
           if TryTransmitNMRABusLayerMsg(@Buffer, FT_INITIALIZATION_COMPLETE, 0, NMRABus.Node.AliasID, 0, nil) then
           begin
-            NMRABus.iState := STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS;
-            NMRABus.State := NMRABus.State or BS_INITIALIZED and not BS_UNITIALIZED
+            NodeBuffer.iState := STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS;
+            NodeBuffer.State := NodeBuffer.State or BS_INITIALIZED and not BS_UNITIALIZED
           end
       end;
     STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS :
       begin
         LockCANInterrupt;
-        NMRABus.Responses.SimpleResponseFlags := NMRABus.Responses.SimpleResponseFlags or SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED;
+        NodeBuffer.Responses.SimpleResponseFlags := NodeBuffer.Responses.SimpleResponseFlags or SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED;
         UnLockCANInterrupt;
-        NMRABus.iState := STATE_NMRABUS_PERMITTED;
+        NodeBuffer.iState := STATE_NMRABUS_PERMITTED;
       end;
     STATE_NMRABUS_PERMITTED :
       begin
-        Responses_Process(@Buffer, NMRABus.Node.AliasID);                       // Handle auto responses to CAN/NMRAnet messages coming in
+        Responses_Process(@Buffer, NodeBuffer.Node.AliasID);                       // Handle auto responses to CAN/NMRAnet messages coming in
         NMRAnetDatagrams_ProcessReceive;                                        // Handle Datagrams coming in
-        NMRAnetDatagrams_ProcessTransmit(NMRABus.Node.AliasID);                 // Handle Datagrams going out
+        NMRAnetDatagrams_ProcessTransmit(NodeBuffer.Node.AliasID);                 // Handle Datagrams going out
         NMRAnetConfigurationProtocol_Process;
         NMRAnetAbbreviatedConfigurationProtocol_Process;
       end;
     STATE_NMRABUS_INHIBITED :
       begin
-        if TryTransmitCANLayerMsg(FT_AMR, NMRABus.Node.AliasID, @Buffer) then
+        if TryTransmitCANLayerMsg(FT_AMR, NodeBuffer.Node.AliasID, @Buffer) then
         begin
           FlushLists;
           FlushResponses;
-          NMRABus.State := NMRABus.State or BS_INHIBITED and not BS_PERMITED;
-          NMRABus.iState := STATE_RANDOM_NUMBER_GENERATOR;
+          NodeBuffer.State := NodeBuffer.State or BS_INHIBITED and not BS_PERMITED;
+          NodeBuffer.iState := STATE_RANDOM_NUMBER_GENERATOR;
         end
       end;
     STATE_NMRABUS_DUPLICATE_FULL_ID :
       begin
-        if TryTransmitCANLayerMsg(FT_AMR, NMRABus.Node.AliasID, @Buffer) then
+        if TryTransmitCANLayerMsg(FT_AMR, NodeBuffer.Node.AliasID, @Buffer) then
         begin
           FlushLists;
           FlushResponses;
-          NMRABus.State := NMRABus.State or BS_INHIBITED and not BS_PERMITED;
-          NMRABus.iState := STATE_NMRABUS_TAKE_OFFLINE
+          NodeBuffer.State := NodeBuffer.State or BS_INHIBITED and not BS_PERMITED;
+          NodeBuffer.iState := STATE_NMRABUS_TAKE_OFFLINE
         end
       end;
     STATE_NMRABUS_TAKE_OFFLINE :
@@ -807,7 +799,7 @@ begin
     //    if TryTransmitNMRABusLayerMsg(PCER_DUPLICATE_ID..., @Buffer) then
     //    begin
     //      NMRABus.State := NMRABus.State or BS_INHIBITED and not BS_PERMITED;
-          NMRABus.iState := STATE_NMRABUS_OFFLINE
+          NodeBuffer.iState := STATE_NMRABUS_OFFLINE
     //    end
       end;
     STATE_NMRABUS_OFFLINE :
@@ -815,7 +807,7 @@ begin
         // Done until reboot
       end
   else
-    NMRABus.iState := STATE_NMRABUS_START;
+    NodeBuffer.iState := STATE_NMRABUS_START;
   end
 end;
 
@@ -827,9 +819,9 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetStateMachine_Disconnect;
+procedure NMRAnetStateMachine_Disconnect(NodeBuffer: PNMRAnetNodeBuffer);
 begin
-  NMRABus.iState := STATE_NMRABUS_INHIBITED
+  NodeBuffer.iState := STATE_NMRABUS_INHIBITED
 end;
 
 end.

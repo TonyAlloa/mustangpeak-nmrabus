@@ -544,7 +544,7 @@ end;
 procedure ReceivedDatagramMessage(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
-    NMRAnetDatagrams_ProcessReceiveInterrupt(CANBuffer)
+    NMRAnetDatagrams_ProcessReceiveFromInterruptContext(CANBuffer)
 end;
 
 // ****************************************************************************
@@ -560,7 +560,7 @@ end;
 procedure ReceivedStartingDatagramMessage(CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_IsAddressedMessageToNode(CANBuffer) then
-    NMRAnetDatagrams_ProcessReceiveInterrupt(CANBuffer)
+    NMRAnetDatagrams_ProcessReceiveFromInterruptContext(CANBuffer)
 end;
 
 // ****************************************************************************

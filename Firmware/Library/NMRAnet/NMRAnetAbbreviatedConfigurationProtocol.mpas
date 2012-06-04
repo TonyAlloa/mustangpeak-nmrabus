@@ -10,10 +10,11 @@ uses
   
   
 procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize;
-procedure NMRAnetAbbreviatedConfigurationProtocol_Process;
+procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
 function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(var ActiveBuffer: PACDI_ReceiveBuffer; SourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
 function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(SourceAlias, DestAlias: Word): Boolean;
 procedure NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(Callback: PACDI_ReceiveCallbackFunc);
+procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick;
 
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
@@ -49,7 +50,7 @@ begin
     ACDI_ReceiveBufferList.List[i].State := ACDI_BUFFER_STATE_EMPTY;
     ACDI_ReceiveBufferList.List[i].SourceAlias := 0;
     ACDI_ReceiveBufferList.List[i].iState := ACDI_RECEIVE_MFG_VERSION;
-    for j := 0 to ACDI_LEN_MFG-1 do
+    for j := 0 to ACDI_LEN_MFG-1 do                                             // Not needed just helps with debugging
       ACDI_ReceiveBufferList.List[i].Mfg[j] := $FF;
     for j := 0 to ACDI_LEN_MFG_NAME-1 do
       ACDI_ReceiveBufferList.List[i].MfgName[j] := $FF;
@@ -61,6 +62,22 @@ begin
       ACDI_ReceiveBufferList.List[i].UserName[j] := $FF;
     for j := 0 to ACDI_LEN_USER_DESC-1 do
       ACDI_ReceiveBufferList.List[i].UserDesc[j] := $FF;
+  end;
+end;
+
+procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick;
+var
+  i: Integer;
+begin
+  for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do
+  begin
+    if ACDI_ReceiveBufferList.List[i].State = ACDI_BUFFER_STATE_PROCESSING then
+    begin
+      if ACDI_ReceiveBufferList.List[i].iWatchdog <= ACDI_WATCHDOG_MAX then
+        Inc(ACDI_ReceiveBufferList.List[i].iWatchdog)
+      else
+        ACDI_ReceiveBufferList.List[i].State := ACDI_BUFFER_STATE_EMPTY         // The buffer has been abandon reset it
+    end
   end;
 end;
 
@@ -158,7 +175,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetAbbreviatedConfigurationProtocol_Process;
+procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
 var
   ActiveBuffer: PACDI_TransmitBuffer;
   CANBuffer: TCANBuffer;
@@ -209,7 +226,10 @@ begin
             end;
           end;
           
-          NMRAnetUtilities_CreateNMRABusMessagePacket(@CANBuffer, FT_PROTOCOL_ACDI, ActiveBuffer^.DestAlias, ActiveBuffer^.SourceAlias, CANBuffer.DataCount, nil);
+       //   WHAT TO DO?  I think the best stragagy is to put all the buffers local to the NMRAnetNodes as they will all need their own buffer for vNodes
+      //    Also comment out the DAtagram and ACDI for now and not try to compile that code until the other is converted then do one at a time.
+          
+          NMRAnetUtilities_CreateNMRABusMessagePacket(NodeBuffer, @CANBuffer, FT_PROTOCOL_ACDI, ActiveBuffer^.DestAlias, ActiveBuffer^.SourceAlias, CANBuffer.DataCount, nil);
           CANStorage_AddToList(@TX_NMRAnetBufferList, @CANBuffer);
           StartCANMessageEngine();
 
@@ -323,6 +343,7 @@ begin
   FindReceiveBuffer(ActiveBuffer, SourceAlias);
   if ActiveBuffer <> nil then
   begin
+    ActiveBuffer^.iWatchdog := 0;
     while ((iByte < 8) and (ActiveBuffer^.iState < ACDI_RECEIVE_COMPLETE)) do
     begin
       case ActiveBuffer^.iState of

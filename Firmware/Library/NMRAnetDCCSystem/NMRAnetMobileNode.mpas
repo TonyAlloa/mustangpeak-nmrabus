@@ -174,9 +174,11 @@ begin
       Temp.FunctionNames[j] := 'F' + s1;
     end;
     Temp.FunctionLatch := 0;
-    Temp.NodeID := NMRABus.Node.ID;
+    
+  //  Temp.NodeID := NMRABus.Node.ID;
     Temp.NodeID[0] := Temp.NodeID[0] + i + 1;                                   // Virtual Nodes are the base node ID for the command station + n
     for j := 0 to SizeOf(TMobileDCCNodeStatic) div 256 do
+    
     begin
       EEPROMOffset := (MobileDCCNodeList.Nodes[i].iEEPROM * STATIC_DATA_BOUNDRIES) + (j * 256);
       RecordOffset := @Temp + (j * 256);

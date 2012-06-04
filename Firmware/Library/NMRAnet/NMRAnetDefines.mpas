@@ -255,13 +255,14 @@ type
     AliasID: Word;                                                              // 12 Bit Alias ID
   end;
 
-  TNMRABus = record
+  TNMRAnetNodeBuffer = record
     Node: TNodeInfo;                                                            // Information about a Node
     LoginTimeCount: Integer;                                                    // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
     State: Word;                                                                // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
     iState: Byte;                                                               // Statemachine index for the main bus login
     Responses: TQueuedResponses;                                                // Responses the NMRABus_Process loop looks at to response to received messages
   end;
+  PNMRAnetNodeBuffer = ^TNMRAnetNodeBuffer;
   
 type
   TSimpleResponseCallbackFunc = procedure(Response: Word);                      // Response is the SRC_xxxx code of the response
@@ -270,7 +271,7 @@ type
   PComplexResponseCallbackFunc = ^TComplexResponseCallbackFunc;
   
 var
-  NMRABus: TNMRABus;
+  NMRAnetNodeBuffer: TNMRAnetNodeBuffer;
   SimpleResponseCallbackFunc: PSimpleResponseCallbackFunc;
   ComplexResponseCallbackFunc: PComplexResponseCallbackFunc;
   

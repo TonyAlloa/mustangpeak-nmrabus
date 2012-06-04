@@ -9,7 +9,7 @@ uses
   NMRAnetConfigurationProtocol;
 
 procedure NMRAnetDatagrams_Initialize;
-procedure NMRAnetDatagrams_ProcessReceiveInterrupt(Buffer: PCANBuffer);
+procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(Buffer: PCANBuffer);
 procedure NMRAnetDatagrams_ProcessReceive;
 procedure NMRAnetDatagrams_ProcessTransmit(SourceAlias: Word);
 procedure NMRAnetDatagrams_1ms_TimeTick;
@@ -193,14 +193,14 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function TrySendDatagramResponse(Datagram: PDatagramBuffer; SourceAliasID: Word; NextDatagramState: Byte): Boolean;
+function TrySendDatagramResponse(Datagram: PDatagramBuffer; SourceAliasID: Word; NextDatagramState: Byte; NodeBuffer: PNMRAnetNodeBuffer): Boolean;
 var
   Buffer: TCANBuffer;
 begin
   Result := False;
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
   begin
-    NMRAnetUtilities_CreateNMRABusMessagePacket(@Buffer, MTI_ADDRESSED, Datagram^.Alias, SourceAliasID, Datagram^.iByteCount, nil);
+    NMRAnetUtilities_CreateNMRABusMessagePacket(@Buffer, MTI_ADDRESSED, Datagram^.Alias, SourceAliasID, Datagram^.iByteCount, nil, NodeBuffer);
     Buffer.DataBytes[0] := Datagram^.ErrorCode.MTI;
     Buffer.DataBytes[1] := Datagram^.ErrorCode.SubType[0];
     Buffer.DataBytes[2] := Datagram^.ErrorCode.SubType[1];
@@ -743,7 +743,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRAnetDatagrams_ProcessReceiveInterrupt(Buffer: PCANBuffer);
+procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(Buffer: PCANBuffer);
 var
   Datagram: PDatagramBuffer;
 begin

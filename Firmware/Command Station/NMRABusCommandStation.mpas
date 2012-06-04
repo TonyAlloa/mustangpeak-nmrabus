@@ -293,10 +293,10 @@ begin
        end;    }
        
        
-  //  TMR3 := 0;
-    NMRAnetStateMachine_Process;
+    TMR3 := 0;
+    NMRAnetStateMachine_Process(@NMRAnetNodeBuffer);
   
-  {  if TMR3 > MaxTime_StateMachine then
+    if TMR3 > MaxTime_StateMachine then
     begin
       MaxTime_StateMachine := TMR3;
       FloatToStr((50e-9*double( MaxTime_StateMachine))*1e6, s_float);
@@ -308,7 +308,7 @@ begin
       FloatToStr((50e-9*double( MaxTime_RX))*1e6, s_float);
       UART1_Write_Text('CAN RX Max: ' + s_float+'us'+LF);
       Rlaststate := MaxTime_RX
-    end;   }
+    end;
     
 
 
