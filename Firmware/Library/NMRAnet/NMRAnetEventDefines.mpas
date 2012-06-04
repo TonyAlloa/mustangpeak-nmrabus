@@ -30,11 +30,11 @@ const
   EVENT_DUPLICATE_ID_DETECTED: TEventID = ($01, $10, $00, $00, $00, $00, $02, $01);
   
   // Proposed idea, number not officially assigned
-  EVENT_LC_DISTRICT_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $00);
+  EVENT_LC_DISTRICT_NODE: TEventID    = ($01, $10, $00, $00, $00, $00, $01, $00);
   EVENT_LC_PROGRAMMING_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $01);
-  EVENT_LC_STATIC_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $02);
-  EVENT_LC_MOBILE_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $03);
-  EVENT_LC_CONTROLLER_NODE: TEventID = ($01, $10, $00, $00, $00, $00, $01, $04);
+  EVENT_LC_STATIC_NODE: TEventID      = ($01, $10, $00, $00, $00, $00, $01, $02);
+  EVENT_LC_MOBILE_NODE: TEventID      = ($01, $10, $00, $00, $00, $00, $01, $03);
+  EVENT_LC_CONTROLLER_NODE: TEventID  = ($01, $10, $00, $00, $00, $00, $01, $04);
 
   
 implementation
