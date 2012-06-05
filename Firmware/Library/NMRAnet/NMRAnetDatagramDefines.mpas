@@ -27,7 +27,7 @@ const
 
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
-  LEN_DATAGRAM_RECEIVE_ARRAY = 2;                                               // How many Datagram buffers to have
+  LEN_DATAGRAM_RECEIVE_ARRAY = 1;                                               // How many Datagram buffers to have
   LEN_DATAGRAM_TRANSMIT_ARRAY = 1;                                              // How many Transmit buffer to have
   LEN_DATAGRAM_BUFFER_OVERFLOW_LIST = 2;                                        // How many Datagram requests to buffer if there is no buffer available to service them
 

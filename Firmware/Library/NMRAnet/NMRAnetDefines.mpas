@@ -182,7 +182,7 @@ const
   STATE_NMRABUS_ACDI_REQUEST                                = 16;
   STATE_NMRABUS_ACDI_REPLY                                  = 17;
   
-  LEN_QUEUED_RESPONSE_LIST                  = 4;                                // Number of complex Responses that can be queued up
+  LEN_QUEUED_RESPONSE_LIST                  = 2;                                // Number of complex Responses that can be queued up
   
   // Simple Response Codes for NMRAnet CAN responses
   SRC_DUPLICATE_ALIAS                       = $0001;                            // Duplicate Alais Detected that was not a CID message, need to regenerate an Alias

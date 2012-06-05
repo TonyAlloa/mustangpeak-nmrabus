@@ -7,8 +7,8 @@ const
   ACDI_LEN_MFG_NAME = 16;                                                       // Manufacturer Node Name String Length
   ACDI_LEN_MFG_HW_VER = 16;                                                     // Manufacturer Hardware Version String Length
   ACDI_LEN_MFG_SW_VER = 16;                                                     // Manufacturer Software Version String Length
-  ACDI_LEN_USER_NAME = 32;                                                      // User Node Name String Length
-  ACDI_LEN_USER_DESC = 32;                                                      // User Description Length
+  ACDI_LEN_USER_NAME = 16;                                                      // User Node Name String Length
+  ACDI_LEN_USER_DESC = 16;                                                      // User Description Length
     
   ACDI_WATCHDOG_MAX = 10000;                                                    // How many milliseconds between valid 53 frames before we declare it abandon
   
@@ -21,8 +21,8 @@ const
   STATE_ACDI_TX_START                                      = 0;
   STATE_ACDI_TX_PROCESSING_CHARS                           = 1;
 
-  LEN_ACDI_TRANSMIT_BUFFER_ARRAY                           = 2;                 // Can send up to n requests for ACDI at the same time
-  LEN_ACDI_RECEIVE_BUFFER_ARRAY                            = 2;                 // Can receive up to n requests for ACDI at the same time
+  LEN_ACDI_TRANSMIT_BUFFER_ARRAY                           = 1;                 // Can send up to n requests for ACDI at the same time
+  LEN_ACDI_RECEIVE_BUFFER_ARRAY                            = 1;                 // Can receive up to n requests for ACDI at the same time
   
   ACDI_VERSION                                             = 1;
   

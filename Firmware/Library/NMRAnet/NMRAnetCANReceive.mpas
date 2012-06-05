@@ -52,11 +52,6 @@ var
   CANLayerReceiveHook: PPacketHandlerFunc;
   NMRAnetLayerReceiveHook: PPacketHandlerFunc;
   
-
-  s1: string[32];
-  
-  
-  
 // ****************************************************************************
 // procedure NMRAnetCANReceive_Initialize
 //
@@ -169,11 +164,6 @@ end;
 // ****************************************************************************
 procedure DispatchEqualAliasID(NodeBuffer: PNMRAnetNodeBuffer; CANBuffer: PCANBuffer);
 begin
-
-
-         UART1_Write_Text('Duplicate'+LF);
-         
-         
   if (CANBuffer^.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer^.ID and FT_CID_MASK >= FT_CID4) then // If it is a CID message then force calling node to try again for an Alias this one is ours
     NodeBuffer^.Responses.SimpleResponseFlags := NodeBuffer^.Responses.SimpleResponseFlags or SRC_SEND_RID
   else
@@ -666,12 +656,6 @@ begin
 
     if DoDefault then
     begin
-    
-
-    WordToHex(NodeBuffer^.Node.AliasID, s1);
-         UART1_Write_Text(s1+LF);
-         
-         
       if NMRAnetUtilities_EqualAliasID(NodeBuffer, CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
         DispatchEqualAliasID(NodeBuffer, CANBuffer)
       else begin
