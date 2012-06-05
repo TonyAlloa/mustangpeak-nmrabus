@@ -77,7 +77,7 @@ type
   end;
   
   TDatagramBuffer = record
-    DataBytes: TDatagram;                                                       // The bytes sent in the datagram
+    DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
     Alias: Word;                                                                // The Source Node that sent the datagram if this is a RX buffer, else it is the Target Node that is being sent
     State: Byte;                                                                // The State of the Packet Buffer see DATAGRAM_xxxx contants
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit

@@ -230,7 +230,7 @@ type
   end;
   PQueuedResponse = ^TQueuedResponse;
   
-  TQueuedResponseList = array[0..LEN_QUEUED_RESPONSE_LIST] of TQueuedResponse;      // List of responses the NMRABus_Process loop needs to handle
+  TQueuedResponseList = array[0..LEN_QUEUED_RESPONSE_LIST-1] of TQueuedResponse;      // List of responses the NMRABus_Process loop needs to handle
   
   TQueuedResponses = record
     List: TQueuedResponseList;                                                  // List of complex Responses to be handled in the NMRABus_Process loop

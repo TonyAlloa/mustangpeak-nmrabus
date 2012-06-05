@@ -225,7 +225,7 @@ procedure NMRAnetStateMachine_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
 begin
   NMRAnetDatagrams_Initialize(NodeBuffer);
   NMRAnetCANReceive_Initialize;
-  NMRAnetConfigurationProtocol_Initialize;
+  NMRAnetConfigurationProtocol_Initialize(NodeBuffer);
   NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer);
   SimpleResponseCallbackFunc := PSimpleResponseCallbackFunc( nil);
   ComplexResponseCallbackFunc := PComplexResponseCallbackFunc( nil);
@@ -770,7 +770,7 @@ begin
         Responses_Process(NodeBuffer, @Buffer);                                 // Handle auto responses to CAN/NMRAnet messages coming in
         NMRAnetDatagrams_ProcessReceive(NodeBuffer);                                        // Handle Datagrams coming in
         NMRAnetDatagrams_ProcessTransmit(NodeBuffer);                           // Handle Datagrams going out
-        NMRAnetConfigurationProtocol_Process;
+        NMRAnetConfigurationProtocol_Process(NodeBuffer);
         NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer);
       end;
     STATE_NMRABUS_INHIBITED :

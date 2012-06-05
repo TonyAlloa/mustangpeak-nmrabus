@@ -2,17 +2,18 @@ unit NMRAnetConfigurationProtocol;
 
 uses
   NMRAnetConfigurationProtocolDefines,
-  NMRAnetDatagramDefines;
+  NMRAnetDatagramDefines,
+  NMRAnetDefines;
 
-procedure NMRAnetConfigurationProtocol_Initialize;
-procedure NMRAnetConfigurationProtocol_Process;
+procedure NMRAnetConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
 procedure NMRAnetConfigurationProtocol_HandleDatagram(Datagram: PDatagramBuffer);
   
 
 
 implementation
 
-procedure NMRAnetConfigurationProtocol_Initialize;
+procedure NMRAnetConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
 begin
   ConfigurationProtocolInfo.iState := STATE_CONFIGPROTOCCOL_START;
 end;
@@ -96,7 +97,7 @@ begin
   end
 end;
 
-procedure NMRAnetConfigurationProtocol_Process;
+procedure NMRAnetConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
 begin
   case ConfigurationProtocolInfo.iState of
     STATE_CONFIGPROTOCCOL_START : begin end;

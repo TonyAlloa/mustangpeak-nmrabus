@@ -76,8 +76,8 @@ begin
   Track_DCC_Out_Bar_Pin := not Track_DCC_Out_Pin;
   
   // Now we can update the xxxx_DCC_PIN_BIT flags for the next 56us time slot
-  NMRA_DCC_56us_TimeTick(@Track);                                                          // < 1us
-  NMRA_DCC_TransmitterStateMachine(@Track);                                                // < 5us
+  NMRA_DCC_56us_TimeTick(@Track);                                                         // < 1us
+  NMRA_DCC_TransmitterStateMachine(@Track);                                               // < 5us
   NMRA_DCC_LoadPacketIntoTransmitterStateMachine(@Track, PREAMBLE_BIT_COUNT_NORMAL);      // < 11us    Max
 end;
 
@@ -88,6 +88,7 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
   NMRAnetStateMachine_1ms_Timer(@NMRAnetNodeBuffer); // TODO ENUMERATE ALL THE ACTIVE NODE BUFFERS!!!!!!!!!!!!
+                                                     //      1ms SEEMS TO SHORT, 100ms seems better for what I am trying to do......
 end;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
@@ -293,6 +294,12 @@ begin
        
        
     TMR3 := 0;
+    
+    // TODO June 4, 2012
+    //    Look for optimization in statemachines
+    //    Rethink the statemachine that handles the Responses, should it look for valid responses instead of testing lots of empty possibilities
+    //    Think about using a global pool of dynmaically allocated Datagram and ACDI buffers.  Having a RX and TX for both for all vNodes does not make sense
+    
     NMRAnetStateMachine_Process(@NMRAnetNodeBuffer);
   
   {  if TMR3 > MaxTime_StateMachine then

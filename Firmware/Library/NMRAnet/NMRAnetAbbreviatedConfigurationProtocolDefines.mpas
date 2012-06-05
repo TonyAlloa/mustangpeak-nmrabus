@@ -67,7 +67,7 @@ type
   
   TACDI_TransmitBufferList = record
     List: array[0..LEN_ACDI_TRANSMIT_BUFFER_ARRAY-1] of TACDI_TransmitBuffer;
-    iActiveBuffer: Byte;
+    iActiveBuffer: Byte;                                                        // 10 Bytes
   end;
   
   TACDI_ReceiveBuffer = record                                                  // The only time we receive ACDI information is if we ask for it.  As such we can control the number of simutanious receives to 1
@@ -78,12 +78,13 @@ type
     MfgVersion: Byte;                                                           // Version ID for the ACDI
     UserVersion: Byte;                                                          // Version ID for the ACDI for the User Data
     NextChar: ^Char;                                                            // Where the Next Char is to be written
+                                                                                // 10 Bytes to here
     Mfg: string[ACDI_LEN_MFG];
     MfgName: string[ACDI_LEN_MFG_NAME];
     MfgHWVer: string[ACDI_LEN_MFG_HW_VER];
     MfgSWVer: string[ACDI_LEN_MFG_SW_VER];
     UserName: string[ACDI_LEN_USER_NAME];
-    UserDesc: string[ACDI_LEN_USER_DESC];
+    UserDesc: string[ACDI_LEN_USER_DESC];                                       // 16 * 6 = 96 + 10 = 106 Bytes
   end;
   PACDI_ReceiveBuffer = ^TACDI_ReceiveBuffer;
   
