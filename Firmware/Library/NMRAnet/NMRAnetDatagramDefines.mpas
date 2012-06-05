@@ -67,7 +67,7 @@ type
   TDatagram = array[0..LEN_DATAGRAM-1] of Byte;
   PDatagram = ^TDatagram;
   
-  TBufferOverflowList = array[LEN_DATAGRAM_BUFFER_OVERFLOW_LIST] of Word;
+  TDatagramOverflowList = array[LEN_DATAGRAM_BUFFER_OVERFLOW_LIST] of Word;
   
   TDatagramError = record
     MTI: Byte;
@@ -86,9 +86,6 @@ type
     iStateMachine: Byte;                                                        // Each Datagram Buffer holds it own place in the global statemachine, this allow interleaving and no deadlock when a target node is not responding
   end;
   PDatagramBuffer = ^TDatagramBuffer;
-
-var
-  BufferOverflowList: TBufferOverflowList;                                      // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   
 implementation
 

@@ -265,6 +265,7 @@ type
     Responses: TQueuedResponses;                                                // Responses the NMRABus_Process loop looks at to response to received messages
     DatagramReceive: PDatagramBuffer;                                           // Dynamically allocated only when needed
     DatagramTransmit: PDatagramBuffer;                                          // Dynamically allocated only when needed
+    DatagramOverflowList: TDatagramOverflowList;                                    // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
     ACDI_TransmitBuffer: PACDI_TransmitBuffer;                                  // Dynamically allocated only when needed
     ACDI_ReceiveBuffer: PACDI_ReceiveBuffer;                                    // Dynamically allocated only when needed
   end;
@@ -285,9 +286,6 @@ type
   PDatagramTaskCallbackFunc = ^TDatagramTaskCallbackFunc;
   
 var
-  NMRAnetNodeBuffer: TNMRAnetNodeBuffer;
-  
-var
   SimpleResponseCallbackFunc: PSimpleResponseCallbackFunc;
   ComplexResponseCallbackFunc: PComplexResponseCallbackFunc;
 var
@@ -300,6 +298,8 @@ var
 
   MaxTime_StateMachine: Word;
   MaxTime_RX: Word;
+  
+  NMRAnetNodeBuffer: TNMRAnetNodeBuffer;
 
 implementation
 

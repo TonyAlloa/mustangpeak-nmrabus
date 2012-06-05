@@ -27,7 +27,10 @@ procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func
 implementation
 
  function TryAllocateBuffer(NodeBuffer: PNMRAnetNodeBuffer; var Datagram: PDatagramBuffer): Boolean; forward;
-
+ 
+ 
+ 
+ 
 procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
 var
   i, j: Integer;
@@ -65,7 +68,7 @@ begin
   NMRAnetDatagrams_InitializeDatagramBuffer(NodeBuffer^.DatagramReceive);
   NMRAnetDatagrams_InitializeDatagramBuffer(NodeBuffer^.DatagramTransmit);
   for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST-1 do
-    BufferOverflowList[i] := 0;
+    NodeBuffer^.DatagramOverflowList[i] := 0;
   DatagramCallbackFunc := PDatagramTaskCallbackFunc(nil);
   DatagramTrainControlCallbackFunc := PDatagramTaskCallbackFunc(nil);
   DatagramMemConfigurationCallbackFunc := PDatagramTaskCallbackFunc(nil);
@@ -212,12 +215,12 @@ begin
       i := 0;
       while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
       begin
-        if BufferOverflowList[i] <> 0 then
+        if NodeBuffer^.DatagramOverflowList[i] <> 0 then
         begin
-          Datagram.Alias := BufferOverflowList[i];
+          Datagram.Alias := NodeBuffer^.DatagramOverflowList[i];
           NMRANetUtilities_LoadDatagramResultBytes(@Datagram, MTI_TYPE_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
           if TrySendDatagramResponse(NodeBuffer, @Datagram, DATAGRAM_BUFFER_EMPTY) then
-            BufferOverflowList[i] := 0;
+            NodeBuffer^.DatagramOverflowList[i] := 0;
           Exit;
         end;
         Inc(i);
@@ -676,9 +679,9 @@ var
 begin
   while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
   begin
-    if BufferOverflowList[i] = 0 then
+    if NodeBuffer^.DatagramOverflowList[i] = 0 then
     begin
-      BufferOverflowList[i] := Datagram^.Alias;
+      NodeBuffer^.DatagramOverflowList[i] := Datagram^.Alias;
       Exit;
     end
   end

@@ -247,6 +247,9 @@ var
   ii: Integer;
   ii2: Integer;
   
+  TestDatagramRx: TDatagramBuffer;
+  TestDatagramTx: TDatagramBuffer;
+  
 begin
   xx := Sizeof(TDatagram);
   xx := Inc(xx);
@@ -289,7 +292,10 @@ begin
   
  // NMRAnetMobileNode_InitializeEEPROM;
   
-
+  NMRAnetDatagrams_InitializeDatagramBuffer(@TestDatagramRx);
+  NMRAnetDatagrams_InitializeDatagramBuffer(@TestDatagramTx);
+  NMRAnetNodeBuffer.DatagramReceive := @TestDatagramRx;
+  NMRAnetNodeBuffer.DatagramTransmit := @TestDatagramTx;
 
   while (TRUE) do
   begin

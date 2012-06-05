@@ -25,7 +25,7 @@ implementation
 
 procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(ReceiveBuffer: PACDI_ReceiveBuffer);
 var
-  i, j: Integer;
+  j: Integer;
 begin
   if ReceiveBuffer <> nil then
   begin
@@ -48,8 +48,6 @@ begin
 end;
 
 procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(TransmitBuffer: PACDI_TransmitBuffer);
-var
-  i, j: Integer;
 begin
   if TransmitBuffer <> nil then
   begin
@@ -260,8 +258,6 @@ end;
 //
 // *****************************************************************************
 procedure FindReceiveBuffer(NodeBuffer: PNMRAnetNodeBuffer; var ReceiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word);
-var
-  i: Integer;
 begin
   ReceiveBuffer := PACDI_ReceiveBuffer(nil);
   
