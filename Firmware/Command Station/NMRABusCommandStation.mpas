@@ -295,7 +295,7 @@ begin
     TMR3 := 0;
     NMRAnetStateMachine_Process(@NMRAnetNodeBuffer);
   
-    if TMR3 > MaxTime_StateMachine then
+  {  if TMR3 > MaxTime_StateMachine then
     begin
       MaxTime_StateMachine := TMR3;
       FloatToStr((50e-9*double( MaxTime_StateMachine))*1e6, s_float);
@@ -307,11 +307,11 @@ begin
       FloatToStr((50e-9*double( MaxTime_RX))*1e6, s_float);
       UART1_Write_Text('CAN RX Max: ' + s_float+'us'+LF);
       Rlaststate := MaxTime_RX
-    end;
+    end;      }
     
 
 
-    delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
+    delay_us(600);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
 
     if NMRAnetCANReceive_Permited(@NMRAnetNodeBuffer) then
     begin

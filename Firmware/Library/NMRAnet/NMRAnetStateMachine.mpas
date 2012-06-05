@@ -229,13 +229,13 @@ begin
   NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer);
   SimpleResponseCallbackFunc := PSimpleResponseCallbackFunc( nil);
   ComplexResponseCallbackFunc := PComplexResponseCallbackFunc( nil);
-  NMRAnetNodeBuffer.State := 0;
-  GetUniqueIDFunc(NMRAnetNodeBuffer.Node.ID[1], NMRAnetNodeBuffer.Node.ID[0]);
-  NMRAnetNodeBuffer.Node.Seed[0] := NMRAnetNodeBuffer.Node.ID[0];
-  NMRAnetNodeBuffer.Node.Seed[1] := NMRAnetNodeBuffer.Node.ID[1];
-  NMRAnetNodeBuffer.iState := STATE_NMRABUS_START;
+  NodeBuffer^.State := 0;
+  GetUniqueIDFunc(NodeBuffer^.Node.ID[1], NodeBuffer^.Node.ID[0]);
+  NodeBuffer^.Node.Seed[0] := NodeBuffer^.Node.ID[0];
+  NodeBuffer^.Node.Seed[1] := NodeBuffer^.Node.ID[1];
+  NodeBuffer^.iState := STATE_NMRABUS_START;
   FlushResponses(NodeBuffer);
-  NMRAnetNodeBuffer.Responses.BufferOverrunCount := 0;
+  NodeBuffer^.Responses.BufferOverrunCount := 0;
   NMRAnetStateMachine_InitializeList(@TX_CANBufferList, @TX_CANBuffer, TX_CAN_BUFFER_LEN);
   NMRAnetStateMachine_InitializeList(@TX_NMRAnetBufferList, @TX_NMRAnet_Buffer, TX_NMRANET_BUFFER_LEN);
 end;
@@ -399,7 +399,7 @@ end;
 procedure SendCANLayerSimpleResponse(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer; VariableField: DWord; Flag: Word; NextState: Byte);
 begin
   if TestReceivedMsgFlags(NodeBuffer, Flag) then
-    if TryTransmitCANLayerMsg(NodeBuffer, VariableField, Buffer) then
+    if TryTransmitCANLayerMsg(NodeBuffer, Buffer, VariableField) then
       ClearReceivedMsgFlags(NodeBuffer, Flag);
   NodeBuffer^.Responses.iState := NextState
 end;
