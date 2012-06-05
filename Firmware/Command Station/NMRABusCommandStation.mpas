@@ -112,14 +112,15 @@ var
   i: Integer;
 begin
   Handled := True;
-  
-  NodeBuffer^.DatagramTransmit.List[0].Databytes[0] := $C0;
-  for i := 1 to Datagram^.DataBytes[1] do
-    NodeBuffer^.DatagramTransmit.List[0].Databytes[i] := i;
-  NodeBuffer^.DatagramTransmit.List[0].iByteCount := Datagram^.DataBytes[1] + 1;
-  NodeBuffer^.DatagramTransmit.List[0].Alias := $ee9;
-  NodeBuffer^.DatagramTransmit.List[0].State := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
-
+  if Datagram <> nil then
+  begin
+    NodeBuffer^.DatagramTransmit^.List[0].Databytes[0] := $C0;
+    for i := 1 to Datagram^.DataBytes[1] do
+      NodeBuffer^.DatagramTransmit^.List[0].Databytes[i] := i;
+    NodeBuffer^.DatagramTransmit^.List[0].iByteCount := Datagram^.DataBytes[1] + 1;
+    NodeBuffer^.DatagramTransmit^.List[0].Alias := $ee9;
+    NodeBuffer^.DatagramTransmit^.List[0].State := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
+  end
 end;
 
 procedure MemConfigurationCallback(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; var Handled: Boolean);
@@ -247,6 +248,16 @@ var
   ii2: Integer;
   
 begin
+  xx := Sizeof(TDatagramReceive);
+  xx := Inc(xx);
+  ii := SizeOf(TDatagramTransmit);
+  ii := Inc(ii);
+  xx := Sizeof(TACDI_TransmitBufferList);
+  xx := Inc(xx);
+  ii := SizeOf(TACDI_ReceiveBufferList);
+  ii := Inc(ii);
+  
+
 
   Track_DCC_Out_Pin := 0;
   Track_DCC_Out_Pin := 0;

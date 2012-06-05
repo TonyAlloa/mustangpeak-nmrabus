@@ -98,11 +98,13 @@ type
     iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
     BufferOverflowList: TBufferOverflowList;                                    // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;
+  PDatagramReceive = ^TDatagramReceive;
   
   TDatagramTransmit = record                                                    // Buffer to hold datagrams being send by the node
     List: TDatagramTransmitBufferArray;
     iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
   end;
+  PDatagramTransmit = ^TDatagramTransmit;
   
 implementation
 

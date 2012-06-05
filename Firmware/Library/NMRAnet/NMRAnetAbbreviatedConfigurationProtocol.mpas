@@ -15,11 +15,58 @@ function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptCont
 function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(NodeBuffer: PNMRAnetNodeBuffer; DestAlias: Word): Boolean;
 procedure NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(Callback: PACDI_ReceiveCallbackFunc);
 procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveList(ReceiveBufferList: PACDI_ReceiveBufferList);
+procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitList(TransmitBufferList: PACDI_TransmitBufferList);
 
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
 
 implementation
+
+procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveList(ReceiveBufferList: PACDI_ReceiveBufferList);
+var
+  i, j: Integer;
+begin
+  if ReceiveBufferList <> nil then
+  begin
+    for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do
+    begin
+      ReceiveBufferList^.List[i].State := ACDI_BUFFER_STATE_EMPTY;
+      ReceiveBufferList^.List[i].SourceAlias := 0;
+      ReceiveBufferList^.List[i].iState := ACDI_RECEIVE_MFG_VERSION;
+      for j := 0 to ACDI_LEN_MFG-1 do                                             // Not needed just helps with debugging
+        ReceiveBufferList^.List[i].Mfg[j] := $FF;
+      for j := 0 to ACDI_LEN_MFG_NAME-1 do
+        ReceiveBufferList^.List[i].MfgName[j] := $FF;
+      for j := 0 to ACDI_LEN_MFG_HW_VER-1 do
+        ReceiveBufferList^.List[i].MfgHWVer[j] := $FF;
+      for j := 0 to ACDI_LEN_MFG_SW_VER-1 do
+        ReceiveBufferList^.List[i].MfgSWVer[j] := $FF;
+      for j := 0 to ACDI_LEN_USER_NAME-1 do
+       ReceiveBufferList^.List[i].UserName[j] := $FF;
+      for j := 0 to ACDI_LEN_USER_DESC-1 do
+        ReceiveBufferList^.List[i].UserDesc[j] := $FF;
+    end;
+  end
+end;
+
+procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitList(TransmitBufferList: PACDI_TransmitBufferList);
+var
+  i, j: Integer;
+begin
+  if TransmitBufferList <> nil then
+  begin
+    TransmitBufferList^.iActiveBuffer := 0;
+    for i := 0 to LEN_ACDI_TRANSMIT_BUFFER_ARRAY - 1 do
+    begin
+      TransmitBufferList^.List[i].State := ACDI_BUFFER_STATE_EMPTY;
+      TransmitBufferList^.List[i].iState := STATE_ACDI_TX_START;
+      TransmitBufferList^.List[i].DestAlias := 0;
+      TransmitBufferList^.List[i].SourceAlias := 0;
+      TransmitBufferList^.List[i].iNextChar := 0;
+    end;
+  end
+end;
 
 // *****************************************************************************
 //  procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize
@@ -29,56 +76,32 @@ implementation
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
-var
-  i, j: Integer;
+procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNodeBuffer;);
+
 begin
   ACDI_ReceiveCallbackFunc := PACDI_ReceiveCallbackFunc( nil);
-  
-  NodeBuffer^.ACDI_TransmitBufferList.iActiveBuffer := 0;
-  for i := 0 to LEN_ACDI_TRANSMIT_BUFFER_ARRAY - 1 do
-  begin
-    NodeBuffer^.ACDI_TransmitBufferList.List[i].State := ACDI_BUFFER_STATE_EMPTY;
-    NodeBuffer^.ACDI_TransmitBufferList.List[i].iState := STATE_ACDI_TX_START;
-    NodeBuffer^.ACDI_TransmitBufferList.List[i].DestAlias := 0;
-    NodeBuffer^.ACDI_TransmitBufferList.List[i].SourceAlias := 0;
-    NodeBuffer^.ACDI_TransmitBufferList.List[i].iNextChar := 0;
-  end;
-  
-  for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do
-  begin
-    NodeBuffer^.ACDI_ReceiveBufferList.List[i].State := ACDI_BUFFER_STATE_EMPTY;
-    NodeBuffer^.ACDI_ReceiveBufferList.List[i].SourceAlias := 0;
-    NodeBuffer^.ACDI_ReceiveBufferList.List[i].iState := ACDI_RECEIVE_MFG_VERSION;
-    for j := 0 to ACDI_LEN_MFG-1 do                                             // Not needed just helps with debugging
-      NodeBuffer^.ACDI_ReceiveBufferList.List[i].Mfg[j] := $FF;
-    for j := 0 to ACDI_LEN_MFG_NAME-1 do
-      NodeBuffer^.ACDI_ReceiveBufferList.List[i].MfgName[j] := $FF;
-    for j := 0 to ACDI_LEN_MFG_HW_VER-1 do
-      NodeBuffer^.ACDI_ReceiveBufferList.List[i].MfgHWVer[j] := $FF;
-    for j := 0 to ACDI_LEN_MFG_SW_VER-1 do
-      NodeBuffer^.ACDI_ReceiveBufferList.List[i].MfgSWVer[j] := $FF;
-    for j := 0 to ACDI_LEN_USER_NAME-1 do
-     NodeBuffer^. ACDI_ReceiveBufferList.List[i].UserName[j] := $FF;
-    for j := 0 to ACDI_LEN_USER_DESC-1 do
-      NodeBuffer^.ACDI_ReceiveBufferList.List[i].UserDesc[j] := $FF;
-  end;
+  NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitList(NodeBuffer^.ACDI_TransmitBufferList);
+  NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveList(NodeBuffer^.ACDI_ReceiveBufferList);
 end;
+
 
 procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick(NodeBuffer: PNMRAnetNodeBuffer);
 var
   i: Integer;
 begin
-  for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do
+  if NodeBuffer^.ACDI_ReceiveBufferList <> nil then
   begin
-    if NodeBuffer^.ACDI_ReceiveBufferList.List[i].State = ACDI_BUFFER_STATE_PROCESSING then
+  for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do
     begin
-      if NodeBuffer^.ACDI_ReceiveBufferList.List[i].iWatchdog <= ACDI_WATCHDOG_MAX then
-        Inc(NodeBuffer^.ACDI_ReceiveBufferList.List[i].iWatchdog)
-      else
-        NodeBuffer^.ACDI_ReceiveBufferList.List[i].State := ACDI_BUFFER_STATE_EMPTY         // The buffer has been abandon reset it
+      if NodeBuffer^.ACDI_ReceiveBufferList^.List[i].State = ACDI_BUFFER_STATE_PROCESSING then
+      begin
+        if NodeBuffer^.ACDI_ReceiveBufferList^.List[i].iWatchdog <= ACDI_WATCHDOG_MAX then
+          Inc(NodeBuffer^.ACDI_ReceiveBufferList^.List[i].iWatchdog)
+        else
+          NodeBuffer^.ACDI_ReceiveBufferList^.List[i].State := ACDI_BUFFER_STATE_EMPTY         // The buffer has been abandon reset it
+      end
     end
-  end;
+  end
 end;
 
 procedure NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(Callback: PACDI_ReceiveCallbackFunc);
@@ -100,18 +123,21 @@ var
 begin
   Result := False;
   i := 0;
-  while i < LEN_ACDI_TRANSMIT_BUFFER_ARRAY do
+  if NodeBuffer^.ACDI_TransmitBufferList <> nil then
   begin
-    if NodeBuffer^.ACDI_TransmitBufferList.List[i].State = ACDI_BUFFER_STATE_EMPTY then
+    while i < LEN_ACDI_TRANSMIT_BUFFER_ARRAY do
     begin
-      NodeBuffer^.ACDI_TransmitBufferList.List[i].State :=  ACDI_BUFFER_STATE_PROCESSING;
-      NodeBuffer^.ACDI_TransmitBufferList.List[i].DestAlias := DestAlias;
-      NodeBuffer^.ACDI_TransmitBufferList.List[i].SourceAlias := NodeBuffer^.Node.AliasID;
-      Result := True;
-      Break
+      if NodeBuffer^.ACDI_TransmitBufferList^.List[i].State = ACDI_BUFFER_STATE_EMPTY then
+      begin
+        NodeBuffer^.ACDI_TransmitBufferList^.List[i].State :=  ACDI_BUFFER_STATE_PROCESSING;
+        NodeBuffer^.ACDI_TransmitBufferList^.List[i].DestAlias := DestAlias;
+        NodeBuffer^.ACDI_TransmitBufferList^.List[i].SourceAlias := NodeBuffer^.Node.AliasID;
+        Result := True;
+        Break
+      end;
+      Inc(i)
     end;
-    Inc(i)
-  end;
+  end
 end;
 
 // *****************************************************************************
@@ -181,67 +207,70 @@ var
   CANBuffer: TCANBuffer;
   LenMfg, LenMfgName, LenMfgHWVer, LenMfgSWVer, LenUserName, LenUserDesc: Word;
 begin
-  ActiveBuffer := @NodeBuffer^.ACDI_TransmitBufferList.List[NodeBuffer^.ACDI_TransmitBufferList.iActiveBuffer];
-  case ActiveBuffer^.iState of
-    STATE_ACDI_TX_START :
-      begin
-        if ActiveBuffer^.State <> ACDI_BUFFER_STATE_EMPTY then
+  if NodeBuffer^.ACDI_TransmitBufferList <> nil then
+  begin
+    ActiveBuffer := @NodeBuffer^.ACDI_TransmitBufferList^.List[NodeBuffer^.ACDI_TransmitBufferList^.iActiveBuffer];
+    case ActiveBuffer^.iState of
+      STATE_ACDI_TX_START :
         begin
-          ActiveBuffer^.iTransferState := ACDI_TRANSMIT_VERSION_MFG_INFO;
-          ActiveBuffer^.iState := STATE_ACDI_TX_PROCESSING_CHARS;
-        end;
-      end;
-    STATE_ACDI_TX_PROCESSING_CHARS :
-      begin
-        if not CANStorage_ListFull(@TX_NMRAnetBufferList) then                  // Make sure we can send the message before building it
-        begin
-          CANBuffer.DataCount := 0;
-          CANBuffer.DataBytes[CANBuffer.DataCount] := MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REPLY;
-          Inc(CANBuffer.DataCount);
-          
-          LenMfg      := Length(ABBREVIATED_CDI_MFG);
-          LenMfgName  := Length(ABBREVIATED_CDI_MFG_NAME);
-          LenMfgHWVer := Length(ABBREVIATED_CDI_MFG_HW_VER);
-          LenMfgSWVer := Length(ABBREVIATED_CDI_MFG_SW_VER);
-          LenUserName := Length(ABBREVIATED_CDI_USER_NAME);
-          LenUserDesc := Length(ABBREVIATED_CDI_USER_DISC);
-
-          while (ActiveBuffer^.iTransferState <> ACDI_TRANSMIT_COMPLETE) and (CANBuffer.DataCount < 8) do
+          if ActiveBuffer^.State <> ACDI_BUFFER_STATE_EMPTY then
           begin
-            case ActiveBuffer^.iTransferState of
-              ACDI_TRANSMIT_VERSION_MFG_INFO  : VersionIndicator(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_MFG);
-              ACDI_TRANSMIT_MFG               : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_MFG[ActiveBuffer^.iNextChar], LenMfg, ACDI_TRANSMIT_MFG_NULL);
-              ACDI_TRANSMIT_MFG_NULL          : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_MFG_NAME);
-              ACDI_TRANSMIT_MFG_NAME          : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_NAME[ActiveBuffer^.iNextChar], LenMfgName, ACDI_TRANSMIT_MFG_NAME_NULL);
-              ACDI_TRANSMIT_MFG_NAME_NULL     : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_MFG_HW_VER);
-              ACDI_TRANSMIT_MFG_HW_VER        : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_HW_VER[ActiveBuffer^.iNextChar], LenMfgHWVer, ACDI_TRANSMIT_MFG_HW_NULL);
-              ACDI_TRANSMIT_MFG_HW_NULL       : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_MFG_SW_VER);
-              ACDI_TRANSMIT_MFG_SW_VER        : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_SW_VER[ActiveBuffer^.iNextChar], LenMfgSWVer, ACDI_TRANSMIT_MFG_SW_NULL);
-              ACDI_TRANSMIT_MFG_SW_NULL       : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_VERSION_USER_INFO);
-              ACDI_TRANSMIT_VERSION_USER_INFO : VersionIndicator(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_USER_NAME);
-              ACDI_TRANSMIT_USER_NAME         : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_USER_NAME[ActiveBuffer^.iNextChar], LenUserName, ACDI_TRANSMIT_USER_NAME_NULL);
-              ACDI_TRANSMIT_USER_NAME_NULL    : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_USER_DESC);
-              ACDI_TRANSMIT_USER_DESC         : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_USER_DISC[ActiveBuffer^.iNextChar], LenUserDesc, ACDI_TRANSMIT_USER_DESC_NULL);
-              ACDI_TRANSMIT_USER_DESC_NULL    : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_COMPLETE);
-            end;
+            ActiveBuffer^.iTransferState := ACDI_TRANSMIT_VERSION_MFG_INFO;
+            ActiveBuffer^.iState := STATE_ACDI_TX_PROCESSING_CHARS;
           end;
-          
-          NMRAnetUtilities_CreateNMRABusMessagePacket(NodeBuffer, @CANBuffer, FT_PROTOCOL_ACDI, ActiveBuffer^.DestAlias, CANBuffer.DataCount, nil);
-          CANStorage_AddToList(@TX_NMRAnetBufferList, @CANBuffer);
-          StartCANMessageEngine();
-
-          if CANBuffer.DataCount < 8 then
+        end;
+      STATE_ACDI_TX_PROCESSING_CHARS :
+        begin
+          if not CANStorage_ListFull(@TX_NMRAnetBufferList) then                  // Make sure we can send the message before building it
           begin
-            ActiveBuffer^.State := ACDI_BUFFER_STATE_EMPTY;
-            ActiveBuffer^.iState := STATE_ACDI_TX_START;
+            CANBuffer.DataCount := 0;
+            CANBuffer.DataBytes[CANBuffer.DataCount] := MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REPLY;
+            Inc(CANBuffer.DataCount);
+
+            LenMfg      := Length(ABBREVIATED_CDI_MFG);
+            LenMfgName  := Length(ABBREVIATED_CDI_MFG_NAME);
+            LenMfgHWVer := Length(ABBREVIATED_CDI_MFG_HW_VER);
+            LenMfgSWVer := Length(ABBREVIATED_CDI_MFG_SW_VER);
+            LenUserName := Length(ABBREVIATED_CDI_USER_NAME);
+            LenUserDesc := Length(ABBREVIATED_CDI_USER_DISC);
+
+            while (ActiveBuffer^.iTransferState <> ACDI_TRANSMIT_COMPLETE) and (CANBuffer.DataCount < 8) do
+            begin
+              case ActiveBuffer^.iTransferState of
+                ACDI_TRANSMIT_VERSION_MFG_INFO  : VersionIndicator(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_MFG);
+                ACDI_TRANSMIT_MFG               : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_MFG[ActiveBuffer^.iNextChar], LenMfg, ACDI_TRANSMIT_MFG_NULL);
+                ACDI_TRANSMIT_MFG_NULL          : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_MFG_NAME);
+                ACDI_TRANSMIT_MFG_NAME          : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_NAME[ActiveBuffer^.iNextChar], LenMfgName, ACDI_TRANSMIT_MFG_NAME_NULL);
+                ACDI_TRANSMIT_MFG_NAME_NULL     : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_MFG_HW_VER);
+                ACDI_TRANSMIT_MFG_HW_VER        : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_HW_VER[ActiveBuffer^.iNextChar], LenMfgHWVer, ACDI_TRANSMIT_MFG_HW_NULL);
+                ACDI_TRANSMIT_MFG_HW_NULL       : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_MFG_SW_VER);
+                ACDI_TRANSMIT_MFG_SW_VER        : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_MFG_SW_VER[ActiveBuffer^.iNextChar], LenMfgSWVer, ACDI_TRANSMIT_MFG_SW_NULL);
+                ACDI_TRANSMIT_MFG_SW_NULL       : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_VERSION_USER_INFO);
+                ACDI_TRANSMIT_VERSION_USER_INFO : VersionIndicator(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_USER_NAME);
+                ACDI_TRANSMIT_USER_NAME         : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_USER_NAME[ActiveBuffer^.iNextChar], LenUserName, ACDI_TRANSMIT_USER_NAME_NULL);
+                ACDI_TRANSMIT_USER_NAME_NULL    : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_USER_DESC);
+                ACDI_TRANSMIT_USER_DESC         : LoadChars(@CANBuffer, ActiveBuffer, @ABBREVIATED_CDI_USER_DISC[ActiveBuffer^.iNextChar], LenUserDesc, ACDI_TRANSMIT_USER_DESC_NULL);
+                ACDI_TRANSMIT_USER_DESC_NULL    : NullChar(@CANBuffer, ActiveBuffer, ACDI_TRANSMIT_COMPLETE);
+              end;
+            end;
+
+            NMRAnetUtilities_CreateNMRABusMessagePacket(NodeBuffer, @CANBuffer, FT_PROTOCOL_ACDI, ActiveBuffer^.DestAlias, CANBuffer.DataCount, nil);
+            CANStorage_AddToList(@TX_NMRAnetBufferList, @CANBuffer);
+            StartCANMessageEngine();
+
+            if CANBuffer.DataCount < 8 then
+            begin
+              ActiveBuffer^.State := ACDI_BUFFER_STATE_EMPTY;
+              ActiveBuffer^.iState := STATE_ACDI_TX_START;
+            end
           end
-        end
-      end;
-  end;
-  
-  Inc(NodeBuffer^.ACDI_TransmitBufferList.iActiveBuffer);
-  if NodeBuffer^.ACDI_TransmitBufferList.iActiveBuffer >= LEN_ACDI_TRANSMIT_BUFFER_ARRAY then
-    NodeBuffer^.ACDI_TransmitBufferList.iActiveBuffer := 0;
+        end;
+    end;
+
+    Inc(NodeBuffer^.ACDI_TransmitBufferList^.iActiveBuffer);
+    if NodeBuffer^.ACDI_TransmitBufferList^.iActiveBuffer >= LEN_ACDI_TRANSMIT_BUFFER_ARRAY then
+      NodeBuffer^.ACDI_TransmitBufferList^.iActiveBuffer := 0;
+  end
 end;
 
 
@@ -259,32 +288,34 @@ var
   i: Integer;
 begin
   ReceiveBuffer := PACDI_ReceiveBuffer(nil);
+  if NodeBuffer^.ACDI_ReceiveBufferList <> nil then
+  begin
+    for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do                            // Look for an in progress reply for this SourceAlias
+    begin
+      if NodeBuffer^.ACDI_ReceiveBufferList^.List[i].State = ACDI_BUFFER_STATE_PROCESSING then
+        if NodeBuffer^.ACDI_ReceiveBufferList^.List[i].SourceAlias = IncommingSourceAlias then
+        begin
+          ReceiveBuffer := @NodeBuffer^.ACDI_ReceiveBufferList^.List[i];                       // Leave it alone to continue
+          ReceiveBuffer^.iWatchdog := 0;
+          Exit
+        end;
+    end;
 
-  for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do                            // Look for an in progress reply for this SourceAlias
-  begin
-    if NodeBuffer^.ACDI_ReceiveBufferList.List[i].State = ACDI_BUFFER_STATE_PROCESSING then
-      if NodeBuffer^.ACDI_ReceiveBufferList.List[i].SourceAlias = IncommingSourceAlias then
-      begin
-        ReceiveBuffer := @NodeBuffer^.ACDI_ReceiveBufferList.List[i];                       // Leave it alone to continue
-        ReceiveBuffer^.iWatchdog := 0;
-        Exit
-      end;
-  end;
-  
-  if ReceiveBuffer = nil then                                                   // If there is no in progress replies start a fresh one
-  begin
-    for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do
-      if NodeBuffer^.ACDI_ReceiveBufferList.List[i].State = ACDI_BUFFER_STATE_EMPTY then
-      begin
-        ReceiveBuffer := @NodeBuffer^.ACDI_ReceiveBufferList.List[i];
-        ReceiveBuffer^.iState := ACDI_RECEIVE_MFG_VERSION;
-        ReceiveBuffer^.State := ACDI_BUFFER_STATE_PROCESSING;
-        ReceiveBuffer^.NextChar := @ReceiveBuffer^.Mfg[0];
-        ReceiveBuffer^.SourceAlias := IncommingSourceAlias;
-        ReceiveBuffer^.iWatchdog := 0;
-        Exit
-      end
-  end;
+    if ReceiveBuffer = nil then                                                   // If there is no in progress replies start a fresh one
+    begin
+      for i := 0 to LEN_ACDI_RECEIVE_BUFFER_ARRAY - 1 do
+        if NodeBuffer^.ACDI_ReceiveBufferList^.List[i].State = ACDI_BUFFER_STATE_EMPTY then
+        begin
+          ReceiveBuffer := @NodeBuffer^.ACDI_ReceiveBufferList^.List[i];
+          ReceiveBuffer^.iState := ACDI_RECEIVE_MFG_VERSION;
+          ReceiveBuffer^.State := ACDI_BUFFER_STATE_PROCESSING;
+          ReceiveBuffer^.NextChar := @ReceiveBuffer^.Mfg[0];
+          ReceiveBuffer^.SourceAlias := IncommingSourceAlias;
+          ReceiveBuffer^.iWatchdog := 0;
+          Exit
+        end
+    end;
+  end
 end;
 
 
