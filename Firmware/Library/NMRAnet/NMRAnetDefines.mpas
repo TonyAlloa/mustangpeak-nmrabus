@@ -20,7 +20,9 @@ unit NMRAnetDefines;
 {$I Options.inc}
 
 uses
-  CANDefines;
+  CANDefines,
+  NMRAnetAbbreviatedConfigurationProtocolDefines,
+  NMRAnetDatagramDefines;
 
 const
   MAX_BUS_LOGIN_TIMEOUT = 201;                                                  // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
@@ -261,21 +263,41 @@ type
     State: Word;                                                                // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
     iState: Byte;                                                               // Statemachine index for the main bus login
     Responses: TQueuedResponses;                                                // Responses the NMRABus_Process loop looks at to response to received messages
+    DatagramReceive: TDatagramReceive;
+    DatagramTransmit: TDatagramTransmit;
+    ACDI_TransmitBufferList: TACDI_TransmitBufferList;
+    ACDI_ReceiveBufferList: TACDI_ReceiveBufferList;
   end;
   PNMRAnetNodeBuffer = ^TNMRAnetNodeBuffer;
   
 type
-  TSimpleResponseCallbackFunc = procedure(Response: Word);                      // Response is the SRC_xxxx code of the response
+  TSimpleResponseCallbackFunc = procedure(NodeBuffer: PNMRAnetNodeBuffer; Response: Word);                      // Response is the SRC_xxxx code of the response
   PSimpleResponseCallbackFunc = ^TSimpleResponseCallbackFunc;
-  TComplexResponseCallbackFunc = procedure(Response: PQueuedResponse);
+  TComplexResponseCallbackFunc = procedure(NodeBuffer: PNMRAnetNodeBuffer; Response: PQueuedResponse);
   PComplexResponseCallbackFunc = ^TComplexResponseCallbackFunc;
+  
+type
+  TACDI_ReceiveCallbackFunc = procedure(NodeBuffer: PNMRAnetNodeBuffer; ACDI_Buffer: PACDI_ReceiveBuffer);
+  PACDI_ReceiveCallbackFunc = ^TACDI_ReceiveCallbackFunc;
+  
+type
+  TDatagramTaskCallbackFunc = procedure(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; var Handled: Boolean);
+  PDatagramTaskCallbackFunc = ^TDatagramTaskCallbackFunc;
   
 var
   NMRAnetNodeBuffer: TNMRAnetNodeBuffer;
+  
+var
   SimpleResponseCallbackFunc: PSimpleResponseCallbackFunc;
   ComplexResponseCallbackFunc: PComplexResponseCallbackFunc;
+var
+   ACDI_ReceiveCallbackFunc: PACDI_ReceiveCallbackFunc;                         // Called when a ACDI message is received
+var
+  DatagramCallbackFunc: PDatagramTaskCallbackFunc;                                  // Callback to the user app from the NMRADatagrams.mpas when a datagram is received that is not a special datagram defined in the following...
+  DatagramTrainControlCallbackFunc: PDatagramTaskCallbackFunc;                      // Callback to the user app from the NMRADatagrams.mpas when a Train Control datagram is received
+  DatagramMemConfigurationCallbackFunc: PDatagramTaskCallbackFunc;                  // Callback to the user app from the NMRADatagrams.mpas when a Memory Configuration datagram is received
   
-  
+
   MaxTime_StateMachine: Word;
   MaxTime_RX: Word;
 

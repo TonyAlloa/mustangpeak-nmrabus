@@ -1,8 +1,7 @@
 unit NMRAnetDatagramDefines;
 
 uses
-  CANDefines,
-  NMRAnetDefines;
+  CANDefines;
   
 {$I Options.inc}
 
@@ -104,18 +103,6 @@ type
     List: TDatagramTransmitBufferArray;
     iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
   end;
-  
-  TDatagramTaskCallbackFunc = procedure(Datagram: PDatagramBuffer; var Handled: Boolean);
-  PDatagramTaskCallbackFunc = ^TDatagramTaskCallbackFunc;
-
-var
-  DatagramReceive: TDatagramReceive;
-  DatagramTransmit: TDatagramTransmit;
-  
-  
-  DatagramCallback: PDatagramTaskCallbackFunc;                                  // Callback to the user app from the NMRADatagrams.mpas when a datagram is received that is not a special datagram defined in the following...
-  DatagramTrainControlCallback: PDatagramTaskCallbackFunc;                      // Callback to the user app from the NMRADatagrams.mpas when a Train Control datagram is received
-  DatagramMemConfigurationCallback: PDatagramTaskCallbackFunc;                  // Callback to the user app from the NMRADatagrams.mpas when a Memory Configuration datagram is received
   
 implementation
 

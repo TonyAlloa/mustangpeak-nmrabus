@@ -91,15 +91,6 @@ type
     List: array[0..LEN_ACDI_RECEIVE_BUFFER_ARRAY-1] of TACDI_ReceiveBuffer;
   end;
   
-  TACDI_ReceiveCallbackFunc = procedure(Buffer: PACDI_ReceiveBuffer);
-  PACDI_ReceiveCallbackFunc = ^TACDI_ReceiveCallbackFunc;
-  
-var
-   ACDI_TransmitBufferList: TACDI_TransmitBufferList;
-   ACDI_ReceiveBufferList: TACDI_ReceiveBufferList;
-   
-   ACDI_ReceiveCallbackFunc: PACDI_ReceiveCallbackFunc;                         // Called when a ACDI message is received
-
 implementation
 
 end.

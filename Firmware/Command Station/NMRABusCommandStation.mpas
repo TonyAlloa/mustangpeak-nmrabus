@@ -87,7 +87,7 @@ begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRAnetStateMachine_1ms_Timer;
+  NMRAnetStateMachine_1ms_Timer(@NMRAnetNodeBuffer); // TODO ENUMERATE ALL THE ACTIVE NODE BUFFERS!!!!!!!!!!!!
 end;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
@@ -106,22 +106,22 @@ var
   delay: word;
 
 
-procedure TrainControlCallback(Datagram: PDatagramBuffer; var Handled: Boolean);
+procedure TrainControlCallback(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; var Handled: Boolean);
 var
   i: Integer;
 begin
   Handled := True;
   
-  DatagramTransmit.List[0].Databytes[0] := $C0;
+  NodeBuffer^.DatagramTransmit.List[0].Databytes[0] := $C0;
   for i := 1 to Datagram^.DataBytes[1] do
-    DatagramTransmit.List[0].Databytes[i] := i;
-  DatagramTransmit.List[0].iByteCount := Datagram^.DataBytes[1] + 1;
-  DatagramTransmit.List[0].Alias := $ee9;
-  DatagramTransmit.List[0].State := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
+    NodeBuffer^.DatagramTransmit.List[0].Databytes[i] := i;
+  NodeBuffer^.DatagramTransmit.List[0].iByteCount := Datagram^.DataBytes[1] + 1;
+  NodeBuffer^.DatagramTransmit.List[0].Alias := $ee9;
+  NodeBuffer^.DatagramTransmit.List[0].State := DATAGRAM_BUFFER_IN_PROCESS;  // Kick it off.
 
 end;
 
-procedure MemConfigurationCallback(Datagram: PDatagramBuffer; var Handled: Boolean);
+procedure MemConfigurationCallback(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; var Handled: Boolean);
 //var
  // j, i: Integer;
 begin
@@ -138,7 +138,7 @@ begin
   UART1_Write_Text(LF);  }
 end;
 
-procedure AbbriviatedCDICallback(Buffer: PACDI_ReceiveBuffer);
+procedure AbbriviatedCDICallback(NodeBuffer: PNMRAnetNodeBuffer; ACDI_Buffer: PACDI_ReceiveBuffer);
 var
 
  i: Integer;
@@ -207,20 +207,20 @@ begin
   UART1_Write_Text(LF) ;
   
   }
-  ByteToStr(Buffer^.MfgVersion, s1);
+  ByteToStr(ACDI_Buffer^.MfgVersion, s1);
   UART1_Write_Text('Mfg Version: ' + s1+LF);
-  ByteToStr(Buffer^.UserVersion, s1);
+  ByteToStr(ACDI_Buffer^.UserVersion, s1);
   UART1_Write_Text('User Version: ' + s1+LF);
-  WordToHex(Buffer^.SourceAlias, s1);
+  WordToHex(ACDI_Buffer^.SourceAlias, s1);
   UART1_Write_Text('Source Alias: ' + s1+LF);
   
-  UART1_Write_Text(Buffer^.Mfg+LF);
-  UART1_Write_Text(Buffer^.MfgName+LF);
-  UART1_Write_Text(Buffer^.MfgHWVer+LF);
-  UART1_Write_Text(Buffer^.MfgSWVer+LF);
-  UART1_Write_Text(Buffer^.UserName+LF);
-  UART1_Write_Text(Buffer^.UserDesc+LF);
-  Buffer^.State := ACDI_BUFFER_STATE_EMPTY;                                     // Release the buffer
+  UART1_Write_Text(ACDI_Buffer^.Mfg+LF);
+  UART1_Write_Text(ACDI_Buffer^.MfgName+LF);
+  UART1_Write_Text(ACDI_Buffer^.MfgHWVer+LF);
+  UART1_Write_Text(ACDI_Buffer^.MfgSWVer+LF);
+  UART1_Write_Text(ACDI_Buffer^.UserName+LF);
+  UART1_Write_Text(ACDI_Buffer^.UserDesc+LF);
+  ACDI_Buffer^.State := ACDI_BUFFER_STATE_EMPTY;                                     // Release the buffer
 end;
 
 procedure ComplexResponseCallback(Response: PQueuedResponse);
@@ -257,15 +257,14 @@ begin
 
   _25AAxxxx_Initialize;
   CANStorage_Initialize;
-  NMRAnetStateMachine_Initialize;
+  NMRAnetStateMachine_Initialize(@NMRAnetNodeBuffer);
   MCU_Setup_Initialize;
   NMRA_DCC_Initialize;
-  NMRAnetMobileNode_Initialize;
- 
-  NMRAnetDatagrams_SetCallback(DatagramTrainControlCallback, @TrainControlCallback);
-  NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallback, @MemConfigurationCallback);
-  NMRAnetStateMachine_SetComplexCallbackFunc(@ComplexResponseCallback);
-  NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(@AbbriviatedCDICallback);
+
+  NMRAnetDatagrams_SetCallback(DatagramTrainControlCallbackFunc, @TrainControlCallback);
+//  NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallbackFunc, @MemConfigurationCallback);
+//  NMRAnetStateMachine_SetComplexCallbackFunc(@ComplexResponseCallback);
+ // NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(@AbbriviatedCDICallback);
   
 
  // UART1_Write_Text('Connecting'+LF);
@@ -314,7 +313,7 @@ begin
 
     delay_us(2000);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
 
-    if NMRAnetCANReceive_Permited then
+    if NMRAnetCANReceive_Permited(@NMRAnetNodeBuffer) then
     begin
 
     end;
