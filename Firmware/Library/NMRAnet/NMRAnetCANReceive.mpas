@@ -649,6 +649,7 @@ begin
 
   DoDefault := True;
   NodeBuffer := FindMatchingNodeBuffer(CANBuffer);
+  
   if NodeBuffer <> nil then
   begin
     if NMRAnetLayerReceiveHook <> nil then

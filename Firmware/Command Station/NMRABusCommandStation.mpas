@@ -249,6 +249,8 @@ var
   
   TestDatagramRx: TDatagramBuffer;
   TestDatagramTx: TDatagramBuffer;
+  TestACDIBufferTx: TACDI_TransmitBuffer;
+  TestACDIBufferRx: TACDI_ReceiveBuffer;
   
 begin
   xx := Sizeof(TDatagram);
@@ -296,6 +298,11 @@ begin
   NMRAnetDatagrams_InitializeDatagramBuffer(@TestDatagramTx);
   NMRAnetNodeBuffer.DatagramReceive := @TestDatagramRx;
   NMRAnetNodeBuffer.DatagramTransmit := @TestDatagramTx;
+  
+  NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(@TestACDIBufferRx);
+  NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(@TestACDIBufferTx);
+  NMRAnetNodeBuffer.ACDI_TransmitBuffer := @TestACDIBufferTx;
+  NMRAnetNodeBuffer.ACDI_ReceiveBuffer := @TestACDIBufferRx;
 
   while (TRUE) do
   begin
