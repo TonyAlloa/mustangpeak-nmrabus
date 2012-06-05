@@ -234,7 +234,7 @@ type
   
   TQueuedResponses = record
     List: TQueuedResponseList;                                                  // List of complex Responses to be handled in the NMRABus_Process loop
-    SimpleResponseFlags: Word;                                                  // List of simple Responses that do not need any information to respond to in the NMRABus_Process loop.  See SRF_xxx constants
+    SimpleResponseFlags: Word;                                                  // List of simple Responses that do not need any information to respond to in the NMRABus_Process loop.  See SRC_xxx constants
     iState: Byte;                                                               // Statemachine Index
     Tag: Byte;                                                                  // MultiUse Flag, just be careful state don't overwrite it, Use 1) CID state for logging into bus  Use 2) Tracking the number of Event IDs when sending them all
     iCID: Byte;
