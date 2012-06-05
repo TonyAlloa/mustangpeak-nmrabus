@@ -223,10 +223,10 @@ end;
 // *****************************************************************************
 procedure NMRAnetStateMachine_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
 begin
-  NodeBuffer^.DatagramReceive := PDatagramReceive(nil);
-  NodeBuffer^.DatagramTransmit := PDatagramTransmit(nil);
-  NodeBuffer^.ACDI_TransmitBufferList := PACDI_TransmitBufferList(nil);
-  NodeBuffer^.ACDI_ReceiveBufferList := PACDI_ReceiveBufferList(nil);
+  NodeBuffer^.DatagramReceive := PDatagramBuffer(nil);
+  NodeBuffer^.DatagramTransmit := PDatagramBuffer(nil);
+  NodeBuffer^.ACDI_TransmitBuffer := PACDI_TransmitBuffer(nil);
+  NodeBuffer^.ACDI_ReceiveBuffer := PACDI_ReceiveBuffer(nil);
   NMRAnetDatagrams_Initialize(NodeBuffer);
   NMRAnetCANReceive_Initialize;
   NMRAnetConfigurationProtocol_Initialize(NodeBuffer);
@@ -547,30 +547,24 @@ procedure DispatchDatagramResponse(NodeBuffer: PNMRAnetNodeBuffer; nCode: Word; 
 var
   Response: PQueuedResponse;
   Datagram: PDatagramBuffer;
-  i: Integer;
 begin
   Response := FindStoredComplexResponse(NodeBuffer, nCode);                                 // Look for Datagram Responses from Nodes this node sent a Datagram to
   if Response <> nil then
   begin
-    i := 0;        
     if NodeBuffer^.DatagramTransmit <> nil then
     begin                                                             // A node is responding to a Datagram this node sent
-      while i < LEN_DATAGRAM_TRANSMIT_ARRAY do
-      begin
-        Datagram := @NodeBuffer^.DatagramTransmit^.List[i];
-        if Datagram^.State = DATAGRAM_BUFFER_IN_PROCESS then                     // Only look for transmit buffers that have Datagram Tranmissions in Process
-          if NMRAnetUtilities_CompareAliasIDs(NodeBuffer^.DatagramTransmit^.List[i].Alias, Response^.Alias) then
-          begin                                                                   // The alias that sent the response (OK/Rejected) is in the list of Nodes that we sent a Datagram to!
-            Datagram^.ErrorCode.MTI := Response^.DataBytes[0];                    // Copy over the results that destination node passed in the received Datagram Result message
-            Datagram^.ErrorCode.SubType[0] := Response^.DataBytes[2];
-            Datagram^.ErrorCode.SubType[1] := Response^.DataBytes[1];
-            Datagram^.State := DATAGRAM_BUFFER_TRANSFER_COMPLETE;
-            Response^.nCode := CRC_EMPTY;                                         // Free the response
-            Exit;
-          end;
-        Inc(i)
-      end;
-    end;
+      Datagram := NodeBuffer^.DatagramTransmit;
+      if Datagram^.State = DATAGRAM_BUFFER_IN_PROCESS then                     // Only look for transmit buffers that have Datagram Tranmissions in Process
+        if NMRAnetUtilities_CompareAliasIDs(Datagram^.Alias, Response^.Alias) then
+        begin                                                                   // The alias that sent the response (OK/Rejected) is in the list of Nodes that we sent a Datagram to!
+          Datagram^.ErrorCode.MTI := Response^.DataBytes[0];                    // Copy over the results that destination node passed in the received Datagram Result message
+          Datagram^.ErrorCode.SubType[0] := Response^.DataBytes[2];
+          Datagram^.ErrorCode.SubType[1] := Response^.DataBytes[1];
+          Datagram^.State := DATAGRAM_BUFFER_TRANSFER_COMPLETE;
+          Response^.nCode := CRC_EMPTY;                                         // Free the response
+          Exit;
+        end;
+    end;                                          // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     Response^.nCode := CRC_EMPTY;                                               // The response was found but there was no matching transmiting nodes
   end;
   NodeBuffer^.Responses.iState := NextState

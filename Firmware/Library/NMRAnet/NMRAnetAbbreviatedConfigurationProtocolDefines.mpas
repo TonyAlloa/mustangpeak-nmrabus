@@ -21,9 +21,6 @@ const
   STATE_ACDI_TX_START                                      = 0;
   STATE_ACDI_TX_PROCESSING_CHARS                           = 1;
 
-  LEN_ACDI_TRANSMIT_BUFFER_ARRAY                           = 1;                 // Can send up to n requests for ACDI at the same time
-  LEN_ACDI_RECEIVE_BUFFER_ARRAY                            = 1;                 // Can receive up to n requests for ACDI at the same time
-  
   ACDI_VERSION                                             = 1;
   
   ACDI_TRANSMIT_VERSION_MFG_INFO                           = 0;
@@ -65,12 +62,7 @@ type
   end;
   PACDI_TransmitBuffer = ^TACDI_TransmitBuffer;
   
-  TACDI_TransmitBufferList = record
-    List: array[0..LEN_ACDI_TRANSMIT_BUFFER_ARRAY-1] of TACDI_TransmitBuffer;
-    iActiveBuffer: Byte;                                                        // 10 Bytes
-  end;
-  PACDI_TransmitBufferList = ^TACDI_TransmitBufferList;
-  
+
   TACDI_ReceiveBuffer = record                                                  // The only time we receive ACDI information is if we ask for it.  As such we can control the number of simutanious receives to 1
     iState: Byte;                                                               // Statemachine index for Buffer
     State: Byte;                                                                // State of the Buffer (allocated, etc) see the ACDI_STATE_xxxx constants
@@ -88,11 +80,6 @@ type
     UserDesc: string[ACDI_LEN_USER_DESC];                                       // 16 * 6 = 96 + 10 = 106 Bytes
   end;
   PACDI_ReceiveBuffer = ^TACDI_ReceiveBuffer;
-  
-  TACDI_ReceiveBufferList = record
-    List: array[0..LEN_ACDI_RECEIVE_BUFFER_ARRAY-1] of TACDI_ReceiveBuffer;
-  end;
-  PACDI_ReceiveBufferList = ^TACDI_ReceiveBufferList;
   
 implementation
 

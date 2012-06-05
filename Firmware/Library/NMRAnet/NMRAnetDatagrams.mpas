@@ -9,12 +9,14 @@ uses
   NMRAnetConfigurationProtocol;
 
 procedure NMRAnetDatagrams_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
 procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer);
 procedure NMRAnetDatagrams_ProcessReceive(NodeBuffer: PNMRAnetNodeBuffer);
 procedure NMRAnetDatagrams_ProcessTransmit(NodeBuffer: PNMRAnetNodeBuffer);
 procedure NMRAnetDatagrams_1ms_TimeTick(NodeBuffer: PNMRAnetNodeBuffer);
 function NMRAnetDatagrams_QueueDatagram(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagram; ByteCount: Byte; TargetAliasID: Word): Boolean;
 procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
+
 
 // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
@@ -26,39 +28,24 @@ implementation
 
  function TryAllocateBuffer(NodeBuffer: PNMRAnetNodeBuffer; var Datagram: PDatagramBuffer): Boolean; forward;
 
-procedure NMRAnetDatagrams_InitializeReceiveBuffer(DatagramReceive: PDatagramReceive);
+procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
 var
   i, j: Integer;
 begin
-  if DatagramReceive <> nil then
+  if DatagramBuffer <> nil then
   begin
-    for i := 0 to LEN_DATAGRAM_RECEIVE_ARRAY - 1 do
-    begin
-      DatagramReceive^.List[i].State := DATAGRAM_BUFFER_EMPTY;
-      DatagramReceive^.List[i].iStateMachine := STATE_DATAGRAM_RECEIVE_START;
+    DatagramBuffer^.Alias := 0;
+    DatagramBuffer^.iByteCount := 0;
+    DatagramBuffer^.iFrameCount := 0;
+    DatagramBuffer^.iWatchdog := 0;
+    DatagramBuffer^.ErrorCode.MTI := 0;
+    DatagramBuffer^.ErrorCode.SubType[0] := 0;
+    DatagramBuffer^.ErrorCode.SubType[1] := 0;
+    DatagramBuffer^.iRetransmit := 0;
+    DatagramBuffer^.State := DATAGRAM_BUFFER_EMPTY;
+    DatagramBuffer^.iStateMachine := STATE_DATAGRAM_RECEIVE_START;
       for j := 0 to LEN_DATAGRAM-1 do
-        DatagramReceive^.List[i].DataBytes[j] := 0;
-    end;
-    DatagramReceive^.iActiveDatagram := 0;
-    for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST-1 do
-      DatagramReceive^.BufferOverflowList[i] := 0;
-  end
-end;
-
-procedure NMRAnetDatagrams_InitializeTransmitBuffer(DatagramTransmit: PDatagramTransmit);
-var
-  i, j: Integer;
-begin
-  if DatagramTransmit <> nil then
-  begin
-    for i := 0 to LEN_DATAGRAM_TRANSMIT_ARRAY - 1 do
-    begin
-      DatagramTransmit^.List[i].State := DATAGRAM_BUFFER_EMPTY;
-      DatagramTransmit^.List[i].iStateMachine := STATE_DATAGRAM_TRANSMIT_START;
-      for j := 0 to LEN_DATAGRAM-1 do
-        DatagramTransmit^.List[i].DataBytes[j] := 0;
-    end;
-    DatagramTransmit^.iActiveDatagram := 0;
+        DatagramBuffer^.DataBytes[j] := 0;
   end
 end;
 
@@ -72,9 +59,13 @@ end;
 //  Description:
 // *****************************************************************************
 procedure NMRAnetDatagrams_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
+var
+  i: Integer;
 begin
-  NMRAnetDatagrams_InitializeReceiveBuffer(NodeBuffer^.DatagramReceive);
-  NMRAnetDatagrams_InitializeTransmitBuffer(NodeBuffer^.DatagramTransmit);
+  NMRAnetDatagrams_InitializeDatagramBuffer(NodeBuffer^.DatagramReceive);
+  NMRAnetDatagrams_InitializeDatagramBuffer(NodeBuffer^.DatagramTransmit);
+  for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST-1 do
+    BufferOverflowList[i] := 0;
   DatagramCallbackFunc := PDatagramTaskCallbackFunc(nil);
   DatagramTrainControlCallbackFunc := PDatagramTaskCallbackFunc(nil);
   DatagramMemConfigurationCallbackFunc := PDatagramTaskCallbackFunc(nil);
@@ -150,30 +141,22 @@ end;
 //
 // *****************************************************************************
 procedure NMRAnetDatagrams_1ms_TimeTick(NodeBuffer: PNMRAnetNodeBuffer);
-var
-  i: Integer;
 begin
   if NodeBuffer^.DatagramReceive <> nil then
-  begin
-    for i := 0 to LEN_DATAGRAM_RECEIVE_ARRAY - 1 do
-    begin
-      if NodeBuffer^.DatagramReceive^.List[i].State = DATAGRAM_BUFFER_IN_PROCESS then
+  begin                                                                           // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      if NodeBuffer^.DatagramReceive^.State = DATAGRAM_BUFFER_IN_PROCESS then
       begin
-        if NodeBuffer^.DatagramReceive^.List[i].iWatchdog < DATAGRAM_WATCHDOG_MAX then                 // Latch it at DATAGRAM_WATCHDOG_MAX
-          Inc(NodeBuffer^.DatagramReceive^.List[i].iWatchdog)                                          // Increase the Watchdog counter
+        if NodeBuffer^.DatagramReceive^.iWatchdog < DATAGRAM_WATCHDOG_MAX then                 // Latch it at DATAGRAM_WATCHDOG_MAX
+          Inc(NodeBuffer^.DatagramReceive^.iWatchdog)                                          // Increase the Watchdog counter
       end
-    end;
   end;
   
   if NodeBuffer^.DatagramTransmit <> nil then
-  begin
-    for i := 0 to LEN_DATAGRAM_TRANSMIT_ARRAY - 1 do
+  begin                                                                          // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    if NodeBuffer^.DatagramTransmit^.State = DATAGRAM_BUFFER_IN_PROCESS then
     begin
-      if NodeBuffer^.DatagramTransmit^.List[i].State = DATAGRAM_BUFFER_IN_PROCESS then
-      begin
-        if NodeBuffer^.DatagramTransmit^.List[i].iWatchdog < DATAGRAM_WATCHDOG_MAX then                 // Latch it at DATAGRAM_WATCHDOG_MAX
-          Inc(NodeBuffer^.DatagramTransmit^.List[i].iWatchdog)                                          // Increase the Watchdog counter
-      end
+      if NodeBuffer^.DatagramTransmit^.iWatchdog < DATAGRAM_WATCHDOG_MAX then                 // Latch it at DATAGRAM_WATCHDOG_MAX
+        Inc(NodeBuffer^.DatagramTransmit^.iWatchdog)                                          // Increase the Watchdog counter
     end
   end
 end;
@@ -229,12 +212,12 @@ begin
       i := 0;
       while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
       begin
-        if NodeBuffer^.DatagramReceive^.BufferOverflowList[i] <> 0 then
+        if BufferOverflowList[i] <> 0 then
         begin
-          Datagram.Alias := NodeBuffer^.DatagramReceive^.BufferOverflowList[i];
+          Datagram.Alias := BufferOverflowList[i];
           NMRANetUtilities_LoadDatagramResultBytes(@Datagram, MTI_TYPE_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
           if TrySendDatagramResponse(NodeBuffer, @Datagram, DATAGRAM_BUFFER_EMPTY) then
-            NodeBuffer^.DatagramReceive^.BufferOverflowList[i] := 0;
+            BufferOverflowList[i] := 0;
           Exit;
         end;
         Inc(i);
@@ -491,7 +474,7 @@ var
 begin
   if NodeBuffer^.DatagramTransmit <> nil then
   begin
-    ActiveDatagram := @NodeBuffer^.DatagramTransmit^.List[NodeBuffer^.DatagramTransmit^.iActiveDatagram];
+    ActiveDatagram := NodeBuffer^.DatagramTransmit;
     if ActiveDatagram^.State <> DATAGRAM_BUFFER_EMPTY then
     begin
       case ActiveDatagram^.iStateMachine of
@@ -504,10 +487,7 @@ begin
          ActiveDatagram^.iStateMachine := STATE_DATAGRAM_TRANSMIT_START;
        end;
     end;
-    Inc(NodeBuffer^.DatagramTransmit^.iActiveDatagram);
-    if NodeBuffer^.DatagramTransmit^.iActiveDatagram >= LEN_DATAGRAM_TRANSMIT_ARRAY then
-      NodeBuffer^.DatagramTransmit^.iActiveDatagram := 0;
-  end
+  end                            // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 end;
 
 procedure ProcessAbandonedDatagram(Datagram: PDatagramBuffer; AbandonState, NextState: Byte);
@@ -544,7 +524,7 @@ var
 begin
   if NodeBuffer^.DatagramReceive <> nil then
   begin
-    ActiveDatagram := @NodeBuffer^.DatagramReceive^.List[NodeBuffer^.DatagramReceive^.iActiveDatagram];
+    ActiveDatagram := NodeBuffer^.DatagramReceive;
 
     if ActiveDatagram^.State <> DATAGRAM_BUFFER_EMPTY then
     begin
@@ -605,10 +585,7 @@ begin
        else
          ActiveDatagram^.iStateMachine := STATE_DATAGRAM_RECEIVE_START;
        end;
-    end;
-    Inc(NodeBuffer^.DatagramReceive^.iActiveDatagram);
-    if NodeBuffer^.DatagramReceive^.iActiveDatagram >= LEN_DATAGRAM_RECEIVE_ARRAY then
-      NodeBuffer^.DatagramReceive^.iActiveDatagram := 0;
+    end;                                                                         // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   end
 end;
 
@@ -622,24 +599,18 @@ end;
 //  Description:
 // *****************************************************************************
 function FindMatchingInProcessReceiveDatagram(NodeBuffer: PNMRAnetNodeBuffer; var Datagram: PDatagramBuffer; Alias: Word): Boolean;
-var
-  i: Integer;
 begin
   Result := False;
   if NodeBuffer^.DatagramReceive <> nil then
   begin
-    i := 0;
-    while i < LEN_DATAGRAM_RECEIVE_ARRAY do
+    if NodeBuffer^.DatagramReceive^.State = DATAGRAM_BUFFER_IN_PROCESS then
     begin
-      if NodeBuffer^.DatagramReceive^.List[i].State = DATAGRAM_BUFFER_IN_PROCESS then
-        if NMRAnetUtilities_CompareAliasIDs(NodeBuffer^.DatagramReceive^.List[i].Alias, Alias) then
-        begin
-          Datagram := @NodeBuffer^.DatagramReceive^.List[i];
-          Result := True;
-          Exit;
-        end;
-      Inc(i)
-    end
+      if NMRAnetUtilities_CompareAliasIDs(NodeBuffer^.DatagramReceive^.Alias, Alias) then
+      begin
+        Datagram := NodeBuffer^.DatagramReceive;
+        Result := True;
+      end;
+    end                                                                      // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   end
 end;
 
@@ -703,16 +674,12 @@ procedure AddToBufferOverflowList(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDat
 var
   i: Integer;
 begin
-  if NodeBuffer^.DatagramReceive <> nil then
+  while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
   begin
-    i := 0;
-    while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
+    if BufferOverflowList[i] = 0 then
     begin
-      if NodeBuffer^.DatagramReceive^.BufferOverflowList[i] = 0 then
-      begin
-        NodeBuffer^.DatagramReceive^.BufferOverflowList[i] := Datagram^.Alias;
-        Exit;
-      end
+      BufferOverflowList[i] := Datagram^.Alias;
+      Exit;
     end
   end
 end;
@@ -727,23 +694,16 @@ end;
 //  Description:
 // *****************************************************************************
 function TryAllocateBuffer(NodeBuffer: PNMRAnetNodeBuffer; var Datagram: PDatagramBuffer): Boolean;
-var
-  i: Integer;
 begin
   Result := False;
   if NodeBuffer^.DatagramReceive <> nil then
   begin
-    i := 0;
-    while (i < LEN_DATAGRAM_RECEIVE_ARRAY) and not Result do
-    begin
-      if NodeBuffer^.DatagramReceive^.List[i].State = DATAGRAM_BUFFER_EMPTY then
-      begin                                                                       // Grab the first empty buffer
-        Datagram := @NodeBuffer^.DatagramReceive^.List[i];                                     // It is NOT initialized
-        Datagram^.ErrorCode.MTI := MTI_TYPE_DATAGRAM_RECIEVED_OK;
-        Result := True
-      end;
-      Inc(i);
-    end
+    if NodeBuffer^.DatagramReceive^.State = DATAGRAM_BUFFER_EMPTY then
+    begin                                                                       // Grab the first empty buffer
+      Datagram := NodeBuffer^.DatagramReceive;                                  // It is NOT initialized
+      Datagram^.ErrorCode.MTI := MTI_TYPE_DATAGRAM_RECIEVED_OK;
+      Result := True
+    end                                                    // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   end
 end;
 

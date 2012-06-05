@@ -263,10 +263,10 @@ type
     State: Word;                                                                // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concedered READ-ONLY inside of an interrupt
     iState: Byte;                                                               // Statemachine index for the main bus login
     Responses: TQueuedResponses;                                                // Responses the NMRABus_Process loop looks at to response to received messages
-    DatagramReceive: PDatagramReceive;                                          // Dynamically allocated only when needed
-    DatagramTransmit: PDatagramTransmit;                                        // Dynamically allocated only when needed
-    ACDI_TransmitBufferList: PACDI_TransmitBufferList;                          // Dynamically allocated only when needed
-    ACDI_ReceiveBufferList: PACDI_ReceiveBufferList;                            // Dynamically allocated only when needed
+    DatagramReceive: PDatagramBuffer;                                           // Dynamically allocated only when needed
+    DatagramTransmit: PDatagramBuffer;                                          // Dynamically allocated only when needed
+    ACDI_TransmitBuffer: PACDI_TransmitBuffer;                                  // Dynamically allocated only when needed
+    ACDI_ReceiveBuffer: PACDI_ReceiveBuffer;                                    // Dynamically allocated only when needed
   end;
   PNMRAnetNodeBuffer = ^TNMRAnetNodeBuffer;
   

@@ -27,8 +27,6 @@ const
 
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
-  LEN_DATAGRAM_RECEIVE_ARRAY = 1;                                               // How many Datagram buffers to have
-  LEN_DATAGRAM_TRANSMIT_ARRAY = 1;                                              // How many Transmit buffer to have
   LEN_DATAGRAM_BUFFER_OVERFLOW_LIST = 2;                                        // How many Datagram requests to buffer if there is no buffer available to service them
 
   // Datagram Buffer States
@@ -87,24 +85,10 @@ type
     iRetransmit: Byte;                                                          // Number of times the Datagram was attempted to transmit use to test before not trying any more
     iStateMachine: Byte;                                                        // Each Datagram Buffer holds it own place in the global statemachine, this allow interleaving and no deadlock when a target node is not responding
   end;
-  
   PDatagramBuffer = ^TDatagramBuffer;
-  TDatagramReceiveBufferArray = array[0..LEN_DATAGRAM_RECEIVE_ARRAY-1] of TDatagramBuffer;
-  TDatagramTransmitBufferArray = array[0..LEN_DATAGRAM_TRANSMIT_ARRAY-1] of TDatagramBuffer;
 
-
-  TDatagramReceive = record                                                     // Buffer to hold the datagram coming into the node
-    List: TDatagramReceiveBufferArray;
-    iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
-    BufferOverflowList: TBufferOverflowList;                                    // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
-  end;
-  PDatagramReceive = ^TDatagramReceive;
-  
-  TDatagramTransmit = record                                                    // Buffer to hold datagrams being send by the node
-    List: TDatagramTransmitBufferArray;
-    iActiveDatagram: Byte;                                                      // Datagram in the List that is being examamied by the statemachine
-  end;
-  PDatagramTransmit = ^TDatagramTransmit;
+var
+  BufferOverflowList: TBufferOverflowList;                                      // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   
 implementation
 
