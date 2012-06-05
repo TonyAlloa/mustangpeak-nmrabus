@@ -8,7 +8,7 @@ uses
   NMRAnetDatagramDefines,
   NMRAnetConfigurationProtocol;
 
-procedure NMRAnetDatagrams_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
 procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer);
 procedure NMRAnetDatagrams_ProcessReceive(NodeBuffer: PNMRAnetNodeBuffer);
@@ -61,14 +61,8 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRAnetDatagrams_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
-var
-  i: Integer;
+procedure NMRAnetDatagrams_Initialize;
 begin
-  NMRAnetDatagrams_InitializeDatagramBuffer(NodeBuffer^.DatagramReceive);
-  NMRAnetDatagrams_InitializeDatagramBuffer(NodeBuffer^.DatagramTransmit);
-  for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST-1 do
-    NodeBuffer^.DatagramOverflowList[i] := 0;
   DatagramCallbackFunc := PDatagramTaskCallbackFunc(nil);
   DatagramTrainControlCallbackFunc := PDatagramTaskCallbackFunc(nil);
   DatagramMemConfigurationCallbackFunc := PDatagramTaskCallbackFunc(nil);

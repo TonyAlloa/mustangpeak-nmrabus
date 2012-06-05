@@ -52,6 +52,8 @@ type
 //
 // Frame Types.  These define what the Frame of the CAN message consists of.
 const
+  MAX_VNODE_COUNT = 10;
+  
   FT_CAN                            = $00000000;                                // Frame Type CAN Control Message
   FT_CID0                           = $07000000;                                // First 12 Bits of 48 bit Node ID
   FT_CID1                           = $06000000;                                // 2rd 12 Bits of 48 bit Node ID
@@ -300,6 +302,9 @@ var
   MaxTime_RX: Word;
   
   NMRAnetNodeBuffer: TNMRAnetNodeBuffer;
+  
+  vNodePool: array[0..MAX_VNODE_COUNT-1] of TNMRAnetNodeBuffer;
+  vNodePoolIndex: Word;
 
 implementation
 

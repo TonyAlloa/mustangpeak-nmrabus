@@ -9,7 +9,7 @@ uses
   NMRAnetAbbreviatedConfigurationProtocolDefines;
   
   
-procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize;
 procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
 function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNodeBuffer; var ActiveBuffer: PACDI_ReceiveBuffer; SourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
 function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(NodeBuffer: PNMRAnetNodeBuffer; DestAlias: Word): Boolean;
@@ -67,12 +67,10 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNodeBuffer;);
+procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize;
 
 begin
   ACDI_ReceiveCallbackFunc := PACDI_ReceiveCallbackFunc( nil);
-  NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(NodeBuffer^.ACDI_TransmitBuffer);
-  NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(NodeBuffer^.ACDI_ReceiveBuffer);
 end;
 
 

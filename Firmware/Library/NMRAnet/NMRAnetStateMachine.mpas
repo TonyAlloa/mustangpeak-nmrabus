@@ -37,7 +37,8 @@ uses
 
   procedure NMRAnetStateMachine_Process(NodeBuffer: PNMRAnetNodeBuffer);
   procedure NMRAnetStateMachine_Disconnect(NodeBuffer: PNMRAnetNodeBuffer);
-  procedure NMRAnetStateMachine_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
+  procedure NMRAnetStateMachine_Initialize;
+  procedure NMRAnetStateMachine_InitializeNodeBuffer(NodeBuffer: PNMRAnetNodeBuffer; NodeIDHi, NodeIDLo: DWord);
   procedure NMRAnetStateMachine_1ms_Timer(NodeBuffer: PNMRAnetNodeBuffer);
   
   // Receive Callback Helper Functions.  This could be done with separate callbacks for different message
@@ -58,9 +59,6 @@ uses
   // Exported Functions
   function TryTransmitNMRABusLayerMsg(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
 
-  // defined in the user program
-  procedure GetUniqueIDFunc(var HiID, LoID: DWord); external;
-  
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
   procedure LockCANInterrupt; external;
@@ -214,6 +212,30 @@ begin
 end;
 
 // *****************************************************************************
+//  procedure NMRAnetStateMachine_InitializeNodeBuffer
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRAnetStateMachine_InitializeNodeBuffer(NodeBuffer: PNMRAnetNodeBuffer; NodeIDHi, NodeIDLo: DWord);
+begin
+  NodeBuffer^.DatagramReceive := PDatagramBuffer(nil);
+  NodeBuffer^.DatagramTransmit := PDatagramBuffer(nil);
+  NodeBuffer^.ACDI_TransmitBuffer := PACDI_TransmitBuffer(nil);
+  NodeBuffer^.ACDI_ReceiveBuffer := PACDI_ReceiveBuffer(nil);
+  FlushResponses(NodeBuffer);
+  NodeBuffer^.State := 0;
+  NodeBuffer^.iState := STATE_NMRABUS_START;
+  NodeBuffer^.Responses.BufferOverrunCount := 0;
+  NodeBuffer^.Node.ID[0] := NodeIDLo;
+  NodeBuffer^.Node.ID[1] := NodeIDHi;
+  NodeBuffer^.Node.Seed[0] := NodeIDLo;
+  NodeBuffer^.Node.Seed[1] := NodeIDHi;
+end;
+
+// *****************************************************************************
 //  procedure NMRAnetStateMachine_Initialize
 //     Parameters:
 //     Returns:
@@ -221,25 +243,14 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetStateMachine_Initialize(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetStateMachine_Initialize;
 begin
-  NodeBuffer^.DatagramReceive := PDatagramBuffer(nil);
-  NodeBuffer^.DatagramTransmit := PDatagramBuffer(nil);
-  NodeBuffer^.ACDI_TransmitBuffer := PACDI_TransmitBuffer(nil);
-  NodeBuffer^.ACDI_ReceiveBuffer := PACDI_ReceiveBuffer(nil);
-  NMRAnetDatagrams_Initialize(NodeBuffer);
   NMRAnetCANReceive_Initialize;
-  NMRAnetConfigurationProtocol_Initialize(NodeBuffer);
-  NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer);
+  NMRAnetDatagrams_Initialize;
+  NMRAnetConfigurationProtocol_Initialize;
+  NMRAnetAbbreviatedConfigurationProtocol_Initialize;
   SimpleResponseCallbackFunc := PSimpleResponseCallbackFunc( nil);
   ComplexResponseCallbackFunc := PComplexResponseCallbackFunc( nil);
-  NodeBuffer^.State := 0;
-  GetUniqueIDFunc(NodeBuffer^.Node.ID[1], NodeBuffer^.Node.ID[0]);
-  NodeBuffer^.Node.Seed[0] := NodeBuffer^.Node.ID[0];
-  NodeBuffer^.Node.Seed[1] := NodeBuffer^.Node.ID[1];
-  NodeBuffer^.iState := STATE_NMRABUS_START;
-  FlushResponses(NodeBuffer);
-  NodeBuffer^.Responses.BufferOverrunCount := 0;
   NMRAnetStateMachine_InitializeList(@TX_CANBufferList, @TX_CANBuffer, TX_CAN_BUFFER_LEN);
   NMRAnetStateMachine_InitializeList(@TX_NMRAnetBufferList, @TX_NMRAnet_Buffer, TX_NMRANET_BUFFER_LEN);
 end;

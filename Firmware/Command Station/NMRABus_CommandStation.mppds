@@ -6,13 +6,13 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRABusCommandStation.mpas
+Value=..\Library\NMRAnet\NMRAnetDefines.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
-Value=0
+Value=1
 [HEAP_SIZE]
-Value=2000
+Value=400
 [EEPROM_DEFINITION]
 Value=
 [FILES]
@@ -45,11 +45,12 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=4
+Count=5
 File0=NMRABusCommandStation.mpas
-File1=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
-File2=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocolDefines.mpas
-File3=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDefines.mpas
+File1=..\Library\NMRAnet\NMRAnetStateMachine.mpas
+File2=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
+File3=..\Library\NMRAnet\NMRAnetConfigurationProtocol.mpas
+File4=..\Library\NMRAnet\NMRAnetDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -58,25 +59,17 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=18
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
-Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Command Station\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
-Path4=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path10=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
-Path11=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Math\
-Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
-Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
-Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path15=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path16=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
-Path17=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Math\
+Count=10
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
+Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
+Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
+Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Math\
 [HEADER_PATH]
 Count=0
 [HEADERS]
