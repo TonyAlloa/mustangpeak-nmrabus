@@ -693,6 +693,7 @@ end;
 function TryAllocateBuffer(NodeBuffer: PNMRAnetNodeBuffer; var Datagram: PDatagramBuffer): Boolean;
 begin
   Result := False;
+//  GetMem(NodeBuffer^.DatagramReceive, SizeOf(TDatagramBuffer));
   if NodeBuffer^.DatagramReceive <> nil then
   begin
     if NodeBuffer^.DatagramReceive^.State = DATAGRAM_BUFFER_EMPTY then

@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\NMRAnet\NMRAnetDefines.mpas
+Value=NMRABusCommandStation.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -45,12 +45,15 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=5
+Count=8
 File0=NMRABusCommandStation.mpas
 File1=..\Library\NMRAnet\NMRAnetStateMachine.mpas
 File2=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
 File3=..\Library\NMRAnet\NMRAnetConfigurationProtocol.mpas
 File4=..\Library\NMRAnet\NMRAnetDefines.mpas
+File5=..\Library\NMRAnet\NMRAnetCANReceive.mpas
+File6=..\Library\NMRAnet\NMRAnetUtilities.mpas
+File7=..\Library\NMRAnet\NMRAnetDatagrams.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -77,12 +80,13 @@ Count=0
 [PLDS]
 Count=0
 [Useses]
-Count=5
+Count=6
 File0=Conversions
 File1=String
 File2=SPI
 File3=CAN
 File4=UART
+File5=MemManager
 [EXPANDED NODES]
 Node1=Sources
 Node2=Output Files

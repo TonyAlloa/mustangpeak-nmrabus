@@ -581,7 +581,10 @@ begin
 end;
 
 function FindMatchingNodeBuffer(CANBuffer: PCANBuffer): PNMRAnetNodeBuffer;
+var
+  Alias: Word;
 begin
+ // Alias :=
   Result := @NMRAnetNodeBuffer;  // TODO vNode Buffers
 end;
 
@@ -605,10 +608,12 @@ begin
 
   DoDefault := True;
   NodeBuffer := FindMatchingNodeBuffer(CANBuffer);
+  
   if NodeBuffer <> nil then
   begin
     if CANLayerReceiveHook <> nil then
       CANLayerReceiveHook(CANBuffer, DoDefault);
+      
     if DoDefault then
     begin
       if NMRAnetUtilities_EqualAliasID(NodeBuffer, CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
