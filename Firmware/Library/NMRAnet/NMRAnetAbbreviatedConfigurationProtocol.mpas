@@ -9,12 +9,12 @@ uses
   NMRAnetAbbreviatedConfigurationProtocolDefines;
   
   
-procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize;
-procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
-function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNodeBuffer; var ActiveBuffer: PACDI_ReceiveBuffer; SourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
-function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(NodeBuffer: PNMRAnetNodeBuffer; DestAlias: Word): Boolean;
+procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNode);
+procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNode);
+function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNode; var ActiveBuffer: PACDI_ReceiveBuffer; SourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
+function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(NodeBuffer: PNMRAnetNode; DestAlias: Word): Boolean;
 procedure NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(Callback: PACDI_ReceiveCallbackFunc);
-procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick(NodeBuffer: PNMRAnetNode);
 procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(ReceiveBuffer: PACDI_ReceiveBuffer);
 procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(TransmitBuffer: PACDI_TransmitBuffer);
 
@@ -67,14 +67,16 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize;
+procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNode;);
 
 begin
   ACDI_ReceiveCallbackFunc := PACDI_ReceiveCallbackFunc( nil);
+  NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(NodeBuffer^.ACDI_TransmitBuffer);
+  NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(NodeBuffer^.ACDI_ReceiveBuffer);
 end;
 
 
-procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick(NodeBuffer: PNMRAnetNode);
 begin
   if NodeBuffer^.ACDI_ReceiveBuffer <> nil then
   begin
@@ -101,7 +103,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(NodeBuffer: PNMRAnetNodeBuffer; DestAlias: Word): Boolean;
+function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(NodeBuffer: PNMRAnetNode; DestAlias: Word): Boolean;
 begin
   Result := False;
   if NodeBuffer^.ACDI_TransmitBuffer <> nil then
@@ -177,7 +179,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNode);
 var
   ActiveBuffer: PACDI_TransmitBuffer;
   CANBuffer: TCANBuffer;
@@ -255,7 +257,7 @@ end;
 //                             Interrupt....
 //
 // *****************************************************************************
-procedure FindReceiveBuffer(NodeBuffer: PNMRAnetNodeBuffer; var ReceiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word);
+procedure FindReceiveBuffer(NodeBuffer: PNMRAnetNode; var ReceiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word);
 begin
   ReceiveBuffer := PACDI_ReceiveBuffer(nil);
   
@@ -328,7 +330,7 @@ end;
 //                             Interrupt....
 //
 // *****************************************************************************
-function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNodeBuffer; var ActiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
+function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNode; var ActiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
 var
   iByte: Byte;
 begin

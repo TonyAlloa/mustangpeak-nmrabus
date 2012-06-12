@@ -10,11 +10,11 @@ uses
 
 procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
-procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer);
-procedure NMRAnetDatagrams_ProcessReceive(NodeBuffer: PNMRAnetNodeBuffer);
-procedure NMRAnetDatagrams_ProcessTransmit(NodeBuffer: PNMRAnetNodeBuffer);
-procedure NMRAnetDatagrams_1ms_TimeTick(NodeBuffer: PNMRAnetNodeBuffer);
-function NMRAnetDatagrams_QueueDatagram(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagram; ByteCount: Byte; TargetAliasID: Word): Boolean;
+procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer);
+procedure NMRAnetDatagrams_ProcessReceive(NodeBuffer: PNMRAnetNode);
+procedure NMRAnetDatagrams_ProcessTransmit(NodeBuffer: PNMRAnetNode);
+procedure NMRAnetDatagrams_1ms_TimeTick(NodeBuffer: PNMRAnetNode);
+function NMRAnetDatagrams_QueueDatagram(NodeBuffer: PNMRAnetNode; Datagram: PDatagram; ByteCount: Byte; TargetAliasID: Word): Boolean;
 procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
 
 
@@ -22,11 +22,11 @@ procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func
   procedure StartCANMessageEngine; external;
   procedure EnableCANInterrupt(Enable: Boolean); external;
 // defined in the NMRAnetStateMachine.mpas file
-  function TryTransmitNMRABusLayerMsg(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean; external;
+  function TryTransmitNMRABusLayerMsg(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean; external;
 
 implementation
 
- function TryAllocateBuffer(NodeBuffer: PNMRAnetNodeBuffer; var Datagram: PDatagramBuffer): Boolean; forward;
+ function TryAllocateBuffer(NodeBuffer: PNMRAnetNode; var Datagram: PDatagramBuffer): Boolean; forward;
  
  
  
@@ -103,7 +103,7 @@ end;
 //                None
 //  Description:
 // *****************************************************************************
-function NMRAnetDatagrams_QueueDatagram(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagram; ByteCount: Byte; TargetAliasID: Word): Boolean;
+function NMRAnetDatagrams_QueueDatagram(NodeBuffer: PNMRAnetNode; Datagram: PDatagram; ByteCount: Byte; TargetAliasID: Word): Boolean;
 var
   DatagramBuffer: PDatagramBuffer;
   i: Integer;
@@ -137,7 +137,7 @@ end;
 //              the time this takes to run.
 //
 // *****************************************************************************
-procedure NMRAnetDatagrams_1ms_TimeTick(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetDatagrams_1ms_TimeTick(NodeBuffer: PNMRAnetNode);
 begin
   if NodeBuffer^.DatagramReceive <> nil then
   begin                                                                           // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -167,7 +167,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function TrySendDatagramResponse(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; NextDatagramState: Byte): Boolean;
+function TrySendDatagramResponse(NodeBuffer: PNMRAnetNode; Datagram: PDatagramBuffer; NextDatagramState: Byte): Boolean;
 var
   Buffer: TCANBuffer;
 begin
@@ -197,7 +197,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure SendBufferFullResponses(NodeBuffer: PNMRAnetNodeBuffer);
+procedure SendBufferFullResponses(NodeBuffer: PNMRAnetNode);
 var
   i: Integer;
   Datagram: TDatagramBuffer;
@@ -233,7 +233,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure DispatchSpecialDatagramMemConfiguration(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; NextHandledState, NextUnHandledState: Byte);
+procedure DispatchSpecialDatagramMemConfiguration(NodeBuffer: PNMRAnetNode; Datagram: PDatagramBuffer; NextHandledState, NextUnHandledState: Byte);
 var
   Handled: Boolean;
 begin
@@ -259,7 +259,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure DispatchSpecialDatagramTrainControl(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; NextHandledState, NextUnHandledState: Byte);
+procedure DispatchSpecialDatagramTrainControl(NodeBuffer: PNMRAnetNode; Datagram: PDatagramBuffer; NextHandledState, NextUnHandledState: Byte);
 var
   Handled: Boolean;
 begin      
@@ -282,7 +282,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure DispatchDatagram(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; NextHandledState, NextUnHandledState: Byte);
+procedure DispatchDatagram(NodeBuffer: PNMRAnetNode; Datagram: PDatagramBuffer; NextHandledState, NextUnHandledState: Byte);
 var
   Handled: Boolean;
 begin
@@ -328,7 +328,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure TransmitSingleDatagram(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer; Datagram: PDatagramBuffer; SourceAliasID: Word; NextState: Byte);
+procedure TransmitSingleDatagram(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer; Datagram: PDatagramBuffer; SourceAliasID: Word; NextState: Byte);
 begin
   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
   begin
@@ -350,7 +350,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure TransmitMultiDatagram(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer; Datagram: PDatagramBuffer; SourceAlias: Word; NextState: Byte);
+procedure TransmitMultiDatagram(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer; Datagram: PDatagramBuffer; SourceAlias: Word; NextState: Byte);
 var
   Count: Byte;
   MTI: DWord;
@@ -464,7 +464,7 @@ end;
 //               such a hung datagram due to a non-responsve target will not hang up
 //               other datagrams being dealt with
 // *****************************************************************************
-procedure NMRAnetDatagrams_ProcessTransmit(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetDatagrams_ProcessTransmit(NodeBuffer: PNMRAnetNode);
 var
   Buffer: TCANBuffer;
   ActiveDatagram: PDatagramBuffer;
@@ -515,7 +515,7 @@ end;
 //               It also detect if the DATAGRAM_BUFFER_IN_PROCESS flag has been set
 //               too long and if so calls it abandon then frees the buffer
 // *****************************************************************************
-procedure NMRAnetDatagrams_ProcessReceive(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetDatagrams_ProcessReceive(NodeBuffer: PNMRAnetNode);
 var
   ActiveDatagram: PDatagramBuffer;
 begin
@@ -595,7 +595,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function FindMatchingInProcessReceiveDatagram(NodeBuffer: PNMRAnetNodeBuffer; var Datagram: PDatagramBuffer; Alias: Word): Boolean;
+function FindMatchingInProcessReceiveDatagram(NodeBuffer: PNMRAnetNode; var Datagram: PDatagramBuffer; Alias: Word): Boolean;
 begin
   Result := False;
   if NodeBuffer^.DatagramReceive <> nil then
@@ -667,7 +667,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure AddToBufferOverflowList(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer);
+procedure AddToBufferOverflowList(NodeBuffer: PNMRAnetNode; Datagram: PDatagramBuffer);
 var
   i: Integer;
 begin
@@ -690,7 +690,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function TryAllocateBuffer(NodeBuffer: PNMRAnetNodeBuffer; var Datagram: PDatagramBuffer): Boolean;
+function TryAllocateBuffer(NodeBuffer: PNMRAnetNode; var Datagram: PDatagramBuffer): Boolean;
 begin
   Result := False;
 //  GetMem(NodeBuffer^.DatagramReceive, SizeOf(TDatagramBuffer));
@@ -714,7 +714,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNodeBuffer; Buffer: PCANBuffer);
+procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer);
 var
   Datagram: PDatagramBuffer;
 begin

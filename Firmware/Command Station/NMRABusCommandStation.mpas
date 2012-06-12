@@ -49,6 +49,18 @@ var
   CS_Bank_1_Direction               : sbit at TRISB12_bit;
 
 
+// ****************************************************************************
+// procedure GetUniqueIDFunc
+//
+//  Description:   Callback from NMRABus to load the 48 Bit Unique ID
+//
+// ****************************************************************************
+procedure GetUniqueIDFunc(var HiID, LoID: DWord);
+begin
+  LoID := MUSTANGPEAK_COMMANDSTATION_ID_0_LO;
+  HiID := MUSTANGPEAK_ID_0_HI;
+end;
+
 
 // *****************************************************************************
 //  INTERRUPTS
@@ -70,19 +82,13 @@ begin
 end;
 
 procedure INTERRUPT_1ms_Timer(); iv IVT_ADDR_T2INTERRUPT;
-var
-  i: Integer;
 // Called once every 1m
 begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRAnetStateMachine_1ms_Timer(@NMRAnetNodeBuffer); // TODO ENUMERATE ALL THE ACTIVE NODE BUFFERS!!!!!!!!!!!!
+  NMRAnetStateMachine_1ms_Timer(@NMRAnetNode); // TODO ENUMERATE ALL THE ACTIVE NODE BUFFERS!!!!!!!!!!!!
                                                      //      1ms SEEMS TO SHORT, 100ms seems better for what I am trying to do......
-                                                     
-  for i := 0 to MAX_VNODE_COUNT - 1 do
-    NMRAnetStateMachine_1ms_Timer(@vNodePool[i]);
-    
 end;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
@@ -101,7 +107,7 @@ var
   delay: word;
 
 
-procedure TrainControlCallback(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; var Handled: Boolean);
+procedure TrainControlCallback(NodeBuffer: PNMRAnetNode; Datagram: PDatagramBuffer; var Handled: Boolean);
 var
   i: Integer;
 begin
@@ -117,7 +123,7 @@ begin
   end
 end;
 
-procedure MemConfigurationCallback(NodeBuffer: PNMRAnetNodeBuffer; Datagram: PDatagramBuffer; var Handled: Boolean);
+procedure MemConfigurationCallback(NodeBuffer: PNMRAnetNode; Datagram: PDatagramBuffer; var Handled: Boolean);
 //var
  // j, i: Integer;
 begin
@@ -134,7 +140,7 @@ begin
   UART1_Write_Text(LF);  }
 end;
 
-procedure AbbriviatedCDICallback(NodeBuffer: PNMRAnetNodeBuffer; ACDI_Buffer: PACDI_ReceiveBuffer);
+procedure AbbriviatedCDICallback(NodeBuffer: PNMRAnetNode; ACDI_Buffer: PACDI_ReceiveBuffer);
 var
 
  i: Integer;
@@ -219,9 +225,9 @@ begin
   ACDI_Buffer^.State := ACDI_BUFFER_STATE_EMPTY;                                     // Release the buffer
 end;
 
-procedure ComplexResponseCallback(Response: PQueuedResponse);
+procedure ComplexResponseCallback(Response: PQueuedAction);
 begin
- // case Response^.nCode of
+ // case Action^.nCode of
   
  // end;
 end;
@@ -233,9 +239,24 @@ var
   Packet: TCANBuffer;
   DCC_Message: TDCCPacket;
   laststate, Rlaststate: word;
-  i: Integer;
+  
   s_float: array[23] of char;
+  
+  xx: Word;
+  rr: real;
+  ii: Integer;
+  ii2: Integer;
+  
+  TestDatagramRx: TDatagramBuffer;
+  TestDatagramTx: TDatagramBuffer;
+  TestACDIBufferTx: TACDI_TransmitBuffer;
+  TestACDIBufferRx: TACDI_ReceiveBuffer;
+
+  
 begin
+
+  ii := Sizeof(TNMRAnetNode);
+
   Track_DCC_Out_Pin := 0;
   Track_DCC_Out_Pin := 0;
   Track_DCC_Out_Pin_Direction := 0;      // Output
@@ -246,18 +267,18 @@ begin
 
   _25AAxxxx_Initialize;
   CANStorage_Initialize;
-  NMRAnetStateMachine_Initialize;
-  NMRAnetStateMachine_InitializeNodeBuffer(@NMRAnetNodeBuffer, MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_COMMANDSTATION_ID_0_LO);  // BE SURE THESE ARE VALID BEFORE THE 1ms TIMER KICKS IN!!!!
-  for i := 0 to MAX_VNODE_COUNT - 1 do
-    NMRAnetStateMachine_InitializeNodeBuffer(@vNodePool[i], MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_COMMANDSTATION_ID_0_LO + 1 + i);
+  NMRAnetStateMachine_Initialize(@NMRAnetNode);
   MCU_Setup_Initialize;
   NMRA_DCC_Initialize;
 
   NMRAnetDatagrams_SetCallback(DatagramTrainControlCallbackFunc, @TrainControlCallback);
 //  NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallbackFunc, @MemConfigurationCallback);
-//  NMRAnetStateMachine_SetComplexCallbackFunc(@ComplexResponseCallback);
+//  NMRAnetStateMachine_SetComplexCallbackFunc(@ComplexActionCallback);
  // NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(@AbbriviatedCDICallback);
+  
 
+ // UART1_Write_Text('Connecting'+LF);
+  
   laststate := $FF;
   Rlaststate := 0;
   MaxTime_StateMachine := 0;
@@ -265,43 +286,59 @@ begin
   delay := 0;
   
  // NMRAnetMobileNode_InitializeEEPROM;
-
+  
+  NMRAnetDatagrams_InitializeDatagramBuffer(@TestDatagramRx);
+  NMRAnetDatagrams_InitializeDatagramBuffer(@TestDatagramTx);
+  NMRAnetNode.DatagramReceive := @TestDatagramRx;
+  NMRAnetNode.DatagramTransmit := @TestDatagramTx;
+  
+  NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(@TestACDIBufferRx);
+  NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(@TestACDIBufferTx);
+  NMRAnetNode.ACDI_TransmitBuffer := @TestACDIBufferTx;
+  NMRAnetNode.ACDI_ReceiveBuffer := @TestACDIBufferRx;
 
   while (TRUE) do
   begin
-    delay_us(600);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
 
+  
 
+    {   if laststate <> ACDI_ReceiveBufferList.List[0].iState then
+       begin
+         ByteToStr(ACDI_ReceiveBufferList.List[0].iState, s1);
+         UART1_Write_Text(s1+LF);
+         laststate := ACDI_ReceiveBufferList.List[0].iState
+       end;    }
+       
+       
     TMR3 := 0;
-
+    
     // TODO June 4, 2012
     //    Look for optimization in statemachines
-    //    Rethink the statemachine that handles the Responses, should it look for valid responses instead of testing lots of empty possibilities
+    //    Rethink the statemachine that handles the Actions, should it look for valid Actions instead of testing lots of empty possibilities
     //    Think about using a global pool of dynmaically allocated Datagram and ACDI buffers.  Having a RX and TX for both for all vNodes does not make sense
-
-    NMRAnetStateMachine_Process(@NMRAnetNodeBuffer);
-    for i := 0 to MAX_VNODE_COUNT - 1 do
-      NMRAnetStateMachine_Process(@vNodePool[i]);
-
-
-    if TMR3 > MaxTime_StateMachine then
+    
+    NMRAnetStateMachine_Process(@NMRAnetNode);
+  
+  {  if TMR3 > MaxTime_StateMachine then
     begin
       MaxTime_StateMachine := TMR3;
       FloatToStr((50e-9*double( MaxTime_StateMachine))*1e6, s_float);
       UART1_Write_Text('StateMachine Max: ' + s_float+'us'+LF);
     end;
-
+    
     if MaxTime_RX <> Rlaststate then
     begin
       FloatToStr((50e-9*double( MaxTime_RX))*1e6, s_float);
       UART1_Write_Text('CAN RX Max: ' + s_float+'us'+LF);
       Rlaststate := MaxTime_RX
-    end;
+    end;      }
+    
 
 
+    delay_us(600);    // Slows the Statemachine down enough to work with 115k Baud on the CAN/USB adapter
 
-    if NMRAnetCANReceive_Permited(@NMRAnetNodeBuffer) then
-    begin  
+    if NMRAnetCANReceive_Permited(@NMRAnetNode) then
+    begin
 
     end;
   end;

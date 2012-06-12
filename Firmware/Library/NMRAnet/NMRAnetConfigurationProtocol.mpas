@@ -5,15 +5,15 @@ uses
   NMRAnetDatagramDefines,
   NMRAnetDefines;
 
-procedure NMRAnetConfigurationProtocol_Initialize;
-procedure NMRAnetConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNode);
+procedure NMRAnetConfigurationProtocol_Process(NodeBuffer: PNMRAnetNode);
 procedure NMRAnetConfigurationProtocol_HandleDatagram(Datagram: PDatagramBuffer);
   
 
 
 implementation
 
-procedure NMRAnetConfigurationProtocol_Initialize;
+procedure NMRAnetConfigurationProtocol_Initialize(NodeBuffer: PNMRAnetNode);
 begin
   ConfigurationProtocolInfo.iState := STATE_CONFIGPROTOCCOL_START;
 end;
@@ -97,7 +97,7 @@ begin
   end
 end;
 
-procedure NMRAnetConfigurationProtocol_Process(NodeBuffer: PNMRAnetNodeBuffer);
+procedure NMRAnetConfigurationProtocol_Process(NodeBuffer: PNMRAnetNode);
 begin
   case ConfigurationProtocolInfo.iState of
     STATE_CONFIGPROTOCCOL_START : begin end;
