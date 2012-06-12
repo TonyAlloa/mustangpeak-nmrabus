@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\NMRAnet\NMRAnetEventDefines.mpas
+Value=NMRABus_Xpressnet.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -39,12 +39,15 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=5
+Count=8
 File0=NMRABus_Xpressnet.mpas
 File1=..\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
 File2=NMRAnetAppDefines.mpas
 File3=..\Command Station\NMRAnetAppDefines.mpas
 File4=..\Library\NMRAnet\NMRAnetEventDefines.mpas
+File5=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\XpressnetStateMachine.mpas
+File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
+File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -53,15 +56,23 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=8
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Count=16
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\XpressNet Interface\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path10=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path11=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
+Path15=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
 [HEADER_PATH]
 Count=0
 [HEADERS]

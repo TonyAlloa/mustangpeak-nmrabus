@@ -37,7 +37,8 @@ uses
 
   procedure NMRAnetStateMachine_Process(NodeBuffer: PNMRAnetNode);
   procedure NMRAnetStateMachine_Disconnect(NodeBuffer: PNMRAnetNode);
-  procedure NMRAnetStateMachine_Initialize(NodeBuffer: PNMRAnetNode);
+  procedure NMRAnetStateMachine_Initialize;
+  procedure NMRAnetStateMachine_InitializeNode(NodeBuffer: PNMRAnetNode; NodeID_HI, NodeID_Lo: DWord);
   procedure NMRAnetStateMachine_1ms_Timer(NodeBuffer: PNMRAnetNode);
   
   // Receive Callback Helper Functions.  This could be done with separate callbacks for different message
@@ -58,9 +59,6 @@ uses
   // Exported Functions
   function TryTransmitNMRABusLayerMsg(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean;
 
-  // defined in the user program
-  procedure GetUniqueIDFunc(var HiID, LoID: DWord); external;
-  
   // defined in the dsPICxx_CAN_Interrupt.mpas file
   procedure StartCANMessageEngine; external;
   procedure LockCANInterrupt; external;
@@ -206,6 +204,28 @@ begin
 end;
 
 // *****************************************************************************
+//  procedure NMRAnetStateMachine_InitializeNode
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRAnetStateMachine_InitializeNode(NodeBuffer: PNMRAnetNode; NodeID_HI, NodeID_LO: DWord);
+begin
+  NodeBuffer^.DatagramReceive := PDatagramBuffer(nil);
+  NodeBuffer^.DatagramTransmit := PDatagramBuffer(nil);
+  NodeBuffer^.ACDI_TransmitBuffer := PACDI_TransmitBuffer(nil);
+  NodeBuffer^.ACDI_ReceiveBuffer := PACDI_ReceiveBuffer(nil);
+  NodeBuffer^.Actions := PQueuedActions(nil);
+  NodeBuffer^.State := 0;
+  NodeBuffer^.Node.ID[0] := NodeID_LO;
+  NodeBuffer^.Node.ID[1] := NodeID_HI;
+  NodeBuffer^.Node.Seed := NodeBuffer^.Node.ID;
+  NodeBuffer^.iStateMachine := STATE_NMRABUS_START;
+end;    
+
+// *****************************************************************************
 //  procedure NMRAnetStateMachine_Initialize
 //     Parameters:
 //     Returns:
@@ -213,24 +233,14 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetStateMachine_Initialize(NodeBuffer: PNMRAnetNode);
+procedure NMRAnetStateMachine_Initialize;
 begin
-  NodeBuffer^.DatagramReceive := PDatagramBuffer(nil);
-  NodeBuffer^.DatagramTransmit := PDatagramBuffer(nil);
-  NodeBuffer^.ACDI_TransmitBuffer := PACDI_TransmitBuffer(nil);
-  NodeBuffer^.ACDI_ReceiveBuffer := PACDI_ReceiveBuffer(nil);
-  NodeBuffer^.Actions := PQueuedActions(nil);
-  NMRAnetDatagrams_Initialize(NodeBuffer);
+  NMRAnetDatagrams_Initialize;
   NMRAnetCANReceive_Initialize;
-  NMRAnetConfigurationProtocol_Initialize(NodeBuffer);
-  NMRAnetAbbreviatedConfigurationProtocol_Initialize(NodeBuffer);
+  NMRAnetConfigurationProtocol_Initialize;
+  NMRAnetAbbreviatedConfigurationProtocol_Initialize;
   SimpleActionCallbackFunc := PSimpleActionCallbackFunc( nil);
   ComplexActionCallbackFunc := PComplexActionCallbackFunc( nil);
-  NodeBuffer^.State := 0;
-  GetUniqueIDFunc(NodeBuffer^.Node.ID[1], NodeBuffer^.Node.ID[0]);
-  NodeBuffer^.Node.Seed[0] := NodeBuffer^.Node.ID[0];
-  NodeBuffer^.Node.Seed[1] := NodeBuffer^.Node.ID[1];
-  NodeBuffer^.iStateMachine := STATE_NMRABUS_START;
   NMRAnetStateMachine_InitializeList(@TX_CANBufferList, @TX_CANBuffer, TX_CAN_BUFFER_LEN);
   NMRAnetStateMachine_InitializeList(@TX_NMRAnetBufferList, @TX_NMRAnet_Buffer, TX_NMRANET_BUFFER_LEN);
 end;

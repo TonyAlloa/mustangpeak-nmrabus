@@ -37,7 +37,7 @@ procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 begin
   // 1ms Timer
   T2IF_bit := 0;  // Reset the Flag
-  NMRAnetStateMachine_1ms_Timer;
+  NMRAnetStateMachine_1ms_Timer(@NMRAnetNode);
 end;
 
 procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);
@@ -45,17 +45,13 @@ begin
   // Handle the message here
 end;
 
-procedure GetUniqueIDFunc(var HiID, LoID: DWord);
-begin
-  HiID := MUSTANGPEAK_ID_0_HI;
-  LoID := MUSTANGPEAK_TFT_THROTTLE_ID_0_LO;
-end;
-  
 begin
   CANStorage_Initialize;
   dsPIC33_CAN_Initialize;
   MCU_Setup_Initialize;
   NMRAnetStateMachine_Initialize;
+  
+  NMRAnetStateMachine_InitializeNode(@NMRAnetNode, MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_TFT_THROTTLE_ID_0_LO);
   
   MainState := STATE_SPLASH_SCREEN;
   BoxRoundProgressBar.Width := 0;
@@ -67,11 +63,11 @@ begin
   begin
     Check_TP;
     
-    NMRAnetStateMachine_Process;
+    NMRAnetStateMachine_Process(@NMRAnetNode);
     
     Delay_us(2000);  // USB-CAN Board can't keep up
 
-    if NMRAnetCANReceive_Permited then
+    if NMRAnetCANReceive_Permited(@NMRAnetNode) then
     begin
       case MainState of
         STATE_SPLASH_SCREEN :

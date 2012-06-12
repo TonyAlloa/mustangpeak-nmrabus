@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRABusCommandStation.mpas
+Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -45,7 +45,7 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=10
+Count=14
 File0=NMRABusCommandStation.mpas
 File1=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDefines.mpas
 File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
@@ -56,6 +56,10 @@ File6=..\Library\NMRAnet\NMRAnetCANReceive.mpas
 File7=..\Library\NMRAnet\NMRAnetDatagrams.mpas
 File8=..\Library\NMRAnet\NMRAnetDatagramDefines.mpas
 File9=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagramDefines.mpas
+File10=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetConfigurationProtocol.mpas
+File11=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetAbbreviatedConfigurationProtocol.mpas
+File12=..\Library\NodeIDs.mpas
+File13=MCU_Setup_dsPIC4013.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

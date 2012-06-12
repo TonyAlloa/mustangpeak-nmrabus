@@ -49,19 +49,6 @@ var
   CS_Bank_1_Direction               : sbit at TRISB12_bit;
 
 
-// ****************************************************************************
-// procedure GetUniqueIDFunc
-//
-//  Description:   Callback from NMRABus to load the 48 Bit Unique ID
-//
-// ****************************************************************************
-procedure GetUniqueIDFunc(var HiID, LoID: DWord);
-begin
-  LoID := MUSTANGPEAK_COMMANDSTATION_ID_0_LO;
-  HiID := MUSTANGPEAK_ID_0_HI;
-end;
-
-
 // *****************************************************************************
 //  INTERRUPTS
 // *****************************************************************************
@@ -267,7 +254,7 @@ begin
 
   _25AAxxxx_Initialize;
   CANStorage_Initialize;
-  NMRAnetStateMachine_Initialize(@NMRAnetNode);
+  NMRAnetStateMachine_Initialize;
   MCU_Setup_Initialize;
   NMRA_DCC_Initialize;
 
@@ -287,6 +274,7 @@ begin
   
  // NMRAnetMobileNode_InitializeEEPROM;
   
+  NMRAnetStateMachine_InitializeNode(@NMRAnetNode, MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_COMMANDSTATION_ID_0_LO);
   NMRAnetDatagrams_InitializeDatagramBuffer(@TestDatagramRx);
   NMRAnetDatagrams_InitializeDatagramBuffer(@TestDatagramTx);
   NMRAnetNode.DatagramReceive := @TestDatagramRx;

@@ -28,7 +28,7 @@ const
   STATE_RS485_READ_XOR_BYTE     = 2;
   STATE_RS485_FULL              = 3;
   
-procedure XpressnetStateMachine_Process;
+procedure XpressnetStateMachine_Process(NodeBuffer: PNMRAnetNode);
 procedure XpressnetStateMachine_Initialize;
 procedure XpressnetStateMachine_UART_RX_StateMachine(XpressNetBuffer: PXpressnetStateMachineInfo; ReceivedByte: Byte);
 procedure XpressnetStateMachine_840ms_TimeTick;
@@ -275,14 +275,14 @@ begin
   end
 end;
 
-procedure XpressnetStateMachine_Process;
+procedure XpressnetStateMachine_Process(NodeBuffer: PNMRAnetNode);
 var
   Temp: Word;
 begin
   case XpressnetStateMachineInfo.iState of
     STATE_DISCOVERDEVICES :
       begin
-        if NMRAnetCANReceive_Permited then
+        if NMRAnetCANReceive_Permited(NodeBuffer) then
         begin
           XpressnetStateMachineInfo.Discovering := True;
           XpressnetStateMachineInfo.iActiveDevice := 0;
@@ -336,7 +336,7 @@ begin
       end;
     STATE_QUERYDATABASE :
       begin
-        if NMRAnetCANReceive_Permited then
+        if NMRAnetCANReceive_Permited(NodeBuffer) then
         begin
           // Send NMRANet message here......
           XpressnetStateMachineInfo.iState := STATE_XPRESSNETREPLY;
@@ -380,7 +380,7 @@ begin
       end;
     STATE_TESTFORDISCOVERYMODE :
       begin
-        if NMRAnetCANReceive_Permited then
+        if NMRAnetCANReceive_Permited(NodeBuffer) then
         begin
           if XpressnetStateMachineInfo.Discovering then
             XpressnetStateMachineInfo.iState := STATE_DISCOVERNEXTDEVICE
@@ -2368,7 +2368,7 @@ procedure XpressNet_HandleDeviceInstruction(XpressNetMessage: PXpressNetMessage;
 var
   i: Integer;
 begin
-   DatagramTransmit.List[0].DataBytes[0] := $20;
+ {  DatagramTransmit.List[0].DataBytes[0] := $20;
    DatagramTransmit.List[0].DataBytes[1] := XpressnetMessage^.DataCount;
    DatagramTransmit.List[0].DataBytes[2] := XpressNetMessage^.Instruction;
    for i := 0 to XpressnetMessage^.DataCount do
@@ -2378,7 +2378,7 @@ begin
    DatagramTransmit.List[0].State := DATAGRAM_BUFFER_IN_PROCESS;               // Kick it off.
    while DatagramTransmit.List[0].State <> DATAGRAM_BUFFER_EMPTY do
      NMRAnetStateMachine_Process;
-
+      }
 
   // Divide and Conquer
   case XpressNetMessage^.Instruction of
