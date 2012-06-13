@@ -26,6 +26,7 @@ uses
   MCU_Setup_dsPIC4013,
   _25AAxxxx,
   NMRAnetEventDefines,
+  NMRAnetBufferPools,
  // NMRABusNodeItems,
  // NMRAnetUtilities,
  // NMRABusAddressSlots,

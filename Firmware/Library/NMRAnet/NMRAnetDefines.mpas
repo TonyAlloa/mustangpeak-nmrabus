@@ -225,6 +225,36 @@ type
   // to be summed together into a single response.  Other actions need to know more information
   // such as the node Alias the action needs to be sent to.  These are stored in the QueuedActionList
   
+const
+  RMB_EMPTY               = $00;                                                // Buffer is empty and available
+  RMB_ALLOCATED           = $01;                                                // Buffer is allocated but may be in Process, need to check for inprocess flags
+  RMB_INPROCESS_DATAGRAM  = $02;                                                // Buffer is process of receiving a Datagram
+  RMB_INPROCESS_STREAM    = $04;                                                // Buffer is in process of receiving a Stream
+  RMB_INPROCESS_CDI       = $08;                                                // Buffer is in process of receiving a CDI
+  RMB_INPROCESS_ACDI      = $10;                                                // Buffer is in process of receiving a ACDI
+  
+type
+  TDataBuffer = record
+    Count: Byte;                                                                // Number of Databytes that are valid
+    DataBytes: TCAN_DataBytes;                                                  // Depends on nCode, could be EventID, Datagram type, etc
+  end;
+  
+  TReceivedMessageBuffer = record
+    nCode: Word;                                                                // When a message is received a code is assigned to it.  See the CRC_xxx constants
+    SourceAlias: Word;                                                          // The node that the message was sent from
+    DestAlias: Word;                                                            // The node the message was sent to (if not addressed will be 0);
+    DataBuffer: TDataBuffer;                                                    // Data sent in the CAN buffer
+    State: Byte;                                                                // State of the Message buffer, see the RMB_xxx constants
+    DatagramReceive: PDatagramBuffer;                                           // Dynamically allocated only when needed
+    DatagramTransmit: PDatagramBuffer;                                          // Dynamically allocated only when needed
+    ACDI_TransmitBuffer: PACDI_TransmitBuffer;                                  // Dynamically allocated only when needed
+    ACDI_ReceiveBuffer: PACDI_ReceiveBuffer;                                    // Dynamically allocated only when needed
+    Next: ^Word;
+    Prev: ^Word;
+  end;
+  PReceivedMessageBuffer = ^TReceivedMessageBuffer;
+    
+type
   TQueuedAction = record                                                        // When a message is received that needs a response that contains a destination
     nCode: Word;                                                                // What the message was, see CRC_xxxx codes
     FromAlias: Word;                                                            // Destination the info needed to response is queued up in this structure to be acted on in the main

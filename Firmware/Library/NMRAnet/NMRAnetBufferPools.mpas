@@ -1,0 +1,153 @@
+unit NMRAnetBufferPools;
+
+uses
+  NMRAnetDefines,
+  CANDefines,
+  NMRAnetDatagramDefines,
+  NMRAnetConfigurationProtocolDefines,
+  NMRAnetAbbreviatedConfigurationProtocolDefines;
+
+//{$I Options.inc}
+
+// MOVE TO OPTIONS.INC
+const
+  MAX_RECEIVED_MESSAGE_BUFFER_POOL = 10;
+
+type
+  TReceivedMessageBufferPool = record
+    Pool: array[0..MAX_RECEIVED_MESSAGE_BUFFER_POOL-1] of TReceivedMessageBuffer;
+ //   MaxAllocated: Byte;
+  //  CurrentAllocated: Byte;
+  end;
+  
+
+function NMRAnetBufferPools_AllocateReceivedMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+function NMRAnetBufferPools_FindInProcessDatagramMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+function NMRAnetBufferPools_FindInProcessACDIMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+function NMRAnetBufferPools_FindInProcessCDIMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+function NMRAnetBufferPools_FindInProcessStreamMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+procedure NMRAnetBufferPools_ReleaseReceivedMessageBuffer(Buffer: PReceivedMessageBuffer);
+
+
+  
+implementation
+
+var
+  ReceivedMessagePool: TReceivedMessageBufferPool;
+  
+function FindMatchingStateMessageBuffer(State: Byte; var Buffer: PReceivedMessageBuffer): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 0 to MAX_RECEIVED_MESSAGE_BUFFER_POOL - 1 do
+  begin
+    if ReceivedMessagePool.Pool[i].State = State then
+    begin
+      Buffer := @ReceivedMessagePool.Pool[i];
+      Result := True;
+      Break
+    end
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_AllocateReceivedMessageBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRAnetBufferPools_AllocateReceivedMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+begin
+  Result := FindMatchingStateMessageBuffer(RMB_EMPTY, Buffer);
+  if Result then
+  begin
+    Buffer^.nCode := 0;
+    Buffer^.SourceAlias := 0;
+    Buffer^.DestAlias := 0;
+    Buffer^.DataBuffer.Count := 0;
+    Buffer^.State := 0;
+    Buffer^.DatagramReceive := PDatagramBuffer( nil);
+    Buffer^.DatagramTransmit := PDatagramBuffer( nil);
+    Buffer^.ACDI_TransmitBuffer := PACDI_TransmitBuffer( nil);
+    Buffer^.ACDI_ReceiveBuffer := PACDI_ReceiveBuffer( nil);
+    Buffer^.Next := nil;
+    Buffer^.Prev := nil;
+  end;
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_FindInProcessDatagramMessageBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRAnetBufferPools_FindInProcessDatagramMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+begin
+  Result := FindMatchingStateMessageBuffer(RMB_ALLOCATED or RMB_INPROCESS_DATAGRAM, Buffer);
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_FindInProcessACDIMessageBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRAnetBufferPools_FindInProcessACDIMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+begin
+  Result := FindMatchingStateMessageBuffer(RMB_ALLOCATED or RMB_INPROCESS_ACDI, Buffer);
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_FindInProcessCDIMessageBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRAnetBufferPools_FindInProcessCDIMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+begin
+  Result := FindMatchingStateMessageBuffer(RMB_ALLOCATED or RMB_INPROCESS_CDI, Buffer);
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_FindInProcessStreamMessageBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRAnetBufferPools_FindInProcessStreamMessageBuffer(var Buffer: PReceivedMessageBuffer): Boolean;
+begin
+  Result := FindMatchingStateMessageBuffer(RMB_ALLOCATED or RMB_INPROCESS_STREAM, Buffer);
+end;
+
+procedure NMRAnetBufferPools_ReleaseReceivedMessageBuffer(Buffer: PReceivedMessageBuffer);
+var
+  Prev, Next: PReceivedMessageBuffer;
+begin
+  if Buffer^.Next = nil then
+    Buffer^.State := RMB_EMPTY
+  else begin
+    Prev := PReceivedMessageBuffer( Buffer^.Prev);
+    if Buffer^.Prev <> nil then
+      .Next := Buffer^.Next
+    else begin
+    end
+  end;
+end;
+
+end.
