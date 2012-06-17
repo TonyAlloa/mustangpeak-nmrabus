@@ -10,45 +10,47 @@ const
   ACDI_LEN_USER_NAME = 32;                                                      // User Node Name String Length
   ACDI_LEN_USER_DESC = 32;                                                      // User Description Length
     
-  ACDI_WATCHDOG_MAX = 10000;                                                    // How many milliseconds between valid 53 frames before we declare it abandon
+  ACDI_WATCHDOG_MAX = 100;                                                      // How many 100ms counts between valid 53 frames before we declare it abandon
   
 const
   // Buffer State
-  ACDI_BUFFER_STATE_EMPTY                                  = 0;
-  ACDI_BUFFER_STATE_PROCESSING                             = 1;
+  
+  ACDIS_EMPTY                                                 = $00;
+  ACDIS_ALLOCATED                                             = $01;
+  ACDIS_PROCESSING                                            = $02;
 
   // Statemachine State  
-  STATE_ACDI_TX_START                                      = 0;
-  STATE_ACDI_TX_PROCESSING_CHARS                           = 1;
+  STATE_ACDI_TX_START                                           = 0;
+  STATE_ACDI_TX_PROCESSING_CHARS                                = 1;
 
-  ACDI_VERSION                                             = 1;
+  ACDI_VERSION                                                  = 1;
   
-  ACDI_TRANSMIT_VERSION_MFG_INFO                           = 0;
-  ACDI_TRANSMIT_MFG                                        = 1;
-  ACDI_TRANSMIT_MFG_NULL                                   = 2;
-  ACDI_TRANSMIT_MFG_NAME                                   = 3;
-  ACDI_TRANSMIT_MFG_NAME_NULL                              = 4;
-  ACDI_TRANSMIT_MFG_HW_VER                                 = 5;
-  ACDI_TRANSMIT_MFG_HW_NULL                                = 6;
-  ACDI_TRANSMIT_MFG_SW_VER                                 = 7;
-  ACDI_TRANSMIT_MFG_SW_NULL                                = 8;
-  ACDI_TRANSMIT_VERSION_USER_INFO                          = 9;
-  ACDI_TRANSMIT_USER_NAME                                  = 10;
-  ACDI_TRANSMIT_USER_NAME_NULL                             = 11;
-  ACDI_TRANSMIT_USER_DESC                                  = 12;
-  ACDI_TRANSMIT_USER_DESC_NULL                             = 13;
-  ACDI_TRANSMIT_COMPLETE                                   = 14;
+  STATE_ACDI_TRANSMIT_VERSION_MFG_INFO                           = 0;
+  STATE_ACDI_TRANSMIT_MFG                                        = 1;
+  STATE_ACDI_TRANSMIT_MFG_NULL                                   = 2;
+  STATE_ACDI_TRANSMIT_MFG_NAME                                   = 3;
+  STATE_ACDI_TRANSMIT_MFG_NAME_NULL                              = 4;
+  STATE_ACDI_TRANSMIT_MFG_HW_VER                                 = 5;
+  STATE_ACDI_TRANSMIT_MFG_HW_NULL                                = 6;
+  STATE_ACDI_TRANSMIT_MFG_SW_VER                                 = 7;
+  STATE_ACDI_TRANSMIT_MFG_SW_NULL                                = 8;
+  STATE_ACDI_TRANSMIT_VERSION_USER_INFO                          = 9;
+  STATE_ACDI_TRANSMIT_USER_NAME                                  = 10;
+  STATE_ACDI_TRANSMIT_USER_NAME_NULL                             = 11;
+  STATE_ACDI_TRANSMIT_USER_DESC                                  = 12;
+  STATE_ACDI_TRANSMIT_USER_DESC_NULL                             = 13;
+  STATE_ACDI_TRANSMIT_COMPLETE                                   = 14;
   
 
-  ACDI_RECEIVE_MFG_VERSION                                 = 0;
-  ACDI_RECEIVE_MFG                                         = 1;
-  ACDI_RECEIVE_MFG_NAME                                    = 2;
-  ACDI_RECEIVE_MFG_HW_VER                                  = 3;
-  ACDI_RECEIVE_MFG_SW_VER                                  = 4;
-  ACDI_RECEIVE_USER_VERSION                                = 5;
-  ACDI_RECEIVE_USER_NAME                                   = 6;
-  ACDI_RECEIVE_USER_DESC                                   = 7;
-  ACDI_RECEIVE_COMPLETE                                    = 8;
+  STATE_ACDI_RECEIVE_MFG_VERSION                                 = 0;
+  STATE_ACDI_RECEIVE_MFG                                         = 1;
+  STATE_ACDI_RECEIVE_MFG_NAME                                    = 2;
+  STATE_ACDI_RECEIVE_MFG_HW_VER                                  = 3;
+  STATE_ACDI_RECEIVE_MFG_SW_VER                                  = 4;
+  STATE_ACDI_RECEIVE_USER_VERSION                                = 5;
+  STATE_ACDI_RECEIVE_USER_NAME                                   = 6;
+  STATE_ACDI_RECEIVE_USER_DESC                                   = 7;
+  STATE_ACDI_RECEIVE_COMPLETE                                    = 8;
 
 type
 
@@ -56,16 +58,16 @@ type
     iNextChar: Word;                                                            // Next character is stored for the ACDI string
     DestAlias: Word;                                                            // Who to send it to
     SourceAlias: Word;                                                          // Who is sending it
-    iState: Byte;                                                               // Statemachine Index of buffer
-    State: Byte;                                                                // State of the buffer see the ACDI_STATE_xxxx constants
+    iStateMachine: Byte;                                                        // Statemachine Index of buffer
+    State: Byte;                                                                // State of the buffer see the ACDIS_xxxx constants
     iTransferState: Byte;                                                       // Flags Complete Transfer for each string   See ACDI_COMPLETE_xxxx flags
   end;
   PACDI_TransmitBuffer = ^TACDI_TransmitBuffer;
   
 
   TACDI_ReceiveBuffer = record                                                  // The only time we receive ACDI information is if we ask for it.  As such we can control the number of simutanious receives to 1
-    iState: Byte;                                                               // Statemachine index for Buffer
-    State: Byte;                                                                // State of the Buffer (allocated, etc) see the ACDI_STATE_xxxx constants
+    iStateMachine: Byte;                                                        // Statemachine index for Buffer
+    State: Byte;                                                                // State of the Buffer (allocated, etc) see the ACDIS_xxx constants
     SourceAlias: Word;                                                          // What node sent
     iWatchdog: Word;                                                            // Watch for abandon Buffers
     MfgVersion: Byte;                                                           // Version ID for the ACDI

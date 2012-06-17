@@ -25,7 +25,7 @@ uses
   NMRAnetDatagramDefines;
 
 const
-  MAX_BUS_LOGIN_TIMEOUT = 201;                                                  // Number of 1ms time tick to wait for a node to send a RID to signal a duplicate Alais
+  MAX_BUS_LOGIN_TIMEOUT = 3;                                                  // Number of 100ms time tick to wait for a node to send a RID to signal a duplicate Alais
 
   CAN_TX_0 = 0;
   CAN_TX_1 = 1;
@@ -76,10 +76,30 @@ const
   MTI_ADDRESSED                     = $0E000000;
   MTI_STREAM_DATA_SEND              = $0F000000;
   MTI_TYPE_MASK                     = $0F000000;                                // The lower 4 bits of the upper word that decodes the NMRAnet Format code of the message
-  MTI_DATAGRAM_MIN                  = MTI_DATAGRAM_ONLY_FRAME;
-  MTI_DATAGRAM_MAX                  = MTI_DATAGRAM_FRAME_END;
+
+  // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
+  MTI_EXTENSION_VERIFY_NODE_ID_NUMBER_DEST       = $0A;                         // Sub-Type (in first Databyte) for a MTI with a destination in the header
+  MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED    = $0C;
+  MTI_EXTENSION_TERMINATE_DUE_TO_ERROR           = $0D;
+  // Protocol Support MTIs
+  MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           = $2E;
+  MTI_EXTENSION_PROTOCOL_SUPPORT_REPLY           = $2F;                         // Datagram DataBytes: 2F xx vv vv vv vv vv vv
+  // Event Exchange MTIs
+  MTI_EXTENSION_IDENTIFY_EVENTS                  = $2B;
+  // Abbreviated Configuration Decription Information
+  MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;                         // Abbreviated Configuration Decription Information Request, make sure set PIP value if supported
+  MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;                         // Abbreviated Configuration Decription Information Reply
+  // Datagram MTIs
+  MTI_EXTENSION_DATAGRAM_RECIEVED_OK             = $4C;
+  MTI_EXTENSION_DATAGRAM_REJECTED                = $4D;
+  // Stream MTIs
+  MTI_EXTENSION_STREAM_INITIATE_REQUEST          = $4E;
+  MTI_EXTENSION_STREAM_INITIATE_REPLY            = $4F;
+  MTI_EXTENSION_STREAMDATA_PROCEED               = $6A;
+  MTI_EXTENSION_STREAMDATA_COMPLETE              = $6B;
 
   FT_UNADDRESSED_MASK               = $0FFFF000;
+  
   FT_INITIALIZATION_COMPLETE        = $08087000;
   FT_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
   FT_VERIFY_NODE_ID_NUMBER          = $088A7000;
@@ -92,10 +112,16 @@ const
   
   FT_CONSUMER_IDENTIFY              = $08A4F000;                                // Databytes = EventID
   FT_CONSUMER_IDENTIFY_RANGE        = $0825F000;                                // Databytes = EventID
-  FT_CONSUMER_IDENTIFIED            = $0826B000;                                // Databytes = EventID
+  FT_CONSUMER_IDENTIFIED_UNKNOWN    = $0826B000;                                // Databytes = EventID
+  FT_CONSUMER_IDENTIFIED_SET        = $08268000;                                // Databytes = EventID
+  FT_CONSUMER_IDENTIFIED_CLEAR      = $08269000;                                // Databytes = EventID
+  FT_CONSUMER_IDENTIFIED_RESERVED   = $0826A000;                                // Databytes = EventID
   FT_PRODUCER_IDENDIFY              = $08A8F000;                                // Databytes = EventID
   FT_PRODUCER_IDENTIFY_RANGE        = $0829F000;                                // Databytes = EventID
-  FT_PRODUCER_IDENTIFIED            = $082AB000;                                // Databytes = EventID
+  FT_PRODUCER_IDENTIFIED_UNKNOWN    = $082AB000;                                // Databytes = EventID
+  FT_PRODUCER_IDENTIFIED_SET        = $082A8000;                                // Databytes = EventID
+  FT_PRODUCER_IDENTIFIED_CLEAR      = $082A9000;                                // Databytes = EventID
+  FT_PRODUCER_IDENTIFIED_RESERVED   = $082AA000;                                // Databytes = EventID
   FT_EVENTS_IDENTIFY_DEST           = $08000000;                                // Databytes = 2B (see MTI_IDENTIFY_EVENTS)
   FT_EVENTS_IDENTIFY                = $08AB7000;
   FT_EVENT_LEARN                    = $08ACF000;                                // Databytes = EventID
@@ -119,34 +145,7 @@ const
   PIV_PROTOCOL_ID_REMOTE_BUTTON: TPIVProtocolValueArray      = ($00, $80, $00, $00, $00, $00);
   PIV_PROTOCOL_ID_CDI: TPIVProtocolValueArray                = ($00, $40, $00, $00, $00, $00);
   PIV_PROTOCOL_ID_DISPLAY: TPIVProtocolValueArray            = ($00, $20, $00, $00, $00, $00);
-  
-  // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
-  MTI_TYPE_VERIFY_NODE_ID_NUMBER_DEST       = $0A;                                   // Sub-Type (in first Databyte) for a MTI with a destination in the header
-  MTI_TYPE_OPTIONAL_INTERACTION_REJECTED    = $0C;
-  MTI_TYPE_TERMINATE_DUE_TO_ERROR           = $0D;
-  // Protocol Support MTIs
-  MTI_TYPE_PROTOCOL_SUPPORT_QUERY           = $2E;
-  MTI_TYPE_PROTOCOL_SUPPORT_REPLY           = $2F;                                   // Datagram DataBytes: 2F xx vv vv vv vv vv vv
-  // Event Exchange MTIs
-  MTI_TYPE_IDENTIFY_EVENTS                  = $2B;
-  // Abbreviated Configuration Decription Information
-  MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;                              // Abbreviated Configuration Decription Information Request, make sure set PIP value if supported
-  MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;                              // Abbreviated Configuration Decription Information Reply
-  // Datagram MTIs
-  MTI_TYPE_DATAGRAM_RECIEVED_OK             = $4C;
-  MTI_TYPE_DATAGRAM_REJECTED                = $4D;
-  // Stream MTIs
-  MTI_TYPE_STREAM_INITIATE_REQUEST          = $4E;
-  MTI_TYPE_STREAM_INITIATE_REPLY            = $4F;
-  MTI_TYPE_STREAMDATA_PROCEED               = $6A;
-  MTI_TYPE_STREAMDATA_COMPLETE              = $6B;
 
-  // NMRABus States
-  BS_INHIBITED         = $01;                                                   // CAN Frame Layer is inhibited
-  BS_PERMITED          = $02;                                                   // CAN Frame Layer is permitted (Node ID's resolved with bus)
-  BS_UNITIALIZED       = $04;                                                   // Message Layer has not sent its first Initialize Complete Message
-  BS_INITIALIZED       = $08;                                                   // Message Layer has sent its first Initialize Complete Message
-  
   STATE_NMRABUS_START                       = 0;
   STATE_NMRABUS_GENERATE_NODE_ALIAS         = 1;
   STATE_RANDOM_NUMBER_GENERATOR             = 2;
@@ -184,37 +183,6 @@ const
   
   LEN_QUEUED_ACTION_LIST                  = 2;                                 // Number of complex Actions that can be queued up
   
-  // Simple Response Codes for NMRAnet CAN responses
-  SRC_DUPLICATE_ALIAS                       = $0001;                            // Duplicate Alais Detected that was not a CID message, need to regenerate an Alias
-  SRC_DUPLICATE_NODE_ID                     = $0002;                            // Send a Procducer/Consumer Message that a Duplicate 48 Bit node ID was detected, very bad...
-  SRC_SEND_RID                              = $0004;                            // Duplicate Alias Detected that was a CID so tell the node we own that Alias
-  SRC_SEND_AMD                              = $0008;                            // Send an Alias Map Definition
-  // CAN Messages received that require no response
-  // NMRAnet level responses
-  SRC_SEND_VERIFIED_NODE                    = $0010;                            // Send a Verified Node message
-  SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED = $0020;                            // Send all Producers/Consumers defined
-
-  // Complex Response Codes (see TQueuedResponse)
-  CRC_EMPTY                                 = $0000;                            // Response Queue slot is empty
-  CRC_SEND_PROTOCOL_SUPPORT                 = $0001;                            // Send a Protocol Support Response to a destination node
-  CRC_SEND_CONSUMER_IDENTIFIED              = $0002;                            // Send a Consumer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
-  CRC_SEND_PRODUCER_IDENTIFIED              = $0004;                            // Send a Producer Identifed message for the Event ID in the DataBytes of the TQueuedResponse
-  CRC_SEND_OPTIONAL_INTERACTION_REJECTED    = $0005;                            // Send an Optional Interaction Rejected with the passed dest node and Code in the Databytes
-  // Do not require a response, for notification
-  CRC_DATAGRAM_RECEIVED_OK                  = $0006;                            // Received a Datagram OK message addressed to us
-  CRC_DATAGRAM_REJECTED                     = $0007;                            // Received a Datagram Rejected message addressed to us
-  CRC_CONSUMER_IDENTIFIED                   = $0008;                            // Received a Consumer Idendified message addressed to us
-  CRC_PRODUCER_IDENTIFIED                   = $0009;                            // Received a Producer Identified message addressed to us
-  CRC_AMR                                   = $000A;                            // Received a Alias Map Reset
-  CRC_AMD                                   = $000B;                            // Received an Alias Map Definition that did NOT have a duplicate ID to ours (that would force a SRC_DUPLICATE_NODE_ID Response
-  CRC_PC_EVENT_REPORT                       = $000C;                            // Received a Producer Consumer Event Report
-  CRC_VERIFIED_NODE_ID                      = $000D;                            // Received a Verified Node ID Message
-  CRC_ACDI_REQUEST                          = $000E;                            // Recevied a Abbreviated Configuration Description Information Request
-  CRC_ACDI_REPLY                            = $000F;                            // Recevied a Abbreviated Configuration Description Information Reply
-
-  QAS_EMPTY                                 = $00;                              // The Queued Action is not allcoated
-  QAS_ALLOCATED                             = $01;                              // The Queued Action is allocated
-  
 type
   TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used
   // When a message is received on the CAN bus the logic decodes the message and
@@ -225,58 +193,37 @@ type
   // to be summed together into a single response.  Other actions need to know more information
   // such as the node Alias the action needs to be sent to.  These are stored in the QueuedActionList
   
+
 const
-  RMB_EMPTY               = $00;                                                // Buffer is empty and available
-  RMB_ALLOCATED           = $01;                                                // Buffer is allocated but may be in Process, need to check for inprocess flags
-  RMB_INPROCESS_DATAGRAM  = $02;                                                // Buffer is process of receiving a Datagram
-  RMB_INPROCESS_STREAM    = $04;                                                // Buffer is in process of receiving a Stream
-  RMB_INPROCESS_CDI       = $08;                                                // Buffer is in process of receiving a CDI
-  RMB_INPROCESS_ACDI      = $10;                                                // Buffer is in process of receiving a ACDI
-  
+  DBS_EMPTY              = $00;                                                 // DataBuffer States
+  DBS_ALLOCATED          = $01;
+
 type
   TDataBuffer = record
     Count: Byte;                                                                // Number of Databytes that are valid
     DataBytes: TCAN_DataBytes;                                                  // Depends on nCode, could be EventID, Datagram type, etc
+    State: Byte;                                                                // State of Buffer, see CDB_xxx constants
   end;
-  
-  TReceivedMessageBuffer = record
-    nCode: Word;                                                                // When a message is received a code is assigned to it.  See the CRC_xxx constants
-    SourceAlias: Word;                                                          // The node that the message was sent from
-    DestAlias: Word;                                                            // The node the message was sent to (if not addressed will be 0);
-    DataBuffer: TDataBuffer;                                                    // Data sent in the CAN buffer
-    State: Byte;                                                                // State of the Message buffer, see the RMB_xxx constants
-    DatagramReceive: PDatagramBuffer;                                           // Dynamically allocated only when needed
-    DatagramTransmit: PDatagramBuffer;                                          // Dynamically allocated only when needed
-    ACDI_TransmitBuffer: PACDI_TransmitBuffer;                                  // Dynamically allocated only when needed
-    ACDI_ReceiveBuffer: PACDI_ReceiveBuffer;                                    // Dynamically allocated only when needed
-    Next: ^Word;
-    Prev: ^Word;
-  end;
-  PReceivedMessageBuffer = ^TReceivedMessageBuffer;
-    
-type
-  TQueuedAction = record                                                        // When a message is received that needs a response that contains a destination
-    nCode: Word;                                                                // What the message was, see CRC_xxxx codes
-    FromAlias: Word;                                                            // Destination the info needed to response is queued up in this structure to be acted on in the main
-    DataCount: Byte;                                                            // Number of Databytes that are valid
-    DataBytes: TCAN_DataBytes;                                                  // depends on the nCode, could be EventID, etc
-  end;
-  PQueuedAction = ^TQueuedAction;
-  
-  TQueuedActionList = array[0..LEN_QUEUED_ACTION_LIST-1] of TQueuedAction;      // List of responses the NMRABus_Process loop needs to handle
-  
-  TQueuedActions = record
-    List: TQueuedActionList;                                                    // List of complex Actions to be handled in the NMRABus_Process loop
-    SimpleActionFlags: Word;                                                    // List of simple Actions that do not need any information to respond to in the NMRABus_Process loop.  See SRC_xxx constants
-    iState: Byte;                                                               // Statemachine Index
-    Tag: Byte;                                                                  // MultiUse Flag, just be careful state don't overwrite it, Use 1) CID state for logging into bus  Use 2) Tracking the number of Event IDs when sending them all
-    BufferOverrunCount: Word;                                                   // Track how many messages we missed
-    State: Byte;                                                                // QAS_xxx flags
-  end;
-  PQueuedActions = ^TQueuedActions;
-  
+  PDataBuffer = ^TDataBuffer;
+
 const
-  NIDS_VERIFIED         = $0001;                                                // Node ID is verified
+  RMB_EMPTY                = $00;                                                // ReceiveMessageBuffer is empty and available
+  RMB_ALLOCATED            = $01;                                                // ReceiveMessageBuffer is allocated but may be in Process, need to check for inprocess flags
+  RMB_BUFFER_DATAGRAM      = $02;                                                // ReceiveMessageBuffer is process of receiving a Datagram
+  RMB_BUFFER_STREAM        = $04;                                                // ReceiveMessageBuffer is in process of receiving a Stream
+  RMB_BUFFER_CDI           = $08;                                                // ReceiveMessageBuffer is in process of receiving a CDI
+  RMB_BUFFER_ACDI_RECEIVE  = $10;                                                // ReceiveMessageBuffer is in process of receiving a ACDI
+  RMB_BUFFER_ACDI_TRANSMIT = $20;                                                // ReceiveMessageBuffer is in process of receiving a ACDI
+  RMB_BUFFER_DATABUFFER    = $40;                                                // PDataBuffer
+
+type
+  TMessageBuffer = record
+    nCode: Word;                                                                // When a message is received a code is assigned to it.  See the CRC_xxx constants
+    Alias: Word;                                                                // The node that the message was sent from/to
+    State: Byte;                                                                // State of the Message buffer, see the RMB_xxx constants
+    BufferPtr: Word;                                                            // Pointer to the buffer used in the message (PDataBuffer, PDatagramBuffer, PACDI_ReceiveBuffer, PACDI_TransmitBuffer)
+  end;
+  PMessageBuffer = ^TMessageBuffer;
 
 type
   TNodeIDs = record
@@ -295,26 +242,42 @@ type
     Seed: TNodeID;                                                              // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
     AliasID: Word;                                                              // 12 Bit Alias ID
   end;
+  
+const
+  // NMRABus States
+  NS_EMPTY                = $00;
+  NS_ALLOCATED            = $01;
+  NS_PERMITED             = $02;                                                // NodeState CAN Frame Layer is permitted (Node ID's resolved with bus)
+  NS_INITIALIZED          = $04;                                                // NodeState Message Layer has sent its first Initialize Complete Message
+  NS_VIRTUAL              = $08;                                                // NodeState If is a virtual node
+  
+  MF_DUPLICATE_ALIAS_RID  = $01;                                                // MsgFlag, a Duplicate Alias was Detected during a CID message, not a fault just need to respond to claim the Alias
+  MF_DUPLICATE_ALIAS      = $02;                                                // MsgFlag, a Duplicate Alias was Detected, fault
+  MF_DUPLICATE_NODE_ID    = $04;                                                // MsgFlag, a Duplicate Node ID was detected, critical fault
+  MF_ALIAS_MAP_ENQUIRY    = $08;                                                // MsgFlag, an AMD message need to be responded to
+  
 
+type
+  TNMRAnetNodeLoginInfo = record
+    TimeCounter: Byte;
+    iCID: Byte;
+  end;
+  
   TNMRAnetNode = record
     Node: TNodeInfo;                                                            // Information about a Node
-    LoginTimeCount: Integer;                                                    // Increment through the Global Timer to time out when the Spec for waiting for other nodes to send the RID for a duplicate Alias ID
-    State: Word;                                                                // See the BS_xxxx flags; State of the Bus; these are ONLY CHANGED OUTSIDE OF an interrupt and concidered READ-ONLY inside of an interrupt
+    Login: TNMRAnetNodeLoginInfo;                                               // Login Information
+    State: Byte;                                                                // See the NS_xxxx flags; State of the Node
+    MsgFlags: Byte;                                                             // Message Flags for messages that do not require information to be passed to the Node
     iStateMachine: Byte;                                                        // Statemachine index for the main bus login
-    iCID: Byte;
-    Actions: PQueuedActions;                                                    // Actions the NMRABus_Process loop looks at to response to received messages
-    DatagramReceive: PDatagramBuffer;                                           // Dynamically allocated only when needed
-    DatagramTransmit: PDatagramBuffer;                                          // Dynamically allocated only when needed
+    Msg: PMessageBuffer;                                                        // Message to handle
     DatagramOverflowList: TDatagramOverflowList;                                // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
-    ACDI_TransmitBuffer: PACDI_TransmitBuffer;                                  // Dynamically allocated only when needed
-    ACDI_ReceiveBuffer: PACDI_ReceiveBuffer;                                    // Dynamically allocated only when needed
   end;
   PNMRAnetNode = ^TNMRAnetNode;
   
 type
   TSimpleActionCallbackFunc = procedure(NodeBuffer: PNMRAnetNode; Action: Word);                      // Action is the SRC_xxxx code of the Action
   PSimpleActionCallbackFunc = ^TSimpleActionCallbackFunc;
-  TComplexActionCallbackFunc = procedure(NodeBuffer: PNMRAnetNode; Action: PQueuedAction);
+  TComplexActionCallbackFunc = procedure(NodeBuffer: PNMRAnetNode; Msg: PMessageBuffer);
   PComplexActionCallbackFunc = ^TComplexActionCallbackFunc;
   
 type
@@ -338,9 +301,7 @@ var
 
   MaxTime_StateMachine: Word;
   MaxTime_RX: Word;
-  
-  NMRAnetNode: TNMRAnetNode;
-  QueuedActions: TQueuedActions;
+
 
 implementation
 

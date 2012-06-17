@@ -23,6 +23,8 @@ uses
   NMRAnetAbbreviatedConfigurationProtocolDefines,
   NMRAnetDefines,
   NMRAnetUtilities,
+  NMRAnetBufferPools,
+  NMRAnetNode,
   NMRAnetDatagrams,
   NMRAnetDatagramDefines,
   NMRAnetAppDefines,
@@ -36,7 +38,6 @@ type
   function NMRAnetCANReceive_Permited(NodeBuffer: PNMRAnetNode): Boolean;
   procedure NMRAnetCANReceive_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);       // WARNING:  The Hook is called from within the Interrupt Handler.....
   procedure NMRAnetCANReceive_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);   // WARNING:  The Hook is called from within the Interrupt Handler.....
-  function NMRAnetCANReceive_AllocateActions(NodeBuffer: PNMRAnetNode): Boolean;
 
   // callbacks from the CAN interrupts used in the xxxxx_CAN_Interrupt.mpas units
   procedure ReceivedOnFilter0(Buffer: PCANBuffer);
@@ -97,170 +98,7 @@ end;
 // *****************************************************************************
 function NMRAnetCANReceive_Permited(NodeBuffer: PNMRAnetNode): Boolean;
 begin
-  Result := NodeBuffer^.State and BS_PERMITED = BS_PERMITED
-end;
-
-// *****************************************************************************
-//  function NMRAnetCANReceive_AllocateActions
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function NMRAnetCANReceive_AllocateActions(NodeBuffer: PNMRAnetNode): Boolean;
-begin
-//  Get a TQueuedAction from the pool here
-  if NodeBuffer^.Actions = nil then
-    NodeBuffer^.Actions := @QueuedActions;
-  Result := True;
-end;
-
-// ****************************************************************************
-// procedure GetComplexActionBuffer
-//
-//  Description:   Returns first available ComplexActionBuffer
-//
-// ****************************************************************************
-function GetComplexActionBuffer(NodeBuffer: PNMRAnetNode): PQueuedAction;
-var
-  i: Integer;
-begin
-  Result := nil; 
-  if NodeBuffer^.Actions <> nil then
-  begin
-    i := 0;
-    while i < LEN_QUEUED_ACTION_LIST do
-    begin
-      if NodeBuffer^.Actions^.List[i].nCode = CRC_EMPTY then
-      begin
-        Result := @NodeBuffer^.Actions^.List[i];
-        Exit
-      end;
-      Inc(i);
-    end;
-  end
-end;
-
-// ****************************************************************************
-// procedure StoreComplexAction
-//
-//  Description:   Called when the CAN receiver detects a duplicate Alias.
-//
-//
-// ****************************************************************************
-procedure StoreComplexAction(NodeBuffer: PNMRAnetNode; nCode, NodeAlias: Word; DataBytes: PCAN_DataBytes; DataCount: Byte);
-var
-  Buffer: PQueuedAction;
-begin
-  // SHOULD WE CHECK FOR DUPLICATED ActionS IN THE LIST HERE??????????????????????????????????????????????
-  // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-  
-  Buffer := GetComplexActionBuffer(NodeBuffer);                                // Get a free Action Buffer
-  if Buffer <> nil then
-  begin
-    Buffer^.nCode := nCode;                                                     // Store the Code of the Action
-    Buffer^.FromAlias := NodeAlias;                                             // Store the Node that sent the message that requires a Action (if applicable for the Action)
-    if DataBytes <> nil then
-    begin
-      Buffer^.DataCount := DataCount;                                           // Store the DataCount for the DataBytes sent in the CAN message (if applicable for the Action)
-      Buffer^.DataBytes := DataBytes^;                                          // Store the actual DataBytes sent in the CAN message (if applicable for the Action)
-    end
-  end else
-  begin
-    if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
-      Inc(NodeBuffer^.Actions^.BufferOverrunCount)
-  end
-end;
-
-// ****************************************************************************
-// procedure DispatchEqualAliasID
-//
-//  Description:   Called when the CAN receiver detects a duplicate Alias.
-//
-//  Action Layer:
-//                 CAN Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchEqualAliasID(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-  if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
-  begin
-    if (CANBuffer^.ID and FT_CID_MASK <= FT_CID0) and (CANBuffer^.ID and FT_CID_MASK >= FT_CID4) then // If it is a CID message then force calling node to try again for an Alias this one is ours
-      NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_RID
-    else
-      NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_DUPLICATE_ALIAS
-  end
-end;
-
-// ****************************************************************************
-// procedure DispatchAliasMappingDefinition
-//
-//  Action Layer:
-//                 CAN Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchAliasMappingDefinition(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-var
-  NodeID: TNodeID;
-begin
-  if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
-  begin
-    NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);       // Extract the 48 Bit ID
-    if NMRAnetUtilities_EqualNodeID(NodeBuffer, NodeID) then                                  // If address is duplicate then we need to respond with critical error
-      NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_DUPLICATE_NODE_ID
-    else
-      StoreComplexAction(NodeBuffer, CRC_AMD, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 6);
-  end
-end;
-
-// ****************************************************************************
-// procedure DispatchAliasMappingReset
-//
-//  Action Layer:
-//                 CAN Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchAliasMappingReset(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-  StoreComplexAction(NodeBuffer, CRC_AMR, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 6);
-end;
-
-
-
-// ****************************************************************************
-// procedure DispatchAliasMappingEnquiry
-//
-//  Action Layer:
-//                 CAN Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchAliasMappingEnquiry(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-var
-  NodeID: TNodeID;
-begin
-  if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
-  begin
-    if CANBuffer^.DataCount = 6 then
-    begin
-      NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);     // Extract the 48 Bit ID
-      if NMRAnetUtilities_EqualNodeID(NodeBuffer, NodeID) then                                // If addressed to us then respond
-        NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_AMD;
-    end else
-      NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_AMD;
-  end
+  Result := NodeBuffer^.State and NS_PERMITED <> 0
 end;
 
 // ****************************************************************************
@@ -276,7 +114,7 @@ end;
 procedure DispatchEventProducerIdenitify(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes) then
-    StoreComplexAction(NodeBuffer, CRC_SEND_PRODUCER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+//    StoreComplexAction(NodeBuffer, CRC_SEND_PRODUCER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -291,7 +129,7 @@ end;
 // ****************************************************************************
 procedure DispatchEventProducerIdenitified(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
-  StoreComplexAction(NodeBuffer, CRC_PRODUCER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+//  StoreComplexAction(NodeBuffer, CRC_PRODUCER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -307,7 +145,7 @@ end;
 procedure DispatchEventConsumerIdenitify(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
   if NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes) then
-    StoreComplexAction(NodeBuffer, CRC_SEND_CONSUMER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+ //   StoreComplexAction(NodeBuffer, CRC_SEND_CONSUMER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -322,7 +160,7 @@ end;
 // ****************************************************************************
 procedure DispatchEventConsumerIdenitified(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
-  StoreComplexAction(NodeBuffer, CRC_CONSUMER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+//  StoreComplexAction(NodeBuffer, CRC_CONSUMER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -337,7 +175,7 @@ end;
 // ****************************************************************************
 procedure DispatchPCEventReportIdenitified(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
-  StoreComplexAction(NodeBuffer, CRC_PC_EVENT_REPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+ // StoreComplexAction(NodeBuffer, CRC_PC_EVENT_REPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -354,7 +192,7 @@ procedure DispatchVerifyNodeID(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 var
   NodeID: TNodeID;
 begin
-  if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
+ { if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
   begin
     if (CANBuffer^.DataCount = 0) or (CANBuffer^.DataCount = 1)  then       // THIS IS NOT CLEAR IN THE SPEC
     begin
@@ -370,7 +208,7 @@ begin
       if NMRAnetUtilities_EqualNodeID(NodeBuffer, NodeID) then                                  // If addressed to us then respond
        NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_VERIFIED_NODE
     end;
-  end
+  end }
 end;
 
 // ****************************************************************************
@@ -385,7 +223,7 @@ end;
 // ****************************************************************************
 procedure DispatchVerifiedNodeID(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
-  StoreComplexAction(NodeBuffer, CRC_VERIFIED_NODE_ID, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
+ // StoreComplexAction(NodeBuffer, CRC_VERIFIED_NODE_ID, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
 end;
 
 // ****************************************************************************
@@ -400,8 +238,8 @@ end;
 // ****************************************************************************
 procedure DispatchIdentifyEvents(NodeBuffer: PNMRAnetNode);
 begin
-  if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
-    NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED;
+ // if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
+ //   NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED;
 end;
 
 // ****************************************************************************
@@ -416,7 +254,7 @@ end;
 // ****************************************************************************
 procedure DispatchDatagramReceivedOk(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
-  StoreComplexAction(NodeBuffer, CRC_DATAGRAM_RECEIVED_OK, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 1);
+ // StoreComplexAction(NodeBuffer, CRC_DATAGRAM_RECEIVED_OK, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 1);
 end;
 
 // ****************************************************************************
@@ -431,7 +269,7 @@ end;
 // ****************************************************************************
 procedure DispatchDatagramRejected(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
-  StoreComplexAction(NodeBuffer, CRC_DATAGRAM_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 3);
+ // StoreComplexAction(NodeBuffer, CRC_DATAGRAM_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 3);
 end;
 
 // ****************************************************************************
@@ -446,7 +284,7 @@ end;
 // ****************************************************************************
 procedure DispatchAbbreviatedCDIRequest(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
-  StoreComplexAction(NodeBuffer, CRC_ACDI_REQUEST, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 0);
+ // StoreComplexAction(NodeBuffer, CRC_ACDI_REQUEST, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 0);
 end;
 
 // ****************************************************************************
@@ -469,11 +307,9 @@ begin
   begin
     DataBytes[0] := Lo( ActiveBuffer);                                         // Slip the buffer address in through the DataBytes
     DataBytes[1] := Hi( ActiveBuffer);
-    StoreComplexAction(NodeBuffer, CRC_ACDI_REPLY, ActiveBuffer^.SourceAlias, @DataBytes, 2);
+  //  StoreComplexAction(NodeBuffer, CRC_ACDI_REPLY, ActiveBuffer^.SourceAlias, @DataBytes, 2);
   end
 end;
-
-
 
 // ****************************************************************************
 // procedure DispatchProtocolSupportInquiry
@@ -495,76 +331,7 @@ begin
   for i := 0 to LEN_PIV_PROTOCOL-1 do
     for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
       DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
-  StoreComplexAction(NodeBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
-end;
-
-// ****************************************************************************
-// procedure ReceivedUnAddressedMessage
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple/Complex Action
-//
-// ****************************************************************************
-procedure ReceivedUnAddressedMessage(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-  case CANBuffer^.ID and FT_UNADDRESSED_MASK of
-    FT_VERIFY_NODE_ID_NUMBER         : DispatchVerifyNodeID(NodeBuffer, CANBuffer);
-    FT_VERIFIED_NODE_ID_NUMBER       : DispatchVerifiedNodeID(NodeBuffer, CANBuffer);
-    FT_CONSUMER_IDENTIFY             : DispatchEventConsumerIdenitify(NodeBuffer, CANBuffer);
-    FT_CONSUMER_IDENTIFIED           : DispatchEventConsumerIdenitified(NodeBuffer, CANBuffer);
- //   FT_CONSUMER_IDENTIFY_RANGE       : begin end; // TODO
-    FT_PRODUCER_IDENDIFY             : DispatchEventProducerIdenitify(NodeBuffer, CANBuffer);
-    FT_PRODUCER_IDENTIFIED           : DispatchEventProducerIdenitified(NodeBuffer, CANBuffer);
- //   FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
-    FT_EVENT_LEARN                   : begin end; // TODO
-    FT_EVENTS_IDENTIFY               : DispatchIdentifyEvents(NodeBuffer);
-    FT_PC_EVENT_REPORT               : DispatchPCEventReportIdenitified(NodeBuffer, CANBuffer);
-  end
-end;
-
-
-
-// ****************************************************************************
-// procedure ReceivedAddressedMessage
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple/Complex Action on an addressed message that is NOT a Datagram or Stream
-//
-// ****************************************************************************
-procedure ReceivedAddressedMessage(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-var
-  DataBytes: TCAN_DataBytes;
-begin
-
- // UART1_Write_Text('Addressed'+LF);
-  
-  if NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer, CANBuffer) then
-  begin
-  //  UART1_Write_Text('To Us'+LF);
-    
-    case CANBuffer^.Databytes[0] of
-      MTI_TYPE_VERIFY_NODE_ID_NUMBER_DEST       : DispatchVerifyNodeID(NodeBuffer, CANBuffer);
-      MTI_TYPE_PROTOCOL_SUPPORT_QUERY           : DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
-//      MTI_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
-//      MTI_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
-//      MTI_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
-      MTI_TYPE_IDENTIFY_EVENTS                  : DispatchIdentifyEvents(NodeBuffer);
-      MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REQUEST : DispatchAbbreviatedCDIRequest(NodeBuffer, CANBuffer);
-      MTI_TYPE_SIMPLENODE_IDENTIFY_INFO_REPLY   : DispatchAbbreviatedCDIReply(NodeBuffer, CANBuffer);
-      MTI_TYPE_DATAGRAM_RECIEVED_OK             : DispatchDatagramReceivedOk(NodeBuffer, CANBuffer);
-      MTI_TYPE_DATAGRAM_REJECTED                : DispatchDatagramRejected(NodeBuffer, CANBuffer)
-    else begin
-        DataBytes[0] := MTI_TYPE_OPTIONAL_INTERACTION_REJECTED;
-        StoreComplexAction(NodeBuffer, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
-      end;
-    end
-  end
+//  StoreComplexAction(NodeBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
 end;
 
 // ****************************************************************************
@@ -616,11 +383,6 @@ begin
   end
 end;
 
-function FindMatchingNodeBuffer(CANBuffer: PCANBuffer): PNMRAnetNode;
-begin
-  Result := @NMRAnetNode;  // TODO vNode Buffers
-end;
-
 // *****************************************************************************
 //  procedure ReceivedOnFilter0
 //     Parameters:
@@ -634,32 +396,54 @@ end;
 procedure ReceivedOnFilter0(CANBuffer: PCANBuffer);                             // CAN Layer Message
 var
   DoDefault: Boolean;
-  NodeBuffer: PNMRAnetNode;
+  MsgBuffer: PMessageBuffer;
+  Node: PNMRAnetNode;
+  NodeID: TNodeID;
 begin
 
  //UART1_Write_Text('CAN'+LF);
-
+ 
   DoDefault := True;
-  NodeBuffer := FindMatchingNodeBuffer(CANBuffer);
-  if NodeBuffer <> nil then
+  if CANLayerReceiveHook <> nil then
+    CANLayerReceiveHook(CANBuffer, DoDefault);
+    
+  if DoDefault then
   begin
-    if CANLayerReceiveHook <> nil then
-      CANLayerReceiveHook(CANBuffer, DoDefault);
-    if DoDefault then
+    Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractSourceAlias(CANBuffer));
+    if Node <> nil then                                                         // Check for a Duplicate Alias
     begin
-      if NMRAnetUtilities_EqualAliasID(NodeBuffer, CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
-        DispatchEqualAliasID(NodeBuffer, CANBuffer)
-      else begin
-        if NMRAnetCANReceive_Permited(NodeBuffer) then
-        begin
-          case CANBuffer^.ID and FT_UNADDRESSED_MASK of
-            FT_AME : DispatchAliasMappingEnquiry(NodeBuffer, CANBuffer);
-            FT_AMD : DispatchAliasMappingDefinition(NodeBuffer, CANBuffer);
-            FT_AMR : DispatchAliasMappingReset(NodeBuffer, CANBuffer);
-          end
-        end
+      if (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_CID0) or (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_CID1) or (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_CID2) or (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_CID3) then
+        Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS_RID              // A "good" duplicate Alias
+      else
+        Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS;                 // A "bad" duplicate Alias
+    end else
+    begin                                                                       // Not a duplicate Source Alias so handle it
+      case CANBuffer^.ID and FT_UNADDRESSED_MASK of                             // CAN layer messages are not Addressed in the MTI bits
+        FT_AME  : begin
+                    if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
+                    begin                                                       // The message is for a specific Node
+                      NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
+                      Node := NMRAnetNode_FindByNodeID(NodeID);                 // Need to characterize how much time this may take with a large number of nodes
+                      if Node <> nil then
+                        if Node^.State and NS_PERMITED <> 0 then                // Only reply if node is in Permitted state
+                          Node^.MsgFlags := Node^.MsgFlags or MF_ALIAS_MAP_ENQUIRY;
+                    end else
+                    if CANBuffer^.DataCount = 0 then                            // Is the message for all Nodes?
+                      NMRAnetNode_SetMsgFlagsOnAllNodesIfPermitted(MF_ALIAS_MAP_ENQUIRY);    // Need to characterize how much time this may take with a large number of nodes
+                  end;
+        FT_AMD  : begin
+                    if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
+                    begin
+                      NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
+                      Node := NMRAnetNode_FindByNodeID(NodeID);                 // Need to characterize how much time this may take with a large number of nodes
+                      if Node <> nil then
+                        Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_NODE_ID;
+                    end
+                  end;
+        FT_AMR  : begin
+                  end;
       end;
-    end;
+    end
   end
 end;
 
@@ -676,114 +460,113 @@ end;
 procedure ReceivedOnFilter1(CANBuffer: PCANBuffer);                             // NMRAnet Layer Message
 var
   DoDefault: Boolean;
-  NodeBuffer: PNMRAnetNode;
+  Buffer: PMessageBuffer;
+  Node: PNMRAnetNode;
 begin
 
   //UART1_Write_Text('NMRAnet'+LF);
  
   TMR4 := 0;
-
-  DoDefault := True;
-  NodeBuffer := FindMatchingNodeBuffer(CANBuffer);
   
-  if NodeBuffer <> nil then
+  DoDefault := True;
+  if NMRAnetLayerReceiveHook <> nil then
+    NMRAnetLayerReceiveHook(CANBuffer, DoDefault);                              // Allow the program to have a crack at the message handler
+    
+  if DoDefault then
   begin
-    if NMRAnetLayerReceiveHook <> nil then
-      NMRAnetLayerReceiveHook(CANBuffer, DoDefault);                              // Allow the program to have a crack at the message handler
-
-    if DoDefault then
-    begin
-      if NMRAnetUtilities_EqualAliasID(NodeBuffer, CANBuffer^.ID and MASK_SOURCE_ALIAS) then  // This is ALWAYS checked regardless of permitted state
-        DispatchEqualAliasID(NodeBuffer, CANBuffer)
-      else begin
-        if NMRAnetCANReceive_Permited(NodeBuffer) then
-        begin
-          case CANBuffer^.ID and MTI_TYPE_MASK of
-            MTI_UNADDRESSED              : ReceivedUnAddressedMessage(NodeBuffer, CANBuffer);
-            MTI_RESERVED                 : begin end;
-            MTI_DATAGRAM_ONLY_FRAME,
-            MTI_DATAGRAM_FRAME_START     : ReceivedStartingDatagramMessage(NodeBuffer, CANBuffer);
-            MTI_DATAGRAM_FRAME,
-            MTI_DATAGRAM_FRAME_END       : ReceivedDatagramMessage(NodeBuffer, CANBuffer);
-            MTI_ADDRESSED                : ReceivedAddressedMessage(NodeBuffer, CANBuffer);
-            MTI_STREAM_DATA_SEND         : ReceivedStreamMessage(NodeBuffer, CANBuffer);
-          end;
-        end;
+    Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractSourceAlias(CANBuffer));
+    if Node <> nil then
+      Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS                    // A "bad" duplicate Alias
+    else begin
+      case CANBuffer^.ID and MTI_TYPE_MASK of                                   // First subdivide between Unaddressed and Addressed Messages
+        MTI_UNADDRESSED        : begin                                          // Unaddressed Messages
+                                   case CANBuffer^.ID and FT_UNADDRESSED_MASK of
+                                     FT_VERIFY_NODE_ID_NUMBER         : begin end;  // DispatchVerifyNodeID(NodeBuffer, CANBuffer);
+                                     FT_VERIFIED_NODE_ID_NUMBER       : begin end; // DispatchVerifiedNodeID(NodeBuffer, CANBuffer);
+                                     FT_CONSUMER_IDENTIFY             : begin end; //  DispatchEventConsumerIdenitify(NodeBuffer, CANBuffer);
+                                     FT_CONSUMER_IDENTIFIED_UNKNOWN   : begin end; //  DispatchEventConsumerIdenitified(NodeBuffer, CANBuffer);
+                                     FT_CONSUMER_IDENTIFIED_SET       : begin end;
+                                     FT_CONSUMER_IDENTIFIED_CLEAR     : begin end;
+                                     FT_CONSUMER_IDENTIFY_RANGE       : begin end; // TODO
+                                     FT_PRODUCER_IDENDIFY             : begin end;  // DispatchEventProducerIdenitify(NodeBuffer, CANBuffer);
+                                     FT_PRODUCER_IDENTIFIED_UNKNOWN   : begin end;  // DispatchEventProducerIdenitified(NodeBuffer, CANBuffer);
+                                     FT_PRODUCER_IDENTIFIED_SET       : begin end;
+                                     FT_PRODUCER_IDENTIFIED_CLEAR     : begin end;
+                                     FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
+                                     FT_EVENT_LEARN                   : begin end; // TODO
+                                     FT_EVENTS_IDENTIFY               : begin end;  // DispatchIdentifyEvents(NodeBuffer);
+                                     FT_PC_EVENT_REPORT               : begin end;  // DispatchPCEventReportIdenitified(NodeBuffer, CANBuffer);
+                                   end
+                                 end;
+        MTI_RESERVED           : begin                                          // Unused as of June 2012
+                                 end
+      else begin                                                                // Addressed Messages
+          Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractDestinationAlias(CANBuffer));
+          if Node <> nil then
+          begin
+            if Node^.State and NS_PERMITED <> 0 then
+            begin
+              case CANBuffer^.ID and MTI_TYPE_MASK of                           // Now subdivide the Addressed down to Datagrams, Streams, Other Addressed
+                MTI_ADDRESSED            : begin
+                                             case CANBuffer^.Databytes[0] of
+                                               MTI_EXTENSION_VERIFY_NODE_ID_NUMBER_DEST       : begin end;  // DispatchVerifyNodeID(NodeBuffer, CANBuffer);
+                                               MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           : begin end;  // DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
+                                               MTI_EXTENSION_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
+                                               MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
+                                               MTI_EXTENSION_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
+                                               MTI_EXTENSION_IDENTIFY_EVENTS                  : begin end;  // DispatchIdentifyEvents(NodeBuffer);
+                                               MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // DispatchAbbreviatedCDIRequest(NodeBuffer, CANBuffer);
+                                               MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;  // DispatchAbbreviatedCDIReply(NodeBuffer, CANBuffer);
+                                               MTI_EXTENSION_DATAGRAM_RECIEVED_OK             : begin end;  // DispatchDatagramReceivedOk(NodeBuffer, CANBuffer);
+                                               MTI_EXTENSION_DATAGRAM_REJECTED                : begin end  // DispatchDatagramRejected(NodeBuffer, CANBuffer)
+                                             else begin
+                                          //       DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
+                                         //        StoreComplexAction(NodeBuffer, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
+                                                end;
+                                              end
+                                           end;
+                MTI_DATAGRAM_ONLY_FRAME,
+                MTI_DATAGRAM_FRAME_START : begin
+                                           end;
+                MTI_DATAGRAM_FRAME,
+                MTI_DATAGRAM_FRAME_END   : begin
+                                           end;
+                MTI_STREAM_DATA_SEND     : begin
+                                           end;
+               end
+            end
+          end
+        end;  // case, else
       end
     end;
   end;
-  
+
   if TMR4 > MaxTime_RX then
   begin
     MaxTime_RX := TMR4;
   end;
 end;
 
-// *****************************************************************************
-//  procedure ReceivedOnFilter2
-//     Parameters:
-//     Returns:
-//
-//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
-//                  Called when a message passes Filter 2
-//
-// *****************************************************************************
 procedure ReceivedOnFilter2(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
 end;
 
-// *****************************************************************************
-//  procedure ReceivedOnFilter3
-//     Parameters:
-//     Returns:
-//
-//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
-//                  Called when a message passes Filter 3
-//
-// *****************************************************************************
 procedure ReceivedOnFilter3(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
 end;
 
-// *****************************************************************************
-//  procedure ReceivedOnFilter4
-//     Parameters:
-//     Returns:
-//
-//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
-//                  Called when a message passes Filter 4
-//
-// *****************************************************************************
 procedure ReceivedOnFilter4(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
 end;
 
-// *****************************************************************************
-//  procedure ReceivedOnFilter5
-//     Parameters:
-//     Returns:
-//
-//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
-//                  Called when a message passes Filter 5
-//
-// *****************************************************************************
 procedure ReceivedOnFilter5(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus
 end;
 
-// *****************************************************************************
-//  procedure ReceivedOnFilter6
-//     Parameters:
-//     Returns:
-//
-//     Description: WARNING: CALLED FROM RX COMPLETE INTERRUPT
-//                  Called when a message passes Filter 6
-//
-// *****************************************************************************
 procedure ReceivedOnFilter6(Buffer: PCANBuffer);
 begin
   // Not used for NMRABus

@@ -30,9 +30,10 @@ const
   LEN_DATAGRAM_BUFFER_OVERFLOW_LIST = 2;                                        // How many Datagram requests to buffer if there is no buffer available to service them
 
   // Datagram Buffer States
-  DATAGRAM_BUFFER_EMPTY               = 0;                                      // [RX/TX] The Datagram Packet Buffer is empty
-  DATAGRAM_BUFFER_IN_PROCESS          = 1;                                      // [RX/TX] The Datagram Packet Buffer is currently collecting/transmitting frames
-  DATAGRAM_BUFFER_TRANSFER_COMPLETE   = 2;                                      // [RX/TX] The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
+  DGS_EMPTY               = $00;                                                // [RX/TX] The Datagram Packet Buffer is empty
+  DGS_ALLOCATED           = $01;                                                // Allocated
+  DGS_IN_PROCESS          = $02;                                                // [RX/TX] The Datagram Packet Buffer is currently collecting/transmitting frames
+  DGS_TRANSFER_COMPLETE   = $04;                                                // [RX/TX] The Datagram Packet has responded to the sender and ready for use (DATAGRAM_REJECTED_BUFFER_FULL response needed)
 
   // Datagram Receive Statemachine States
   STATE_DATAGRAM_RECEIVE_START         = 0;                                     // Receive Statemachine states
@@ -50,7 +51,7 @@ const
   STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  = 4;
 
 
-  DATAGRAM_WATCHDOG_MAX = 10000;                                                // 1ms counts before the datagram is declared abandon
+  DATAGRAM_WATCHDOG_MAX = 100;                                                  // 100ms counts before the datagram is declared abandon
   DATAGRAM_MAX_RETRY_COUNT = 3;                                                 // Number of try a datagram will try to be resent
   
   DATAGRAM_MAX_FRAME_COUNT = 9;                                                 // Maximum number of Frames (segments) in a Datagram
@@ -76,8 +77,8 @@ type
   
   TDatagramBuffer = record
     DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
-    Alias: Word;                                                                // The Source Node that sent the datagram if this is a RX buffer, else it is the Target Node that is being sent
-    State: Byte;                                                                // The State of the Packet Buffer see DATAGRAM_xxxx contants
+    Alias: Word;                                                                // The Source Node that sent the datagram if this is a RX buffer, else it is the Target Node that it is being sent to
+    State: Byte;                                                                // The State of the Packet Buffer see DGB_xxxx contants
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit
     iFrameCount: Byte;                                                          // Counts the number of Frames received/transmitted
     iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message or during transmit the Target Node never responds

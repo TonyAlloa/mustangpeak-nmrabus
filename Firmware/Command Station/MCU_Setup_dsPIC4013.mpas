@@ -72,7 +72,9 @@ begin
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
   T2IP_1_bit := 1;
   T2IP_2_bit := 0;
-  PR2 := 20000;             // Clock ticks every 50ns * 20000 = 1ms interrupts
+  TCKPS_0_T2CON_bit := 0;   // Prescaler =  1:64
+  TCKPS_1_T2CON_bit := 1;
+  PR2 := 31250;             // Clock ticks every 50ns * 31250 * 64 = 100ms interrupts
   T2IF_bit := 0;            // Clear T2IF
   T2IE_bit := 1;            // Enable the Interrupt
   TON_T2CON_bit := 1;       // Turn on

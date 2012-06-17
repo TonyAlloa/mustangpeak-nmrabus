@@ -1,5 +1,21 @@
 unit NMRAnetAbbreviatedConfigurationProtocol;
 
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+//
+// ******************************************************************************
+
 uses
   NMRAnetUtilities,
   CANStorage,
@@ -10,11 +26,11 @@ uses
   
   
 procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize;
-procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNode);
-function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNode; var ActiveBuffer: PACDI_ReceiveBuffer; SourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
-function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(NodeBuffer: PNMRAnetNode; DestAlias: Word): Boolean;
+procedure NMRAnetAbbreviatedConfigurationProtocol_Process(Node: PNMRAnetNode);
+function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(Node: PNMRAnetNode; var ActiveBuffer: PACDI_ReceiveBuffer; SourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
+function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(Node: PNMRAnetNode; DestAlias: Word): Boolean;
 procedure NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(Callback: PACDI_ReceiveCallbackFunc);
-procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick(NodeBuffer: PNMRAnetNode);
+procedure NMRAnetAbbreviatedConfigurationProtocol_100ms_TimeTick(Node: PNMRAnetNode);
 procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(ReceiveBuffer: PACDI_ReceiveBuffer);
 procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(TransmitBuffer: PACDI_TransmitBuffer);
 
@@ -23,15 +39,23 @@ procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(Trans
 
 implementation
 
+// *****************************************************************************
+//  procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(ReceiveBuffer: PACDI_ReceiveBuffer);
 var
   j: Integer;
 begin
   if ReceiveBuffer <> nil then
   begin
-    ReceiveBuffer^.State := ACDI_BUFFER_STATE_EMPTY;
+    ReceiveBuffer^.State := ACDIS_EMPTY;
     ReceiveBuffer^.SourceAlias := 0;
-    ReceiveBuffer^.iState := ACDI_RECEIVE_MFG_VERSION;
+    ReceiveBuffer^.iStateMachine := STATE_ACDI_RECEIVE_MFG_VERSION;
     for j := 0 to ACDI_LEN_MFG-1 do                                             // Not needed just helps with debugging
       ReceiveBuffer^.Mfg[j] := $FF;
     for j := 0 to ACDI_LEN_MFG_NAME-1 do
@@ -47,12 +71,20 @@ begin
   end
 end;
 
+// *****************************************************************************
+//  procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(TransmitBuffer: PACDI_TransmitBuffer);
 begin
   if TransmitBuffer <> nil then
   begin
-    TransmitBuffer^.State := ACDI_BUFFER_STATE_EMPTY;
-    TransmitBuffer^.iState := STATE_ACDI_TX_START;
+    TransmitBuffer^.State := ACDIS_EMPTY;
+    TransmitBuffer^.iStateMachine := STATE_ACDI_TX_START;
     TransmitBuffer^.DestAlias := 0;
     TransmitBuffer^.SourceAlias := 0;
     TransmitBuffer^.iNextChar := 0;
@@ -68,26 +100,41 @@ end;
 //
 // *****************************************************************************
 procedure NMRAnetAbbreviatedConfigurationProtocol_Initialize;
-
 begin
   ACDI_ReceiveCallbackFunc := PACDI_ReceiveCallbackFunc( nil);
 end;
 
-
-procedure NMRAnetAbbreviatedConfigurationProtocol_1ms_TimeTick(NodeBuffer: PNMRAnetNode);
+// *****************************************************************************
+//  procedure NMRAnetAbbreviatedConfigurationProtocol_100ms_TimeTick
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRAnetAbbreviatedConfigurationProtocol_100ms_TimeTick(Node: PNMRAnetNode);
+var
+  ACDI_RxBuffer: PACDI_ReceiveBuffer;
 begin
-  if NodeBuffer^.ACDI_ReceiveBuffer <> nil then
+  if Node^.Msg <> nil then
   begin
-    if NodeBuffer^.ACDI_ReceiveBuffer^.State = ACDI_BUFFER_STATE_PROCESSING then
+    if Node^.Msg^.State and RMB_BUFFER_ACDI_RECEIVE <> 0 then                   // See if the buffer is a ACDI Receive Pointer
     begin
-      if NodeBuffer^.ACDI_ReceiveBuffer^.iWatchdog <= ACDI_WATCHDOG_MAX then
-        Inc(NodeBuffer^.ACDI_ReceiveBuffer^.iWatchdog)
-      else
-        NodeBuffer^.ACDI_ReceiveBuffer^.State := ACDI_BUFFER_STATE_EMPTY         // The buffer has been abandon reset it
-    end                                                                         // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  end
+      ACDI_RxBuffer :=  PACDI_ReceiveBuffer(Node^.Msg^.BufferPtr);
+      if ACDI_RxBuffer^.iWatchdog < ACDI_WATCHDOG_MAX then                      // Latch it at ACDI_WATCHDOG_MAX
+        Inc( ACDI_RxBuffer^.iWatchdog)                                          // Increase the Watchdog counter
+    end
+  end;
 end;
 
+// *****************************************************************************
+//  procedure NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRAnetAbbreviatedConfigurationProtocol_ReplyCallback(Callback: PACDI_ReceiveCallbackFunc);
 begin
   ACDI_ReceiveCallbackFunc := Callback
@@ -101,19 +148,19 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(NodeBuffer: PNMRAnetNode; DestAlias: Word): Boolean;
+function NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(Node: PNMRAnetNode; DestAlias: Word): Boolean;
 begin
   Result := False;
-  if NodeBuffer^.ACDI_TransmitBuffer <> nil then
+ { if Node^.ACDI_TransmitBuffer <> nil then
   begin
-    if NodeBuffer^.ACDI_TransmitBuffer^.State = ACDI_BUFFER_STATE_EMPTY then
+    if Node^.ACDI_TransmitBuffer^.State = ACDI_BUFFER_STATE_EMPTY then
     begin
-      NodeBuffer^.ACDI_TransmitBuffer^.State :=  ACDI_BUFFER_STATE_PROCESSING;
-      NodeBuffer^.ACDI_TransmitBuffer^.DestAlias := DestAlias;
-      NodeBuffer^.ACDI_TransmitBuffer^.SourceAlias := NodeBuffer^.Node.AliasID;
+      Node^.ACDI_TransmitBuffer^.State :=  ACDI_BUFFER_STATE_PROCESSING;
+      Node^.ACDI_TransmitBuffer^.DestAlias := DestAlias;
+      Node^.ACDI_TransmitBuffer^.SourceAlias := Node^.Node.AliasID;
       Result := True;
     end
-  end
+  end      }
 end;
 
 // *****************************************************************************
@@ -177,16 +224,16 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetAbbreviatedConfigurationProtocol_Process(NodeBuffer: PNMRAnetNode);
+procedure NMRAnetAbbreviatedConfigurationProtocol_Process(Node: PNMRAnetNode);
 var
   ActiveBuffer: PACDI_TransmitBuffer;
   CANBuffer: TCANBuffer;
   LenMfg, LenMfgName, LenMfgHWVer, LenMfgSWVer, LenUserName, LenUserDesc: Word;
 begin
-  if NodeBuffer^.ACDI_TransmitBuffer <> nil then
+{  if Node^.ACDI_TransmitBuffer <> nil then
   begin
-    ActiveBuffer := NodeBuffer^.ACDI_TransmitBuffer;
-    case ActiveBuffer^.iState of
+    ActiveBuffer := Node^.ACDI_TransmitBuffer;
+    case ActiveBuffer^.iStateMachine of
       STATE_ACDI_TX_START :
         begin
           if ActiveBuffer^.State <> ACDI_BUFFER_STATE_EMPTY then
@@ -230,7 +277,7 @@ begin
               end;
             end;
 
-            NMRAnetUtilities_CreateNMRABusMessagePacket(NodeBuffer, @CANBuffer, FT_PROTOCOL_ACDI, ActiveBuffer^.DestAlias, CANBuffer.DataCount, nil);
+            NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CANBuffer, FT_PROTOCOL_ACDI, ActiveBuffer^.DestAlias, CANBuffer.DataCount, nil);
             CANStorage_AddToList(@TX_NMRAnetBufferList, @CANBuffer);
             StartCANMessageEngine();
 
@@ -242,7 +289,7 @@ begin
           end
         end;
     end;                           // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  end
+  end     }
 end;
 
 
@@ -255,26 +302,26 @@ end;
 //                             Interrupt....
 //
 // *****************************************************************************
-procedure FindReceiveBuffer(NodeBuffer: PNMRAnetNode; var ReceiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word);
+procedure FindReceiveBuffer(Node: PNMRAnetNode; var ReceiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word);
 begin
   ReceiveBuffer := PACDI_ReceiveBuffer(nil);
   
-  if NodeBuffer^.ACDI_ReceiveBuffer <> nil then
+{  if Node^.ACDI_ReceiveBuffer <> nil then
   begin
-    if NodeBuffer^.ACDI_ReceiveBuffer^.State = ACDI_BUFFER_STATE_PROCESSING then
+    if Node^.ACDI_ReceiveBuffer^.State = ACDI_BUFFER_STATE_PROCESSING then
     begin
-      if NodeBuffer^.ACDI_ReceiveBuffer^.SourceAlias = IncommingSourceAlias then
+      if Node^.ACDI_ReceiveBuffer^.SourceAlias = IncommingSourceAlias then
       begin
-        ReceiveBuffer := NodeBuffer^.ACDI_ReceiveBuffer;                        // Leave it alone to continue
+        ReceiveBuffer := Node^.ACDI_ReceiveBuffer;                        // Leave it alone to continue
         ReceiveBuffer^.iWatchdog := 0;
       end;
     end;
 
     if ReceiveBuffer = nil then                                                   // If there is no in progress replies start a fresh one
     begin
-      if NodeBuffer^.ACDI_ReceiveBuffer^.State = ACDI_BUFFER_STATE_EMPTY then
+      if Node^.ACDI_ReceiveBuffer^.State = ACDI_BUFFER_STATE_EMPTY then
       begin
-        ReceiveBuffer := NodeBuffer^.ACDI_ReceiveBuffer;
+        ReceiveBuffer := Node^.ACDI_ReceiveBuffer;
         ReceiveBuffer^.iState := ACDI_RECEIVE_MFG_VERSION;
         ReceiveBuffer^.State := ACDI_BUFFER_STATE_PROCESSING;
         ReceiveBuffer^.NextChar := @ReceiveBuffer^.Mfg[0];
@@ -282,7 +329,7 @@ begin
         ReceiveBuffer^.iWatchdog := 0;
       end
     end;                                                     // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  end
+  end }
 end;
 
 
@@ -290,13 +337,13 @@ procedure HandleReceiveVersion(ReceiveBuffer: PACDI_ReceiveBuffer; DataBytes: PC
 begin
   Version^ := DataBytes^[iByte];
   Inc(iByte);
-  ReceiveBuffer^.iState := NextState;
+  ReceiveBuffer^.iStateMachine := NextState;
 end;
 
 
 procedure HandleReceiveNextString(ReceiveBuffer: PACDI_ReceiveBuffer; DataBytes: PCAN_DataBytes; var iByte: Byte; NextState: Byte);
 begin
-  while iByte < 8 do
+{  while iByte < 8 do
   begin
     ReceiveBuffer^.NextChar^ := DataBytes^[iByte];
     if DataBytes^[iByte] = #0 then                                              // use the null in our string
@@ -316,7 +363,7 @@ begin
       Inc(ReceiveBuffer^.NextChar);                                             // Not to the end of the string yet
       Inc(iByte);
     end
-  end
+  end }
 end;
 
 // *****************************************************************************
@@ -328,14 +375,14 @@ end;
 //                             Interrupt....
 //
 // *****************************************************************************
-function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNode; var ActiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
+function NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(Node: PNMRAnetNode; var ActiveBuffer: PACDI_ReceiveBuffer; IncommingSourceAlias: Word; DataBytes: PCAN_DataBytes): Boolean;
 var
   iByte: Byte;
 begin
   Result := False;
   iByte := 1;                                                                   // Always skip over the first MTI Type byte
-
-  FindReceiveBuffer(NodeBuffer, ActiveBuffer, IncommingSourceAlias);
+{
+  FindReceiveBuffer(Node, ActiveBuffer, IncommingSourceAlias);
   if ActiveBuffer <> nil then
   begin
     ActiveBuffer^.iWatchdog := 0;
@@ -354,7 +401,7 @@ begin
       end;
     end;
     Result := ActiveBuffer^.iState = ACDI_RECEIVE_COMPLETE;
-  end;
+  end;   }
 end;
 
 
