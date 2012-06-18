@@ -18,6 +18,7 @@ unit NMRAnetNode;
 // *****************************************************************************
 
 uses
+  CANDefines,
   NMRAnetUtilities,
   NMRAnetAppDefines,
   NMRAnetDefines,
@@ -27,9 +28,9 @@ uses
   
 type
   TNodes = record
-    RawList: array[0..NODE_COUNT-1] of TNMRAnetNode;                              // Node [0] is ALWAYS the physical node
-    AllocatedList: array[0..NODE_COUNT-1] of PNMRAnetNode;
-    Count: Word;
+    RawList: array[0..MAX_NODE_COUNT-1] of TNMRAnetNode;                              // Node [0] is ALWAYS the physical node
+    AllocatedList: array[0..MAX_NODE_COUNT-1] of PNMRAnetNode;
+    Count: Integer;
     iActiveNode: Word;
   end;
 
@@ -103,8 +104,11 @@ begin
     begin
       LocalNodes.AllocatedList[j] := LocalNodes.AllocatedList[j-1];
       j := j - 1;
+      if j = 0 then                                                             // mPascal does not support short circuit Boolean so the [j-1] when j = 0 is bad in the while conditional define
+        Break;
     end;
     LocalNodes.AllocatedList[j] := LocalData;
+    
   end;
   UnLockCANInterrupt
 end;
@@ -224,7 +228,8 @@ var
   Node: PNMRAnetNode;
 begin
   Nodes.iActiveNode := 0;
-  for i := 0 to NODE_COUNT - 1 do
+  Nodes.Count := 0;
+  for i := 0 to MAX_NODE_COUNT - 1 do
     NMRAnetStateMachine_InitializeNode(@Nodes.RawList[i], PhysicalNodeID_HI, PhysicalNodeID_LO + i);  // Physical Node + i MUST FIT IN THE LOWER 3 BYTES
   Node := NMRAnetNode_Allocate;                                                 // Allocate the Physical Node
   Node^.State := Node^.State and not NS_VIRTUAL;
@@ -241,18 +246,38 @@ end;
 //                automatically as its statemachine begins to run
 // *****************************************************************************
 function NMRAnetNode_Allocate: PNMRAnetNode;
+
+var
+  i: Integer;
+  
 begin
   LockCANInterrupt;
   Result := PNMRAnetNode( nil);
-  if Nodes.Count < NODE_COUNT then
+  if Nodes.Count < MAX_NODE_COUNT then
   begin
     Result := @Nodes.RawList[Nodes.Count];
     NMRAnetStateMachine_InitializeNode(Result, 0, 0);                           // The NodeID was already created in the initialization
-    Result^.State := Result^.State or NS_ALLOCATED or NS_VIRTUAL;
+    NMRAnetNode_SetStateFlag(Result, NS_ALLOCATED or NS_VIRTUAL);
     Nodes.AllocatedList[Nodes.Count] := Result;
     Result^.Node.AliasID := NMRAnetUtilities_CreateAliasID(Result^.Node.Seed, False); // Pregenerate it so it can be sorted
     Inc(Nodes.Count);
     NMRAnetNode_SortNodeList(Nodes);
+    
+  {  UART1_Write_Text(LF+'*****************'+LF);
+    UART1_Write_Text('RAW'+LF);
+    for i := 0 to Nodes.Count - 1 do
+    begin
+      IntToHex(Nodes.RawList[i].Node.AliasID, s1);
+      UART1_Write_Text(s1+LF);
+    end;
+    UART1_Write_Text(LF+'Sorted'+LF);
+    for i := 0 to Nodes.Count - 1 do
+    begin
+      IntToHex(Nodes.AllocatedList[i]^.Node.AliasID, s1);
+      UART1_Write_Text(s1+LF);
+    end;
+    UART1_Write_Text(LF+'*****************'+LF);
+   }
   end;
   UnLockCANInterrupt
 end;
@@ -330,10 +355,13 @@ end;
 function NMRAnetNode_NextNode: PNMRAnetNode;
 begin
   LockCANInterrupt;
-  if Nodes.iActiveNode > Nodes.Count - 1 then
-    Nodes.iActiveNode := 0;
-  Result := Nodes.AllocatedList[Nodes.iActiveNode];
-  Inc(Nodes.iActiveNode);
+  if Nodes.Count > 0 then
+  begin
+    if Nodes.iActiveNode > Nodes.Count - 1 then
+      Nodes.iActiveNode := 0;
+    Result := Nodes.AllocatedList[Nodes.iActiveNode];
+    Inc(Nodes.iActiveNode);
+  end;
   UnLockCANInterrupt
 end;
 
