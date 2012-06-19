@@ -108,7 +108,7 @@ const
   FT_TERMINATE_DUE_TO_ERROR         = $0E000000;
   
   FT_PROTOCOL_SUPPORT_INQUIRY       = $0E000000;
-  FT_PROTOCOL_SUPPORT_RESPONSE      = $0E000000;
+  FT_PROTOCOL_SUPPORT_REPLY         = $0E000000;
   
   FT_CONSUMER_IDENTIFY              = $08A4F000;                                // Databytes = EventID
   FT_CONSUMER_IDENTIFY_RANGE        = $0825F000;                                // Databytes = EventID
@@ -222,6 +222,7 @@ type
     Alias: Word;                                                                // The node that the message was sent from/to
     State: Byte;                                                                // State of the Message buffer, see the RMB_xxx constants
     BufferPtr: Word;                                                            // Pointer to the buffer used in the message (PDataBuffer, PDatagramBuffer, PACDI_ReceiveBuffer, PACDI_TransmitBuffer)
+    NextPtr: Word;                                                              // Pointer to the Next Linked Message Buffer
   end;
   PMessageBuffer = ^TMessageBuffer;
 
@@ -247,16 +248,19 @@ const
   // NMRABus States
   NS_EMPTY                = $00;
   NS_ALLOCATED            = $01;
-  NS_PERMITED             = $02;                                                // NodeState CAN Frame Layer is permitted (Node ID's resolved with bus)
+  NS_PERMITTED            = $02;                                                // NodeState CAN Frame Layer is permitted (Node ID's resolved with bus)
   NS_INITIALIZED          = $04;                                                // NodeState Message Layer has sent its first Initialize Complete Message
   NS_VIRTUAL              = $08;                                                // NodeState If is a virtual node
   
   // MsgFlags in order of precidence (= 0 highest precidence)
-  MF_DUPLICATE_NODE_ID    = $01;                                                // MsgFlag, a Duplicate Node ID was detected, critical fault
-  MF_DUPLICATE_ALIAS      = $02;                                                // MsgFlag, a Duplicate Alias was Detected, critical fault
-  MF_DUPLICATE_ALIAS_RID  = $04;                                                // MsgFlag, a Duplicate Alias was Detected during a CID message, not a fault just need to respond to claim the Alias
+  MF_DUPLICATE_NODE_ID        = $01;                                            // MsgFlag, a Duplicate Node ID was detected, critical fault
+  MF_DUPLICATE_ALIAS          = $02;                                            // MsgFlag, a Duplicate Alias was Detected, critical fault
+  MF_DUPLICATE_ALIAS_RID      = $04;                                            // MsgFlag, a Duplicate Alias was Detected during a CID message, not a fault just need to respond to claim the Alias
 
-  MF_ALIAS_MAP_ENQUIRY    = $08;                                                // MsgFlag, an AMD message need to be responded to
+  MF_ALIAS_MAP_ENQUIRY        = $08;                                            // MsgFlag, an AMD message need to be responded to
+  MF_VERIFY_NODE_ID           = $10;                                            // MsgFlag, a Verify Node ID message needs to be responded to
+  MF_PROTOCOL_SUPPORT_INQUIRY = $20;                                            // MsgFlag, a Protocol Support Inquiry (PIP) message needs to be responded to
+  MF_IDENTIFY_EVENTS          = $40;                                            // MsgFlag, an Identify Events message needs to be responded to
   
 
 type

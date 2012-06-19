@@ -35,7 +35,6 @@ type
   PPacketHandlerFunc = ^TPacketHandlerFunc;
   
   procedure NMRAnetCANReceive_Initialize;
-  function NMRAnetCANReceive_Permited(NodeBuffer: PNMRAnetNode): Boolean;
   procedure NMRAnetCANReceive_SetCANLayerReceiveHook(HookFunc: PPacketHandlerFunc);       // WARNING:  The Hook is called from within the Interrupt Handler.....
   procedure NMRAnetCANReceive_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);   // WARNING:  The Hook is called from within the Interrupt Handler.....
 
@@ -86,19 +85,6 @@ end;
 procedure NMRAnetCANReceive_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);
 begin
   NMRAnetLayerReceiveHook := HookFunc
-end;
-
-// *****************************************************************************
-//  function NMRAnetCANReceive_Permited
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function NMRAnetCANReceive_Permited(NodeBuffer: PNMRAnetNode): Boolean;
-begin
-  Result := NodeBuffer^.State and NS_PERMITED <> 0
 end;
 
 // ****************************************************************************
@@ -409,6 +395,7 @@ begin
     
   if DoDefault then
   begin
+    // First thing is the extract the Source Alias and make sure it is not a duplicate of one of our Node or vNode Aliases
     Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractSourceAlias(CANBuffer));
     if Node <> nil then                                                         // Check for a Duplicate Alias
     begin
@@ -417,25 +404,28 @@ begin
       else
         Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS;                 // A "bad" duplicate Alias
     end else
-    begin                                                                       // Not a duplicate Source Alias so handle it
+    begin
+      // The message does not contain a duplicate Source Alias so handle it
       case CANBuffer^.ID and FT_UNADDRESSED_MASK of                             // CAN layer messages are not Addressed in the MTI bits
         FT_AME  : begin
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
                     begin                                                       // The message is for a specific Node
                       NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
-                      Node := NMRAnetNode_FindByNodeID(NodeID);                 // Need to characterize how much time this may take with a large number of nodes
+                      Node := NMRAnetNode_FindByNodeID(NodeID);                 // *************** Need to characterize how much time this may take with a large number of nodes
                       if Node <> nil then
-                        if Node^.State and NS_PERMITED <> 0 then                // Only reply if node is in Permitted state
+                      begin
+                        if NMRAnetNode_TestStateFlag(Node, NS_PERMITTED) then                // Only reply if node is in Permitted state
                           Node^.MsgFlags := Node^.MsgFlags or MF_ALIAS_MAP_ENQUIRY;
+                      end
                     end else
                     if CANBuffer^.DataCount = 0 then                            // Is the message for all Nodes?
-                      NMRAnetNode_SetMsgFlagsOnAllNodesIfPermitted(MF_ALIAS_MAP_ENQUIRY);    // Need to characterize how much time this may take with a large number of nodes
+                      NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_ALIAS_MAP_ENQUIRY);    // Need to characterize how much time this may take with a large number of nodes
                   end;
         FT_AMD  : begin
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
                     begin
                       NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
-                      Node := NMRAnetNode_FindByNodeID(NodeID);                 // Need to characterize how much time this may take with a large number of nodes
+                      Node := NMRAnetNode_FindByNodeID(NodeID);                 // *************** Need to characterize how much time this may take with a large number of nodes
                       if Node <> nil then
                         Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_NODE_ID;
                     end
@@ -476,45 +466,59 @@ begin
   begin
     Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractSourceAlias(CANBuffer));
     if Node <> nil then
+    begin
       Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS                    // A "bad" duplicate Alias
-    else begin
+    end else 
+    begin
       case CANBuffer^.ID and MTI_TYPE_MASK of                                   // First subdivide between Unaddressed and Addressed Messages
         MTI_UNADDRESSED        : begin                                          // Unaddressed Messages
                                    case CANBuffer^.ID and FT_UNADDRESSED_MASK of
-                                     FT_VERIFY_NODE_ID_NUMBER         : begin end;  // DispatchVerifyNodeID(NodeBuffer, CANBuffer);
-                                     FT_VERIFIED_NODE_ID_NUMBER       : begin end; // DispatchVerifiedNodeID(NodeBuffer, CANBuffer);
-                                     FT_CONSUMER_IDENTIFY             : begin end; //  DispatchEventConsumerIdenitify(NodeBuffer, CANBuffer);
-                                     FT_CONSUMER_IDENTIFIED_UNKNOWN   : begin end; //  DispatchEventConsumerIdenitified(NodeBuffer, CANBuffer);
-                                     FT_CONSUMER_IDENTIFIED_SET       : begin end;
-                                     FT_CONSUMER_IDENTIFIED_CLEAR     : begin end;
-                                     FT_CONSUMER_IDENTIFY_RANGE       : begin end; // TODO
-                                     FT_PRODUCER_IDENDIFY             : begin end;  // DispatchEventProducerIdenitify(NodeBuffer, CANBuffer);
-                                     FT_PRODUCER_IDENTIFIED_UNKNOWN   : begin end;  // DispatchEventProducerIdenitified(NodeBuffer, CANBuffer);
-                                     FT_PRODUCER_IDENTIFIED_SET       : begin end;
-                                     FT_PRODUCER_IDENTIFIED_CLEAR     : begin end;
-                                     FT_PRODUCER_IDENTIFY_RANGE       : begin end; // TODO
-                                     FT_EVENT_LEARN                   : begin end; // TODO
-                                     FT_EVENTS_IDENTIFY               : begin end;  // DispatchIdentifyEvents(NodeBuffer);
-                                     FT_PC_EVENT_REPORT               : begin end;  // DispatchPCEventReportIdenitified(NodeBuffer, CANBuffer);
+                                     FT_VERIFY_NODE_ID_NUMBER         : begin
+                                                                          NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_VERIFY_NODE_ID);    // Need to characterize how much time this may take with a large number of nodes
+                                                                        end;
+                                     FT_CONSUMER_IDENTIFY             : begin 
+                                                                          // Need to store the 8 bit Event ID in the Message
+                                                                        end;
+                                     FT_CONSUMER_IDENTIFY_RANGE       : begin 
+                                                                          // TODO
+                                                                        end;
+                                     FT_PRODUCER_IDENDIFY             : begin   
+                                                                          // Need to store the 8 bit Event ID in the Message
+                                                                        end;
+                                     FT_PRODUCER_IDENTIFY_RANGE       : begin
+                                                                          // TODO
+                                                                        end;
+                                     FT_EVENT_LEARN                   : begin 
+                                                                          // Need to store the 8 bit Event ID in the Message
+                                                                        end;
+                                     FT_EVENTS_IDENTIFY               : begin 
+                                                                          NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_EVENTS);
+                                                                        end;
                                    end
                                  end;
         MTI_RESERVED           : begin                                          // Unused as of June 2012
                                  end
       else begin                                                                // Addressed Messages
-          Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractDestinationAlias(CANBuffer));
+          Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractDestinationAlias(CANBuffer));   // Extract the Node that the message is addressed to
           if Node <> nil then
           begin
-            if Node^.State and NS_PERMITED <> 0 then
+            if NMRAnetNode_TestStateFlag(Node, NS_PERMITTED) then
             begin
               case CANBuffer^.ID and MTI_TYPE_MASK of                           // Now subdivide the Addressed down to Datagrams, Streams, Other Addressed
                 MTI_ADDRESSED            : begin
                                              case CANBuffer^.Databytes[0] of
-                                               MTI_EXTENSION_VERIFY_NODE_ID_NUMBER_DEST       : begin end;  // DispatchVerifyNodeID(NodeBuffer, CANBuffer);
-                                               MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           : begin end;  // DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
-                                               MTI_EXTENSION_PROTOCOL_SUPPORT_REPLY           : begin end;  // TODO
+                                               MTI_EXTENSION_VERIFY_NODE_ID_NUMBER_DEST       : begin 
+                                                                                                  NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID);
+                                                                                                end;
+                                               MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           : begin 
+                                                                                                  // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
+                                                                                                end;  // DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
                                                MTI_EXTENSION_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
-                                               MTI_EXTENSION_IDENTIFY_EVENTS                  : begin end;  // DispatchIdentifyEvents(NodeBuffer);
+                                               MTI_EXTENSION_IDENTIFY_EVENTS                  : begin
+                                                                                                  NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_EVENTS);
+                                                                                                  // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
+                                                                                                end;
                                                MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // DispatchAbbreviatedCDIRequest(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;  // DispatchAbbreviatedCDIReply(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_DATAGRAM_RECIEVED_OK             : begin end;  // DispatchDatagramReceivedOk(NodeBuffer, CANBuffer);

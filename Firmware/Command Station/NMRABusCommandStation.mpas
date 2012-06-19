@@ -264,7 +264,7 @@ begin
     
       NMRAnetStateMachine_Process(ActiveNode);
       
-      if NMRAnetCANReceive_Permited(ActiveNode) then
+      if NMRAnetNode_TestStateFlag(ActiveNode, NS_PERMITTED) then
       begin
 
       end;

@@ -223,6 +223,7 @@ begin
   Buffer^.Alias := 0;
   Buffer^.State := 0;
   Buffer^.BufferPtr := 0;
+  Buffer^.NextPtr := 0;
 end;
 
 // *****************************************************************************
@@ -304,25 +305,6 @@ begin
 end;
 
 // *****************************************************************************
-//  function DuplicateDetected
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function DuplicateDetected(Node: PNMRAnetNode; Flag: Word; DuplicateBranchState: Byte): Boolean;
-begin
-  Result := False;
-  if NMRAnetNode_TestMsgFlags(Node, Flag, True) then
-  begin
-    Node^.iStateMachine := DuplicateBranchState;
-    Result := True
-  end
-end;
-
-
-// *****************************************************************************
 //  procedure TryTransmitCANLayerMsg
 //     Parameters:
 //     Returns:
@@ -364,29 +346,6 @@ begin
       Result := True;
     end
   end
-end;
-
-// *****************************************************************************
-//  procedure SendCANLayerSimpleAction
-//
-//     Parameters:  Buffer - Buffer to load to send
-//                  VariableField - MIT Coding for the Message to Send
-//                  Flag - Flag to test for to decide if the Action is needed
-//                  NextState - next state in the statemachine once the Action is handled
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure SendCANLayerSimpleAction(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; Flag: Word; NextState: Byte);
-begin
-{  if Node^.Actions <> nil then
-  begin
-    if TestReceivedMsgFlags(Node, Flag) then
-      if TryTransmitCANLayerMsg(Node, Buffer, VariableField) then
-        ClearReceivedMsgFlags(Node, Flag);
-    Node^.Actions^.iState := NextState
-  end }
 end;
 
 // *****************************************************************************
@@ -639,6 +598,7 @@ const
 
 var
   LocalMsgFlags: Byte;
+  DataBytes: TCAN_DataBytes;
   
 begin 
   LocalMsgFlags := Node^.MsgFlags;
@@ -646,6 +606,7 @@ begin
   begin
     if LocalMsgFlags and CRITICAL_MSG_MASK <> 0 then                            // Subdivide to Critical vs. Noncritical messages
     begin
+      // Critial Fault Messages
       if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_NODE_ID, True) then        // Jump Statemachine here
         Node^.iStateMachine := STATE_NMRABUS_DUPLICATE_FULL_ID
       else
@@ -653,15 +614,34 @@ begin
         Node^.iStateMachine := STATE_NMRABUS_INHIBITED
     end else
     begin
+      // Non Critical Fault Messages that require a response
       if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS_RID, False) then
       begin
-         // If message sent then.....
-         NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_NODE_ID);
+         if TryTransmitCANLayerMsg(Node, Buffer, FT_RID) then
+           NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_ALIAS_RID);
       end else
       if NMRAnetNode_TestMsgFlags(Node, MF_ALIAS_MAP_ENQUIRY, False) then
       begin
-         // If message sent then.....
-         NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_NODE_ID);
+         if TryTransmitCANLayerMsg(Node, Buffer, FT_AMD) then                   // DataBytes get loaded automatically
+           NMRAnetNode_ClearMsgFlag(Node, MF_ALIAS_MAP_ENQUIRY);
+      end else
+      if NMRAnetNode_TestMsgFlags(Node, MF_VERIFY_NODE_ID, False) then
+      begin
+        NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @DataBytes);
+        if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_VERIFIED_NODE_ID_NUMBER, 0, 6, @DataBytes) then
+          NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
+      end else
+      if NMRAnetNode_TestMsgFlags(Node, MF_PROTOCOL_SUPPORT_INQUIRY, False) then
+      begin                                             // I NEED THE DESTINATION NODE HERE BUT THAT IS ALL........................... HOW??????????
+  //      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, 0, 6, @DataBytes) then
+          NMRAnetNode_ClearMsgFlag(Node, MF_PROTOCOL_SUPPORT_INQUIRY);
+      end else
+      if NMRAnetNode_TestMsgFlags(Node, MF_IDENTIFY_EVENTS, False) then
+      begin
+        // Need to run through all Event here to not Destination Address, there is an addressed version of this......................
+        // NEED TO PASS THE POSSIBLE TARGET NODE TO THIS LAYER, HOW????????
+  //      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, 0, 6, @DataBytes) then
+          NMRAnetNode_ClearMsgFlag(Node, MF_IDENTIFY_EVENTS);
       end
     end
   end else
@@ -775,27 +755,36 @@ begin
       end;
     STATE_NMRABUS_SEND_LOGIN_RID :
       begin
-        if not DuplicateDetected(Node, MF_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
+        if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then    
+          Node^.iStateMachine := STATE_RANDOM_NUMBER_GENERATOR
+        else begin
           if TryTransmitCANLayerMsg(Node, @Buffer, FT_RID) then
             Node^.iStateMachine := STATE_NMRABUS_SEND_LOGIN_AMD;
+        end
       end;
     STATE_NMRABUS_SEND_LOGIN_AMD :
       begin
-        if not DuplicateDetected(Node, MF_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
+        if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then
+          Node^.iStateMachine := STATE_RANDOM_NUMBER_GENERATOR
+        else begin
           if TryTransmitCANLayerMsg(Node, @Buffer, FT_AMD) then
           begin
-            NMRAnetNode_SetStateFlag(Node, NS_PERMITED);
+            NMRAnetNode_SetStateFlag(Node, NS_PERMITTED);
             Node^.iStateMachine := STATE_NMRABUS_INITIALIZED
           end
+        end
       end;
     STATE_NMRABUS_INITIALIZED :
       begin
-        if not DuplicateDetected(Node, MF_DUPLICATE_ALIAS, STATE_RANDOM_NUMBER_GENERATOR) then
+        if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then
+          Node^.iStateMachine := STATE_RANDOM_NUMBER_GENERATOR
+        else begin
           if TryTransmitNMRABusLayerMsg(Node, @Buffer, FT_INITIALIZATION_COMPLETE, 0, 0, nil) then
           begin
             Node^.iStateMachine := STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS;
             NMRAnetNode_SetStateFlag(Node, NS_INITIALIZED);
           end
+        end
       end;
     STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS :
       begin
@@ -821,7 +810,7 @@ begin
         begin
           FlushLists;
           ReleaseActions(Node);
-          NMRAnetNode_ClearStateFlag(Node, NS_PERMITED);
+          NMRAnetNode_ClearStateFlag(Node, NS_PERMITTED);
           NMRAnetNode_ClearMsgFlags(Node);
           
           // NEED TO CLEAR PENDING MESSAGES TO.................................
@@ -835,7 +824,7 @@ begin
         begin
           FlushLists;
           ReleaseActions(Node);
-          NMRAnetNode_ClearStateFlag(Node, NS_PERMITED);
+          NMRAnetNode_ClearStateFlag(Node, NS_PERMITTED);
           NMRAnetNode_ClearMsgFlags(Node);
           
           // NEED TO CLEAR PENDING MESSAGES TO.................................

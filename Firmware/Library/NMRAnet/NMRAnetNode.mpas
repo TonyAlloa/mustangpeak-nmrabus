@@ -41,11 +41,12 @@ type
   procedure NMRAnetNode_Release(Node: PNMRAnetNode);
   function NMRAnetNode_FindByAlias(AliasID: Word): PNMRAnetNode;
   function NMRAnetNode_FindByNodeID(var NodeID: TNodeID): PNMRAnetNode;
-  procedure NMRAnetNode_SetMsgFlagsOnAllNodesIfPermitted(StateFlags: Word);
+  procedure NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(StateFlags: Word);
   function NMRAnetNode_NextNode: PNMRAnetNode;
   procedure NMRAnetNode_SortNodeList(var LocalNodes: TNodes);
   procedure NMRAnetNode_SetStateFlag(Node: PNMRAnetNode; Flag: Byte);
   procedure NMRAnetNode_ClearStateFlag(Node: PNMRAnetNode; Flag: Byte);
+  function NMRAnetNode_TestStateFlag(Node: PNMRAnetNode; Flag: Byte): Boolean;
   procedure NMRAnetNode_SetMsgFlag(Node: PNMRAnetNode; Flag: Byte);
   procedure NMRAnetNode_ClearMsgFlag(Node: PNMRAnetNode; Flag: Byte);
   procedure NMRAnetNode_ClearMsgFlags(Node: PNMRAnetNode);
@@ -197,6 +198,11 @@ end;
 //  Result:
 //
 //  Description:
+//                READ ME:
+//                   Currently this uses a dog slow search.  If we declare that
+//                   the vNodes must be continous and have the same upper 3 bytes
+//                   then this can collapse to a check the upper 3 bytes then check
+//                   the lower 3 bytes to be between two values (NodeID and NodeID+vNodeCount)
 // *****************************************************************************
 function NMRAnetNode_FindByNodeID(var NodeID: TNodeID): PNMRAnetNode;
 var
@@ -311,7 +317,7 @@ end;
 
 
 // *****************************************************************************
-//  procedure NMRAnetNode_SetMsgFlagsOnAllNodesIfPermitted;
+//  procedure NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes;
 //
 //  Parameters:
 //
@@ -319,12 +325,12 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRAnetNode_SetMsgFlagsOnAllNodesIfPermitted(MsgFlags: Word);
+procedure NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MsgFlags: Word);
 var
   i: Integer;
 begin
   for i := 0 to Nodes.Count - 1 do
-    if Nodes.AllocatedList[i]^.State and NS_PERMITED then
+    if Nodes.AllocatedList[i]^.State and NS_PERMITTED then
       Nodes.AllocatedList[i]^.MsgFlags := Nodes.AllocatedList[i]^.MsgFlags or MsgFlags;
 end;
 
@@ -379,6 +385,22 @@ procedure NMRAnetNode_ClearStateFlag(Node: PNMRAnetNode; Flag: Byte);
 begin
   LockCANInterrupt;
   Node^.State := Node^.State and not Flag;
+  UnLockCANInterrupt;
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetNode_TestStateFlag;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRAnetNode_TestStateFlag(Node: PNMRAnetNode; Flag: Byte): Boolean;
+begin
+  LockCANInterrupt;
+  Result := Node^.State and Flag <> 0;
   UnLockCANInterrupt;
 end;
 
