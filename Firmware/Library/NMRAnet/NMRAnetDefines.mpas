@@ -60,7 +60,7 @@ const
   FT_CID4                           = $03000000;                                // non-OpenLCB Protocol
   FT_CID5                           = $02000000;                                // non-OpenLCB Protocol
   FT_CID6                           = $01000000;                                // non-OpenLCB Protocol
-  FT_CID_MASK                       = $0F000000;
+  FT_CID_MASK                       = $07000000;
   
   FT_RID                            = $00700000;                                // Reserve ID
   FT_AMD                            = $00701000;                                // Alias Map Definition
@@ -261,7 +261,6 @@ const
   MF_VERIFY_NODE_ID           = $10;                                            // MsgFlag, a Verify Node ID message needs to be responded to
   MF_PROTOCOL_SUPPORT_INQUIRY = $20;                                            // MsgFlag, a Protocol Support Inquiry (PIP) message needs to be responded to
   MF_IDENTIFY_EVENTS          = $40;                                            // MsgFlag, an Identify Events message needs to be responded to
-  
 
 type
   TNMRAnetNodeLoginInfo = record

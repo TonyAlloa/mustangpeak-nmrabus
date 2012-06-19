@@ -290,7 +290,7 @@ begin
     Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractSourceAlias(CANBuffer));
     if Node <> nil then                                                         // Check for a Duplicate Alias
     begin
-      if (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_CID0) or (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_CID1) or (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_CID2) or (CANBuffer^.ID and FT_UNADDRESSED_MASK = FT_CID3) then
+      if (CANBuffer^.ID and FT_CID_MASK = FT_CID0) or (CANBuffer^.ID and FT_CID_MASK = FT_CID1) or (CANBuffer^.ID and FT_CID_MASK = FT_CID2) or (CANBuffer^.ID and FT_CID_MASK = FT_CID3) then
         Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS_RID              // A "good" duplicate Alias
       else
         Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS;                 // A "bad" duplicate Alias
@@ -438,7 +438,9 @@ begin
                                              else begin
                                           //       DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
                                          //        StoreComplexAction(NodeBuffer, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
-                                                end;
+                                                end
+                                                else
+                                             //     NMRAnetNode_SetMsgFlag(Node, MF_OPTIONAL_INTERACTION_REJECTED);     NEED TO SEND OIR TO DEST NODE>>>>>>>>
                                               end
                                            end;
                 MTI_DATAGRAM_ONLY_FRAME,
