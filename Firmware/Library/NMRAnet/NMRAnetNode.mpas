@@ -163,7 +163,7 @@ begin
     if AliasID = MidAliasID then
     begin
       Result := Middle;
-      Exit
+      Break
     end else
       Min := Middle + 1
   end;
@@ -183,9 +183,19 @@ end;
 function NMRAnetNode_FindByAlias(AliasID: Word): PNMRAnetNode;
 var
   Index: Integer;
+  
+  s1: array[0..32] of char;
 begin
+
+WordToHex(AliasID, s1);
+UART1_Write_Text(s1+LF);
+
   Result := PNMRAnetNode( nil);
-  Index := BinarySearchAliasID(Nodes, AliasID);
+  Index := BinarySearchAliasID(Nodes, AliasID);     // BINARY SEARCH FAILING>>>>>>>>>>>>>>>>>>>>>>
+  
+IntToStr(Index, s1);
+UART1_Write_Text(s1+LF);
+
   if (Index > -1) and (Index < Nodes.Count) then
     Result := Nodes.AllocatedList[Index]
 end;

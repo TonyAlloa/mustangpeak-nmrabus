@@ -150,115 +150,6 @@ begin
 end;
 
 // ****************************************************************************
-// procedure DispatchPCEventReportIdenitified
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Complex Action
-//
-// ****************************************************************************
-procedure DispatchPCEventReportIdenitified(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
- // StoreComplexAction(NodeBuffer, CRC_PC_EVENT_REPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
-end;
-
-// ****************************************************************************
-// procedure DispatchVerifyNodeID
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchVerifyNodeID(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-var
-  NodeID: TNodeID;
-begin
- { if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
-  begin
-    if (CANBuffer^.DataCount = 0) or (CANBuffer^.DataCount = 1)  then       // THIS IS NOT CLEAR IN THE SPEC
-    begin
-      NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_VERIFIED_NODE
-    end else
-    if (CANBuffer^.DataCount = 6) or (CANBuffer^.DataCount = 7) then       // THIS IS NOT CLEAR IN THE SPEC
-    begin
-      if CANBuffer^.DataCount = 6 then
-        NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0)              // Extract the 48 Bit ID
-      else
-        NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 1);             // Extract the 48 Bit ID, with the $0A in Index 0
-
-      if NMRAnetUtilities_EqualNodeID(NodeBuffer, NodeID) then                                  // If addressed to us then respond
-       NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_VERIFIED_NODE
-    end;
-  end }
-end;
-
-// ****************************************************************************
-// procedure DispatchVerifiedNodeID
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchVerifiedNodeID(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
- // StoreComplexAction(NodeBuffer, CRC_VERIFIED_NODE_ID, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
-end;
-
-// ****************************************************************************
-// procedure DispatchIdentifyEvents
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchIdentifyEvents(NodeBuffer: PNMRAnetNode);
-begin
- // if NMRAnetCANReceive_AllocateActions(NodeBuffer) then
- //   NodeBuffer^.Actions^.SimpleActionFlags := NodeBuffer^.Actions^.SimpleActionFlags or SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED;
-end;
-
-// ****************************************************************************
-// procedure DispatchDatagramReceivedOk
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchDatagramReceivedOk(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
- // StoreComplexAction(NodeBuffer, CRC_DATAGRAM_RECEIVED_OK, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 1);
-end;
-
-// ****************************************************************************
-// procedure DispatchDatagramRejected
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple Action
-//
-// ****************************************************************************
-procedure DispatchDatagramRejected(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
- // StoreComplexAction(NodeBuffer, CRC_DATAGRAM_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 3);
-end;
-
-// ****************************************************************************
 // procedure DispatchAbbreviatedCDIRequest
 //
 //  Action Layer:
@@ -418,8 +309,10 @@ begin
                           Node^.MsgFlags := Node^.MsgFlags or MF_ALIAS_MAP_ENQUIRY;
                       end
                     end else
-                    if CANBuffer^.DataCount = 0 then                            // Is the message for all Nodes?
-                      NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_ALIAS_MAP_ENQUIRY);    // Need to characterize how much time this may take with a large number of nodes
+                    begin
+                      if CANBuffer^.DataCount = 0 then                            // Is the message for all Nodes?
+                        NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_ALIAS_MAP_ENQUIRY);    // Need to characterize how much time this may take with a large number of nodes
+                    end
                   end;
         FT_AMD  : begin
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
@@ -452,6 +345,7 @@ var
   DoDefault: Boolean;
   Buffer: PMessageBuffer;
   Node: PNMRAnetNode;
+  NodeID: TNodeID;
 begin
 
   //UART1_Write_Text('NMRAnet'+LF);
@@ -474,7 +368,16 @@ begin
         MTI_UNADDRESSED        : begin                                          // Unaddressed Messages
                                    case CANBuffer^.ID and FT_UNADDRESSED_MASK of
                                      FT_VERIFY_NODE_ID_NUMBER         : begin
-                                                                          NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_VERIFY_NODE_ID);    // Need to characterize how much time this may take with a large number of nodes
+                                                                           if (CANBuffer^.DataCount = 0) then                                      // THIS IS NOT CLEAR IN THE SPEC
+                                                                             NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_VERIFY_NODE_ID)  // Need to characterize how much time this may take with a large number of nodes
+                                                                           else
+                                                                           if (CANBuffer^.DataCount = 6) then                                      // THIS IS NOT CLEAR IN THE SPEC
+                                                                           begin
+                                                                             NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
+                                                                             Node := NMRAnetNode_FindByNodeID(NodeID);
+                                                                             if Node <> nil then
+                                                                               NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_VERIFY_NODE_ID)  // Need to characterize how much time this may take with a large number of nodes
+                                                                           end
                                                                         end;
                                      FT_CONSUMER_IDENTIFY             : begin 
                                                                           // Need to store the 8 bit Event ID in the Message
@@ -508,7 +411,16 @@ begin
                 MTI_ADDRESSED            : begin
                                              case CANBuffer^.Databytes[0] of
                                                MTI_EXTENSION_VERIFY_NODE_ID_NUMBER_DEST       : begin 
-                                                                                                  NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID);
+                                                                                                  if CANBuffer^.DataCount = 1 then                                 // THIS IS NOT CLEAR IN THE SPEC, , with the $0A in Index 0
+                                                                                                     NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID)
+                                                                                                  else
+                                                                                                  if CANBuffer^.DataCount = 7 then                                 // THIS IS NOT CLEAR IN THE SPEC
+                                                                                                  begin
+                                                                                                    NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 1); // Extract the 48 Bit ID, with the $0A in Index 0
+                                                                                                    Node := NMRAnetNode_FindByNodeID(NodeID);
+                                                                                                    if Node <> nil then                                                 // If addressed to us then respond
+                                                                                                      NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID)
+                                                                                                  end
                                                                                                 end;
                                                MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           : begin 
                                                                                                   // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
