@@ -624,19 +624,51 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure Actions_Process
+//  procedure ProcessNode
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-procedure Actions_Process(Node: PNMRAnetNode; Buffer: PCANBuffer);
+procedure ProcessNode(Node: PNMRAnetNode; Buffer: PCANBuffer);
 const
   ADDRESSED = True;
   NONADDRESSED = False;
+  CRITICAL_MSG_MASK = MF_DUPLICATE_NODE_ID or MF_DUPLICATE_ALIAS;
+
+var
+  LocalMsgFlags: Byte;
   
-begin  {
+begin 
+  LocalMsgFlags := Node^.MsgFlags;
+  if LocalMsgFlags <> 0 then
+  begin
+    if LocalMsgFlags and CRITICAL_MSG_MASK <> 0 then                            // Subdivide to Critical vs. Noncritical messages
+    begin
+      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_NODE_ID, True) then        // Jump Statemachine here
+        Node^.iStateMachine := STATE_NMRABUS_DUPLICATE_FULL_ID
+      else
+      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then          // Jump Statemachine here
+        Node^.iStateMachine := STATE_NMRABUS_INHIBITED
+    end else
+    begin
+      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS_RID, False) then
+      begin
+         // If message sent then.....
+         NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_NODE_ID);
+      end else
+      if NMRAnetNode_TestMsgFlags(Node, MF_ALIAS_MAP_ENQUIRY, False) then
+      begin
+         // If message sent then.....
+         NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_NODE_ID);
+      end
+    end
+  end else
+  begin
+  end;
+
+ {
   if Node^.Actions <> nil then
   begin
     if not DuplicateDetected(Node, SRC_DUPLICATE_NODE_ID, STATE_NMRABUS_DUPLICATE_FULL_ID) then  // Highest Priority, if detected the main loop needs to change state
@@ -777,7 +809,7 @@ begin
       end;
     STATE_NMRABUS_PERMITTED :
       begin
-        Actions_Process(Node, @Buffer);                                         // Handle auto Actions to CAN/NMRAnet messages coming in
+        ProcessNode(Node, @Buffer);                                             // Handle auto Actions to CAN/NMRAnet messages coming in
      //   NMRAnetDatagrams_ProcessReceive(Node);                                  // Handle Datagrams coming in
      //   NMRAnetDatagrams_ProcessTransmit(Node);                                 // Handle Datagrams going out
      //   NMRAnetConfigurationProtocol_Process(Node);
@@ -790,6 +822,10 @@ begin
           FlushLists;
           ReleaseActions(Node);
           NMRAnetNode_ClearStateFlag(Node, NS_PERMITED);
+          NMRAnetNode_ClearMsgFlags(Node);
+          
+          // NEED TO CLEAR PENDING MESSAGES TO.................................
+          
           Node^.iStateMachine := STATE_RANDOM_NUMBER_GENERATOR;
         end
       end;
@@ -800,6 +836,10 @@ begin
           FlushLists;
           ReleaseActions(Node);
           NMRAnetNode_ClearStateFlag(Node, NS_PERMITED);
+          NMRAnetNode_ClearMsgFlags(Node);
+          
+          // NEED TO CLEAR PENDING MESSAGES TO.................................
+          
           Node^.iStateMachine := STATE_NMRABUS_TAKE_OFFLINE
         end
       end;

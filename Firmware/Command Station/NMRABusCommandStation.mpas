@@ -273,6 +273,21 @@ begin
   // if i = 200 then
     begin
       NMRAnetNode_Allocate;
+      
+        {  UART1_Write_Text(LF+'*****************'+LF);
+          UART1_Write_Text('RAW'+LF);
+          for i := 0 to Nodes.Count - 1 do
+          begin
+            IntToHex(Nodes.RawList[i].Node.AliasID, s1);
+            UART1_Write_Text(s1+LF);
+          end;
+          UART1_Write_Text(LF+'Sorted'+LF);
+          for i := 0 to Nodes.Count - 1 do
+          begin
+            IntToHex(Nodes.AllocatedList[i]^.Node.AliasID, s1);
+            UART1_Write_Text(s1+LF);
+          end;
+          UART1_Write_Text(LF+'*****************'+LF);  }
       i := 0;
     end;
     Inc(i);

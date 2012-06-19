@@ -48,6 +48,7 @@ type
   procedure NMRAnetNode_ClearStateFlag(Node: PNMRAnetNode; Flag: Byte);
   procedure NMRAnetNode_SetMsgFlag(Node: PNMRAnetNode; Flag: Byte);
   procedure NMRAnetNode_ClearMsgFlag(Node: PNMRAnetNode; Flag: Byte);
+  procedure NMRAnetNode_ClearMsgFlags(Node: PNMRAnetNode);
   function NMRAnetNode_TestMsgFlags(Node: PNMRAnetNode; Flag: Word; DoClear: Boolean): Boolean;
   
   
@@ -262,22 +263,6 @@ begin
     Result^.Node.AliasID := NMRAnetUtilities_CreateAliasID(Result^.Node.Seed, False); // Pregenerate it so it can be sorted
     Inc(Nodes.Count);
     NMRAnetNode_SortNodeList(Nodes);
-    
-  {  UART1_Write_Text(LF+'*****************'+LF);
-    UART1_Write_Text('RAW'+LF);
-    for i := 0 to Nodes.Count - 1 do
-    begin
-      IntToHex(Nodes.RawList[i].Node.AliasID, s1);
-      UART1_Write_Text(s1+LF);
-    end;
-    UART1_Write_Text(LF+'Sorted'+LF);
-    for i := 0 to Nodes.Count - 1 do
-    begin
-      IntToHex(Nodes.AllocatedList[i]^.Node.AliasID, s1);
-      UART1_Write_Text(s1+LF);
-    end;
-    UART1_Write_Text(LF+'*****************'+LF);
-   }
   end;
   UnLockCANInterrupt
 end;
@@ -426,6 +411,22 @@ procedure NMRAnetNode_ClearMsgFlag(Node: PNMRAnetNode; Flag: Byte);
 begin
   LockCANInterrupt;
   Node^.MsgFlags := Node^.MsgFlags and not Flag;
+  UnLockCANInterrupt;
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetNode_ClearMsgFlags;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure NMRAnetNode_ClearMsgFlags(Node: PNMRAnetNode);
+begin
+  LockCANInterrupt;
+  Node^.MsgFlags := 0;
   UnLockCANInterrupt;
 end;
 

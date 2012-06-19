@@ -251,9 +251,11 @@ const
   NS_INITIALIZED          = $04;                                                // NodeState Message Layer has sent its first Initialize Complete Message
   NS_VIRTUAL              = $08;                                                // NodeState If is a virtual node
   
-  MF_DUPLICATE_ALIAS_RID  = $01;                                                // MsgFlag, a Duplicate Alias was Detected during a CID message, not a fault just need to respond to claim the Alias
-  MF_DUPLICATE_ALIAS      = $02;                                                // MsgFlag, a Duplicate Alias was Detected, fault
-  MF_DUPLICATE_NODE_ID    = $04;                                                // MsgFlag, a Duplicate Node ID was detected, critical fault
+  // MsgFlags in order of precidence (= 0 highest precidence)
+  MF_DUPLICATE_NODE_ID    = $01;                                                // MsgFlag, a Duplicate Node ID was detected, critical fault
+  MF_DUPLICATE_ALIAS      = $02;                                                // MsgFlag, a Duplicate Alias was Detected, critical fault
+  MF_DUPLICATE_ALIAS_RID  = $04;                                                // MsgFlag, a Duplicate Alias was Detected during a CID message, not a fault just need to respond to claim the Alias
+
   MF_ALIAS_MAP_ENQUIRY    = $08;                                                // MsgFlag, an AMD message need to be responded to
   
 
