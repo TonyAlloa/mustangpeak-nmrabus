@@ -150,7 +150,6 @@ var
   Min, Max, Middle: Integer;
   MidAliasID: Word;
 begin
-  LockCANInterrupt;
   Min := 0;
   Max := LocalNodes.Count - 1;
   while Min <= Max do
@@ -163,12 +162,11 @@ begin
     if AliasID = MidAliasID then
     begin
       Result := Middle;
-      Break
+      Exit
     end else
       Min := Middle + 1
   end;
   Result := -1;
-  UnLockCANInterrupt
 end;
 
 // *****************************************************************************
@@ -183,21 +181,13 @@ end;
 function NMRAnetNode_FindByAlias(AliasID: Word): PNMRAnetNode;
 var
   Index: Integer;
-  
-  s1: array[0..32] of char;
 begin
-
-WordToHex(AliasID, s1);
-UART1_Write_Text(s1+LF);
-
+  LockCANInterrupt;
   Result := PNMRAnetNode( nil);
-  Index := BinarySearchAliasID(Nodes, AliasID);     // BINARY SEARCH FAILING>>>>>>>>>>>>>>>>>>>>>>
-  
-IntToStr(Index, s1);
-UART1_Write_Text(s1+LF);
-
+  Index := BinarySearchAliasID(Nodes, AliasID);
   if (Index > -1) and (Index < Nodes.Count) then
-    Result := Nodes.AllocatedList[Index]
+    Result := Nodes.AllocatedList[Index];
+  UnLockCANInterrupt;
 end;
 
 // *****************************************************************************
