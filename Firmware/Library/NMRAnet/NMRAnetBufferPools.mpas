@@ -36,36 +36,38 @@ const
   
 type
   TMessageBufferPool = record
-    Pool: array[0..MAX_RECEIVED_MESSAGE_BUFFER_POOL-1] of TMessageBuffer; // Addressed messages that are dynamically assigned to a TNMRAnetNode to be responded to in the Main Statemachine
-    MaxCount: Byte;                                                               // Max Count of Pool Buffers used
-    Count: Byte;                                                                  // Number of Buffers currently used
+    Pool: array[0..MAX_RECEIVED_MESSAGE_BUFFER_POOL-1] of TMessageBuffer;       // Addressed messages that are dynamically assigned to a TNMRAnetNode to be responded to in the Main Statemachine
+    MaxCount: Byte;                                                             // Max Count of Pool Buffers used
+    Count: Byte;                                                                // Number of Buffers currently used
   end;
   
-  TDataBufferPool = record                                                       // CAN Buffers that are dynamically assigned to TMessageBuffer structures
-    Pool: array[0..MAX_DATA_BUFFER_POOL-1] of TDataBuffer;                       // Max Count of Pool Buffers used
-    MaxCount: Byte;                                                              // Number of Buffers currently used
+  TDataBufferPool = record                                                      // CAN Buffers that are dynamically assigned to TMessageBuffer structures
+    Pool: array[0..MAX_DATA_BUFFER_POOL-1] of TDataBuffer;                      // Max Count of Pool Buffers used
+    MaxCount: Byte;                                                             // Number of Buffers currently used
     Count: Byte;
   end;
   
-  TDatagramBufferPool = record                                                   // Datagrams that are dynamically assigned to TMessageBuffer structures
-    Pool: array[0..MAX_DATAGRAM_BUFFER_POOL-1] of TDatagramBuffer;               // Max Count of Pool Buffers used
-    MaxCount: Byte;                                                              // Number of Buffers currently used
+  TDatagramBufferPool = record                                                  // Datagrams that are dynamically assigned to TMessageBuffer structures
+    Pool: array[0..MAX_DATAGRAM_BUFFER_POOL-1] of TDatagramBuffer;              // Max Count of Pool Buffers used
+    MaxCount: Byte;                                                             // Number of Buffers currently used
     Count: Byte;
   end;
   
-  TACDI_ReceiveBufferPool = record                                               // Datagrams that are dynamically assigned to TMessageBuffer structures
-    Pool: array[0..MAX_ACDI_RECEIVE_BUFFER_POOL-1] of TACDI_ReceiveBuffer;       // Max Count of Pool Buffers used
-    MaxCount: Byte;                                                              // Number of Buffers currently used
+  TACDI_ReceiveBufferPool = record                                              // Datagrams that are dynamically assigned to TMessageBuffer structures
+    Pool: array[0..MAX_ACDI_RECEIVE_BUFFER_POOL-1] of TACDI_ReceiveBuffer;      // Max Count of Pool Buffers used
+    MaxCount: Byte;                                                             // Number of Buffers currently used
     Count: Byte;
   end;
   
   TACDI_TransmitBufferPool = record                                             // Datagrams that are dynamically assigned to TMessageBuffer structures
     Pool: array[0..MAX_ACDI_TRANSMIT_BUFFER_POOL-1] of TACDI_TransmitBuffer;    // Max Count of Pool Buffers used
-    MaxCount: Byte;                                                              // Number of Buffers currently used
+    MaxCount: Byte;                                                             // Number of Buffers currently used
     Count: Byte;
   end;
   
 procedure NMRAnetBufferPools_Initialize;
+
+procedure NMRAnetBufferPools_AssignBufferToNode(Node: PNMRAnetNode; MsgPtr: PMessageBuffer);
 
 function NMRAnetBufferPools_AllocateReceivedMessageBuffer(var Buffer: PMessageBuffer): Boolean;
 function NMRAnetBufferPools_FindInProcessDatagramMessageBuffer(var Buffer: PMessageBuffer): Boolean;
@@ -143,8 +145,25 @@ begin
     NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(@ACDI_TransmitBufferPool.Pool[i]);
   ACDI_TransmitBufferPool.Count := 0;
   ACDI_TransmitBufferPool.MaxCount := 0;
+end;
 
-  
+// *****************************************************************************
+//  procedure FindMatchingStateMessageBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure NMRAnetBufferPools_AssignBufferToNode(Node: PNMRAnetNode; MsgPtr: PMessageBuffer);
+var
+  NextMsg: PMessageBuffer;
+begin
+  NextMsg := Node^.Msg;
+  while NextMsg^.NextPtr <> 0 do
+    NextMsg := PMessageBuffer( NextMsg^.NextPtr);
+  NextMsg^.NextPtr := Word( MsgPtr)
 end;
   
 // *****************************************************************************

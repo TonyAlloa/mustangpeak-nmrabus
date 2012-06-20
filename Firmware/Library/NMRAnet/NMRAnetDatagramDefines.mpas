@@ -76,9 +76,9 @@ type
   end;
   
   TDatagramBuffer = record
+    State: Byte;                                                                // The State of the Packet Buffer see DGS_xxxx contants
     DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
     Alias: Word;                                                                // The Source Node that sent the datagram if this is a RX buffer, else it is the Target Node that it is being sent to
-    State: Byte;                                                                // The State of the Packet Buffer see DGB_xxxx contants
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit
     iFrameCount: Byte;                                                          // Counts the number of Frames received/transmitted
     iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message or during transmit the Target Node never responds

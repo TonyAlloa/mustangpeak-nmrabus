@@ -346,6 +346,7 @@ var
   Buffer: PMessageBuffer;
   Node: PNMRAnetNode;
   NodeID: TNodeID;
+  DataBuffer: PDataBuffer;
 begin
 
   //UART1_Write_Text('NMRAnet'+LF);
@@ -381,21 +382,31 @@ begin
                                                                         end;
                                      FT_CONSUMER_IDENTIFY             : begin 
                                                                           // Need to store the 8 bit Event ID in the Message
+                                                                       //   if NMRAnetBufferPools_AllocateDataBuffer() then
+                                                                          begin
+                                                                      //      DataBuffer^.Count := CANBuffer^.DataCount;
+                                                                      //      DataBuffer^.DataBytes := CANBuffer^.DataBytes;
+                                                                     //       NMRAnetBufferPools_AssignBufferToNode(Node, Word( DataBuffer));
+                                                                          end;
                                                                         end;
                                      FT_CONSUMER_IDENTIFY_RANGE       : begin 
                                                                           // TODO
                                                                         end;
                                      FT_PRODUCER_IDENDIFY             : begin   
-                                                                          // Need to store the 8 bit Event ID in the Message
+                                                                       //   if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
+                                                                          begin
+                                                                          end;
                                                                         end;
                                      FT_PRODUCER_IDENTIFY_RANGE       : begin
                                                                           // TODO
                                                                         end;
                                      FT_EVENT_LEARN                   : begin 
-                                                                          // Need to store the 8 bit Event ID in the Message
+                                                                     //     if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
+                                                                          begin
+                                                                          end;
                                                                         end;
                                      FT_EVENTS_IDENTIFY               : begin 
-                                                                          NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_EVENTS);
+                                                                          NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_ALL_EVENTS);
                                                                         end;
                                    end
                                  end;
@@ -426,8 +437,7 @@ begin
                                                                                                   // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
                                                                                                 end;  // DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_IDENTIFY_EVENTS                  : begin
-                                                                                                  NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_EVENTS);
-                                                                                                  // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
+                                                                                                  NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_ALL_EVENTS);
                                                                                                 end;
                                                MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin 
                                                                                                     // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
@@ -437,8 +447,8 @@ begin
                                              else begin
                                           //       DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
                                          //        StoreComplexAction(NodeBuffer, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
-                                                end
-                                                else
+                                                end;
+                                          //      else
                                              //     NMRAnetNode_SetMsgFlag(Node, MF_OPTIONAL_INTERACTION_REJECTED);      // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
                                               end
                                            end;

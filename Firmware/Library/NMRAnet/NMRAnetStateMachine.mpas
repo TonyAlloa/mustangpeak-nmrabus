@@ -258,6 +258,7 @@ begin
   Node^.Msg := PMessageBuffer( nil);
   Node^.State := 0;
   Node^.MsgFlags := 0;
+  Node^.EventCounter := 0;
   if (NodeID_HI <> 0) and (NodeID_LO <> 0) then
   begin
     Node^.Node.ID[0] := NodeID_LO;
@@ -374,87 +375,6 @@ begin
       end;
     Node^.Actions^.iState := NextState
   end   }
-end;
-
-// *****************************************************************************
-//  procedure SendNMRALayerSimpleSendAllConsumerProducer
-//
-//     Parameters:  Buffer - Buffer to load to send
-//                  VariableField - MIT Coding for the Message to Send
-//                  nCode - The type of Action needed to test for to decide if the Action is needed
-//                  NextState - next state in the statemachine once the Action is handled
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure SendNMRALayerSimpleSendAllConsumerProducer(Node: PNMRAnetNode; Buffer: PCANBuffer; NextState: Byte);
-begin
- (* if Node^.Actions <> nil then
-  begin
-    if TestReceivedMsgFlags(Node, SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED) then
-    begin
-      {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
-      if Node^.Actions^.Tag < MAX_SUPPORTED_EVENTS_PRODUCED then
-      begin
-        if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PRODUCER_IDENTIFIED, 0, 8, @SUPPORTED_EVENTS_PRODUCED[Node^.Actions^.Tag]) then
-          Inc(Node^.Actions^.Tag);
-      end else
-      {$ENDIF}
-      {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
-      if Node^.Actions^.Tag < MAX_SUPPORTED_EVENTS then
-      begin
-        if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED, 0, 8, @SUPPORTED_EVENTS_CONSUMED[Node^.Actions^.Tag-MAX_SUPPORTED_EVENTS_PRODUCED]) then
-          Inc(Node^.Actions^.Tag);
-      end else
-      {$ENDIF}
-      begin
-        if SimpleActionCallbackFunc <> nil then
-          SimpleActionCallbackFunc(Node, SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED);
-        ClearReceivedMsgFlags(Node, SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED);              // Done
-        Node^.Actions^.iState := NextState
-      end
-    end else
-      Node^.Actions^.iState := NextState                                       // Can't skip over this one until done with all sending
-  end   *)
-end;
-
-// *****************************************************************************
-//  procedure SendNMRAnetLayerComplexAction
-//
-//     Parameters:  Buffer - Buffer to load to send
-//                  VariableField - MIT Coding for the Message to Send
-//                  nCode - The type of Action needed to test for to decide if the Action is needed
-//                  NextState - next state in the statemachine once the Action is handled
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure SendNMRAnetLayerComplexAction(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; IsAddressed: Boolean; nCode: Word; NextState: Byte);
-var
- // Action: PQueuedAction;
-  TargetAlias: Word;
-begin
-{  if Node^.Actions <> nil then
-  begin
-    Action := FindStoredComplexAction(Node, nCode);
-    if Action <> nil then
-    begin
-      if IsAddressed then
-        TargetAlias := Action^.FromAlias
-      else
-        TargetAlias := 0;
-      if TryTransmitNMRABusLayerMsg(Node, Buffer, VariableField, TargetAlias, Action^.DataCount, @Action^.DataBytes) then
-      begin
-        if ComplexActionCallbackFunc <> nil then
-          ComplexActionCallbackFunc(Node, Action);
-        Action^.nCode := CRC_EMPTY;
-        Node^.Actions^.iState := NextState;
-      end;
-    end else
-      Node^.Actions^.iState := NextState
-  end     }
 end;
 
 // *****************************************************************************
@@ -599,7 +519,7 @@ const
 var
   LocalMsgFlags: Byte;
   DataBytes: TCAN_DataBytes;
-  
+
 begin 
   LocalMsgFlags := Node^.MsgFlags;
   if LocalMsgFlags <> 0 then
@@ -636,16 +556,38 @@ begin
   //      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, 0, 6, @DataBytes) then
           NMRAnetNode_ClearMsgFlag(Node, MF_PROTOCOL_SUPPORT_INQUIRY);
       end else
-      if NMRAnetNode_TestMsgFlags(Node, MF_IDENTIFY_EVENTS, False) then
+      if NMRAnetNode_TestMsgFlags(Node, MF_IDENTIFY_ALL_EVENTS, False) or NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then
       begin
-        // Need to run through all Event here to not Destination Address, there is an addressed version of this......................
-        // NEED TO PASS THE POSSIBLE TARGET NODE TO THIS LAYER, HOW????????
-  //      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, 0, 6, @DataBytes) then
-          NMRAnetNode_ClearMsgFlag(Node, MF_IDENTIFY_EVENTS);
+        if not NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then
+        begin
+          NMRAnetNode_SetStateFlag(Node, NS_ENUMERATING_EVENTS);                // Enumerating is just starting, kick it off
+          NMRAnetNode_ClearMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);               // Allow another node to set the flag
+        end else
+        begin
+          {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
+          if Node^.EventCounter < MAX_SUPPORTED_EVENTS_PRODUCED then
+          begin
+            if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_PRODUCED[Node^.EventCounter]) then
+              Inc(Node^.EventCounter);
+          end else
+          {$ENDIF}
+          {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
+          if Node^EventCounter < MAX_SUPPORTED_EVENTS then
+          begin
+            if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_CONSUMED[Node^.EventCounter-MAX_SUPPORTED_EVENTS_PRODUCED]) then
+              Inc(Node^.EventCounter);
+          end else
+          {$ENDIF}
+          begin
+            Node^.EventCounter := 0;                                            // Done
+            NMRAnetNode_ClearStateFlag(Node, NS_ENUMERATING_EVENTS);
+          end
+        end
       end
     end
   end else
   begin
+
   end;
 
  {
@@ -788,13 +730,8 @@ begin
       end;
     STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS :
       begin
-        LockCANInterrupt;
-   //     if NMRAnetCANReceive_AllocateActions(Node) then
-        begin
-  //        Node^.Actions^.SimpleActionFlags := Node^.Actions^.SimpleActionFlags or SRC_SEND_ALL_CONSUMER_PRODUCER_IDENTIFIED;
-          Node^.iStateMachine := STATE_NMRABUS_PERMITTED;
-        end;
-        UnLockCANInterrupt;
+        NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
+        Node^.iStateMachine := STATE_NMRABUS_PERMITTED;
       end;
     STATE_NMRABUS_PERMITTED :
       begin

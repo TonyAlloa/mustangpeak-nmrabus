@@ -181,8 +181,8 @@ const
   STATE_NMRABUS_SEND_ACDI_REQUEST                           = 16;
   STATE_NMRABUS_ACDI_REPLY                                  = 17;
   
-  LEN_QUEUED_ACTION_LIST                  = 2;                                 // Number of complex Actions that can be queued up
-  
+
+
 type
   TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used
   // When a message is received on the CAN bus the logic decodes the message and
@@ -200,9 +200,9 @@ const
 
 type
   TDataBuffer = record
+    State: Byte;                                                                // State of Buffer, see DBS_xxx constants
     Count: Byte;                                                                // Number of Databytes that are valid
     DataBytes: TCAN_DataBytes;                                                  // Depends on nCode, could be EventID, Datagram type, etc
-    State: Byte;                                                                // State of Buffer, see CDB_xxx constants
   end;
   PDataBuffer = ^TDataBuffer;
 
@@ -230,7 +230,6 @@ type
   TNodeIDs = record
     ID: TNodeID;
     AliasID: Word;
-    State: Word;                                                                // See the NIDS_xxxx constants
   end;
   
   TNodeInfo = record
@@ -238,12 +237,7 @@ type
     Seed: TNodeID;                                                              // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
     AliasID: Word;                                                              // 12 Bit Alias ID
   end;
-  
-  TVirtualNodeInfo = record                                                     // The ID can be the Physical ID + Index of the vNode if the NodeIDs are reserved for the vNodes.....
-    Seed: TNodeID;                                                              // Seed for Random Number Generator in case we have to reseed because of a duplicate ID
-    AliasID: Word;                                                              // 12 Bit Alias ID
-  end;
-  
+
 const
   // NMRABus States
   NS_EMPTY                = $00;
@@ -251,6 +245,7 @@ const
   NS_PERMITTED            = $02;                                                // NodeState CAN Frame Layer is permitted (Node ID's resolved with bus)
   NS_INITIALIZED          = $04;                                                // NodeState Message Layer has sent its first Initialize Complete Message
   NS_VIRTUAL              = $08;                                                // NodeState If is a virtual node
+  NS_ENUMERATING_EVENTS   = $10;                                                // Node is enumerating all events
   
   // MsgFlags in order of precidence (= 0 highest precidence)
   MF_DUPLICATE_NODE_ID        = $01;                                            // MsgFlag, a Duplicate Node ID was detected, critical fault
@@ -260,7 +255,7 @@ const
   MF_ALIAS_MAP_ENQUIRY        = $08;                                            // MsgFlag, an AMD message need to be responded to
   MF_VERIFY_NODE_ID           = $10;                                            // MsgFlag, a Verify Node ID message needs to be responded to
   MF_PROTOCOL_SUPPORT_INQUIRY = $20;                                            // MsgFlag, a Protocol Support Inquiry (PIP) message needs to be responded to
-  MF_IDENTIFY_EVENTS          = $40;                                            // MsgFlag, an Identify Events message needs to be responded to
+  MF_IDENTIFY_ALL_EVENTS      = $40;                                            // MsgFlag, an Identify Events message needs to be responded to
 
 type
   TNMRAnetNodeLoginInfo = record
@@ -269,11 +264,12 @@ type
   end;
   
   TNMRAnetNode = record
+    State: Byte;                                                                // See the NS_xxxx flags; State of the Node
     Node: TNodeInfo;                                                            // Information about a Node
     Login: TNMRAnetNodeLoginInfo;                                               // Login Information
-    State: Byte;                                                                // See the NS_xxxx flags; State of the Node
     MsgFlags: Byte;                                                             // Message Flags for messages that do not require information to be passed to the Node
     iStateMachine: Byte;                                                        // Statemachine index for the main bus login
+    EventCounter: Word;                                                         // Counts the Events when enumerating them
     Msg: PMessageBuffer;                                                        // Message to handle
     DatagramOverflowList: TDatagramOverflowList;                                // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;

@@ -20,8 +20,14 @@ const
   EVENT_ARRAY_LENGTH = 8;
   
 type
-  TEventID = array[0..EVENT_ARRAY_LENGTH-1] of Byte;                                               // Is the 48 Bit node ID + 16 Bits of unique Event ID = 64 Bits
+  TEventID = array[0..EVENT_ARRAY_LENGTH-1] of Byte;                        // Is the 48 Bit node ID + 16 Bits of unique Event ID = 64 Bits
   PEventID = ^TEventID;
+  
+  TSettableEventID = record
+    Event: TEventID;
+    State: Byte;                                                                // Is the event Clear (0), Set (1), Undefined (> 1)
+  end;
+  PSettableEventID = ^TSettableEventID;
   
 const
   EVENT_EMERGENCY_STOP_ALL: TEventID = ($01, $10, $00, $00, $00, $00, $FF, $FF);

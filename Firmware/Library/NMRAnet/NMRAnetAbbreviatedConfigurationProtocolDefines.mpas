@@ -55,19 +55,19 @@ const
 type
 
   TACDI_TransmitBuffer = record
+    State: Byte;                                                                // State of the buffer see the ACDIS_xxxx constants
     iNextChar: Word;                                                            // Next character is stored for the ACDI string
     DestAlias: Word;                                                            // Who to send it to
     SourceAlias: Word;                                                          // Who is sending it
     iStateMachine: Byte;                                                        // Statemachine Index of buffer
-    State: Byte;                                                                // State of the buffer see the ACDIS_xxxx constants
     iTransferState: Byte;                                                       // Flags Complete Transfer for each string   See ACDI_COMPLETE_xxxx flags
   end;
   PACDI_TransmitBuffer = ^TACDI_TransmitBuffer;
   
 
   TACDI_ReceiveBuffer = record                                                  // The only time we receive ACDI information is if we ask for it.  As such we can control the number of simutanious receives to 1
-    iStateMachine: Byte;                                                        // Statemachine index for Buffer
     State: Byte;                                                                // State of the Buffer (allocated, etc) see the ACDIS_xxx constants
+    iStateMachine: Byte;                                                        // Statemachine index for Buffer
     SourceAlias: Word;                                                          // What node sent
     iWatchdog: Word;                                                            // Watch for abandon Buffers
     MfgVersion: Byte;                                                           // Version ID for the ACDI
