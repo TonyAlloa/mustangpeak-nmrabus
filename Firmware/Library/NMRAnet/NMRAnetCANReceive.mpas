@@ -425,14 +425,13 @@ begin
                                                MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           : begin 
                                                                                                   // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
                                                                                                 end;  // DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
-                                               MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED    : begin end;  // TODO
-                                               MTI_EXTENSION_TERMINATE_DUE_TO_ERROR           : begin end;  // TODO
                                                MTI_EXTENSION_IDENTIFY_EVENTS                  : begin
                                                                                                   NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_EVENTS);
                                                                                                   // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
                                                                                                 end;
-                                               MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin end;  // DispatchAbbreviatedCDIRequest(NodeBuffer, CANBuffer);
-                                               MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY   : begin end;  // DispatchAbbreviatedCDIReply(NodeBuffer, CANBuffer);
+                                               MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin 
+                                                                                                    // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
+                                                                                                end;  // DispatchAbbreviatedCDIRequest(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_DATAGRAM_RECIEVED_OK             : begin end;  // DispatchDatagramReceivedOk(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_DATAGRAM_REJECTED                : begin end  // DispatchDatagramRejected(NodeBuffer, CANBuffer)
                                              else begin
@@ -440,7 +439,7 @@ begin
                                          //        StoreComplexAction(NodeBuffer, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
                                                 end
                                                 else
-                                             //     NMRAnetNode_SetMsgFlag(Node, MF_OPTIONAL_INTERACTION_REJECTED);     NEED TO SEND OIR TO DEST NODE>>>>>>>>
+                                             //     NMRAnetNode_SetMsgFlag(Node, MF_OPTIONAL_INTERACTION_REJECTED);      // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
                                               end
                                            end;
                 MTI_DATAGRAM_ONLY_FRAME,
