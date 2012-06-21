@@ -17,28 +17,20 @@ unit NMRAnetBufferPools;
 // ******************************************************************************
 
 uses
+  NMRAnetBufferPoolsDefines,
   NMRAnetDefines,
   CANDefines,
   NMRAnetDatagramDefines,
   NMRAnetConfigurationProtocolDefines,
   NMRAnetAbbreviatedConfigurationProtocolDefines;
 
-//{$I Options.inc}
+{$I Options.inc}
 
-// MOVE TO OPTIONS.INC or NMRAnetAppDefines.mpas
-const
-  MAX_RECEIVED_MESSAGE_BUFFER_POOL = 4;                                         // Number of Received Message Buffers to allocate
-  MAX_DATA_BUFFER_POOL             = 4;                                         // Number of CAN DataByte Buffers to allocate for Messages
-  MAX_DATAGRAM_BUFFER_POOL         = 2;                                         // Number of Datagram Buffers to allocate for Messages
-  MAX_ACDI_RECEIVE_BUFFER_POOL     = 2;                                         // Number of ACDI Buffers to allocate for Messages
-  MAX_ACDI_TRANSMIT_BUFFER_POOL    = 1;                                         // Number of ACDI Buffers to allocate for Messages
-  
-  
 type
-  TMessageBufferPool = record
-    Pool: array[0..MAX_RECEIVED_MESSAGE_BUFFER_POOL-1] of TMessageBuffer;       // Addressed messages that are dynamically assigned to a TNMRAnetNode to be responded to in the Main Statemachine
-    MaxCount: Byte;                                                             // Max Count of Pool Buffers used
-    Count: Byte;                                                                // Number of Buffers currently used
+  TBaseBufferPool = record
+    Pool: array[0..MAX_BASE_BUFFER_POOL-1] of TBaseBuffer;
+    MaxCount: Byte;
+    Count: Byte;
   end;
   
   TDataBufferPool = record                                                      // CAN Buffers that are dynamically assigned to TMessageBuffer structures
@@ -46,35 +38,30 @@ type
     MaxCount: Byte;                                                             // Number of Buffers currently used
     Count: Byte;
   end;
-  
+
   TDatagramBufferPool = record                                                  // Datagrams that are dynamically assigned to TMessageBuffer structures
     Pool: array[0..MAX_DATAGRAM_BUFFER_POOL-1] of TDatagramBuffer;              // Max Count of Pool Buffers used
     MaxCount: Byte;                                                             // Number of Buffers currently used
     Count: Byte;
   end;
-  
+
   TACDI_ReceiveBufferPool = record                                              // Datagrams that are dynamically assigned to TMessageBuffer structures
     Pool: array[0..MAX_ACDI_RECEIVE_BUFFER_POOL-1] of TACDI_ReceiveBuffer;      // Max Count of Pool Buffers used
     MaxCount: Byte;                                                             // Number of Buffers currently used
     Count: Byte;
   end;
-  
+
   TACDI_TransmitBufferPool = record                                             // Datagrams that are dynamically assigned to TMessageBuffer structures
     Pool: array[0..MAX_ACDI_TRANSMIT_BUFFER_POOL-1] of TACDI_TransmitBuffer;    // Max Count of Pool Buffers used
     MaxCount: Byte;                                                             // Number of Buffers currently used
     Count: Byte;
   end;
-  
+
 procedure NMRAnetBufferPools_Initialize;
+procedure NMRAnetBufferPools_InitializeBaseBuffer(Buffer: PBaseBuffer);
 
-procedure NMRAnetBufferPools_AssignBufferToNode(Node: PNMRAnetNode; MsgPtr: PMessageBuffer);
-
-function NMRAnetBufferPools_AllocateReceivedMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-function NMRAnetBufferPools_FindInProcessDatagramMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-function NMRAnetBufferPools_FindInProcessACDIMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-function NMRAnetBufferPools_FindInProcessCDIMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-function NMRAnetBufferPools_FindInProcessStreamMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-procedure NMRAnetBufferPools_ReleaseReceivedMessageBuffer(Buffer: PMessageBuffer);
+function NMRAnetBufferPools_AllocateBaseBuffer(var Buffer: PBaseBuffer): Boolean;
+procedure NMRAnetBufferPools_ReleaseBaseBuffer(Buffer: PBaseBuffer);
 
 function NMRAnetBufferPools_AllocateDataBuffer(var Buffer: PDataBuffer): Boolean;
 procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
@@ -89,7 +76,6 @@ function NMRAnetBufferPools_AllocateACDI_TransmitBuffer(var Buffer: PACDI_Transm
 procedure NMRAnetBufferPools_ReleaseACDI_TransmitBuffer(Buffer: PACDI_TransmitBuffer);
 
   // Located in NMRAnetStateMachine.mpas
-  procedure NMRAnetStateMachine_InitializeMessageBuffer(Buffer: PMessageBuffer); external;
   procedure NMRAnetStateMachine_InitializeDataBuffer(Buffer: PDataBuffer); external;
   // Located in NMRAnetDatagrams.mpas
   procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer); external;
@@ -102,11 +88,29 @@ procedure NMRAnetBufferPools_ReleaseACDI_TransmitBuffer(Buffer: PACDI_TransmitBu
 implementation
 
 var
-  MessagePool: TMessageBufferPool;
+  BaseBufferPool: TBaseBufferPool;
   DataBufferPool: TDataBufferPool;
   DatagramPool: TDatagramBufferPool;
   ACDI_ReceiveBufferPool: TACDI_ReceiveBufferPool;
   ACDI_TransmitBufferPool: TACDI_TransmitBufferPool;
+
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_InitializeBaseBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure NMRAnetBufferPools_InitializeBaseBuffer(Buffer: PBaseBuffer);
+begin
+  Buffer^.State := 0;
+  Buffer^.Alias := 0;
+  Buffer^.Next := 0;
+  Buffer^.mCode := 0;
+end;
 
 // *****************************************************************************
 //  procedure NMRAnetBufferPools_Initialize;
@@ -121,11 +125,11 @@ procedure NMRAnetBufferPools_Initialize;
 var
   i: Integer;
 begin
-  for i := 0 to MAX_RECEIVED_MESSAGE_BUFFER_POOL-1 do
-    NMRAnetStateMachine_InitializeMessageBuffer(@MessagePool.Pool[i]);
-  MessagePool.MaxCount := 0;
-  MessagePool.Count := 0;
-
+  for i := 0 to MAX_BASE_BUFFER_POOL - 1 do
+    NMRAnetBufferPools_InitializeBaseBuffer(@BaseBufferPool.Pool[i]);
+  BaseBufferPool.Count := 0;
+  BaseBufferPool.MaxCount := 0;
+  
   for i := 0 to MAX_DATA_BUFFER_POOL - 1 do
     NMRAnetStateMachine_InitializeDataBuffer(@DataBufferPool.Pool[i]);
   DataBufferPool.Count := 0;
@@ -147,8 +151,9 @@ begin
   ACDI_TransmitBufferPool.MaxCount := 0;
 end;
 
+
 // *****************************************************************************
-//  procedure FindMatchingStateMessageBuffer;
+//  procedure NMRAnetBufferPools_AllocateBaseBuffer;
 //
 //  Parameters:
 //
@@ -156,35 +161,21 @@ end;
 //
 //  Description:
 // *****************************************************************************
-procedure NMRAnetBufferPools_AssignBufferToNode(Node: PNMRAnetNode; MsgPtr: PMessageBuffer);
-var
-  NextMsg: PMessageBuffer;
-begin
-  NextMsg := Node^.Msg;
-  while NextMsg^.NextPtr <> 0 do
-    NextMsg := PMessageBuffer( NextMsg^.NextPtr);
-  NextMsg^.NextPtr := Word( MsgPtr)
-end;
-  
-// *****************************************************************************
-//  procedure FindMatchingStateMessageBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function FindMatchingStateMessageBuffer(State: Byte; var Buffer: PMessageBuffer): Boolean;
+function NMRAnetBufferPools_AllocateBaseBuffer(var Buffer: PBaseBuffer): Boolean;
 var
   i: Integer;
 begin
   Result := False;
-  for i := 0 to MAX_RECEIVED_MESSAGE_BUFFER_POOL - 1 do
+  for i := 0 to MAX_BASE_BUFFER_POOL - 1 do
   begin
-    if MessagePool.Pool[i].State = State then
+    if BaseBufferPool.Pool[i].State = CBS_EMPTY then
     begin
-      Buffer := @MessagePool.Pool[i];
+      Buffer := @BaseBufferPool.Pool[i];
+      NMRAnetBufferPools_InitializeBaseBuffer(Buffer);
+      if BaseBufferPool.Count > BaseBufferPool.MaxCount then
+        BaseBufferPool.MaxCount := BaseBufferPool.Count;
+      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_BASE;
+      Inc(BaseBufferPool.Count);
       Result := True;
       Break
     end
@@ -192,7 +183,7 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure NMRAnetBufferPools_AllocateReceivedMessageBuffer;
+//  procedure NMRAnetBufferPools_ReleaseBaseBuffer;
 //
 //  Parameters:
 //
@@ -200,100 +191,13 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function NMRAnetBufferPools_AllocateReceivedMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-begin
-  Result := FindMatchingStateMessageBuffer(RMB_EMPTY, Buffer);
-  if Result then
-  begin
-    NMRAnetStateMachine_InitializeMessageBuffer(Buffer);
-    Inc(MessagePool.Count);
-    if MessagePool.MaxCount > MessagePool.Count then
-      MessagePool.MaxCount := MessagePool.Count;
-    Buffer^.State := RMB_ALLOCATED;                                             // No "or" here as if just allocated then there is no way anyother bit can be set
-  end
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_ReleaseReceivedMessageBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-procedure NMRAnetBufferPools_ReleaseReceivedMessageBuffer(Buffer: PMessageBuffer);
+procedure NMRAnetBufferPools_ReleaseBaseBuffer(Buffer: PBaseBuffer);
 begin
   if Buffer <> nil then
   begin
-    if Buffer^.State and RMB_BUFFER_DATABUFFER <> 0 then
-      NMRAnetBufferPools_ReleaseDataBuffer(PDataBuffer( Buffer^.BufferPtr))
-    else
-    if Buffer^.State and RMB_BUFFER_DATAGRAM <> 0 then
-      NMRAnetBufferPools_ReleaseDatagramBuffer(PDatagramBuffer( Buffer^.BufferPtr))
-    else
-    if Buffer^.State and RMB_BUFFER_ACDI_RECEIVE <> 0 then
-      NMRAnetBufferPools_ReleaseACDI_ReceiveBuffer(PACDI_ReceiveBuffer( Buffer^.BufferPtr));
-      
-    Buffer^.State := RMB_EMPTY;
-    Dec(MessagePool.Count);
-  end
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindInProcessDatagramMessageBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function NMRAnetBufferPools_FindInProcessDatagramMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-begin
-  Result := FindMatchingStateMessageBuffer(RMB_ALLOCATED or RMB_BUFFER_DATAGRAM, Buffer);
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindInProcessACDIMessageBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function NMRAnetBufferPools_FindInProcessACDIMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-begin
-  Result := FindMatchingStateMessageBuffer(RMB_ALLOCATED or RMB_BUFFER_ACDI_RECEIVE, Buffer);
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindInProcessCDIMessageBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function NMRAnetBufferPools_FindInProcessCDIMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-begin
-  Result := FindMatchingStateMessageBuffer(RMB_ALLOCATED or RMB_BUFFER_CDI, Buffer);
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindInProcessStreamMessageBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function NMRAnetBufferPools_FindInProcessStreamMessageBuffer(var Buffer: PMessageBuffer): Boolean;
-begin
-  Result := FindMatchingStateMessageBuffer(RMB_ALLOCATED or RMB_BUFFER_STREAM, Buffer);
+    Buffer^.State := CBS_EMPTY;
+    Dec(BaseBufferPool.Count);
+  end;
 end;
 
 // *****************************************************************************
@@ -312,14 +216,14 @@ begin
   Result := False;
   for i := 0 to MAX_DATA_BUFFER_POOL - 1 do
   begin
-    if DataBufferPool.Pool[i].State = DBS_EMPTY then
+    if DataBufferPool.Pool[i].State = CBS_EMPTY then
     begin
       Buffer := @DataBufferPool.Pool[i];
       NMRAnetStateMachine_InitializeDataBuffer(Buffer);
-      Inc(DataBufferPool.Count);
+      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATABUFFER;
       if DataBufferPool.Count > DataBufferPool.MaxCount then
         DataBufferPool.MaxCount := DataBufferPool.Count;
-      Buffer^.State := DBS_ALLOCATED;
+      Inc(DataBufferPool.Count);
       Result := True;
       Break
     end
@@ -339,7 +243,7 @@ procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := DBS_EMPTY;
+    Buffer^.State := CBS_EMPTY;
     Dec(DataBufferPool.Count);
   end;
 end;
@@ -366,10 +270,10 @@ begin
       Buffer := @DatagramPool.Pool[i];
       Result := True;
       NMRAnetDatagrams_InitializeDatagramBuffer(Buffer);
-      Buffer^.State := DGS_ALLOCATED;
-      Inc(DatagramPool.Count);
+      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATAGRAM;
       if DatagramPool.Count > DatagramPool.MaxCount then
         DatagramPool.MaxCount := DatagramPool.Count;
+      Inc(DatagramPool.Count);
       Break
     end
   end
@@ -388,7 +292,7 @@ procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := DGS_EMPTY;
+    Buffer^.State := CBS_EMPTY;
     Dec(DatagramPool.Count);
   end;
 end;
@@ -414,10 +318,10 @@ begin
       Buffer := @ACDI_ReceiveBufferPool.Pool[i];
       Result := True;
       NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(Buffer);
-      Buffer^.State := ACDIS_ALLOCATED;
-      Inc(ACDI_ReceiveBufferPool.Count);
+      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_ACDI_RECEIVE;
       if ACDI_ReceiveBufferPool.Count > ACDI_ReceiveBufferPool.MaxCount then
         ACDI_ReceiveBufferPool.MaxCount := ACDI_ReceiveBufferPool.Count;
+      Inc(ACDI_ReceiveBufferPool.Count);
       Break
     end
   end
@@ -436,7 +340,7 @@ procedure NMRAnetBufferPools_ReleaseACDI_ReceiveBuffer(Buffer: PACDI_ReceiveBuff
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := ACDIS_EMPTY;
+    Buffer^.State := CBS_EMPTY;
     Dec(ACDI_ReceiveBufferPool.Count);
   end;
 end;
@@ -462,10 +366,10 @@ begin
       Buffer := @ACDI_TransmitBufferPool.Pool[i];
       Result := True;
       NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(Buffer);
-      Buffer^.State := ACDIS_ALLOCATED;
-      Inc(ACDI_TransmitBufferPool.Count);
+      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_ACDI_TRANSMIT;
       if ACDI_TransmitBufferPool.Count > ACDI_TransmitBufferPool.MaxCount then
         ACDI_TransmitBufferPool.MaxCount := ACDI_TransmitBufferPool.Count;
+      Inc(ACDI_TransmitBufferPool.Count);
       Break
     end
   end
@@ -484,7 +388,7 @@ procedure NMRAnetBufferPools_ReleaseACDI_TransmitBuffer(Buffer: PACDI_TransmitBu
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := ACDIS_EMPTY;
+    Buffer^.State := CBS_EMPTY;
     Dec(ACDI_TransmitBufferPool.Count);
   end;
 end;

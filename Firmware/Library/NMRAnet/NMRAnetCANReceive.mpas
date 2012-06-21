@@ -24,6 +24,7 @@ uses
   NMRAnetDefines,
   NMRAnetUtilities,
   NMRAnetBufferPools,
+  NMRAnetBufferPoolsDefines,
   NMRAnetNode,
   NMRAnetDatagrams,
   NMRAnetDatagramDefines,
@@ -88,68 +89,6 @@ begin
 end;
 
 // ****************************************************************************
-// procedure DispatchEventProducerIdenitify
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Complex Action
-//
-// ****************************************************************************
-procedure DispatchEventProducerIdenitify(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-  if NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes) then
-//    StoreComplexAction(NodeBuffer, CRC_SEND_PRODUCER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
-end;
-
-// ****************************************************************************
-// procedure DispatchEventProducerIdenitified
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Complex Action
-//
-// ****************************************************************************
-procedure DispatchEventProducerIdenitified(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-//  StoreComplexAction(NodeBuffer, CRC_PRODUCER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
-end;
-
-// ****************************************************************************
-// procedure DispatchEventConsumerIdenitify
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Complex Action
-//
-// ****************************************************************************
-procedure DispatchEventConsumerIdenitify(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-  if NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes) then
- //   StoreComplexAction(NodeBuffer, CRC_SEND_CONSUMER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
-end;
-
-// ****************************************************************************
-// procedure DispatchEventConsumerIdenitified
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Complex Action
-//
-// ****************************************************************************
-procedure DispatchEventConsumerIdenitified(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-//  StoreComplexAction(NodeBuffer, CRC_CONSUMER_IDENTIFIED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 8);
-end;
-
-// ****************************************************************************
 // procedure DispatchAbbreviatedCDIRequest
 //
 //  Action Layer:
@@ -186,29 +125,6 @@ begin
     DataBytes[1] := Hi( ActiveBuffer);
   //  StoreComplexAction(NodeBuffer, CRC_ACDI_REPLY, ActiveBuffer^.SourceAlias, @DataBytes, 2);
   end
-end;
-
-// ****************************************************************************
-// procedure DispatchProtocolSupportInquiry
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Complex Action
-//
-// ****************************************************************************
-procedure DispatchProtocolSupportInquiry(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-var
-  DataBytes: TCAN_DataBytes;
-  i, j: Integer;
-begin
-  NMRAnetUtilities_ZeroCANData(DataBytes);
-  DataBytes[0] := $2F;
-  for i := 0 to LEN_PIV_PROTOCOL-1 do
-    for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
-      DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
-//  StoreComplexAction(NodeBuffer, CRC_SEND_PROTOCOL_SUPPORT, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 7);
 end;
 
 // ****************************************************************************
@@ -273,7 +189,6 @@ end;
 procedure ReceivedOnFilter0(CANBuffer: PCANBuffer);                             // CAN Layer Message
 var
   DoDefault: Boolean;
-  MsgBuffer: PMessageBuffer;
   Node: PNMRAnetNode;
   NodeID: TNodeID;
 begin
@@ -343,10 +258,11 @@ end;
 procedure ReceivedOnFilter1(CANBuffer: PCANBuffer);                             // NMRAnet Layer Message
 var
   DoDefault: Boolean;
-  Buffer: PMessageBuffer;
   Node: PNMRAnetNode;
   NodeID: TNodeID;
   DataBuffer: PDataBuffer;
+  BaseBuffer: PBaseBuffer;
+  SourceAlias: Word;
 begin
 
   //UART1_Write_Text('NMRAnet'+LF);
@@ -359,7 +275,8 @@ begin
     
   if DoDefault then
   begin
-    Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractSourceAlias(CANBuffer));
+    SourceAlias := NMRAnetUtilities_ExtractSourceAlias(CANBuffer);
+    Node := NMRAnetNode_FindByAlias(SourceAlias);
     if Node <> nil then
     begin
       Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS                    // A "bad" duplicate Alias
@@ -381,29 +298,46 @@ begin
                                                                            end
                                                                         end;
                                      FT_CONSUMER_IDENTIFY             : begin 
-                                                                          // Need to store the 8 bit Event ID in the Message
-                                                                       //   if NMRAnetBufferPools_AllocateDataBuffer() then
+                                                                          if NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes) then
                                                                           begin
-                                                                      //      DataBuffer^.Count := CANBuffer^.DataCount;
-                                                                      //      DataBuffer^.DataBytes := CANBuffer^.DataBytes;
-                                                                     //       NMRAnetBufferPools_AssignBufferToNode(Node, Word( DataBuffer));
-                                                                          end;
+                                                                            if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
+                                                                            begin
+                                                                              NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( Pointer( DataBuffer)));
+                                                                              DataBuffer^.mCode := BMC_CONSUMER_IDENTIFY;
+                                                                              DataBuffer^.Alias := SourceAlias;
+                                                                              DataBuffer^.Count := CANBuffer^.DataCount;
+                                                                              DataBuffer^.DataBytes := CANBuffer^.DataBytes;
+                                                                            end
+                                                                          end
                                                                         end;
                                      FT_CONSUMER_IDENTIFY_RANGE       : begin 
                                                                           // TODO
                                                                         end;
-                                     FT_PRODUCER_IDENDIFY             : begin   
-                                                                       //   if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
+                                     FT_PRODUCER_IDENDIFY             : begin  
+                                                                          if NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes) then
                                                                           begin
-                                                                          end;
+                                                                            if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
+                                                                            begin
+                                                                              NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( Pointer( DataBuffer)));
+                                                                              DataBuffer^.mCode := BMC_PRODUCER_IDENTIFY;
+                                                                              DataBuffer^.Alias := SourceAlias;
+                                                                              DataBuffer^.Count := CANBuffer^.DataCount;
+                                                                              DataBuffer^.DataBytes := CANBuffer^.DataBytes;
+                                                                            end
+                                                                          end
                                                                         end;
                                      FT_PRODUCER_IDENTIFY_RANGE       : begin
                                                                           // TODO
                                                                         end;
                                      FT_EVENT_LEARN                   : begin 
-                                                                     //     if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
+                                                                        { if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
                                                                           begin
-                                                                          end;
+                                                                            NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( Pointer( DataBuffer)));
+                                                                            DataBuffer^.mCode := BMC_EVENT_LEARN;
+                                                                            DataBuffer^.Alias := SourceAlias;
+                                                                            DataBuffer^.Count := CANBuffer^.DataCount;
+                                                                            DataBuffer^.DataBytes := CANBuffer^.DataBytes;
+                                                                          end     }
                                                                         end;
                                      FT_EVENTS_IDENTIFY               : begin 
                                                                           NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_ALL_EVENTS);
@@ -434,7 +368,12 @@ begin
                                                                                                   end
                                                                                                 end;
                                                MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           : begin 
-                                                                                                  // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
+                                                                                                  if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
+                                                                                                  begin
+                                                                                                    NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
+                                                                                                    BaseBuffer^.mCode := BMC_PROTOCOL_SUPPORT_QUERY;
+                                                                                                    BaseBuffer^.Alias := SourceAlias
+                                                                                                  end
                                                                                                 end;  // DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_IDENTIFY_EVENTS                  : begin
                                                                                                   NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
@@ -444,13 +383,14 @@ begin
                                                                                                 end;  // DispatchAbbreviatedCDIRequest(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_DATAGRAM_RECIEVED_OK             : begin end;  // DispatchDatagramReceivedOk(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_DATAGRAM_REJECTED                : begin end  // DispatchDatagramRejected(NodeBuffer, CANBuffer)
-                                             else begin
-                                          //       DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
-                                         //        StoreComplexAction(NodeBuffer, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, CANBuffer^.ID and MASK_SOURCE_ALIAS, @DataBytes, 1);
+                                              else
+                                                if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
+                                                begin
+                                                  NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
+                                                  BaseBuffer^.mCode := BMC_OPTIONAL_INTERACTION_REJECTED;
+                                                  BaseBuffer^.Alias := SourceAlias
                                                 end;
-                                          //      else
-                                             //     NMRAnetNode_SetMsgFlag(Node, MF_OPTIONAL_INTERACTION_REJECTED);      // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
-                                              end
+                                              end;
                                            end;
                 MTI_DATAGRAM_ONLY_FRAME,
                 MTI_DATAGRAM_FRAME_START : begin

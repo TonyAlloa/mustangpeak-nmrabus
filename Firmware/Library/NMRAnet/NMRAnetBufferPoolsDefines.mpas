@@ -1,0 +1,53 @@
+unit NMRAnetBufferPoolsDefines;
+
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-06-20:   Created
+//
+// * Description:
+//
+// ******************************************************************************
+
+type
+  {$IFDEF P30}Pointer = Word;{$ENDIF}
+  {$IFDEF P33}Pointer = Word;{$ENDIF}
+  {$IFDEF P24}Pointer = Word;{$ENDIF}
+  {$IFDEF P32}Pointer = DWord;{$ENDIF}
+  
+const
+  CBS_EMPTY                                = $00;                               // CommonBufferState is empty and available
+  CBS_ALLOCATED                            = $01;                               // CommonBufferState is allocated but may be in Process, need to check for inprocess flags
+  CBS_BUFFER_BASE                          = $02;                               // CommonBufferState is a base Buffer
+  CBS_BUFFER_DATABUFFER                    = $04;                               // CommonBufferState is a DataBuffer with the 8 CAN bytes
+  CBS_BUFFER_DATAGRAM                      = $08;                               // CommonBufferState is process of receiving a Datagram
+  CBS_BUFFER_STREAM                        = $10;                               // CommonBufferState is in process of receiving a Stream
+  CBS_BUFFER_CDI                           = $20;                               // CommonBufferState is in process of receiving a CDI
+  CBS_BUFFER_ACDI_RECEIVE                  = $40;                               // CommonBufferState is in process of receiving a ACDI
+  CBS_BUFFER_ACDI_TRANSMIT                 = $80;                               // CommonBufferState is in process of receiving a ACDI
+  
+  BMC_PROTOCOL_SUPPORT_QUERY               = $01;                               // Buffer Message Code is a Protocol Support Query    [BaseBuffer]
+  BMC_PRODUCER_IDENTIFY                    = $02;                               // Buffer Message Code is Producer Identify           [DataBuffer]
+  BMC_CONSUMER_IDENTIFY                    = $03;                               // Buffer Message Code is Consumer Identify           [DataBuffer]
+  BMC_EVENT_LEARN                          = $04;                               // Buffer Message Code is Event Learn                 [BaseBuffer]
+  BMC_OPTIONAL_INTERACTION_REJECTED        = $05;
+  
+type
+  TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDataBuffer, TDatagramBuffer, ACDI_ReceiveBuffer, ACDI_TransmitBuffer, etc
+    State: Byte;                                                                // State of Buffer, see CBS_xxx constants
+    Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
+    Next: Pointer;                                                              // Pointer to the next Message Buffer
+    mCode: Byte;                                                                // Buffer Message Code for what the message was (not implemented on some buffers so be careful), see BMC_xxxx
+  end;
+  PBaseBuffer = ^TBaseBuffer;
+
+implementation
+
+end.

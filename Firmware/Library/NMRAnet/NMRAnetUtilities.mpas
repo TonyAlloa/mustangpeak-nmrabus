@@ -24,9 +24,9 @@ uses
   NMRAnetAppDefines,
   NMRAnetDefines,
   CANDefines,
+  NMRAnetBufferPoolsDefines,
   NMRAnetDatagramDefines;
-
-
+  
 procedure NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer);
 procedure NMRAnetUtilities_CreateCANControlFramePacket(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; VariableField: DWord);
 procedure NMRAnetUtilities_CreateNMRABusMessagePacket(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; VariableField: DWord; DestinationAliasID: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
@@ -52,6 +52,9 @@ function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
+
+procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
 
 implementation
 
@@ -533,6 +536,14 @@ begin
 end;
 
 
+// *****************************************************************************
+//  procedure NMRANetUtilities_LoadDatagramResultBytes
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 begin
   Datagram^.ErrorCode.MTI := MTI;
@@ -543,6 +554,42 @@ begin
     Datagram^.ErrorCode.SubType[1] := CodeType^[1];
   end else
     Datagram^.iByteCount := 1
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetUtilities_MsgBufferLink
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
+var
+  Temp: PBaseBuffer;
+begin
+  Temp := Node^.MsgBuffer;
+  while PBaseBuffer( Temp^.Next) <> 0 do
+    Temp := PBaseBuffer( Temp^.Next);
+  Temp^.Next := Buffer
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetUtilities_MsgBufferUnLink
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
+var
+  Temp: PBaseBuffer;
+begin
+  Buffer := Node^.MsgBuffer;
+  Temp := Node^.MsgBuffer^.Next;
+  Node^.MsgBuffer := Temp;
+
 end;
 
 end.

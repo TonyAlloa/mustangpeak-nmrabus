@@ -197,7 +197,7 @@ begin
   UART1_Write_Text('Mfg Version: ' + s1+LF);
   ByteToStr(ACDI_Buffer^.UserVersion, s1);
   UART1_Write_Text('User Version: ' + s1+LF);
-  WordToHex(ACDI_Buffer^.SourceAlias, s1);
+  WordToHex(ACDI_Buffer^.Alias, s1);
   UART1_Write_Text('Source Alias: ' + s1+LF);
   
   UART1_Write_Text(ACDI_Buffer^.Mfg+LF);
@@ -207,13 +207,6 @@ begin
   UART1_Write_Text(ACDI_Buffer^.UserName+LF);
   UART1_Write_Text(ACDI_Buffer^.UserDesc+LF);
   //ACDI_Buffer^.State := ACDI_BUFFER_STATE_EMPTY;                                     // Release the buffer
-end;
-
-procedure ComplexResponseCallback(Response: PMessageBuffer);
-begin
- // case Action^.nCode of
-  
- // end;
 end;
 
 // *******************

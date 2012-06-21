@@ -28,6 +28,7 @@ uses
   NMRAnetNode,
   NMRAnetDatagrams,
   NMRAnetBufferPools,
+  NMRAnetBufferPoolsDefines,
   NMRAnetDatagramDefines,
   NMRAnetConfigurationProtocol,
   NMRAnetConfigurationProtocolDefines,
@@ -43,7 +44,6 @@ uses
   procedure NMRAnetStateMachine_InitializeNode(Node: PNMRAnetNode; NodeID_HI, NodeID_Lo: DWord);
   procedure NMRAnetStateMachine_100ms_Timer(Node: PNMRAnetNode);
   
-  procedure NMRAnetStateMachine_InitializeMessageBuffer(Buffer: PMessageBuffer);
   procedure NMRAnetStateMachine_InitializeDataBuffer(Buffer: PDataBuffer);
   
   // Receive Callback Helper Functions.  This could be done with separate callbacks for different message
@@ -158,7 +158,7 @@ end;
 procedure FlushLists(Node: PNMRAnetNode);
 begin
 
- Need to only remove messages that match the passed Node!!!!!!!
+ //Need to only remove messages that match the passed Node!!!!!!!
  
   CANStorage_FlushList(@TX_CANBufferList);                                      // Flush any pending packets
   CANStorage_FlushList(@TX_NMRAnetBufferList);
@@ -212,24 +212,6 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure NMRAnetStateMachine_InitializeMessageBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-procedure NMRAnetStateMachine_InitializeMessageBuffer(Buffer: PMessageBuffer);
-begin
-  Buffer^.nCode := 0;
-  Buffer^.Alias := 0;
-  Buffer^.State := 0;
-  Buffer^.BufferPtr := 0;
-  Buffer^.NextPtr := 0;
-end;
-
-// *****************************************************************************
 //  procedure NMRAnetStateMachine_InitializeDataBuffer;
 //
 //  Parameters:
@@ -243,7 +225,8 @@ var
   i: Integer;
 begin
   Buffer^.Count := 0;
-  Buffer^.State := DBS_EMPTY;
+  Buffer^.State := CBS_EMPTY;
+  Buffer^.mCode := 0;
   for i := 0 to CAN_DATA_LEN - 1 do
     Buffer^.DataBytes[i] := 0;
 end;
@@ -258,7 +241,7 @@ end;
 // *****************************************************************************
 procedure NMRAnetStateMachine_InitializeNode(Node: PNMRAnetNode; NodeID_HI, NodeID_LO: DWord);
 begin
-  Node^.Msg := PMessageBuffer( nil);
+  Node^.MsgBuffer := PBaseBuffer( nil);
   Node^.State := 0;
   Node^.MsgFlags := 0;
   Node^.EventCounter := 0;
@@ -352,33 +335,6 @@ begin
   end
 end;
 
-// *****************************************************************************
-//  procedure SendNMRAnetLayerSimpleAction
-//
-//     Parameters:  Buffer - Buffer to load to send
-//                  VariableField - MIT Coding for the Message to Send
-//                  Flag - Flag to test for to decide if the Action is needed
-//                  NextState - next state in the statemachine once the Action is handled
-//
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure SendNMRAnetLayerSimpleAction(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; Flag: Word; NextState: Byte);
-begin
- { if Node^.Actions <> nil then
-  begin
-    if TestReceivedMsgFlags(Node, Flag) then
-      if TryTransmitNMRABusLayerMsg(Node, Buffer, VariableField, 0, 0, nil) then
-      begin
-        if SimpleActionCallbackFunc <> nil then
-          SimpleActionCallbackFunc(Node, Flag);
-        ClearReceivedMsgFlags(Node, Flag);
-      end;
-    Node^.Actions^.iState := NextState
-  end   }
-end;
 
 // *****************************************************************************
 //  procedure SendACDI_Request
@@ -522,6 +478,9 @@ const
 var
   LocalMsgFlags: Byte;
   DataBytes: TCAN_DataBytes;
+  i, j: Integer;
+  BaseBuffer: PBaseBuffer;
+  DataBuffer: PDataBuffer;
 
 begin 
   LocalMsgFlags := Node^.MsgFlags;
@@ -564,12 +523,6 @@ begin
       if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_VERIFIED_NODE_ID_NUMBER, 0, 6, @DataBytes) then
         NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
     end else
-    if NMRAnetNode_TestMsgFlags(Node, MF_PROTOCOL_SUPPORT_INQUIRY, False) then
-    begin                                             // I NEED THE DESTINATION NODE HERE BUT THAT IS ALL........................... HOW??????????
-    
-//      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, 0, 6, @DataBytes) then
-        NMRAnetNode_ClearMsgFlag(Node, MF_PROTOCOL_SUPPORT_INQUIRY);
-    end else
     if NMRAnetNode_TestMsgFlags(Node, MF_IDENTIFY_ALL_EVENTS, False) then
     begin
       if not NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then
@@ -580,7 +533,66 @@ begin
     end
   end else
   begin
-
+    if Node^.MsgBuffer <> 0 then
+    begin
+      if Node^.MsgBuffer^.State and CBS_BUFFER_BASE <> 0 then
+      begin
+        case Node^.MsgBuffer^.mCode of
+          BMC_PROTOCOL_SUPPORT_QUERY :        begin
+                                                NMRAnetUtilities_ZeroCANData(DataBytes);
+                                                DataBytes[0] := $2F;
+                                                for i := 0 to LEN_PIV_PROTOCOL-1 do
+                                                  for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
+                                                    DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
+                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, Node^.MsgBuffer^.Alias, 6, @DataBytes) then
+                                                begin
+                                                  NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
+                                                  NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
+                                                end;
+                                              end;
+          BMC_OPTIONAL_INTERACTION_REJECTED : begin
+                                                DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_OPTIONAL_INTERACTION_REJECTED, Node^.MsgBuffer^.Alias, 1, @DataBytes) then
+                                                begin
+                                                  NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
+                                                  NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
+                                                end;
+                                              end;
+        end;
+      end else
+      if Node^.MsgBuffer^.State and CBS_BUFFER_DATABUFFER <> 0 then
+      begin
+        case Node^.MsgBuffer^.mCode of
+          BMC_PRODUCER_IDENTIFY :             begin
+                                                DataBuffer := PDataBuffer( Pointer( Node^.MsgBuffer));
+                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PRODUCER_IDENTIFIED_UNKNOWN, 0, @DataBuffer^.Count, @DataBuffer^.DataBytes) then
+                                                begin
+                                                  NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
+                                                  NMRAnetBufferPools_ReleaseDataBuffer(PDataBuffer( Pointer( BaseBuffer)));
+                                                end;
+                                              end;
+          BMC_CONSUMER_IDENTIFY :             begin
+                                                DataBuffer := PDataBuffer( Pointer( Node^.MsgBuffer));
+                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED_UNKNOWN, 0, @DataBuffer^.Count, @DataBuffer^.DataBytes) then
+                                                begin
+                                                  NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
+                                                  NMRAnetBufferPools_ReleaseDataBuffer(PDataBuffer( Pointer( BaseBuffer)));
+                                                end;
+                                              end;
+          BMC_EVENT_LEARN :                   begin
+                                              end;
+        end;
+      end else
+      if Node^.MsgBuffer^.State and CBS_BUFFER_DATAGRAM <> 0 then
+      begin
+      end else
+      if Node^.MsgBuffer^.State and CBS_BUFFER_ACDI_RECEIVE <> 0 then
+      begin
+      end else
+      if Node^.MsgBuffer^.State and CBS_BUFFER_ACDI_TRANSMIT <> 0 then
+      begin
+      end
+    end
   end;
   
   // Chugging through the Event Enumeration is lowest on the list of priorites so it
@@ -627,18 +639,6 @@ begin
           STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS        : SendNMRALayerSimpleSendAllConsumerProducer(Node, Buffer, STATE_NMRABUS_RESPONSE_SEND_OPTIONAL_INTERACTION_REJECTED);
           STATE_NMRABUS_RESPONSE_SEND_OPTIONAL_INTERACTION_REJECTED : SendNMRAnetLayerComplexAction(Node, Buffer, FT_OPTIONAL_INTERACTION_REJECTED, ADDRESSED, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_SEND_ACDI_REQUEST);
           STATE_NMRABUS_SEND_ACDI_REQUEST                           : SendACDI_Request(Node, STATE_NMRABUS_SEND_ACDI_REQUEST, STATE_NMRABUS_DATAGRAM_RECEIVED_OK);
-
-          // These Actions do NOT need a predefined Action message sent
-          STATE_NMRABUS_DATAGRAM_RECEIVED_OK                        : DispatchDatagramAction(Node, CRC_DATAGRAM_RECEIVED_OK, STATE_NMRABUS_DATAGRAM_REJECTED);
-          STATE_NMRABUS_DATAGRAM_REJECTED                           : DispatchDatagramAction(Node, CRC_DATAGRAM_REJECTED, STATE_NMRABUS_RESPONSE_CONSUMER_IDENTIFIED);
-          STATE_NMRABUS_RESPONSE_CONSUMER_IDENTIFIED                : DispatchMessageAction(Node, CRC_CONSUMER_IDENTIFIED, STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED);
-          STATE_NMRABUS_RESPONSE_PRODUCER_IDENTIFIED                : DispatchMessageAction(Node, CRC_PRODUCER_IDENTIFIED, STATE_NMRABUS_RESPONSE_AMR);
-          STATE_NMRABUS_RESPONSE_AMR                                : DispatchMessageAction(Node, CRC_AMR, STATE_NMRABUS_RESPONSE_AMD);
-          STATE_NMRABUS_RESPONSE_AMD                                : DispatchMessageAction(Node, CRC_AMD, STATE_NMRABUS_RESPONSE_PC_EVENT_REPORT);
-          STATE_NMRABUS_RESPONSE_PC_EVENT_REPORT                    : DispatchMessageAction(Node, CRC_PC_EVENT_REPORT, STATE_NMRABUS_VERIFIED_NODE_ID);
-          STATE_NMRABUS_VERIFIED_NODE_ID                            : DispatchMessageAction(Node, CRC_VERIFIED_NODE_ID, STATE_NMRABUS_ACDI_REPLY);
-          STATE_NMRABUS_ACDI_REPLY                                  : DispatchACDI_ReplyAction(Node, CRC_ACDI_REPLY, STATE_NMRABUS_RESPONSE_SEND_RID)
-
         else
           Node^.Actions^.iState := STATE_NMRABUS_RESPONSE_SEND_RID;
         end;

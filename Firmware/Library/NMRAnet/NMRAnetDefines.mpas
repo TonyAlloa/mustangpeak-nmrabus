@@ -17,12 +17,13 @@ unit NMRAnetDefines;
 //
 // *****************************************************************************
 
-{$I Options.inc}
-
 uses
+  NMRAnetBufferPoolsDefines,
   CANDefines,
   NMRAnetAbbreviatedConfigurationProtocolDefines,
   NMRAnetDatagramDefines;
+  
+{$I Options.inc}
 
 const
   MAX_BUS_LOGIN_TIMEOUT = 3;                                                  // Number of 100ms time tick to wait for a node to send a RID to signal a duplicate Alais
@@ -193,38 +194,25 @@ type
   // to be summed together into a single response.  Other actions need to know more information
   // such as the node Alias the action needs to be sent to.  These are stored in the QueuedActionList
   
-
+// MOVE TO OPTIONS.INC or NMRAnetAppDefines.mpas
 const
-  DBS_EMPTY              = $00;                                                 // DataBuffer States
-  DBS_ALLOCATED          = $01;
+  MAX_BASE_BUFFER_POOL             = 4;                                         // Number of Base Buffers to allocate for Messages
+  MAX_DATA_BUFFER_POOL             = 4;                                         // Number of CAN DataByte Buffers to allocate for Messages
+  MAX_DATAGRAM_BUFFER_POOL         = 2;                                         // Number of Datagram Buffers to allocate for Messages
+  MAX_ACDI_RECEIVE_BUFFER_POOL     = 2;                                         // Number of ACDI Buffers to allocate for Messages
+  MAX_ACDI_TRANSMIT_BUFFER_POOL    = 1;                                         // Number of ACDI Buffers to allocate for Messages
+
 
 type
-  TDataBuffer = record
-    State: Byte;                                                                // State of Buffer, see DBS_xxx constants
+  TDataBuffer = record                                                          // Overlays TBaseBuffer..........
+    State: Byte;                                                                // State of Buffer, see CBS_xxx constants
+    Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
+    Next: Pointer;                                                              // Pointer to the next Message Buffer
+    mCode: Byte;                                                                // Message Code for what the message was (not implemented on some buffers so be careful
     Count: Byte;                                                                // Number of Databytes that are valid
     DataBytes: TCAN_DataBytes;                                                  // Depends on nCode, could be EventID, Datagram type, etc
   end;
   PDataBuffer = ^TDataBuffer;
-
-const
-  RMB_EMPTY                = $00;                                                // ReceiveMessageBuffer is empty and available
-  RMB_ALLOCATED            = $01;                                                // ReceiveMessageBuffer is allocated but may be in Process, need to check for inprocess flags
-  RMB_BUFFER_DATAGRAM      = $02;                                                // ReceiveMessageBuffer is process of receiving a Datagram
-  RMB_BUFFER_STREAM        = $04;                                                // ReceiveMessageBuffer is in process of receiving a Stream
-  RMB_BUFFER_CDI           = $08;                                                // ReceiveMessageBuffer is in process of receiving a CDI
-  RMB_BUFFER_ACDI_RECEIVE  = $10;                                                // ReceiveMessageBuffer is in process of receiving a ACDI
-  RMB_BUFFER_ACDI_TRANSMIT = $20;                                                // ReceiveMessageBuffer is in process of receiving a ACDI
-  RMB_BUFFER_DATABUFFER    = $40;                                                // PDataBuffer
-
-type
-  TMessageBuffer = record
-    nCode: Word;                                                                // When a message is received a code is assigned to it.  See the CRC_xxx constants
-    Alias: Word;                                                                // The node that the message was sent from/to
-    State: Byte;                                                                // State of the Message buffer, see the RMB_xxx constants
-    BufferPtr: Word;                                                            // Pointer to the buffer used in the message (PDataBuffer, PDatagramBuffer, PACDI_ReceiveBuffer, PACDI_TransmitBuffer)
-    NextPtr: Word;                                                              // Pointer to the Next Linked Message Buffer
-  end;
-  PMessageBuffer = ^TMessageBuffer;
 
 type
   TNodeIDs = record
@@ -254,8 +242,7 @@ const
 
   MF_ALIAS_MAP_ENQUIRY        = $08;                                            // MsgFlag, an AMD message need to be responded to
   MF_VERIFY_NODE_ID           = $10;                                            // MsgFlag, a Verify Node ID message needs to be responded to
-  MF_PROTOCOL_SUPPORT_INQUIRY = $20;                                            // MsgFlag, a Protocol Support Inquiry (PIP) message needs to be responded to
-  MF_IDENTIFY_ALL_EVENTS      = $40;                                            // MsgFlag, an Identify Events message needs to be responded to
+  MF_IDENTIFY_ALL_EVENTS      = $20;                                            // MsgFlag, an Identify Events message needs to be responded to
 
 type
   TNMRAnetNodeLoginInfo = record
@@ -270,15 +257,15 @@ type
     MsgFlags: Byte;                                                             // Message Flags for messages that do not require information to be passed to the Node
     iStateMachine: Byte;                                                        // Statemachine index for the main bus login
     EventCounter: Word;                                                         // Counts the Events when enumerating them
-    Msg: PMessageBuffer;                                                        // Message to handle
+    MsgBuffer: PBaseBuffer;                                                     // Message to handle
     DatagramOverflowList: TDatagramOverflowList;                                // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;
   PNMRAnetNode = ^TNMRAnetNode;
   
 type
-  TSimpleActionCallbackFunc = procedure(NodeBuffer: PNMRAnetNode; Action: Word);                      // Action is the SRC_xxxx code of the Action
+  TSimpleActionCallbackFunc = procedure(NodeBuffer: PNMRAnetNode);                      // Action is the SRC_xxxx code of the Action
   PSimpleActionCallbackFunc = ^TSimpleActionCallbackFunc;
-  TComplexActionCallbackFunc = procedure(NodeBuffer: PNMRAnetNode; Msg: PMessageBuffer);
+  TComplexActionCallbackFunc = procedure(NodeBuffer: PNMRAnetNode);
   PComplexActionCallbackFunc = ^TComplexActionCallbackFunc;
   
 type

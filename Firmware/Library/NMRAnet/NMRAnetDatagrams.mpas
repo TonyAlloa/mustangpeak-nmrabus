@@ -157,7 +157,7 @@ procedure NMRAnetDatagrams_100ms_TimeTick(Node: PNMRAnetNode);
 var
   DatagramBuffer: PDatagramBuffer;
 begin
-  if Node^.Msg <> nil then
+{  if Node^.Msg <> nil then
   begin
     if Node^.Msg^.State and RMB_BUFFER_DATAGRAM <> 0 then                                           // See if the buffer is a Datagram Pointer
     begin
@@ -165,7 +165,7 @@ begin
       if DatagramBuffer^.iWatchdog < DATAGRAM_WATCHDOG_MAX then                 // Latch it at DATAGRAM_WATCHDOG_MAX
         Inc( DatagramBuffer^.iWatchdog)                                          // Increase the Watchdog counter
     end
-  end;
+  end; }
 end;
 
 // *****************************************************************************

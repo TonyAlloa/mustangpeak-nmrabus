@@ -54,7 +54,7 @@ begin
   if ReceiveBuffer <> nil then
   begin
     ReceiveBuffer^.State := ACDIS_EMPTY;
-    ReceiveBuffer^.SourceAlias := 0;
+    ReceiveBuffer^.Alias := 0;
     ReceiveBuffer^.iStateMachine := STATE_ACDI_RECEIVE_MFG_VERSION;
     for j := 0 to ACDI_LEN_MFG-1 do                                             // Not needed just helps with debugging
       ReceiveBuffer^.Mfg[j] := $FF;
@@ -116,7 +116,7 @@ procedure NMRAnetAbbreviatedConfigurationProtocol_100ms_TimeTick(Node: PNMRAnetN
 var
   ACDI_RxBuffer: PACDI_ReceiveBuffer;
 begin
-  if Node^.Msg <> nil then
+{  if Node^.Msg <> nil then
   begin
     if Node^.Msg^.State and RMB_BUFFER_ACDI_RECEIVE <> 0 then                   // See if the buffer is a ACDI Receive Pointer
     begin
@@ -124,7 +124,7 @@ begin
       if ACDI_RxBuffer^.iWatchdog < ACDI_WATCHDOG_MAX then                      // Latch it at ACDI_WATCHDOG_MAX
         Inc( ACDI_RxBuffer^.iWatchdog)                                          // Increase the Watchdog counter
     end
-  end;
+  end;    }
 end;
 
 // *****************************************************************************
