@@ -152,11 +152,14 @@ end;
 //     Parameters:
 //     Returns:
 //
-//     Description: Clears the lists
+//     Description: Clears the lists of messages for the passed node
 //
 // *****************************************************************************
-procedure FlushLists;
+procedure FlushLists(Node: PNMRAnetNode);
 begin
+
+ Need to only remove messages that match the passed Node!!!!!!!
+ 
   CANStorage_FlushList(@TX_CANBufferList);                                      // Flush any pending packets
   CANStorage_FlushList(@TX_NMRAnetBufferList);
 end;
@@ -514,7 +517,7 @@ procedure ProcessNode(Node: PNMRAnetNode; Buffer: PCANBuffer);
 const
   ADDRESSED = True;
   NONADDRESSED = False;
-  CRITICAL_MSG_MASK = MF_DUPLICATE_NODE_ID or MF_DUPLICATE_ALIAS;
+  CRITICAL_MSG_MASK = MF_DUPLICATE_NODE_ID or MF_DUPLICATE_ALIAS or MF_DUPLICATE_ALIAS_RID;
 
 var
   LocalMsgFlags: Byte;
@@ -522,6 +525,9 @@ var
 
 begin 
   LocalMsgFlags := Node^.MsgFlags;
+  
+  // The first thing to check is for duplicate Node ID's or Aliases and handle
+  // them first and exclusively
   if LocalMsgFlags <> 0 then
   begin
     if LocalMsgFlags and CRITICAL_MSG_MASK <> 0 then                            // Subdivide to Critical vs. Noncritical messages
@@ -532,62 +538,73 @@ begin
       else
       if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then          // Jump Statemachine here
         Node^.iStateMachine := STATE_NMRABUS_INHIBITED
-    end else
-    begin
-      // Non Critical Fault Messages that require a response
+      else
       if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS_RID, False) then
       begin
          if TryTransmitCANLayerMsg(Node, Buffer, FT_RID) then
            NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_ALIAS_RID);
-      end else
-      if NMRAnetNode_TestMsgFlags(Node, MF_ALIAS_MAP_ENQUIRY, False) then
+      end;
+      Exit;                                                                     // Bad things happening, exit
+    end
+  end;
+  
+
+  
+  if LocalMsgFlags <> 0 then
+  begin
+    // Non Critical Fault Messages that require a response
+    if NMRAnetNode_TestMsgFlags(Node, MF_ALIAS_MAP_ENQUIRY, False) then
+    begin
+       if TryTransmitCANLayerMsg(Node, Buffer, FT_AMD) then                   // DataBytes get loaded automatically
+         NMRAnetNode_ClearMsgFlag(Node, MF_ALIAS_MAP_ENQUIRY);
+    end else
+    if NMRAnetNode_TestMsgFlags(Node, MF_VERIFY_NODE_ID, False) then
+    begin
+      NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @DataBytes);
+      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_VERIFIED_NODE_ID_NUMBER, 0, 6, @DataBytes) then
+        NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
+    end else
+    if NMRAnetNode_TestMsgFlags(Node, MF_PROTOCOL_SUPPORT_INQUIRY, False) then
+    begin                                             // I NEED THE DESTINATION NODE HERE BUT THAT IS ALL........................... HOW??????????
+    
+//      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, 0, 6, @DataBytes) then
+        NMRAnetNode_ClearMsgFlag(Node, MF_PROTOCOL_SUPPORT_INQUIRY);
+    end else
+    if NMRAnetNode_TestMsgFlags(Node, MF_IDENTIFY_ALL_EVENTS, False) then
+    begin
+      if not NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then
       begin
-         if TryTransmitCANLayerMsg(Node, Buffer, FT_AMD) then                   // DataBytes get loaded automatically
-           NMRAnetNode_ClearMsgFlag(Node, MF_ALIAS_MAP_ENQUIRY);
-      end else
-      if NMRAnetNode_TestMsgFlags(Node, MF_VERIFY_NODE_ID, False) then
-      begin
-        NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @DataBytes);
-        if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_VERIFIED_NODE_ID_NUMBER, 0, 6, @DataBytes) then
-          NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
-      end else
-      if NMRAnetNode_TestMsgFlags(Node, MF_PROTOCOL_SUPPORT_INQUIRY, False) then
-      begin                                             // I NEED THE DESTINATION NODE HERE BUT THAT IS ALL........................... HOW??????????
-  //      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, 0, 6, @DataBytes) then
-          NMRAnetNode_ClearMsgFlag(Node, MF_PROTOCOL_SUPPORT_INQUIRY);
-      end else
-      if NMRAnetNode_TestMsgFlags(Node, MF_IDENTIFY_ALL_EVENTS, False) or NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then
-      begin
-        if not NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then
-        begin
-          NMRAnetNode_SetStateFlag(Node, NS_ENUMERATING_EVENTS);                // Enumerating is just starting, kick it off
-          NMRAnetNode_ClearMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);               // Allow another node to set the flag
-        end else
-        begin
-          {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
-          if Node^.EventCounter < MAX_SUPPORTED_EVENTS_PRODUCED then
-          begin
-            if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_PRODUCED[Node^.EventCounter]) then
-              Inc(Node^.EventCounter);
-          end else
-          {$ENDIF}
-          {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
-          if Node^EventCounter < MAX_SUPPORTED_EVENTS then
-          begin
-            if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_CONSUMED[Node^.EventCounter-MAX_SUPPORTED_EVENTS_PRODUCED]) then
-              Inc(Node^.EventCounter);
-          end else
-          {$ENDIF}
-          begin
-            Node^.EventCounter := 0;                                            // Done
-            NMRAnetNode_ClearStateFlag(Node, NS_ENUMERATING_EVENTS);
-          end
-        end
-      end
+        NMRAnetNode_SetStateFlag(Node, NS_ENUMERATING_EVENTS);                // Enumerating is just starting, kick it off
+        NMRAnetNode_ClearMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);               // Allow another node to set the flag
+      end   
     end
   end else
   begin
 
+  end;
+  
+  // Chugging through the Event Enumeration is lowest on the list of priorites so it
+  // gets the last crack at succeeding at the end of the statemachine
+  if NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then                // Last in priority to send the Event Lists
+  begin
+   {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
+    if Node^.EventCounter < MAX_SUPPORTED_EVENTS_PRODUCED then
+    begin
+      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_PRODUCED[Node^.EventCounter]) then
+        Inc(Node^.EventCounter);
+    end else
+    {$ENDIF}
+    {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
+    if Node^EventCounter < MAX_SUPPORTED_EVENTS then
+    begin
+      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_CONSUMED[Node^.EventCounter-MAX_SUPPORTED_EVENTS_PRODUCED]) then
+        Inc(Node^.EventCounter);
+    end else
+    {$ENDIF}
+    begin
+      Node^.EventCounter := 0;                                            // Done
+      NMRAnetNode_ClearStateFlag(Node, NS_ENUMERATING_EVENTS);
+    end
   end;
 
  {
@@ -646,7 +663,7 @@ begin
   case Node^.iStateMachine of
     STATE_NMRABUS_START :
       begin
-        FlushLists;
+        FlushLists(Node);
         while CAN_Engine.State and CES_TRANSMITTING <> 0 do;                             // Wait for the last transmited packet
         Node^.iStateMachine := STATE_NMRABUS_GENERATE_NODE_ALIAS;
       end;
@@ -745,7 +762,7 @@ begin
       begin
         if TryTransmitCANLayerMsg(Node, @Buffer, FT_AMR) then
         begin
-          FlushLists;
+          FlushLists(Node);
           ReleaseActions(Node);
           NMRAnetNode_ClearStateFlag(Node, NS_PERMITTED);
           NMRAnetNode_ClearMsgFlags(Node);
@@ -759,7 +776,7 @@ begin
       begin
         if TryTransmitCANLayerMsg(Node, @Buffer, FT_AMR) then
         begin
-          FlushLists;
+          FlushLists(Node);
           ReleaseActions(Node);
           NMRAnetNode_ClearStateFlag(Node, NS_PERMITTED);
           NMRAnetNode_ClearMsgFlags(Node);

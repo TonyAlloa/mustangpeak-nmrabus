@@ -437,7 +437,7 @@ begin
                                                                                                   // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
                                                                                                 end;  // DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_IDENTIFY_EVENTS                  : begin
-                                                                                                  NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_ALL_EVENTS);
+                                                                                                  NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
                                                                                                 end;
                                                MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin 
                                                                                                     // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????

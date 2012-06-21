@@ -58,10 +58,8 @@ type
 
   TCANRawBufferArray = array[0..0] of TCANRawBuffer;                            // Allows any length array within the TCANRawBufferList
   PCANRawBufferArray = ^TCANRawBufferArray;
-
 const
   CBS_EXTENDED     = $01;                                                       // CAN Buffer State constants, Buffer is extended
-  CBS_VIRTUALNODE  = $02;                                                       // CAN Buffer is a Virtual Node ID and not the Physical Node ID
 
 type
  // ***************************************************************************
