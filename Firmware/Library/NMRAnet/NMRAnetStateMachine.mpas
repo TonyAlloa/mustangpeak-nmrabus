@@ -224,9 +224,11 @@ procedure NMRAnetStateMachine_InitializeDataBuffer(Buffer: PDataBuffer);
 var
   i: Integer;
 begin
-  Buffer^.Count := 0;
   Buffer^.State := CBS_EMPTY;
   Buffer^.mCode := 0;
+  Buffer^.Alias := 0;
+  Buffer^.Next := 0;
+  Buffer^.Count := 0;
   for i := 0 to CAN_DATA_LEN - 1 do
     Buffer^.DataBytes[i] := 0;
 end;
@@ -551,7 +553,7 @@ begin
                                                 end;
                                               end;
           BMC_OPTIONAL_INTERACTION_REJECTED : begin
-                                                DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_OPTIONAL_INTERACTION_REJECTED, Node^.MsgBuffer^.Alias, 1, @DataBytes) then
                                                 begin
                                                   NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
@@ -592,9 +594,23 @@ begin
       if Node^.MsgBuffer^.State and CBS_BUFFER_ACDI_TRANSMIT <> 0 then
       begin
       end
+    end;
+    
+    if Nodes.GlobalMsgFlags and GMF_IDENTIFY_CONSUMER <> 0 then
+    begin
+    
+      // ENUMERATE THE NODES AND CHECK FOR A MATCH IN ID, MAKE REFERENCE COUNTED DATA BUFFERS FOR THIS SO WE CAN SHARE THE MESSAGE BUFFER FOR ALL NODES
+    
+    end else
+    if Nodes.GlobalMsgFlags and GMF_IDENTIFY_PRODUCER <> 0 then
+    begin
+
+       // ENUMERATE THE NODES AND CHECK FOR A MATCH IN ID, MAKE REFERENCE COUNTED DATA BUFFERS FOR THIS SO WE CAN SHARE THE MESSAGE BUFFER FOR ALL NODES
+       
     end
   end;
   
+
   // Chugging through the Event Enumeration is lowest on the list of priorites so it
   // gets the last crack at succeeding at the end of the statemachine
   if NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then                // Last in priority to send the Event Lists

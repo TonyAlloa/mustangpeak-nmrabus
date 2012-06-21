@@ -53,7 +53,7 @@ function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 
-procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: Pointer);
 procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
 
 implementation
@@ -564,14 +564,18 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: Pointer);
 var
   Temp: PBaseBuffer;
 begin
-  Temp := Node^.MsgBuffer;
-  while PBaseBuffer( Temp^.Next) <> 0 do
-    Temp := PBaseBuffer( Temp^.Next);
-  Temp^.Next := Buffer
+  if Node^.MsgBuffer = 0 then
+    Node^.MsgBuffer := Buffer
+  else begin
+    Temp := Node^.MsgBuffer;
+    while Temp^.Next <> 0 do
+      Temp := Temp^.Next;
+    Temp^.Next := Buffer
+  end
 end;
 
 // *****************************************************************************

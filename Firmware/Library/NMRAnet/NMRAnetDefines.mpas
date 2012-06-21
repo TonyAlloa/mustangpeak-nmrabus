@@ -234,6 +234,8 @@ const
   NS_INITIALIZED          = $04;                                                // NodeState Message Layer has sent its first Initialize Complete Message
   NS_VIRTUAL              = $08;                                                // NodeState If is a virtual node
   NS_ENUMERATING_EVENTS   = $10;                                                // Node is enumerating all events
+  NS_IDENTIFYING_PRODUCERS = $20;
+  NS_IDENTIFYING_CONSUMERS = $40;
   
   // MsgFlags in order of precidence (= 0 highest precidence)
   MF_DUPLICATE_NODE_ID        = $01;                                            // MsgFlag, a Duplicate Node ID was detected, critical fault
@@ -257,7 +259,7 @@ type
     MsgFlags: Byte;                                                             // Message Flags for messages that do not require information to be passed to the Node
     iStateMachine: Byte;                                                        // Statemachine index for the main bus login
     EventCounter: Word;                                                         // Counts the Events when enumerating them
-    MsgBuffer: PBaseBuffer;                                                     // Message to handle
+    MsgBuffer: PBaseBuffer;                                                     // Messages to handle in a linked list
     DatagramOverflowList: TDatagramOverflowList;                                // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
   end;
   PNMRAnetNode = ^TNMRAnetNode;

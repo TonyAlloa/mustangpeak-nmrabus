@@ -248,13 +248,9 @@ begin
     
     ActiveNode := NMRAnetNode_NextNode;
 
-  //  UART1_Write_Text('X'+LF);
-    
     if ActiveNode <> PNMRAnetNode( nil) then
     begin
-    
-  //  UART1_Write_Text('P'+LF);
-    
+
       NMRAnetStateMachine_Process(ActiveNode);
 
       if NMRAnetNode_TestStateFlag(ActiveNode, NS_PERMITTED) then
@@ -263,10 +259,20 @@ begin
       end;
     end;
     
-  // if i = 200 then
+   if i = 1000 then
     begin
-      NMRAnetNode_Allocate;
+    //  NMRAnetNode_Allocate;
       
+      { IntToStr(BaseBufferPool.MaxCount, s1);
+       UART1_Write_Text('BaseBufferPool Max Count: '+s1+LF);
+       IntToStr(BaseBufferPool.Count, s1);
+       UART1_Write_Text('BaseBufferPool Count: '+s1+LF);
+       IntToStr(DataBufferPool.MaxCount, s1);
+       UART1_Write_Text('DataBufferPool Max Count: '+s1+LF);
+       IntToStr(DataBufferPool.Count, s1);
+       UART1_Write_Text('DataBufferPool Count: '+s1+LF);  }
+       
+
         {  UART1_Write_Text(LF+'*****************'+LF);
           UART1_Write_Text('RAW'+LF);
           for i := 0 to Nodes.Count - 1 do
@@ -281,9 +287,9 @@ begin
             UART1_Write_Text(s1+LF);
           end;
           UART1_Write_Text(LF+'*****************'+LF);  }
-   //   i := 0;
+      i := 0;
     end;
- //   Inc(i);
+    Inc(i);
       
   end;
 end.

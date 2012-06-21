@@ -83,16 +83,16 @@ procedure NMRAnetBufferPools_ReleaseACDI_TransmitBuffer(Buffer: PACDI_TransmitBu
   procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(ReceiveBuffer: PACDI_ReceiveBuffer); external;
   procedure NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(TransmitBuffer: PACDI_TransmitBuffer); external;
 
-
-  
-implementation
-
 var
   BaseBufferPool: TBaseBufferPool;
   DataBufferPool: TDataBufferPool;
   DatagramPool: TDatagramBufferPool;
   ACDI_ReceiveBufferPool: TACDI_ReceiveBufferPool;
   ACDI_TransmitBufferPool: TACDI_TransmitBufferPool;
+  
+implementation
+
+
 
 
 // *****************************************************************************
