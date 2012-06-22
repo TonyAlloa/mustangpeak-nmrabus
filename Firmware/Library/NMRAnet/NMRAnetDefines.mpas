@@ -208,6 +208,7 @@ type
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
     Next: Pointer;                                                              // Pointer to the next Message Buffer
+    RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Message Code for what the message was (not implemented on some buffers so be careful
     Count: Byte;                                                                // Number of Databytes that are valid
     DataBytes: TCAN_DataBytes;                                                  // Depends on nCode, could be EventID, Datagram type, etc

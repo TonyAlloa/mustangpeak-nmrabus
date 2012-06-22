@@ -63,7 +63,7 @@ type
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
     Next: Pointer;                                                              // Pointer to the next Message Buffer
-    
+    RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     iNextChar: Word;                                                            // Next character is stored for the ACDI string
     DestAlias: Word;                                                            // Who to send it to
     SourceAlias: Word;                                                          // Who is sending it
@@ -77,6 +77,7 @@ type
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
     Next: Pointer;                                                              // Pointer to the next Message Buffer
+    RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     iStateMachine: Byte;                                                        // Statemachine index for Buffer
     iWatchdog: Word;                                                            // Watch for abandon Buffers
     MfgVersion: Byte;                                                           // Version ID for the ACDI

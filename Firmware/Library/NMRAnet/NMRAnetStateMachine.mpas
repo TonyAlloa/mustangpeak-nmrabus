@@ -18,6 +18,7 @@ unit NMRAnetStateMachine;
 // ******************************************************************************
 
 uses
+  NMRAnetNodeDefines,
   NMRAnetEventDefines,
   NMRAnetAppDefines,
   NMRAnetDefines,
@@ -229,6 +230,7 @@ begin
   Buffer^.Alias := 0;
   Buffer^.Next := 0;
   Buffer^.Count := 0;
+  Buffer^.RefCount := 0;
   for i := 0 to CAN_DATA_LEN - 1 do
     Buffer^.DataBytes[i] := 0;
 end;
@@ -596,17 +598,38 @@ begin
       end
     end;
     
-    if Nodes.GlobalMsgFlags and GMF_IDENTIFY_CONSUMER <> 0 then
+    if Nodes.MsgBuffer <> nil then
     begin
-    
-      // ENUMERATE THE NODES AND CHECK FOR A MATCH IN ID, MAKE REFERENCE COUNTED DATA BUFFERS FOR THIS SO WE CAN SHARE THE MESSAGE BUFFER FOR ALL NODES
-    
-    end else
-    if Nodes.GlobalMsgFlags and GMF_IDENTIFY_PRODUCER <> 0 then
-    begin
+      DataBuffer := PDataBuffer( Pointer( Node^.MsgBuffer));
+      case Nodes.MsgBuffer^.mCode of
+        BMC_PRODUCER_IDENTIFY:    begin
+                                    if NMRAnetUtilities_SupportsEventAsProducer(@DataBuffer^.DataBytes) then
+                                    begin
+                                      LockCANInterrupt;                                                     // Need to split off Node 0 (physical) as a different possibility of Producers/Consumers.....
+                                      for i := 0 to Nodes.Count - 1 do
+                                        NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], DataBuffer);
+                                      UnLockCANInterrupt;
+                                    end else
+                                    begin
+                                      DataBuffer^.RefCount := 1;
+                                      NMRAnetUtilities_MsgBufferUnLinkNodes(@Nodes, DataBuffer)
+                                    end
+                                  end;
+      BMC_CONSUMER_IDENTIFY:    begin
+                                    if NMRAnetUtilities_SupportsEventAsConsumer(@DataBuffer^.DataBytes) then
+                                    begin
+                                      LockCANInterrupt;
+                                      for i := 0 to Nodes.Count - 1 do
+                                        NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], DataBuffer);
+                                      UnLockCANInterrupt;
+                                    end else
+                                    begin
+                                      DataBuffer^.RefCount := 1;
+                                      NMRAnetUtilities_MsgBufferUnLinkNodes(@Nodes, DataBuffer)
+                                    end
+                                  end;
+      end;
 
-       // ENUMERATE THE NODES AND CHECK FOR A MATCH IN ID, MAKE REFERENCE COUNTED DATA BUFFERS FOR THIS SO WE CAN SHARE THE MESSAGE BUFFER FOR ALL NODES
-       
     end
   end;
   
@@ -643,17 +666,6 @@ begin
       begin
         case Node^.Actions^.iState of
           // These Actions needs a Action message sent and were queued up at the Interrupt level automagically
-          STATE_NMRABUS_RESPONSE_SEND_RID                          : SendCANLayerSimpleAction(Node, Buffer, FT_RID, SRC_SEND_RID, STATE_NMRABUS_RESPONSE_SEND_AMD);
-          STATE_NMRABUS_RESPONSE_SEND_AMD                          : SendCANLayerSimpleAction(Node, Buffer, FT_AMD, SRC_SEND_AMD, STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE);
-          STATE_NMRABUS_RESPONSE_SEND_VERIFIED_NODE                : SendNMRAnetLayerSimpleAction(Node, Buffer, FT_VERIFIED_NODE_ID_NUMBER, SRC_SEND_VERIFIED_NODE, STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT);
-          STATE_NMRABUS_RESPONSE_SEND_PROTOCOL_SUPPORT             : SendNMRAnetLayerComplexAction(Node, Buffer, FT_PROTOCOL_SUPPORT_RESPONSE, ADDRESSED, CRC_SEND_PROTOCOL_SUPPORT, STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED);                           // Simple Action
-          STATE_NMRABUS_RESPONSE_SEND_CONSUMER_IDENTIFIED          : SendNMRAnetLayerComplexAction(Node, Buffer, FT_CONSUMER_IDENTIFIED, NONADDRESSED, CRC_SEND_CONSUMER_IDENTIFIED, STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED);
-          STATE_NMRABUS_RESPONSE_SEND_PRODUCER_IDENTIFIED          : begin
-                                                                       SendNMRAnetLayerComplexAction(Node, Buffer, FT_PRODUCER_IDENTIFIED, NONADDRESSED, CRC_SEND_PRODUCER_IDENTIFIED, STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS);
-                                                                       Node^.Actions^.Tag := 0;   // Get ready for next state
-                                                                      end;
-          STATE_NMRABUS_RESPONSE_SEND_ALL_CONSUMER_PRODUCERS        : SendNMRALayerSimpleSendAllConsumerProducer(Node, Buffer, STATE_NMRABUS_RESPONSE_SEND_OPTIONAL_INTERACTION_REJECTED);
-          STATE_NMRABUS_RESPONSE_SEND_OPTIONAL_INTERACTION_REJECTED : SendNMRAnetLayerComplexAction(Node, Buffer, FT_OPTIONAL_INTERACTION_REJECTED, ADDRESSED, CRC_SEND_OPTIONAL_INTERACTION_REJECTED, STATE_NMRABUS_SEND_ACDI_REQUEST);
           STATE_NMRABUS_SEND_ACDI_REQUEST                           : SendACDI_Request(Node, STATE_NMRABUS_SEND_ACDI_REQUEST, STATE_NMRABUS_DATAGRAM_RECEIVED_OK);
         else
           Node^.Actions^.iState := STATE_NMRABUS_RESPONSE_SEND_RID;

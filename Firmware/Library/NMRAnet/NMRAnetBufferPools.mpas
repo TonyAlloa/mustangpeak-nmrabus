@@ -175,6 +175,7 @@ begin
       if BaseBufferPool.Count > BaseBufferPool.MaxCount then
         BaseBufferPool.MaxCount := BaseBufferPool.Count;
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_BASE;
+      Inc(Buffer^.RefCount);
       Inc(BaseBufferPool.Count);
       Result := True;
       Break
@@ -195,8 +196,12 @@ procedure NMRAnetBufferPools_ReleaseBaseBuffer(Buffer: PBaseBuffer);
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := CBS_EMPTY;
-    Dec(BaseBufferPool.Count);
+    Inc(Buffer^.RefCount);
+    if Buffer^.RefCount = 0 then
+    begin
+      Buffer^.State := CBS_EMPTY;
+      Dec(BaseBufferPool.Count);
+    end
   end;
 end;
 
@@ -223,6 +228,7 @@ begin
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATABUFFER;
       if DataBufferPool.Count > DataBufferPool.MaxCount then
         DataBufferPool.MaxCount := DataBufferPool.Count;
+      Inc(Buffer^.RefCount);
       Inc(DataBufferPool.Count);
       Result := True;
       Break
@@ -243,8 +249,12 @@ procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := CBS_EMPTY;
-    Dec(DataBufferPool.Count);
+    Inc(Buffer^.RefCount);
+    if Buffer^.RefCount = 0 then
+    begin
+      Buffer^.State := CBS_EMPTY;
+      Dec(BaseBufferPool.Count);
+    end
   end;
 end;
 
@@ -273,6 +283,7 @@ begin
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATAGRAM;
       if DatagramPool.Count > DatagramPool.MaxCount then
         DatagramPool.MaxCount := DatagramPool.Count;
+      Inc(Buffer^.RefCount);
       Inc(DatagramPool.Count);
       Break
     end
@@ -292,8 +303,12 @@ procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := CBS_EMPTY;
-    Dec(DatagramPool.Count);
+    Inc(Buffer^.RefCount);
+    if Buffer^.RefCount = 0 then
+    begin
+      Buffer^.State := CBS_EMPTY;
+      Dec(BaseBufferPool.Count);
+    end
   end;
 end;
 
@@ -321,6 +336,7 @@ begin
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_ACDI_RECEIVE;
       if ACDI_ReceiveBufferPool.Count > ACDI_ReceiveBufferPool.MaxCount then
         ACDI_ReceiveBufferPool.MaxCount := ACDI_ReceiveBufferPool.Count;
+      Inc(Buffer^.RefCount);
       Inc(ACDI_ReceiveBufferPool.Count);
       Break
     end
@@ -340,8 +356,12 @@ procedure NMRAnetBufferPools_ReleaseACDI_ReceiveBuffer(Buffer: PACDI_ReceiveBuff
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := CBS_EMPTY;
-    Dec(ACDI_ReceiveBufferPool.Count);
+    Inc(Buffer^.RefCount);
+    if Buffer^.RefCount = 0 then
+    begin
+      Buffer^.State := CBS_EMPTY;
+      Dec(BaseBufferPool.Count);
+    end
   end;
 end;
 
@@ -369,6 +389,7 @@ begin
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_ACDI_TRANSMIT;
       if ACDI_TransmitBufferPool.Count > ACDI_TransmitBufferPool.MaxCount then
         ACDI_TransmitBufferPool.MaxCount := ACDI_TransmitBufferPool.Count;
+      Inc(Buffer^.RefCount);
       Inc(ACDI_TransmitBufferPool.Count);
       Break
     end
@@ -388,8 +409,12 @@ procedure NMRAnetBufferPools_ReleaseACDI_TransmitBuffer(Buffer: PACDI_TransmitBu
 begin
   if Buffer <> nil then
   begin
-    Buffer^.State := CBS_EMPTY;
-    Dec(ACDI_TransmitBufferPool.Count);
+    Inc(Buffer^.RefCount);
+    if Buffer^.RefCount = 0 then
+    begin
+      Buffer^.State := CBS_EMPTY;
+      Dec(BaseBufferPool.Count);
+    end
   end;
 end;
 

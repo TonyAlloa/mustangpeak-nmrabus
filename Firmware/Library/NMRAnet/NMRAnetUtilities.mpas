@@ -20,6 +20,7 @@ unit NMRAnetUtilities;
 {$I Options.inc}
 
 uses
+  NMRAnetNodeDefines,
   NMRAnetEventDefines,
   NMRAnetAppDefines,
   NMRAnetDefines,
@@ -54,7 +55,9 @@ function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 
 procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: Pointer);
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: Pointer);
+procedure NMRAnetUtilities_MsgBufferLinkNodes(Nodes: PNodes; Buffer: Pointer);
+procedure NMRAnetUtilities_MsgBufferUnLinkNodes(Nodes: PNodes; var Buffer: Pointer);
 
 implementation
 
@@ -586,14 +589,52 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: Pointer);
 var
   Temp: PBaseBuffer;
 begin
   Buffer := Node^.MsgBuffer;
   Temp := Node^.MsgBuffer^.Next;
   Node^.MsgBuffer := Temp;
+end;
 
+// *****************************************************************************
+//  procedure NMRAnetUtilities_MsgBufferLinkNodes
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRAnetUtilities_MsgBufferLinkNodes(Nodes: PNodes; Buffer: Pointer);
+var
+  Temp: PBaseBuffer;
+begin
+  if Nodes^.MsgBuffer = 0 then
+    Nodes^.MsgBuffer := Buffer
+  else begin
+    Temp := Nodes^.MsgBuffer;
+    while Temp^.Next <> 0 do
+      Temp := Temp^.Next;
+    Temp^.Next := Buffer
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetUtilities_MsgBufferUnLinkNodes
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure NMRAnetUtilities_MsgBufferUnLinkNodes(Nodes: PNodes; var Buffer: Pointer);
+var
+  Temp: PBaseBuffer;
+begin
+  Buffer := Nodes^.MsgBuffer;
+  Temp := Nodes^.MsgBuffer^.Next;
+  Nodes^.MsgBuffer := Temp;
 end;
 
 end.

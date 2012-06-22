@@ -298,42 +298,35 @@ begin
                                                                            end
                                                                         end;
                                      FT_CONSUMER_IDENTIFY             : begin 
-                                                                        {  if NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes) then
+                                                                          if NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes) then
                                                                           begin
-
-                                                                          NODE IS NOT VALID HERE>>>>>>>  HOW DO WE DO THIS??????   DO WE HAVE TIME TO CHECK ALL VNODES TO SEE IF THEY SUPPORT THIS?
-
                                                                             if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
                                                                             begin
-                                                                              NMRAnetUtilities_MsgBufferLink(Node, DataBuffer);
+                                                                              NMRAnetUtilities_MsgBufferLinkNodes(@Nodes, DataBuffer);
+                                                                              DataBuffer^.RefCount := Nodes.Count;  // Assume they all will be getting the buffer for now
                                                                               DataBuffer^.mCode := BMC_CONSUMER_IDENTIFY;
                                                                               DataBuffer^.Alias := SourceAlias;
                                                                               DataBuffer^.Count := CANBuffer^.DataCount;
                                                                               DataBuffer^.DataBytes := CANBuffer^.DataBytes;
                                                                             end
-                                                                          end    }
+                                                                          end
                                                                         end;
                                      FT_CONSUMER_IDENTIFY_RANGE       : begin 
                                                                           // TODO
                                                                         end;
                                      FT_PRODUCER_IDENDIFY             : begin  
-                                     
-                                                                   {       THIS NEEDS TO BE DONE TO ALL NODES HOW DO WE DO THIS??????
-                                                                          
                                                                           if NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes) then
                                                                           begin
                                                                             if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
                                                                             begin
-                                                                            
-                                                                            NODE IS NOT VALID HERE  >>>>>>>  THIS NEEDS TO BE DONE TO ALL NODES HOW DO WE DO THIS??????
-                                                                            
-                                                                              NMRAnetUtilities_MsgBufferLink(Node, DataBuffer);
+                                                                              NMRAnetUtilities_MsgBufferLinkNodes(@Nodes, DataBuffer);
+                                                                              DataBuffer^.RefCount := Nodes.Count;  // Assume they all will be getting the buffer for now
                                                                               DataBuffer^.mCode := BMC_PRODUCER_IDENTIFY;
                                                                               DataBuffer^.Alias := SourceAlias;
                                                                               DataBuffer^.Count := CANBuffer^.DataCount;
                                                                               DataBuffer^.DataBytes := CANBuffer^.DataBytes;
                                                                             end
-                                                                          end   }
+                                                                          end
                                                                         end;
                                      FT_PRODUCER_IDENTIFY_RANGE       : begin
                                                                           // TODO
@@ -341,10 +334,8 @@ begin
                                      FT_EVENT_LEARN                   : begin 
                                                                         { if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
                                                                           begin
-                                                                          
-                                                                           NODE IS NOT VALID HERE>>>>>>>  HOW DO WE DO THIS??????
-                                                                          
-                                                                            NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( Pointer( DataBuffer)));
+                                                                            NMRAnetUtilities_MsgBufferLink(@Nodes, DataBuffer);
+                                                                            DataBuffer^.RefCount := Nodes.Count;  // Assume they all will be getting the buffer for now
                                                                             DataBuffer^.mCode := BMC_EVENT_LEARN;
                                                                             DataBuffer^.Alias := SourceAlias;
                                                                             DataBuffer^.Count := CANBuffer^.DataCount;

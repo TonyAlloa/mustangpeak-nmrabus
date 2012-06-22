@@ -55,6 +55,9 @@ begin
   begin
     ReceiveBuffer^.State := ACDIS_EMPTY;
     ReceiveBuffer^.Alias := 0;
+    ReceiveBuffer^.RefCount := 0;
+    ReceiveBuffer^.Next := 0;
+    ReceiveBuffer^.iWatchdog := 0;
     ReceiveBuffer^.iStateMachine := STATE_ACDI_RECEIVE_MFG_VERSION;
     for j := 0 to ACDI_LEN_MFG-1 do                                             // Not needed just helps with debugging
       ReceiveBuffer^.Mfg[j] := $FF;
@@ -88,6 +91,9 @@ begin
     TransmitBuffer^.DestAlias := 0;
     TransmitBuffer^.SourceAlias := 0;
     TransmitBuffer^.iNextChar := 0;
+    TransmitBuffer^.RefCount := 0;
+    TransmitBuffer^.Next := 0;
+    TransmitBuffer^.Alias := 0;
   end
 end;
 

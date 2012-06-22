@@ -18,6 +18,7 @@ unit NMRAnetNode;
 // *****************************************************************************
 
 uses
+  NMRAnetNodeDefines,
   CANDefines,
   NMRAnetUtilities,
   NMRAnetBufferPoolsDefines,
@@ -26,23 +27,6 @@ uses
   NMRAnetDatagramDefines,
   NMRAnetConfigurationProtocolDefines,
   NMRAnetAbbreviatedConfigurationProtocolDefines;
-  
-const
-  GMF_IDENTIFY_PRODUCER = $01;
-  GMF_IDENTIFY_CONSUMER = $02;
-  
-  
-type
-  TNodes = record
-    RawList: array[0..MAX_NODE_COUNT-1] of TNMRAnetNode;                              // Node [0] is ALWAYS the physical node
-    AllocatedList: array[0..MAX_NODE_COUNT-1] of PNMRAnetNode;
-    Count: Integer;
-    iActiveNode: Word;
-    GlobalMsgFlags: Byte;                                                       // Message flags for messages that occur which effect all vNodes but don't have time to enumerate them in the interrupt.  Need to handle in main loop
-    MsgBuffer: PBaseBuffer;                                                     // Messages to handle in a linked list
-  end;
-
-  
   
   procedure NMRAnetNode_Initialize(PhysicalNodeID_HI, PhysicalNodeID_Lo: DWord);
   function NMRAnetNode_Allocate: PNMRAnetNode;
@@ -244,7 +228,6 @@ var
 begin
   Nodes.iActiveNode := 0;
   Nodes.Count := 0;
-  Nodes.GlobalMsgFlags := 0;
   Nodes.MsgBuffer := 0;
   for i := 0 to MAX_NODE_COUNT - 1 do
     NMRAnetStateMachine_InitializeNode(@Nodes.RawList[i], PhysicalNodeID_HI, PhysicalNodeID_LO + i);  // Physical Node + i MUST FIT IN THE LOWER 3 BYTES
