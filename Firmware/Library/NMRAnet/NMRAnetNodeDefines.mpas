@@ -1,0 +1,20 @@
+unit NMRAnetNodeDefines;
+
+uses
+  NMRAnetBufferPoolsDefines,
+  NMRAnetAppDefines,
+  NMRAnetDefines;
+  
+type
+  TNodes = record
+    RawList: array[0..MAX_NODE_COUNT-1] of TNMRAnetNode;                         // Node [0] is ALWAYS the physical node
+    AllocatedList: array[0..MAX_NODE_COUNT-1] of PNMRAnetNode;
+    Count: Integer;
+    iActiveNode: Word;
+    MsgBuffer: PBaseBuffer;                                                     // Messages to handle in a linked list
+  end;
+  PNodes = ^TNodes;
+
+implementation
+
+end.
