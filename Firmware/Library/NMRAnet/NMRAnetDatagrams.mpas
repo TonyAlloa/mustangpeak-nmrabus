@@ -681,6 +681,7 @@ procedure AddToBufferOverflowList(Node: PNMRAnetNode; Datagram: PDatagramBuffer)
 var
   i: Integer;
 begin
+  i := 0;
   while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
   begin
     if Node^.DatagramOverflowList[i] = 0 then

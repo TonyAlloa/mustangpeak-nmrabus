@@ -49,15 +49,17 @@ procedure NMRAnetUtilities_LoadCANData(var DataBytes: TCAN_DataBytes; Byte0, Byt
 procedure NMRAnetUtilities_ZeroCANData(var DataBytes: TCAN_DataBytes);
 function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): DWord;
 function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
+
 function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID): Boolean;
+function NMRAnetUtilities_SupportsVNodeEventAsProducer(DataBytes: PEventID): Boolean;
+function NMRAnetUtilities_SupportsVNodeEventAsConsumer(DataBytes: PEventID): Boolean;
 function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
+
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 
 procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: Pointer);
 procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: Pointer);
-procedure NMRAnetUtilities_MsgBufferLinkNodes(Nodes: PNodes; Buffer: Pointer);
-procedure NMRAnetUtilities_MsgBufferUnLinkNodes(Nodes: PNodes; var Buffer: Pointer);
 
 implementation
 
@@ -538,6 +540,64 @@ begin
   {$ENDIF}
 end;
 
+// *****************************************************************************
+//  procedure NMRAnetUtilities_SupportsVNodeEventAsProducer
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRAnetUtilities_SupportsVNodeEventAsProducer(DataBytes: PEventID): Boolean;
+{$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_PRODUCED_EVENT}
+var
+  i: Integer;
+{$ENDIF}
+begin
+  Result := False;
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_PRODUCED_EVENT}
+  i := 0;
+  while (i < MAX_VNODE_SUPPORTED_EVENTS_PRODUCED) do
+  begin
+    if NMRAnetUtilities_EqualEventID(@SUPPORTED_VNODE_EVENTS_PRODUCED[i], DataBytes) then
+    begin
+      Result := True;
+      Break
+    end;
+    Inc(i)
+  end;
+  {$ENDIF}
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetUtilities_SupportsVNodeEventAsConsumer
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRAnetUtilities_SupportsVNodeEventAsConsumer(DataBytes: PEventID): Boolean;
+{$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT}
+var
+  i: Integer;
+{$ENDIF}
+begin
+  Result := False;
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT}
+  i := 0;
+  while (i < MAX_VNODE_SUPPORTED_EVENTS_CONSUMED) and not Result do
+  begin
+    if NMRAnetUtilities_EqualEventID(@SUPPORTED_VNODE_EVENTS_CONSUMED[i], DataBytes) then
+    begin
+      Result := True;
+      Exit
+    end;
+    Inc(i)
+  end
+  {$ENDIF}
+end;
+
 
 // *****************************************************************************
 //  procedure NMRANetUtilities_LoadDatagramResultBytes
@@ -571,8 +631,8 @@ procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: Pointer);
 var
   Temp: PBaseBuffer;
 begin
-  if Node^.MsgBuffer = 0 then
-    Node^.MsgBuffer := Buffer
+  if Node^.MsgBuffer = nil then
+    Node^.MsgBuffer := PBaseBuffer( Buffer)
   else begin
     Temp := Node^.MsgBuffer;
     while Temp^.Next <> 0 do
@@ -598,43 +658,5 @@ begin
   Node^.MsgBuffer := Temp;
 end;
 
-// *****************************************************************************
-//  procedure NMRAnetUtilities_MsgBufferLinkNodes
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferLinkNodes(Nodes: PNodes; Buffer: Pointer);
-var
-  Temp: PBaseBuffer;
-begin
-  if Nodes^.MsgBuffer = 0 then
-    Nodes^.MsgBuffer := Buffer
-  else begin
-    Temp := Nodes^.MsgBuffer;
-    while Temp^.Next <> 0 do
-      Temp := Temp^.Next;
-    Temp^.Next := Buffer
-  end
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetUtilities_MsgBufferUnLinkNodes
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferUnLinkNodes(Nodes: PNodes; var Buffer: Pointer);
-var
-  Temp: PBaseBuffer;
-begin
-  Buffer := Nodes^.MsgBuffer;
-  Temp := Nodes^.MsgBuffer^.Next;
-  Nodes^.MsgBuffer := Temp;
-end;
 
 end.

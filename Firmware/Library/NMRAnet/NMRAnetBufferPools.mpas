@@ -196,7 +196,7 @@ procedure NMRAnetBufferPools_ReleaseBaseBuffer(Buffer: PBaseBuffer);
 begin
   if Buffer <> nil then
   begin
-    Inc(Buffer^.RefCount);
+    Dec(Buffer^.RefCount);
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;
@@ -249,7 +249,7 @@ procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
 begin
   if Buffer <> nil then
   begin
-    Inc(Buffer^.RefCount);
+    Dec(Buffer^.RefCount);
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;
@@ -303,7 +303,7 @@ procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
 begin
   if Buffer <> nil then
   begin
-    Inc(Buffer^.RefCount);
+    Dec(Buffer^.RefCount);
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;
@@ -356,7 +356,7 @@ procedure NMRAnetBufferPools_ReleaseACDI_ReceiveBuffer(Buffer: PACDI_ReceiveBuff
 begin
   if Buffer <> nil then
   begin
-    Inc(Buffer^.RefCount);
+    Dec(Buffer^.RefCount);
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;
@@ -409,7 +409,7 @@ procedure NMRAnetBufferPools_ReleaseACDI_TransmitBuffer(Buffer: PACDI_TransmitBu
 begin
   if Buffer <> nil then
   begin
-    Inc(Buffer^.RefCount);
+    Dec(Buffer^.RefCount);
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;

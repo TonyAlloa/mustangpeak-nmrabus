@@ -11,7 +11,6 @@ type
     AllocatedList: array[0..MAX_NODE_COUNT-1] of PNMRAnetNode;
     Count: Integer;
     iActiveNode: Word;
-    MsgBuffer: PBaseBuffer;                                                     // Messages to handle in a linked list
   end;
   PNodes = ^TNodes;
 

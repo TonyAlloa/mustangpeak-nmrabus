@@ -597,42 +597,7 @@ begin
       begin
       end
     end;
-    
-    if Nodes.MsgBuffer <> nil then
-    begin
-      DataBuffer := PDataBuffer( Pointer( Node^.MsgBuffer));
-      case Nodes.MsgBuffer^.mCode of
-        BMC_PRODUCER_IDENTIFY:    begin
-                                    if NMRAnetUtilities_SupportsEventAsProducer(@DataBuffer^.DataBytes) then
-                                    begin
-                                      LockCANInterrupt;                                                     // Need to split off Node 0 (physical) as a different possibility of Producers/Consumers.....
-                                      for i := 0 to Nodes.Count - 1 do
-                                        NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], DataBuffer);
-                                      UnLockCANInterrupt;
-                                    end else
-                                    begin
-                                      DataBuffer^.RefCount := 1;
-                                      NMRAnetUtilities_MsgBufferUnLinkNodes(@Nodes, DataBuffer)
-                                    end
-                                  end;
-      BMC_CONSUMER_IDENTIFY:    begin
-                                    if NMRAnetUtilities_SupportsEventAsConsumer(@DataBuffer^.DataBytes) then
-                                    begin
-                                      LockCANInterrupt;
-                                      for i := 0 to Nodes.Count - 1 do
-                                        NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], DataBuffer);
-                                      UnLockCANInterrupt;
-                                    end else
-                                    begin
-                                      DataBuffer^.RefCount := 1;
-                                      NMRAnetUtilities_MsgBufferUnLinkNodes(@Nodes, DataBuffer)
-                                    end
-                                  end;
-      end;
-
-    end
   end;
-  
 
   // Chugging through the Event Enumeration is lowest on the list of priorites so it
   // gets the last crack at succeeding at the end of the statemachine
@@ -641,19 +606,33 @@ begin
    {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
     if Node^.EventCounter < MAX_SUPPORTED_EVENTS_PRODUCED then
     begin
-      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_PRODUCED[Node^.EventCounter]) then
-        Inc(Node^.EventCounter);
+      if Node^.State and NS_VIRTUAL <> nil then
+      begin
+        if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_VNODE_EVENTS_PRODUCED[Node^.EventCounter]) then
+          Inc(Node^.EventCounter);
+      end else
+      begin
+        if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_PRODUCED[Node^.EventCounter]) then
+          Inc(Node^.EventCounter);
+      end
     end else
     {$ENDIF}
     {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
-    if Node^EventCounter < MAX_SUPPORTED_EVENTS then
+    if Node^.EventCounter < MAX_SUPPORTED_EVENTS then
     begin
-      if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_CONSUMED[Node^.EventCounter-MAX_SUPPORTED_EVENTS_PRODUCED]) then
-        Inc(Node^.EventCounter);
+      if Node^.State and NS_VIRTUAL <> nil then
+      begin
+        if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_VNODE_EVENTS_CONSUMED[Node^.EventCounter-MAX_SUPPORTED_EVENTS_PRODUCED]) then
+          Inc(Node^.EventCounter);
+      end else
+      begin
+        if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, @SUPPORTED_EVENTS_CONSUMED[Node^.EventCounter-MAX_SUPPORTED_EVENTS_PRODUCED]) then
+          Inc(Node^.EventCounter);
+      end;
     end else
     {$ENDIF}
     begin
-      Node^.EventCounter := 0;                                            // Done
+      Node^.EventCounter := 0;                                                  // Done
       NMRAnetNode_ClearStateFlag(Node, NS_ENUMERATING_EVENTS);
     end
   end;

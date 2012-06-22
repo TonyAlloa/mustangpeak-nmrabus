@@ -26,7 +26,15 @@ const
   ABBREVIATED_CDI_USER_NAME = 'Rico District';
   ABBREVIATED_CDI_USER_DISC = 'DCC Command Station';
   
-  MAX_NODE_COUNT = 1;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
+  ABBREVIATED_CDI_MFG_VNODE = 'Mustangpeak';
+  ABBREVIATED_CDI_MFG_NAME_VNODE = 'MN101';
+  ABBREVIATED_CDI_MFG_HW_VER_VNODE = '1.0.0';
+  ABBREVIATED_CDI_MFG_SW_VER_VNODE = '0.0.1';
+
+  ABBREVIATED_CDI_USER_NAM_VNODEE = 'Mobile Node';
+  ABBREVIATED_CDI_USER_DISC_VNODE = 'DCC Decoder';
+  
+  MAX_NODE_COUNT = 17;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
                               // If the lower bits of this node are $0300 then the first Virtual Node is $0301 and the last is $0309 if the VIRTUAL_NODE_COUNT = 9
                               // It also MUST fall within the lower 3 byte boundry (this is due to the way I have defined HI/LO as 3 byte) so the max virtual nodes is 4095 with a base
                               // physical node starting at $0000;
@@ -50,13 +58,32 @@ const
   // Defined the Values of the Events that are Consumed and Produced by this Node
   {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
   SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
-    ($05, $01, $01, $01, $07, $00, $FF, $FF)
+    ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
   );
   {$ENDIF}
   {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
   SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
     ($01, $10, $00, $00, $00, $00, $01, $00),                                   // EVENT_LC_DISTRICT_NODE
     ($01, $10, $00, $00, $00, $00, $01, $01),                                   // EVENT_LC_PROGRAMMING_NODE
+    ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
+  );
+  {$ENDIF}
+  
+  // Set the number of Events that are Consumed and Produced by this Node
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT} MAX_VNODE_SUPPORTED_EVENTS_CONSUMED = 1; {$ELSE} MAX_VNODE_SUPPORTED_EVENTS_CONSUMED = 0; {$ENDIF}
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_PRODUCED_EVENT} MAX_VNODE_SUPPORTED_EVENTS_PRODUCED = 2; {$ELSE} MAX_VNODE_SUPPORTED_EVENTS_PRODUCED = 0; {$ENDIF}
+
+  MAX_VNODE_SUPPORTED_EVENTS = MAX_VNODE_SUPPORTED_EVENTS_PRODUCED + MAX_VNODE_SUPPORTED_EVENTS_CONSUMED;
+
+  // Defined the Values of the Events that are Consumed and Produced by this Node
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT}
+  SUPPORTED_VNODE_EVENTS_CONSUMED: array[0..MAX_VNODE_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
+    ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
+  );
+  {$ENDIF}
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_PRODUCED_EVENT}
+  SUPPORTED_VNODE_EVENTS_PRODUCED: array[0..MAX_VNODE_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
+    ($01, $10, $00, $00, $00, $00, $01, $03),                                   // EVENT_LC_MOBILE_NODE
     ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
   );
   {$ENDIF}
