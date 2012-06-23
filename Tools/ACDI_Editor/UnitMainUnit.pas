@@ -171,16 +171,16 @@ begin
   Result := '';
   Str := Trim(Str);
   for i := 1 to Length(Str) do
-    Result := Result + IntToStr( Ord(Str[i])) + ',';
+    Result := Result + '$' + IntToHex( Ord(Str[i]), 2) + ',';
   if IsVersion then
   begin
     Result := '      '+Result + '  // Version = ' + Str
   end else
   begin
     if EndComma then
-      Result := '      '+Result + IntToStr( Ord(#0)) + ',  // ' + Str
+      Result := '      '+Result + '$' + IntToHex( Ord(#0), 2) + ',  // ' + Str
     else
-      Result := '      '+Result + IntToStr( Ord(#0))+'  // ' + Str
+      Result := '      '+Result + '$' + IntToHex( Ord(#0), 2)+'  // ' + Str
   end
 end;
 
