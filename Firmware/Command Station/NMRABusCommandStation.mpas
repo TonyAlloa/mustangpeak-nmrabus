@@ -130,7 +130,7 @@ end;
 var
   ActiveNode: PNMRAnetNode;
   i: Integer;
-  x: Word;
+  x, y: Word;
 
 begin
   Track_DCC_Out_Pin := 0;
@@ -162,6 +162,8 @@ begin
 
   
   x := 0;
+  y := 0;
+  MaxTime_StateMachine := 0;
 
   while (TRUE) do
   begin
@@ -171,19 +173,30 @@ begin
         
     if x <> MaxTime_RX then
     begin
-      WordToStr(MaxTime_RX, s1);
-      UART1_Write_Text('MaxTime_RX count: '+s1+LF);
       FloatToStr(double(MaxTime_RX)*50e-3, s1);
-      UART1_Write_Text(s1+'us'+LF);
+      UART1_Write_Text('Interrupt Time: '+s1+'us'+LF);
       x := MaxTime_RX
+    end;
+    
+    if y <> MaxTime_StateMachine then
+    begin
+      FloatToStr(MaxTime_StateMachine*50e-3, s1);
+      UART1_Write_Text('Statemachine Time: '+s1+'us'+LF);
+      y := MaxTime_StateMachine
     end;
     
     ActiveNode := NMRAnetNode_NextNode;
 
     if ActiveNode <> PNMRAnetNode( nil) then
     begin
+    
 
+      TMR4 := 0;
       NMRAnetStateMachine_Process(ActiveNode);
+      if TMR4 > MaxTime_StateMachine then
+      begin
+        MaxTime_StateMachine := TMR4;
+      end;
 
       if NMRAnetNode_TestStateFlag(ActiveNode, NS_PERMITTED) then
       begin
