@@ -64,6 +64,7 @@ procedure NMRAnetCANReceive_Initialize;
 begin
   CANLayerReceiveHook := PPacketHandlerFunc( nil);
   NMRAnetLayerReceiveHook := PPacketHandlerFunc( nil);
+  MaxTime_RX := 0;
 end;
   
 // ****************************************************************************
@@ -265,6 +266,9 @@ var
   SourceAlias: Word;
   VNodeSupports, PhysicalNodeSupports: Boolean;
   i: Integer;
+  
+  
+  s1: array[0..32] of char;
 begin
 
   //UART1_Write_Text('NMRAnet'+LF);
@@ -300,9 +304,11 @@ begin
                                                                            end
                                                                         end;
                                      FT_CONSUMER_IDENTIFY             : begin 
-                                                                          VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsConsumer(@CANBuffer^.DataBytes);
+                                                                          if Nodes.Count > 1 then    // First node is the Virtual Node, do we have any vNodes Allocated?
+                                                                            VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsConsumer(@CANBuffer^.DataBytes)
+                                                                          else
+                                                                            VNodeSupports := False;
                                                                           PhysicalNodeSupports := NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes);
-                                                                          
                                                                           if VNodeSupports or PhysicalNodeSupports then
                                                                           begin
                                                                             if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
@@ -311,18 +317,25 @@ begin
                                                                               DataBuffer^.Alias := SourceAlias;
                                                                               DataBuffer^.Count := CANBuffer^.DataCount;
                                                                               DataBuffer^.DataBytes := CANBuffer^.DataBytes;
-                                                                              
-                                                                              if VNodeSupports then
+                                                                              DataBuffer^.RefCount := 0;                         // We manipulate this manually
+
+                                                                              for i := 0 to Nodes.Count - 1 do
                                                                               begin
-                                                                                DataBuffer^.RefCount := Nodes.Count - 1;
-                                                                                for i := 1 to Nodes.Count - 1 do
-                                                                                  NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], DataBuffer);
-                                                                              end;
-                                                                              
-                                                                              if PhysicalNodeSupports then
-                                                                              begin
-                                                                                NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[0], @DataBuffer);    //  Store it in the Nodes structure to distribute later
-                                                                                Inc(DataBuffer^.RefCount);
+                                                                                if Nodes.AllocatedList[i]^.State and NS_VIRTUAL <> 0 then
+                                                                                begin
+                                                                                  if VNodeSupports then
+                                                                                  begin
+                                                                                    NMRAnetUtilities_MsgBufferLink(Nodes.AllocatedList[i], DataBuffer);
+                                                                                    Inc(DataBuffer^.RefCount);
+                                                                                  end
+                                                                                end else
+                                                                                begin
+                                                                                  if PhysicalNodeSupports then
+                                                                                  begin
+                                                                                    NMRAnetUtilities_MsgBufferLink(Nodes.AllocatedList[i], DataBuffer);
+                                                                                    Inc(DataBuffer^.RefCount);
+                                                                                  end
+                                                                                end
                                                                               end
                                                                             end
                                                                           end
@@ -331,7 +344,10 @@ begin
                                                                           // TODO
                                                                         end;
                                      FT_PRODUCER_IDENDIFY             : begin  
-                                                                          VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsProducer(@CANBuffer^.DataBytes);
+                                                                          if Nodes.Count > 1 then     // First node is the Virtual Node, do we have any vNodes Allocated?
+                                                                            VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsProducer(@CANBuffer^.DataBytes)
+                                                                          else
+                                                                            VNodeSupports := False;
                                                                           PhysicalNodeSupports := NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes);
 
                                                                           if VNodeSupports or PhysicalNodeSupports then
@@ -342,6 +358,7 @@ begin
                                                                               DataBuffer^.Alias := SourceAlias;
                                                                               DataBuffer^.Count := CANBuffer^.DataCount;
                                                                               DataBuffer^.DataBytes := CANBuffer^.DataBytes;
+                                                                              DataBuffer^.RefCount := 0;                         // We manipulate this manually
 
                                                                               if VNodeSupports then
                                                                               begin

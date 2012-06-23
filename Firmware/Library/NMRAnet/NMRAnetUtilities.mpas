@@ -635,7 +635,7 @@ begin
     Node^.MsgBuffer := PBaseBuffer( Buffer)
   else begin
     Temp := Node^.MsgBuffer;
-    while Temp^.Next <> 0 do
+    while Temp^.Next <> nil do
       Temp := Temp^.Next;
     Temp^.Next := Buffer
   end
@@ -653,7 +653,7 @@ procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: Point
 var
   Temp: PBaseBuffer;
 begin
-  Buffer := Node^.MsgBuffer;
+  Buffer := Pointer( Node^.MsgBuffer);
   Temp := Node^.MsgBuffer^.Next;
   Node^.MsgBuffer := Temp;
 end;

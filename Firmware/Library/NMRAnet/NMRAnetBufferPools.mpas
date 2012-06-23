@@ -172,7 +172,7 @@ begin
     begin
       Buffer := @BaseBufferPool.Pool[i];
       NMRAnetBufferPools_InitializeBaseBuffer(Buffer);
-      if BaseBufferPool.Count > BaseBufferPool.MaxCount then
+      if BaseBufferPool.Count >= BaseBufferPool.MaxCount then
         BaseBufferPool.MaxCount := BaseBufferPool.Count;
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_BASE;
       Inc(Buffer^.RefCount);
@@ -226,7 +226,7 @@ begin
       Buffer := @DataBufferPool.Pool[i];
       NMRAnetStateMachine_InitializeDataBuffer(Buffer);
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATABUFFER;
-      if DataBufferPool.Count > DataBufferPool.MaxCount then
+      if DataBufferPool.Count >= DataBufferPool.MaxCount then
         DataBufferPool.MaxCount := DataBufferPool.Count;
       Inc(Buffer^.RefCount);
       Inc(DataBufferPool.Count);
@@ -253,7 +253,7 @@ begin
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;
-      Dec(BaseBufferPool.Count);
+      Dec(DataBufferPool.Count);
     end
   end;
 end;
@@ -281,7 +281,7 @@ begin
       Result := True;
       NMRAnetDatagrams_InitializeDatagramBuffer(Buffer);
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATAGRAM;
-      if DatagramPool.Count > DatagramPool.MaxCount then
+      if DatagramPool.Count >= DatagramPool.MaxCount then
         DatagramPool.MaxCount := DatagramPool.Count;
       Inc(Buffer^.RefCount);
       Inc(DatagramPool.Count);
@@ -307,7 +307,7 @@ begin
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;
-      Dec(BaseBufferPool.Count);
+      Dec(DatagramPool.Count);
     end
   end;
 end;
@@ -334,7 +334,7 @@ begin
       Result := True;
       NMRAnetAbbreviatedConfigurationProtocol_InitializeReceiveBuffer(Buffer);
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_ACDI_RECEIVE;
-      if ACDI_ReceiveBufferPool.Count > ACDI_ReceiveBufferPool.MaxCount then
+      if ACDI_ReceiveBufferPool.Count >= ACDI_ReceiveBufferPool.MaxCount then
         ACDI_ReceiveBufferPool.MaxCount := ACDI_ReceiveBufferPool.Count;
       Inc(Buffer^.RefCount);
       Inc(ACDI_ReceiveBufferPool.Count);
@@ -360,7 +360,7 @@ begin
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;
-      Dec(BaseBufferPool.Count);
+      Dec(ACDI_ReceiveBufferPool.Count);
     end
   end;
 end;
@@ -387,7 +387,7 @@ begin
       Result := True;
       NMRAnetAbbreviatedConfigurationProtocol_InitializeTransmitBuffer(Buffer);
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_ACDI_TRANSMIT;
-      if ACDI_TransmitBufferPool.Count > ACDI_TransmitBufferPool.MaxCount then
+      if ACDI_TransmitBufferPool.Count >= ACDI_TransmitBufferPool.MaxCount then
         ACDI_TransmitBufferPool.MaxCount := ACDI_TransmitBufferPool.Count;
       Inc(Buffer^.RefCount);
       Inc(ACDI_TransmitBufferPool.Count);
@@ -413,7 +413,7 @@ begin
     if Buffer^.RefCount = 0 then
     begin
       Buffer^.State := CBS_EMPTY;
-      Dec(BaseBufferPool.Count);
+      Dec(ACDI_TransmitBufferPool.Count);
     end
   end;
 end;
