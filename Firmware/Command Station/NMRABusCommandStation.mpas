@@ -124,91 +124,6 @@ begin
   UART1_Write_Text(LF);  }
 end;
 
-procedure AbbriviatedCDICallback(NodeBuffer: PNMRAnetNode; ACDI_Buffer: PACDI_ReceiveBuffer);
-var
-
- i: Integer;
-  s1: string[32];
-  
-begin
- { UART1_Write_Text('Mfg Address: ') ;
-  WordToHex(@Buffer^.Mfg[i], s1);
-  UART1_Write_Text(s1+LF) ;
-  
-  for i := 0 to ACDI_LEN_MFG-1 do
-  begin
-    byteToHex(Buffer^.Mfg[i], s1);
-    UART1_Write_Text(s1 + ' ');
-  end;
-  
-  UART1_Write_Text(LF+'MfgName Address: ') ;
-  WordToHex(@Buffer^.MfgName[0], s1);
-  UART1_Write_Text(s1+LF) ;
-  
-  for i := 0 to ACDI_LEN_MFG_NAME-1 do
-  begin
-    byteToHex(Buffer^.MfgName[i], s1);
-    UART1_Write_Text(s1 + ' ');
-  end;
-  
-  UART1_Write_Text(LF+'MfgHWVer Address: ') ;
-  WordToHex(@Buffer^.MfgHWVer[0], s1);
-  UART1_Write_Text(s1+LF) ;
-
-  for i := 0 to ACDI_LEN_MFG_HW_VER-1 do
-  begin
-    byteToHex(Buffer^.MfgHWVer[i], s1);
-    UART1_Write_Text(s1 + ' ');
-  end;
-  
-  UART1_Write_Text(LF+'MfgSWVer Address: ') ;
-  WordToHex(@Buffer^.MfgSWVer[0], s1);
-  UART1_Write_Text(s1+LF) ;
-  
-  for i := 0 to ACDI_LEN_MFG_SW_VER-1 do
-  begin
-    byteToHex(Buffer^.MfgSWVer[i], s1);
-    UART1_Write_Text(s1 + ' ');
-  end;
-  
-  UART1_Write_Text(LF+'UserName Address: ') ;
-  WordToHex(@Buffer^.UserName[0], s1);
-  UART1_Write_Text(s1+LF) ;
-  
-  for i := 0 to ACDI_LEN_USER_NAME-1 do
-  begin
-    byteToHex(Buffer^.UserName[i], s1);
-    UART1_Write_Text(s1 + ' ');
-  end;
-
- UART1_Write_Text(LF+'UserDesc Address: ') ;
-  WordToHex(@Buffer^.UserDesc[0], s1);
-  UART1_Write_Text(s1+LF) ;
-
-  for i := 0 to ACDI_LEN_USER_DESC-1 do
-  begin
-    byteToHex(Buffer^.UserDesc[i], s1);
-    UART1_Write_Text(s1 + ' ');
-  end;
-  UART1_Write_Text(LF) ;
-  
-  }
-  ByteToStr(ACDI_Buffer^.MfgVersion, s1);
-  UART1_Write_Text('Mfg Version: ' + s1+LF);
-  ByteToStr(ACDI_Buffer^.UserVersion, s1);
-  UART1_Write_Text('User Version: ' + s1+LF);
-  WordToHex(ACDI_Buffer^.Alias, s1);
-  UART1_Write_Text('Source Alias: ' + s1+LF);
-  
-  UART1_Write_Text(ACDI_Buffer^.Mfg+LF);
-  UART1_Write_Text(ACDI_Buffer^.MfgName+LF);
-  UART1_Write_Text(ACDI_Buffer^.MfgHWVer+LF);
-  UART1_Write_Text(ACDI_Buffer^.MfgSWVer+LF);
-  UART1_Write_Text(ACDI_Buffer^.UserName+LF);
-  UART1_Write_Text(ACDI_Buffer^.UserDesc+LF);
-  //ACDI_Buffer^.State := ACDI_BUFFER_STATE_EMPTY;                                     // Release the buffer
-end;
-
 // *******************
 // MAIN LOOP
 // *******************
@@ -258,7 +173,7 @@ begin
     begin
       WordToStr(MaxTime_RX, s1);
       UART1_Write_Text('MaxTime_RX count: '+s1+LF);
-      FloatToStr(MaxTime_RX*50e-3, s1);
+      FloatToStr(double(MaxTime_RX)*50e-3, s1);
       UART1_Write_Text(s1+'us'+LF);
       x := MaxTime_RX
     end;

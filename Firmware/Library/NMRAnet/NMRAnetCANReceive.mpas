@@ -19,8 +19,6 @@ unit NMRAnetCANReceive;
 // ******************************************************************************
 
 uses
-  NMRAnetAbbreviatedConfigurationProtocol,
-  NMRAnetAbbreviatedConfigurationProtocolDefines,
   NMRAnetDefines,
   NMRAnetUtilities,
   NMRAnetBufferPools,
@@ -87,45 +85,6 @@ end;
 procedure NMRAnetCANReceive_SetNMRANetLayerReceiveHook(HookFunc: PPacketHandlerFunc);
 begin
   NMRAnetLayerReceiveHook := HookFunc
-end;
-
-// ****************************************************************************
-// procedure DispatchAbbreviatedCDIRequest
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Complex Action only because the Sender Alias is needed
-//
-// ****************************************************************************
-procedure DispatchAbbreviatedCDIRequest(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
- // StoreComplexAction(NodeBuffer, CRC_ACDI_REQUEST, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes, 0);
-end;
-
-// ****************************************************************************
-// procedure DispatchAbbreviatedCDIReply
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Complex Action
-//
-// ****************************************************************************
-procedure DispatchAbbreviatedCDIReply(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-var
-  ActiveBuffer: PACDI_ReceiveBuffer;
-  DataBytes: TCAN_DataBytes;
-begin
-  ActiveBuffer := PACDI_ReceiveBuffer( nil);
-  if NMRAnetAbbreviatedConfigurationProtocol_ProcessReceiveFromInterruptContext(NodeBuffer, ActiveBuffer, CANBuffer^.ID and MASK_SOURCE_ALIAS, @CANBuffer^.DataBytes) then
-  begin
-    DataBytes[0] := Lo( ActiveBuffer);                                         // Slip the buffer address in through the DataBytes
-    DataBytes[1] := Hi( ActiveBuffer);
-  //  StoreComplexAction(NodeBuffer, CRC_ACDI_REPLY, ActiveBuffer^.SourceAlias, @DataBytes, 2);
-  end
 end;
 
 // ****************************************************************************
@@ -428,11 +387,16 @@ begin
                                                MTI_EXTENSION_IDENTIFY_EVENTS                  : begin
                                                                                                   NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
                                                                                                 end;
-                                               MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin 
-                                                                                                    // NEED TO PASS THE TARGET NODE TO NEXT LAYER, HOW????????
-                                                                                                end;  // DispatchAbbreviatedCDIRequest(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_DATAGRAM_RECIEVED_OK             : begin end;  // DispatchDatagramReceivedOk(NodeBuffer, CANBuffer);
-                                               MTI_EXTENSION_DATAGRAM_REJECTED                : begin end  // DispatchDatagramRejected(NodeBuffer, CANBuffer)
+                                               MTI_EXTENSION_DATAGRAM_REJECTED                : begin end;  // DispatchDatagramRejected(NodeBuffer, CANBuffer)
+                                               MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin
+                                                                                                  if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
+                                                                                                  begin
+                                                                                                    NMRAnetUtilities_MsgBufferLink(Node, DataBuffer);
+                                                                                                    DataBuffer^.mCode := BMC_SIMPLE_NODE_INFO_REQEUST;
+                                                                                                    DataBuffer^.Alias := SourceAlias
+                                                                                                  end;
+                                                                                                end
                                               else
                                                 if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                 begin

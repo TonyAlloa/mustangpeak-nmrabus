@@ -1,5 +1,24 @@
 unit NMRAnetAppDefines;
 
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+//    Implements program specific information such as Consumer/Producer EventIDs,
+//    Buffer allocation sizes, CDI and ACDI Information, Protocol Support IDs, vNode
+//    counts, etc.
+//
+// ******************************************************************************
+
 uses
   CANDefines,
   NMRAnetDefines,
@@ -7,33 +26,39 @@ uses
   
 {$I Options.inc}
 
+const
+  MAX_BASE_BUFFER_POOL             = 4;                                         // Number of Base Buffers to allocate for Messages
+  MAX_DATA_BUFFER_POOL             = 4;                                         // Number of CAN DataByte Buffers to allocate for Messages
+  MAX_DATAGRAM_BUFFER_POOL         = 3;                                         // Number of Datagram Buffers to allocate for Messages
+
 
 const
-{  ABBREVIATED_CDI_MFG = 'MM';
-  ABBREVIATED_CDI_MFG_NAME = 'MM';
-  ABBREVIATED_CDI_MFG_HW_VER = 'MM';
-  ABBREVIATED_CDI_MFG_SW_VER = 'MM';
-
-  ABBREVIATED_CDI_USER_NAME = 'MM';
-  ABBREVIATED_CDI_USER_DISC = 'MM';    }
+  MAX_ACDI_ARRAY = 70;
+  TACDI_NODE_STRINGS: array[0..MAX_ACDI_ARRAY - 1] of byte = (
+      49,  // Version = 1
+      77,117,115,116,97,110,103,112,101,97,107,0,  // Mustangpeak
+      67,83,49,48,48,0,  // CS100
+      48,46,48,46,48,46,49,0,  // 0.0.0.1
+      48,46,48,46,48,46,50,0,  // 0.0.0.2
+      49,  // Version = 1
+      68,67,67,32,67,111,109,109,97,110,100,32,83,116,97,116,105,111,110,0,  // DCC Command Station
+      82,105,99,111,32,68,105,115,116,114,105,99,116,0  // Rico District
+    );
+    
+const
+  MAX_VNODE_ACDI_ARRAY = 63;
+  TACDI_VNODE_STRINGS: array[0..MAX_VNODE_ACDI_ARRAY - 1] of byte = (
+      49,  // Version = 1
+      77,117,115,116,97,110,103,112,101,97,107,0,  // Mustangpeak
+      77,78,49,48,48,0,  // MN100
+      48,46,48,46,48,46,49,0,  // 0.0.0.1
+      48,46,48,46,48,46,50,0,  // 0.0.0.2
+      49,  // Version = 1
+      68,67,67,32,77,111,98,105,108,101,32,78,111,100,101,0,  // DCC Mobile Node
+      84,114,97,105,110,32,78,111,100,101,0  // Train Node
+    );
   
 
-  ABBREVIATED_CDI_MFG = 'Mustangpeak';
-  ABBREVIATED_CDI_MFG_NAME = 'CS101';
-  ABBREVIATED_CDI_MFG_HW_VER = '1.0.0';
-  ABBREVIATED_CDI_MFG_SW_VER = '0.0.1';
-  
-  ABBREVIATED_CDI_USER_NAME = 'Rico District';
-  ABBREVIATED_CDI_USER_DISC = 'DCC Command Station';
-  
-  ABBREVIATED_CDI_MFG_VNODE = 'Mustangpeak';
-  ABBREVIATED_CDI_MFG_NAME_VNODE = 'MN101';
-  ABBREVIATED_CDI_MFG_HW_VER_VNODE = '1.0.0';
-  ABBREVIATED_CDI_MFG_SW_VER_VNODE = '0.0.1';
-
-  ABBREVIATED_CDI_USER_NAM_VNODEE = 'Mobile Node';
-  ABBREVIATED_CDI_USER_DISC_VNODE = 'DCC Decoder';
-  
   MAX_NODE_COUNT = 1;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
                               // If the lower bits of this node are $0300 then the first Virtual Node is $0301 and the last is $0309 if the VIRTUAL_NODE_COUNT = 9
                               // It also MUST fall within the lower 3 byte boundry (this is due to the way I have defined HI/LO as 3 byte) so the max virtual nodes is 4095 with a base

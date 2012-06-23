@@ -77,10 +77,14 @@ type
   end;
   
   TDatagramBuffer = record                                                      // Overlays TBaseBuffer..........
-    State: Byte;                                                                // State of Buffer, see CBS_xxx constants
+  
+  State: Byte;                                                                // State of Buffer, see CBS_xxx constants
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
     Next: Pointer;                                                              // Pointer to the next Message Buffer
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
+    mCode: Byte;                                                                // Buffer Message Code for what the message was (not implemented on some buffers so be careful), see BMC_xxxx
+    Tag: TBufferTag;                                                            // General Purpose useage depending on the message type (not implemented on some buffers so be careful), see BMC_xxxx
+
     DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit
     iFrameCount: Byte;                                                          // Counts the number of Frames received/transmitted

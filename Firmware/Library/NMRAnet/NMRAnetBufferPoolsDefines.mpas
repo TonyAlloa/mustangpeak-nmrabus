@@ -30,17 +30,18 @@ const
   CBS_BUFFER_DATAGRAM                      = $08;                               // CommonBufferState is process of receiving a Datagram
   CBS_BUFFER_STREAM                        = $10;                               // CommonBufferState is in process of receiving a Stream
   CBS_BUFFER_CDI                           = $20;                               // CommonBufferState is in process of receiving a CDI
-  CBS_BUFFER_ACDI_RECEIVE                  = $40;                               // CommonBufferState is in process of receiving a ACDI
-  CBS_BUFFER_ACDI_TRANSMIT                 = $80;                               // CommonBufferState is in process of receiving a ACDI
   
-  BMC_PROTOCOL_SUPPORT_QUERY               = $01;                               // Buffer Message Code is a Protocol Support Query    [BaseBuffer]
-  BMC_PRODUCER_IDENTIFY                    = $02;                               // Buffer Message Code is Producer Identify           [DataBuffer]
-  BMC_CONSUMER_IDENTIFY                    = $03;                               // Buffer Message Code is Consumer Identify           [DataBuffer]
-  BMC_EVENT_LEARN                          = $04;                               // Buffer Message Code is Event Learn                 [BaseBuffer]
-  BMC_OPTIONAL_INTERACTION_REJECTED        = $05;
+  BMC_PROTOCOL_SUPPORT_QUERY               = $01;                               // [IN] Buffer Message Code is a Protocol Support Query    [BaseBuffer]
+  BMC_PRODUCER_IDENTIFY                    = $02;                               // [IN] Buffer Message Code is Producer Identify           [DataBuffer]
+  BMC_CONSUMER_IDENTIFY                    = $03;                               // [IN] Buffer Message Code is Consumer Identify           [DataBuffer]
+  BMC_EVENT_LEARN                          = $04;                               // [IN] Buffer Message Code is Event Learn                 [BaseBuffer]
+  BMC_SIMPLE_NODE_INFO_REQEUST             = $06;                               // [IN] Buffer Message Code is ACDI Request                [BaseBuffer]
 
+  BMC_OPTIONAL_INTERACTION_REJECTED        = $80;                               // [OUT] Buffer Message
+  
 type 
   TRefCount = Byte;
+  TBufferTag = Byte;
 type
   TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDataBuffer, TDatagramBuffer, ACDI_ReceiveBuffer, ACDI_TransmitBuffer, etc
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
@@ -48,6 +49,7 @@ type
     Next: Pointer;                                                              // Pointer to the next Message Buffer
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message was (not implemented on some buffers so be careful), see BMC_xxxx
+    Tag: TBufferTag;                                                            // General Purpose useage depending on the message type (not implemented on some buffers so be careful), see BMC_xxxx
   end;
   PBaseBuffer = ^TBaseBuffer;
 

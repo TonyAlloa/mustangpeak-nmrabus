@@ -32,9 +32,7 @@ uses
   NMRAnetBufferPoolsDefines,
   NMRAnetDatagramDefines,
   NMRAnetConfigurationProtocol,
-  NMRAnetConfigurationProtocolDefines,
-  NMRAnetAbbreviatedConfigurationProtocol,
-  NMRAnetAbbreviatedConfigurationProtocolDefines;
+  NMRAnetConfigurationProtocolDefines;
 
 {$I Options.inc}
 
@@ -231,6 +229,7 @@ begin
   Buffer^.Next := 0;
   Buffer^.Count := 0;
   Buffer^.RefCount := 0;
+  Buffer^.Tag := 0;
   for i := 0 to CAN_DATA_LEN - 1 do
     Buffer^.DataBytes[i] := 0;
 end;
@@ -271,7 +270,6 @@ begin
   NMRAnetDatagrams_Initialize;
   NMRAnetCANReceive_Initialize;
   NMRAnetConfigurationProtocol_Initialize;
-  NMRAnetAbbreviatedConfigurationProtocol_Initialize;
   NMRAnetBufferPools_Initialize;
   NMRAnetNode_Initialize(PhysicalNodeID_HI, PhysicalNodeID_Lo);
   SimpleActionCallbackFunc := PSimpleActionCallbackFunc( nil);
@@ -292,7 +290,6 @@ procedure NMRAnetStateMachine_100ms_Timer(Node: PNMRAnetNode);
 begin
   Inc(Node^.Login.TimeCounter);
   NMRAnetDatagrams_100ms_TimeTick(Node);
-  NMRAnetAbbreviatedConfigurationProtocol_100ms_TimeTick(Node);
 end;
 
 // *****************************************************************************
@@ -339,34 +336,6 @@ begin
   end
 end;
 
-
-// *****************************************************************************
-//  procedure SendACDI_Request
-//
-//     Parameters:
-//
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-procedure SendACDI_Request(Node: PNMRAnetNode; nCode: Word; NextState: Byte);
-//var
-//  Action: PQueuedAction;
-begin
- { if Node^.Actions <> nil then
-  begin
-    Action := FindStoredComplexAction(Node, nCode);                                 // Look for Datagram Actions from Nodes this node sent a Datagram to
-    if Action <> nil then
-    begin
-      if NMRAnetAbbreviatedConfigurationProtocol_QueueTransmit(Node, Action^.FromAlias) then
-        Action^.nCode := CRC_EMPTY;
-    end;
-    Node^.Actions^.iState := NextState
-  end }
-end;
-
-
 // *****************************************************************************
 //  procedure DispatchDatagramAction
 //
@@ -378,9 +347,9 @@ end;
 //
 // *****************************************************************************
 procedure DispatchDatagramAction(Node: PNMRAnetNode; nCode: Word; NextState: Byte);
-var
+//var
 //  Action: PQueuedAction;
-  Datagram: PDatagramBuffer;
+//  Datagram: PDatagramBuffer;
 begin
  { if Node^.Actions <> nil then
   begin
@@ -435,37 +404,6 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure DispatchACDI_ReplyAction
-//
-//     Parameters:
-//
-//     Returns:
-//
-//     Description:  The CAN Frames are collected in the CAN Interrupt code to
-//                   make up the full ACDI message Reply that is passed here.
-//
-// *****************************************************************************
-procedure DispatchACDI_ReplyAction(Node: PNMRAnetNode; nCode: Word; NextState: Byte);
-var
-//  Action: PQueuedAction;
-  Buffer: Word;
-begin
-{  if Node^.Actions <> nil then
-  begin
-    Action := FindStoredComplexAction(Node, nCode);                                 // Look for ACDI Actions from Nodes this node
-    if Action <> nil then
-    begin
-      Buffer := Action^.DataBytes[1] shl 8;
-      Buffer := (Buffer or Action^.DataBytes[0]);
-      if ACDI_ReceiveCallbackFunc <> nil then
-        ACDI_ReceiveCallbackFunc(Node, PACDI_ReceiveBuffer( Buffer));  // Snuck in
-      Action^.nCode := CRC_EMPTY;
-    end;
-    Node^.Actions^.iState := NextState
-  end }
-end;
-
-// *****************************************************************************
 //  procedure ProcessNode
 //     Parameters:
 //     Returns:
@@ -482,10 +420,10 @@ const
 var
   LocalMsgFlags: Byte;
   DataBytes: TCAN_DataBytes;
-  i, j: Integer;
+  i, j, MaxIndex: Integer;
   BaseBuffer: PBaseBuffer;
   DataBuffer: PDataBuffer;
-  SupportedEvents, SupportedConsumers, SupportedProducers: Word;
+  ACDIArray: ^array[0..0] of Byte;
   
   s1: array[0..32] of char;
 
@@ -511,13 +449,8 @@ begin
            NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_ALIAS_RID);
       end;
       Exit;                                                                     // Bad things happening, exit
-    end
-  end;
-  
+    end;
 
-  
-  if LocalMsgFlags <> 0 then
-  begin
     // Non Critical Fault Messages that require a response
     if NMRAnetNode_TestMsgFlags(Node, MF_ALIAS_MAP_ENQUIRY, False) then
     begin
@@ -580,24 +513,7 @@ begin
                                                 end;
                                               end;
           BMC_CONSUMER_IDENTIFY :             begin
-
                                                 DataBuffer := PDataBuffer( Pointer( Node^.MsgBuffer));
-                                                
-                                                
-                                                
-                                         {       IntToStr(Nodes.Count, s1);
-                                                UART1_Write_Text('Node Count: '+s1+LF);
-                                                IntToStr(DataBuffer^.RefCount, s1);
-                                                UART1_Write_Text('DataBuffer RefCount: '+s1+LF);
-                                                IntToStr(DataBuffer^.Count, s1);
-                                                UART1_Write_Text('DataBuffer Data Count: '+s1+LF);
-
-                                                IntToStr(BaseBufferPool.Count, s1);
-                                                UART1_Write_Text('BasePool Count: '+s1+LF);
-                                                IntToStr(DataBufferPool.Count, s1);
-                                                UART1_Write_Text('DataPool Count: '+s1+LF+LF+LF);  }
-                                                
-                                                
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_CONSUMER_IDENTIFIED_UNKNOWN, 0, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                 begin
                                                   NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
@@ -606,17 +522,42 @@ begin
                                               end;
           BMC_EVENT_LEARN :                   begin
                                               end;
+          BMC_SIMPLE_NODE_INFO_REQEUST :      begin
+                                                if not CANStorage_ListFull(@TX_NMRAnetBufferList) then      // This has gotta go after updating everything
+                                                begin
+                                                  DataBuffer :=  PDataBuffer( Pointer( Node^.MsgBuffer));
+
+                                                  if Node^.State and NS_VIRTUAL <> 0 then
+                                                  begin
+                                                    ACDIArray := @TACDI_VNODE_STRINGS;
+                                                    MaxIndex := MAX_VNODE_ACDI_ARRAY
+                                                  end else
+                                                  begin
+                                                    ACDIArray := @TACDI_NODE_STRINGS;
+                                                    MaxIndex := MAX_ACDI_ARRAY
+                                                  end;
+                                                  DataBuffer^.Count := 0;
+                                                  DataBuffer^.DataBytes[DataBuffer^.Count] := MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY;
+                                                  Inc(DataBuffer^.Count);
+                                                  while (DataBuffer^.Count < 7) and (i < MaxIndex) do
+                                                  begin
+                                                    DataBuffer^.DataBytes[DataBuffer^.Count] := ACDIArray^[DataBuffer^.Tag];
+                                                    Inc(DataBuffer^.Tag);
+                                                    Inc(DataBuffer^.Count);
+                                                  end;
+                                                  TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, DataBuffer^.Alias, DataBuffer^.Count, @DataBuffer^.DataBytes);  // Has to go, already checked for a free buffer
+                                                  if DataBuffer^.Tag = MaxIndex then
+                                                  begin
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
+                                                    NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
+                                                  end;
+                                                end
+                                              end;
         end;
       end else
       if Node^.MsgBuffer^.State and CBS_BUFFER_DATAGRAM <> 0 then
       begin
       end else
-      if Node^.MsgBuffer^.State and CBS_BUFFER_ACDI_RECEIVE <> 0 then
-      begin
-      end else
-      if Node^.MsgBuffer^.State and CBS_BUFFER_ACDI_TRANSMIT <> 0 then
-      begin
-      end
     end;
   end;
 
@@ -663,21 +604,6 @@ begin
       Inc(Node^.EventCounter);
     end;
   end;
-
- {
-  if Node^.Actions <> nil then
-  begin
-    if not DuplicateDetected(Node, SRC_DUPLICATE_NODE_ID, STATE_NMRABUS_DUPLICATE_FULL_ID) then  // Highest Priority, if detected the main loop needs to change state
-      if not DuplicateDetected(Node, SRC_DUPLICATE_ALIAS, STATE_NMRABUS_INHIBITED) then          // Next Highest Priority, if detected the main loop needs to change state
-      begin
-        case Node^.Actions^.iState of
-          // These Actions needs a Action message sent and were queued up at the Interrupt level automagically
-          STATE_NMRABUS_SEND_ACDI_REQUEST                           : SendACDI_Request(Node, STATE_NMRABUS_SEND_ACDI_REQUEST, STATE_NMRABUS_DATAGRAM_RECEIVED_OK);
-        else
-          Node^.Actions^.iState := STATE_NMRABUS_RESPONSE_SEND_RID;
-        end;
-      end
-  end        }
 end;
 
 // *****************************************************************************
@@ -790,7 +716,6 @@ begin
      //   NMRAnetDatagrams_ProcessReceive(Node);                                  // Handle Datagrams coming in
      //   NMRAnetDatagrams_ProcessTransmit(Node);                                 // Handle Datagrams going out
      //   NMRAnetConfigurationProtocol_Process(Node);
-      //  NMRAnetAbbreviatedConfigurationProtocol_Process(Node);
       end;
     STATE_NMRABUS_INHIBITED :
       begin
