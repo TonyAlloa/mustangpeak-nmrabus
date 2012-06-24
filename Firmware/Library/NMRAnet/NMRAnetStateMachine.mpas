@@ -491,13 +491,46 @@ begin
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                 end;
                                               end;
-          BMC_OPTIONAL_INTERACTION_REJECTED : begin
+          BMC_UNKNOWN_ADDRESSED_MTI :         begin
                                                 DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, FT_OPTIONAL_INTERACTION_REJECTED, Node^.MsgBuffer^.Alias, 1, @DataBytes) then
                                                 begin
                                                   NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                 end;
+                                              end;
+          BMC_SIMPLE_NODE_INFO_REQEUST :      begin
+                                                if not CANStorage_ListFull(@TX_NMRAnetBufferList) then      // This has gotta go after updating everything
+                                                begin
+
+                                                  BaseBuffer := Node^.MsgBuffer;
+
+                                                  if Node^.State and NS_VIRTUAL <> 0 then
+                                                  begin
+                                                    ACDIArray := @TACDI_VNODE_STRINGS;
+                                                    MaxIndex := MAX_VNODE_ACDI_ARRAY
+                                                  end else
+                                                  begin
+                                                    ACDIArray := @TACDI_NODE_STRINGS;
+                                                    MaxIndex := MAX_ACDI_ARRAY
+                                                  end;
+
+                                                  i := 0;
+                                                  DataBytes[i] := MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY;
+                                                  Inc(i);
+                                                  while (i < 7) and (BaseBuffer^.Tag < MaxIndex) do
+                                                  begin
+                                                    DataBytes[i] := ACDIArray^[BaseBuffer^.Tag];
+                                                    Inc(BaseBuffer^.Tag);
+                                                    Inc(i);
+                                                  end;
+                                                  TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, BaseBuffer^.Alias, i, @DataBytes);  // Has to go, already checked for a free buffer
+                                                  if BaseBuffer^.Tag = MaxIndex then
+                                                  begin
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
+                                                    NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
+                                                  end;
+                                                end
                                               end;
         end;
       end else
@@ -521,37 +554,6 @@ begin
                                                 end;
                                               end;
           BMC_EVENT_LEARN :                   begin
-                                              end;
-          BMC_SIMPLE_NODE_INFO_REQEUST :      begin
-                                                if not CANStorage_ListFull(@TX_NMRAnetBufferList) then      // This has gotta go after updating everything
-                                                begin
-                                                  DataBuffer :=  PDataBuffer( Pointer( Node^.MsgBuffer));
-
-                                                  if Node^.State and NS_VIRTUAL <> 0 then
-                                                  begin
-                                                    ACDIArray := @TACDI_VNODE_STRINGS;
-                                                    MaxIndex := MAX_VNODE_ACDI_ARRAY
-                                                  end else
-                                                  begin
-                                                    ACDIArray := @TACDI_NODE_STRINGS;
-                                                    MaxIndex := MAX_ACDI_ARRAY
-                                                  end;
-                                                  DataBuffer^.Count := 0;
-                                                  DataBuffer^.DataBytes[DataBuffer^.Count] := MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY;
-                                                  Inc(DataBuffer^.Count);
-                                                  while (DataBuffer^.Count < 7) and (DataBuffer^.Tag < MaxIndex) do
-                                                  begin
-                                                    DataBuffer^.DataBytes[DataBuffer^.Count] := ACDIArray^[DataBuffer^.Tag];
-                                                    Inc(DataBuffer^.Tag);
-                                                    Inc(DataBuffer^.Count);
-                                                  end;
-                                                  TryTransmitNMRABusLayerMsg(Node, Buffer, FT_PROTOCOL_SUPPORT_REPLY, DataBuffer^.Alias, DataBuffer^.Count, @DataBuffer^.DataBytes);  // Has to go, already checked for a free buffer
-                                                  if DataBuffer^.Tag = MaxIndex then
-                                                  begin
-                                                    NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
-                                                    NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
-                                                  end;
-                                                end
                                               end;
         end;
       end else

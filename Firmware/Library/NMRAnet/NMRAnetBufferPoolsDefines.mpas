@@ -37,7 +37,7 @@ const
   BMC_EVENT_LEARN                          = $04;                               // [IN] Buffer Message Code is Event Learn                 [BaseBuffer]
   BMC_SIMPLE_NODE_INFO_REQEUST             = $06;                               // [IN] Buffer Message Code is ACDI Request                [BaseBuffer]
 
-  BMC_OPTIONAL_INTERACTION_REJECTED        = $80;                               // [OUT] Buffer Message
+  BMC_UNKNOWN_ADDRESSED_MTI                = $80;                               // [OUT] Buffer Message
   
 type 
   TRefCount = Byte;

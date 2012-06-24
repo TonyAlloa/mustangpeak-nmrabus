@@ -30,7 +30,7 @@ uses
   CANDefines;
   
 type
-  TPacketHandlerFunc = procedure(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+  TPacketHandlerFunc = procedure(CAN3Buffer: PCANBuffer; var DoDefault: Boolean);
   PPacketHandlerFunc = ^TPacketHandlerFunc;
   
   procedure NMRAnetCANReceive_Initialize;
@@ -45,7 +45,7 @@ type
   procedure ReceivedOnFilter4(Buffer: PCANBuffer);
   procedure ReceivedOnFilter5(Buffer: PCANBuffer);
   procedure ReceivedOnFilter6(Buffer: PCANBuffer);
-
+   
 implementation
 
 var
@@ -231,7 +231,6 @@ var
 begin
 
   //UART1_Write_Text('NMRAnet'+LF);
- 
   TMR4 := 0;
   
   DoDefault := True;
@@ -383,25 +382,25 @@ begin
                                                                                                     BaseBuffer^.mCode := BMC_PROTOCOL_SUPPORT_QUERY;
                                                                                                     BaseBuffer^.Alias := SourceAlias
                                                                                                   end
-                                                                                                end;  // DispatchProtocolSupportInquiry(NodeBuffer, CANBuffer);
+                                                                                                end;
                                                MTI_EXTENSION_IDENTIFY_EVENTS                  : begin
                                                                                                   NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
                                                                                                 end;
                                                MTI_EXTENSION_DATAGRAM_RECIEVED_OK             : begin end;  // DispatchDatagramReceivedOk(NodeBuffer, CANBuffer);
                                                MTI_EXTENSION_DATAGRAM_REJECTED                : begin end;  // DispatchDatagramRejected(NodeBuffer, CANBuffer)
                                                MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin
-                                                                                                  if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
+                                                                                                  if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                                                   begin
-                                                                                                    NMRAnetUtilities_MsgBufferLink(Node, DataBuffer);
-                                                                                                    DataBuffer^.mCode := BMC_SIMPLE_NODE_INFO_REQEUST;
-                                                                                                    DataBuffer^.Alias := SourceAlias
+                                                                                                    NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
+                                                                                                    BaseBuffer^.mCode := BMC_SIMPLE_NODE_INFO_REQEUST;
+                                                                                                    BaseBuffer^.Alias := SourceAlias
                                                                                                   end;
                                                                                                 end
                                               else
                                                 if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                 begin
                                                   NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
-                                                  BaseBuffer^.mCode := BMC_OPTIONAL_INTERACTION_REJECTED;
+                                                  BaseBuffer^.mCode := BMC_UNKNOWN_ADDRESSED_MTI;
                                                   BaseBuffer^.Alias := SourceAlias
                                                 end;
                                               end;
