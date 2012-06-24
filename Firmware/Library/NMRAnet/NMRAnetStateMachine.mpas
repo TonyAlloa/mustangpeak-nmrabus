@@ -539,7 +539,7 @@ begin
                                                   DataBuffer^.Count := 0;
                                                   DataBuffer^.DataBytes[DataBuffer^.Count] := MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY;
                                                   Inc(DataBuffer^.Count);
-                                                  while (DataBuffer^.Count < 7) and (i < MaxIndex) do
+                                                  while (DataBuffer^.Count < 7) and (DataBuffer^.Tag < MaxIndex) do
                                                   begin
                                                     DataBuffer^.DataBytes[DataBuffer^.Count] := ACDIArray^[DataBuffer^.Tag];
                                                     Inc(DataBuffer^.Tag);

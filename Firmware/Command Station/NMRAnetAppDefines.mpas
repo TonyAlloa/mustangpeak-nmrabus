@@ -26,9 +26,14 @@ uses
   
 {$I Options.inc}
 
+MAX_NODE_COUNT = 10;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
+                              // If the lower bits of this node are $0300 then the first Virtual Node is $0301 and the last is $0309 if the VIRTUAL_NODE_COUNT = 9
+                              // It also MUST fall within the lower 3 byte boundry (this is due to the way I have defined HI/LO as 3 byte) so the max virtual nodes is 4095 with a base
+                              // physical node starting at $0000;
+
 const
   MAX_BASE_BUFFER_POOL             = 4;                                         // Number of Base Buffers to allocate for Messages
-  MAX_DATA_BUFFER_POOL             = 4;                                         // Number of CAN DataByte Buffers to allocate for Messages
+  MAX_DATA_BUFFER_POOL             = MAX_NODE_COUNT;                            // Number of CAN DataByte Buffers to allocate for Messages, JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
   MAX_DATAGRAM_BUFFER_POOL         = 3;                                         // Number of Datagram Buffers to allocate for Messages
 
 
@@ -57,12 +62,6 @@ const
       $5B,$55,$73,$65,$72,$20,$4E,$61,$6D,$65,$5D,$00,  // [User Name]
       $5B,$55,$73,$65,$72,$20,$44,$65,$73,$63,$72,$69,$70,$74,$69,$6F,$6E,$5D,$00  // [User Description]
     );
-  
-
-  MAX_NODE_COUNT = 1;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
-                              // If the lower bits of this node are $0300 then the first Virtual Node is $0301 and the last is $0309 if the VIRTUAL_NODE_COUNT = 9
-                              // It also MUST fall within the lower 3 byte boundry (this is due to the way I have defined HI/LO as 3 byte) so the max virtual nodes is 4095 with a base
-                              // physical node starting at $0000;
 
 const
   PIV_SUPPORTED_PROTOCOL_COUNT = 4;    // UPDATE THIS IF ADDING OR SUBTRACTING SUPPORTED PROTOCOLS
