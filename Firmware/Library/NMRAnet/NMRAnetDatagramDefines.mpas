@@ -17,9 +17,9 @@ const
   DATAGRAM_RESULT_REJECTED_INFORMATION_LOGGED             : TDatagramErrorCode = ($10, $10);
   DATAGRAM_RESULT_REJECTED_SOURCE_NOT_PERMITTED           : TDatagramErrorCode = ($10, $20);
   DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED  : TDatagramErrorCode = ($10, $40);
-  
+  // Error that should cause sender to retry
   DATAGRAM_RESULT_REJECTED_BUFFER_FULL                    : TDatagramErrorCode = ($20, $00);
-  
+  // Error that was a transport problem
   DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER                   : TDatagramErrorCode = ($60, $00);
 
   DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK                 : TDatagramErrorCode = ($10, $00);
@@ -54,8 +54,6 @@ const
 
   DATAGRAM_WATCHDOG_MAX = 100;                                                  // 100ms counts before the datagram is declared abandon
   DATAGRAM_MAX_RETRY_COUNT = 3;                                                 // Number of try a datagram will try to be resent
-  
-  DATAGRAM_MAX_FRAME_COUNT = 9;                                                 // Maximum number of Frames (segments) in a Datagram
 
 
   // The first byte in a datagram is a command byte that allows datagrams to be "tagged" as special through these codes
@@ -78,20 +76,22 @@ type
   
   TDatagramBuffer = record                                                      // Overlays TBaseBuffer..........
   
-  State: Byte;                                                                // State of Buffer, see CBS_xxx constants
+  State: Byte;                                                                  // State of Buffer, see CBS_xxx constants
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
     Next: Pointer;                                                              // Pointer to the next Message Buffer
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message was (not implemented on some buffers so be careful), see BMC_xxxx
     Tag: TBufferTag;                                                            // General Purpose useage depending on the message type (not implemented on some buffers so be careful), see BMC_xxxx
-
-    DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
+    
+    iStateMachine: Byte;                                                        // Each Datagram Buffer holds it own place in the global statemachine, this allow interleaving and no deadlock when a target node is not responding
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit
     iFrameCount: Byte;                                                          // Counts the number of Frames received/transmitted
+    DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
+
     iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message or during transmit the Target Node never responds
     ErrorCode: TDatagramError;                                                  // Tracks any errors that occur through the MTI/Error Codes send as the first few bytes in the datagram
     iRetransmit: Byte;                                                          // Number of times the Datagram was attempted to transmit use to test before not trying any more
-    iStateMachine: Byte;                                                        // Each Datagram Buffer holds it own place in the global statemachine, this allow interleaving and no deadlock when a target node is not responding
+
   end;
   PDatagramBuffer = ^TDatagramBuffer;
   

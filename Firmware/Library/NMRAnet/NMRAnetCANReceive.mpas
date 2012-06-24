@@ -87,55 +87,6 @@ begin
   NMRAnetLayerReceiveHook := HookFunc
 end;
 
-// ****************************************************************************
-// procedure ReceivedDatagramMessage
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple/Complex Action
-//
-// ****************************************************************************
-procedure ReceivedDatagramMessage(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-  if NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer, CANBuffer) then
-    NMRAnetDatagrams_ProcessReceiveFromInterruptContext(Nodebuffer, CANBuffer)
-end;
-
-// ****************************************************************************
-// procedure ReceivedDatagramMessage
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple/Complex Action
-//
-// ****************************************************************************
-procedure ReceivedStartingDatagramMessage(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-  if NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer, CANBuffer) then
-    NMRAnetDatagrams_ProcessReceiveFromInterruptContext(NodeBuffer, CANBuffer)
-end;
-
-// ****************************************************************************
-// procedure ReceivedStreamMessage
-//
-//  Action Layer:
-//                 NMRAnet Layer
-//
-//  Action Type:
-//                 Simple/Complex Action
-//
-// ****************************************************************************
-procedure ReceivedStreamMessage(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
-begin
-  if NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer, CANBuffer) then
-  begin
-  end
-end;
-
 // *****************************************************************************
 //  procedure ReceivedOnFilter0
 //     Parameters:
@@ -165,15 +116,15 @@ begin
     Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractSourceAlias(CANBuffer));
     if Node <> nil then                                                         // Check for a Duplicate Alias
     begin
-      if (CANBuffer^.ID and FT_CID_MASK = FT_CID0) or (CANBuffer^.ID and FT_CID_MASK = FT_CID1) or (CANBuffer^.ID and FT_CID_MASK = FT_CID2) or (CANBuffer^.ID and FT_CID_MASK = FT_CID3) then
+      if (CANBuffer^.ID and MTI_CID_MASK = MTI_CID0) or (CANBuffer^.ID and MTI_CID_MASK = MTI_CID1) or (CANBuffer^.ID and MTI_CID_MASK = MTI_CID2) or (CANBuffer^.ID and MTI_CID_MASK = MTI_CID3) then
         Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS_RID              // A "good" duplicate Alias
       else
         Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS;                 // A "bad" duplicate Alias
     end else
     begin
       // The message does not contain a duplicate Source Alias so handle it
-      case CANBuffer^.ID and FT_UNADDRESSED_MASK of                             // CAN layer messages are not Addressed in the MTI bits
-        FT_AME  : begin
+      case CANBuffer^.ID and MTI_UNADDRESSED_MASK of                             // CAN layer messages are not Addressed in the MTI bits
+        MTI_AME  : begin
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
                     begin                                                       // The message is for a specific Node
                       NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
@@ -189,7 +140,7 @@ begin
                         NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_ALIAS_MAP_ENQUIRY);    // Need to characterize how much time this may take with a large number of nodes
                     end
                   end;
-        FT_AMD  : begin
+        MTI_AMD  : begin
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
                     begin
                       NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
@@ -198,7 +149,7 @@ begin
                         Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_NODE_ID;
                     end
                   end;
-        FT_AMR  : begin
+        MTI_AMR  : begin
                   end;
       end;
     end
@@ -222,10 +173,11 @@ var
   NodeID: TNodeID;
   DataBuffer: PDataBuffer;
   BaseBuffer: PBaseBuffer;
+  DatagramBuffer: PDatagramBuffer;
   SourceAlias: Word;
   VNodeSupports, PhysicalNodeSupports: Boolean;
   i: Integer;
-  
+  Offset: Byte;
   
   s1: array[0..32] of char;
 begin
@@ -248,8 +200,8 @@ begin
     begin
       case CANBuffer^.ID and MTI_TYPE_MASK of                                   // First subdivide between Unaddressed and Addressed Messages
         MTI_UNADDRESSED        : begin                                          // Unaddressed Messages
-                                   case CANBuffer^.ID and FT_UNADDRESSED_MASK of
-                                     FT_VERIFY_NODE_ID_NUMBER         : begin
+                                   case CANBuffer^.ID and MTI_UNADDRESSED_MASK of
+                                     MTI_VERIFY_NODE_ID_NUMBER         : begin
                                                                            if (CANBuffer^.DataCount = 0) then                                      // THIS IS NOT CLEAR IN THE SPEC
                                                                              NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_VERIFY_NODE_ID)  // Need to characterize how much time this may take with a large number of nodes
                                                                            else
@@ -261,7 +213,7 @@ begin
                                                                                NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_VERIFY_NODE_ID)  // Need to characterize how much time this may take with a large number of nodes
                                                                            end
                                                                         end;
-                                     FT_CONSUMER_IDENTIFY             : begin 
+                                     MTI_CONSUMER_IDENTIFY             : begin
                                                                           if Nodes.Count > 1 then    // First node is the Virtual Node, do we have any vNodes Allocated?
                                                                             VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsConsumer(@CANBuffer^.DataBytes)
                                                                           else
@@ -298,10 +250,10 @@ begin
                                                                             end
                                                                           end
                                                                         end;
-                                     FT_CONSUMER_IDENTIFY_RANGE       : begin 
+                                     MTI_CONSUMER_IDENTIFY_RANGE       : begin
                                                                           // TODO
                                                                         end;
-                                     FT_PRODUCER_IDENDIFY             : begin  
+                                     MTI_PRODUCER_IDENDIFY             : begin
                                                                           if Nodes.Count > 1 then     // First node is the Virtual Node, do we have any vNodes Allocated?
                                                                             VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsProducer(@CANBuffer^.DataBytes)
                                                                           else
@@ -333,10 +285,10 @@ begin
                                                                             end
                                                                           end
                                                                         end;
-                                     FT_PRODUCER_IDENTIFY_RANGE       : begin
+                                     MTI_PRODUCER_IDENTIFY_RANGE       : begin
                                                                           // TODO
                                                                         end;
-                                     FT_EVENT_LEARN                   : begin 
+                                     MTI_EVENT_LEARN                   : begin
                                                                         { if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
                                                                           begin
                                                                             NMRAnetUtilities_MsgBufferLink(@Nodes, DataBuffer);
@@ -347,7 +299,7 @@ begin
                                                                             DataBuffer^.DataBytes := CANBuffer^.DataBytes;
                                                                           end     }
                                                                         end;
-                                     FT_EVENTS_IDENTIFY               : begin 
+                                     MTI_EVENTS_IDENTIFY               : begin
                                                                           NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_ALL_EVENTS);
                                                                         end;
                                    end
@@ -405,11 +357,88 @@ begin
                                                 end;
                                               end;
                                            end;
-                MTI_DATAGRAM_ONLY_FRAME,
-                MTI_DATAGRAM_FRAME_START : begin
+                MTI_DATAGRAM_ONLY_FRAME :  begin
+                                             if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer) then
+                                             begin 
+                                                NMRAnetUtilities_MsgBufferLink(Node, DatagramBuffer);
+                                                DatagramBuffer^.mCode := BMC_DATAGRAM;
+                                                DatagramBuffer^.Alias := SourceAlias;
+                                                DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
+                                                for i := 0 to DatagramBuffer^.iByteCount - 1 do
+                                                  DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
+                                             end else
+                                             begin
+                                               i := LEN_DATAGRAM_BUFFER_OVERFLOW_LIST;
+                                               while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
+                                               begin
+                                                 if Node^.DatagramOverflowList[i] = 0 then
+                                                 begin
+                                                   Node^.DatagramOverflowList[i] := SourceAlias;
+                                                   i := LEN_DATAGRAM_BUFFER_OVERFLOW_LIST;
+                                                 end
+                                               end
+                                             end
                                            end;
-                MTI_DATAGRAM_FRAME,
+                MTI_DATAGRAM_FRAME_START : begin
+                                             if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer) then
+                                             begin
+                                               NMRAnetUtilities_MsgBufferLink(Node, DatagramBuffer);
+                                               DatagramBuffer^.State := DatagramBuffer^.State or CBS_PROCESSING;          // Not ready for the main loop to work it yet.
+                                               DatagramBuffer^.mCode := BMC_DATAGRAM;
+                                               DatagramBuffer^.Alias := SourceAlias;
+                                               DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
+                                               for i := 0 to DatagramBuffer^.iByteCount - 1 do
+                                                 DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
+                                             end
+                                           end;
+                MTI_DATAGRAM_FRAME       : begin
+                                             if NMRAnetUtilities_MsgBufferFindDatagram(Node, SourceAlias, DatagramBuffer) then
+                                             begin
+                                               if DatagramBuffer^.ErrorCode.MTI = MTI_EXTENSION_DATAGRAM_RECIEVED_OK then
+                                               begin
+                                                 Offset := DatagramBuffer^.iByteCount;
+                                                 for i := 0 to  CANBuffer^.DataCount - 1 do
+                                                   DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
+                                                 DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
+                                                 
+                                                 if DatagramBuffer^.iByteCount > LEN_DATAGRAM then
+                                                 begin
+                                                   DatagramBuffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                   DatagramBuffer^.ErrorCode.SubType := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER;
+                                                 end;
+                                               end
+                                             end;
+                                           end;
                 MTI_DATAGRAM_FRAME_END   : begin
+                                             if NMRAnetUtilities_MsgBufferFindDatagram(Node, SourceAlias, DatagramBuffer) then
+                                             begin
+                                               if DatagramBuffer^.ErrorCode.MTI = MTI_EXTENSION_DATAGRAM_RECIEVED_OK then
+                                               begin
+                                                 Offset := DatagramBuffer^.iByteCount;
+                                                 for i := 0 to  CANBuffer^.DataCount - 1 do
+                                                   DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
+                                                 DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
+
+                                                 if DatagramBuffer^.iByteCount > LEN_DATAGRAM then
+                                                 begin
+                                                   DatagramBuffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                   DatagramBuffer^.ErrorCode.SubType := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER;
+                                                 end;
+                                                 
+                                                 DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING;          // Signed Sealed so Deliver.
+                                               end
+                                             end else
+                                             begin
+                                               i := LEN_DATAGRAM_BUFFER_OVERFLOW_LIST;
+                                               while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
+                                               begin
+                                                 if Node^.DatagramOverflowList[i] = 0 then
+                                                 begin
+                                                   Node^.DatagramOverflowList[i] := SourceAlias;
+                                                   i := LEN_DATAGRAM_BUFFER_OVERFLOW_LIST;
+                                                 end
+                                               end
+                                             end
                                            end;
                 MTI_STREAM_DATA_SEND     : begin
                                            end;

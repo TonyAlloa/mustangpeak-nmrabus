@@ -27,11 +27,8 @@ uses
 
 procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
-procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer);
-procedure NMRAnetDatagrams_ProcessReceive(Node: PNMRAnetNode);
 procedure NMRAnetDatagrams_ProcessTransmit(Node: PNMRAnetNode);
 procedure NMRAnetDatagrams_100ms_TimeTick(Node: PNMRAnetNode);
-function NMRAnetDatagrams_QueueDatagram(Node: PNMRAnetNode; Datagram: PDatagram; ByteCount: Byte; TargetAliasID: Word): Boolean;
 procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
 
 
@@ -43,11 +40,6 @@ procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func
 
 implementation
 
- function TryAllocateBuffer(Node: PNMRAnetNode; var Datagram: PDatagramBuffer): Boolean; forward;
- 
- 
- 
- 
 procedure NMRAnetDatagrams_InitializeDatagramBuffer(Buffer: PDatagramBuffer);
 var
   i, j: Integer;
@@ -64,11 +56,11 @@ begin
     Buffer^.iByteCount := 0;
     Buffer^.iFrameCount := 0;
     Buffer^.iWatchdog := 0;
-    Buffer^.ErrorCode.MTI := 0;
+    Buffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_RECIEVED_OK;                // Assume Success
     Buffer^.ErrorCode.SubType[0] := 0;
     Buffer^.ErrorCode.SubType[1] := 0;
     Buffer^.iRetransmit := 0;
-    Buffer^.iStateMachine := 0;                                         // Not sure if is TX or RX at this point but does not matter for start
+    Buffer^.iStateMachine := 0;                                                 // Not sure if is TX or RX at this point but does not matter for start
     for j := 0 to LEN_DATAGRAM-1 do
       Buffer^.DataBytes[j] := 0;
   end
@@ -117,34 +109,6 @@ end;
 
 // *****************************************************************************
 //
-// procedure NMRAnetDatagrams_QueueDatagram;
-//
-//  Parameters:
-//                None
-//  Returns:
-//                None
-//  Description:
-// *****************************************************************************
-function NMRAnetDatagrams_QueueDatagram(Node: PNMRAnetNode; Datagram: PDatagram; ByteCount: Byte; TargetAliasID: Word): Boolean;
-var
-  DatagramBuffer: PDatagramBuffer;
-  i: Integer;
-begin
-  Result := False;
-  if TryAllocateBuffer(Node, DatagramBuffer) then
-  begin
-    for i := 0 to ByteCount - 1 do
-      DatagramBuffer^.DataBytes[i] := Datagram^[i];
-    DatagramBuffer^.Alias := TargetAliasID;
-    DatagramBuffer^.State := DatagramBuffer^.State or DGS_IN_PROCESS;
-    DatagramBuffer^.iByteCount := ByteCount;
-    DatagramBuffer^.iStateMachine := STATE_DATAGRAM_TRANSMIT_START;
-    Result := True
-  end;
-end;
-
-// *****************************************************************************
-//
 // procedure NMRAnetDatagrams_100ms_TimeTick;
 //
 //  Parameters:
@@ -163,6 +127,11 @@ procedure NMRAnetDatagrams_100ms_TimeTick(Node: PNMRAnetNode);
 var
   DatagramBuffer: PDatagramBuffer;
 begin
+
+//   NEED TO DEAL WITH ABANDON DATAGRAMS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
+
+
 {  if Node^.Msg <> nil then
   begin
     if Node^.Msg^.State and RMB_BUFFER_DATAGRAM <> 0 then                                           // See if the buffer is a Datagram Pointer
@@ -511,274 +480,6 @@ begin
     Datagram^.iStateMachine := AbandonState    // Too long between datagram frames, it is abandoned
   end else
     Datagram^.iStateMachine := NextState;
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetDatagrams_ProcessReceive;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description: The StateMachine index is stored within each Datagram Buffer. As
-//               such a hung datagram due to a non-responsve target will not hang up
-//               other datagrams being dealt with.
-//               The CAN layer interrupt handles the CAN recipt of the datgram over many frames
-//               Once the datagram is complete it sets the DATAGRAM_BUFFER_TRANSFER_COMPLETE
-//               state of the datagram and that is the end. The main loop statemachine detects
-//               the DATAGRAM_BUFFER_TRANSFER_COMPLETE flag and then dispatches it depending on
-//               its code, necessary responses to the sender are also handled automatically here.
-//               It also detect if the DATAGRAM_BUFFER_IN_PROCESS flag has been set
-//               too long and if so calls it abandon then frees the buffer
-// *****************************************************************************
-procedure NMRAnetDatagrams_ProcessReceive(Node: PNMRAnetNode);
-var
-  ActiveDatagram: PDatagramBuffer;
-begin
- { if Node^.DatagramReceive <> nil then
-  begin
-    ActiveDatagram := Node^.DatagramReceive;
-
-    if ActiveDatagram^.State <> DATAGRAM_BUFFER_EMPTY then
-    begin
-      case ActiveDatagram^.iStateMachine of
-
-        STATE_DATAGRAM_RECEIVE_START :
-          begin
-            case ActiveDatagram^.State of
-              DATAGRAM_BUFFER_IN_PROCESS         : ProcessAbandonedDatagram(ActiveDatagram, STATE_DATAGRAM_SENDING_RESPONSE, STATE_DATAGRAM_ERROR_RESPONSES);
-              DATAGRAM_BUFFER_TRANSFER_COMPLETE  : ActiveDatagram^.iStateMachine := STATE_DATAGRAM_RECEIVE_COMPLETE  // The datagram has been fully received time to respond to hte sender
-            else
-              ActiveDatagram^.iStateMachine := STATE_DATAGRAM_ERROR_RESPONSES;
-            end;
-          end;
-
-        STATE_DATAGRAM_RECEIVE_COMPLETE  :             // ProcessReceiveInterrupt has completed the datagram on the CAN layer
-          begin                                        // it has filled in the ErrorCode within that Statemachine during Receive
-          //  if ActiveDatagram^.ErrorCode.MTI and DATAGRAM_TYPE_TWO_BYTE_CMD_MASK <>
-          //  if ActiveDatagram^.ErrorCode.MTI and DATAGRAM_TYPE_SIX_BYTE_CMD_MASK <>     TODO DEALING WITH THIS CASES. JUNE 1 2012 NO KNOWN USES DEFINED
-            case ActiveDatagram^.ErrorCode.MTI of
-              MTI_TYPE_DATAGRAM_RECIEVED_OK : begin
-                                            case ActiveDatagram^.Databytes[0] of
-                                              DATAGRAM_TYPE_CONFIGURATION   : DispatchSpecialDatagramMemConfiguration(Node, ActiveDatagram, STATE_DATAGRAM_HANDLED_MESSASGE, STATE_DATAGRAM_UNHANDLED_MESSAGE);      // Memory Configuration Protocol
-                                              DATAGRAM_TYPE_TRAIN_CONTROL   : DispatchSpecialDatagramTrainControl(Node, ActiveDatagram, STATE_DATAGRAM_HANDLED_MESSASGE, STATE_DATAGRAM_UNHANDLED_MESSAGE)          // Train Control Protocol
-                                            else
-                                               DispatchDatagram(Node, ActiveDatagram, STATE_DATAGRAM_HANDLED_MESSASGE, STATE_DATAGRAM_UNHANDLED_MESSAGE);  // Return Not Accepted for any datagram types not handled
-                                            end;
-               end;
-              MTI_TYPE_DATAGRAM_REJECTED    : begin
-                                             ActiveDatagram^.iStateMachine := STATE_DATAGRAM_SENDING_RESPONSE; // The Receive Statemachine has already loaded up the ErrorCode field with the reason for the Rejection
-                                         end;
-            end
-          end;
-
-        STATE_DATAGRAM_HANDLED_MESSASGE :
-          begin
-            NMRANetUtilities_LoadDatagramResultBytes(ActiveDatagram, MTI_TYPE_DATAGRAM_RECIEVED_OK, nil);
-            ActiveDatagram^.iStateMachine := STATE_DATAGRAM_SENDING_RESPONSE;
-          end;
-
-        STATE_DATAGRAM_UNHANDLED_MESSAGE :
-          begin
-            NMRANetUtilities_LoadDatagramResultBytes(ActiveDatagram, MTI_TYPE_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED);
-            ActiveDatagram^.iStateMachine := STATE_DATAGRAM_SENDING_RESPONSE;
-          end;
-
-        STATE_DATAGRAM_SENDING_RESPONSE  :     // Make sure the ErrorCode informatoin is preloaded into the Datagram before entering this State
-          begin
-            if TrySendDatagramResponse(Node, ActiveDatagram, DATAGRAM_BUFFER_EMPTY) then
-              ActiveDatagram^.iStateMachine := STATE_DATAGRAM_ERROR_RESPONSES;
-          end;
-
-        STATE_DATAGRAM_ERROR_RESPONSES  :
-          begin
-            SendBufferFullResponses(Node);
-            ActiveDatagram^.iStateMachine := STATE_DATAGRAM_RECEIVE_START
-          end
-       else
-         ActiveDatagram^.iStateMachine := STATE_DATAGRAM_RECEIVE_START;
-       end;
-    end;                                                                         // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  end      }
-end;
-
-// *****************************************************************************
-//  function FindMatchingInProcessReceiveDatagram;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function FindMatchingInProcessReceiveDatagram(Node: PNMRAnetNode; var Datagram: PDatagramBuffer; Alias: Word): Boolean;
-begin
-  Result := False;
- { if Node^.DatagramReceive <> nil then
-  begin
-    if Node^.DatagramReceive^.State = DATAGRAM_BUFFER_IN_PROCESS then
-    begin
-      if NMRAnetUtilities_CompareAliasIDs(Node^.DatagramReceive^.Alias, Alias) then
-      begin
-        Datagram := Node^.DatagramReceive;
-        Result := True;
-      end;
-    end                                                                      // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  end   }
-end;
-
-// *****************************************************************************
-//  procedure UpdateFrameCount;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-procedure UpdateFrameCount(Datagram: PDatagramBuffer);
-begin
-  if Datagram^.ErrorCode.MTI = MTI_EXTENSION_DATAGRAM_RECIEVED_OK then                     // If in Error has already failed this function
-  begin
-    Inc(Datagram^.iFrameCount);                                                 // Next Frame
-    Datagram^.iWatchdog := 0;                                                   // Reset the Watchdog since the source connected again
-    if Datagram^.iFrameCount >= DATAGRAM_MAX_FRAME_COUNT then                   // Source sent too many frames
-    begin
-      NMRANetUtilities_LoadDatagramResultBytes(Datagram, MTI_EXTENSION_DATAGRAM_REJECTED, @DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER); // Ready for a "Frame out of Order" Response
-      Datagram^.iFrameCount := 0;
-    end
-  end;
-end;
-
-// *****************************************************************************
-//  procedure StoreBytes;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-procedure StoreBytes(Datagram: PDatagramBuffer; var Buffer: TCANBuffer);
-var
-  i, Offset: Integer;
-begin
-  if Datagram^.ErrorCode.MTI = MTI_EXTENSION_DATAGRAM_RECIEVED_OK then        // Only store if thre is no error
-  begin
-    Offset := Datagram^.iByteCount;
-    for i := 0 to Buffer.DataCount - 1 do
-    begin
-      Datagram^.DataBytes[i + Offset] := Buffer.DataBytes[i];
-      Inc(Datagram^.iByteCount);
-    end;
-  end
-end;
-
-// *****************************************************************************
-//  procedure AddToBufferOverflowList;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-procedure AddToBufferOverflowList(Node: PNMRAnetNode; Datagram: PDatagramBuffer);
-var
-  i: Integer;
-begin
-  i := 0;
-  while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
-  begin
-    if Node^.DatagramOverflowList[i] = 0 then
-    begin
-      Node^.DatagramOverflowList[i] := Datagram^.Alias;
-      Exit;
-    end
-  end
-end;
-
-// *****************************************************************************
-//  function TryAllocateBuffer;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function TryAllocateBuffer(Node: PNMRAnetNode; var Datagram: PDatagramBuffer): Boolean;
-begin
-  Result := False;
-//  GetMem(Node^.DatagramReceive, SizeOf(TDatagramBuffer));
-{  if Node^.DatagramReceive <> nil then
-  begin
-    if Node^.DatagramReceive^.State = DATAGRAM_BUFFER_EMPTY then
-    begin                                                                       // Grab the first empty buffer
-      Datagram := Node^.DatagramReceive;                                  // It is NOT initialized
-      Datagram^.ErrorCode.MTI := MTI_TYPE_DATAGRAM_RECIEVED_OK;
-      Result := True
-    end                                                    // TODO THIS WILL BE RECURSIVE INTO THE LINKED LIST!!!@@@J@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  end   }
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetDatagrams_ProcessReceive;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-procedure NMRAnetDatagrams_ProcessReceiveFromInterruptContext(Node: PNMRAnetNode; Buffer: PCANBuffer);
-var
-  Datagram: PDatagramBuffer;
-begin
-  Datagram := PDatagramBuffer( nil);
- { case Buffer^.ID and MTI_TYPE_MASK of
-    MTI_DATAGRAM_ONLY_FRAME :
-      begin
-        if TryAllocateBuffer(Node, Datagram) then
-        begin
-          Datagram^.Alias := Buffer^.ID and MASK_SOURCE_ALIAS;
-          Datagram^.iByteCount := 0;
-          Datagram^.iFrameCount := 0;
-          StoreBytes(Datagram, Buffer^);
-          Datagram^.State := DATAGRAM_BUFFER_TRANSFER_COMPLETE;                // Ready for a "Full" Response
-        end
-      end;
-    MTI_DATAGRAM_FRAME_START :
-      begin
-        if TryAllocateBuffer(Node, Datagram) then
-        begin
-          Datagram^.Alias := Buffer^.ID and MASK_SOURCE_ALIAS;
-          Datagram^.iByteCount := 0;
-          Datagram^.iFrameCount := 0;
-          Datagram^.iWatchdog := 0;
-          StoreBytes(Datagram, Buffer^);
-          Datagram^.State := DATAGRAM_BUFFER_IN_PROCESS;
-        end
-      end;
-    MTI_DATAGRAM_FRAME :
-      begin
-        if FindMatchingInProcessReceiveDatagram(Node, Datagram, Buffer^.ID and MASK_SOURCE_ALIAS) then
-        begin
-          UpdateFrameCount(Datagram);
-          StoreBytes(Datagram, Buffer^);
-        end
-      end;
-    MTI_DATAGRAM_FRAME_END :
-      begin
-        if FindMatchingInProcessReceiveDatagram(Node, Datagram, Buffer^.ID and MASK_SOURCE_ALIAS) then
-        begin
-          UpdateFrameCount(Datagram);
-          StoreBytes(Datagram, Buffer^);
-          Datagram^.State := DATAGRAM_BUFFER_TRANSFER_COMPLETE;                // Ready for a "Full" Response
-        end else
-          AddToBufferOverflowList(Node, Datagram);
-      end;
-   end;   }
 end;
 
 end.
