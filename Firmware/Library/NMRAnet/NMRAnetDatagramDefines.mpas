@@ -72,6 +72,7 @@ type
   TDatagramError = record
     MTI: Byte;
     SubType: TDatagramErrorCode;
+    Count: Byte;                                                                // Number of Bytes to move into the CAN Databyte (MTI + SubType if needed)
   end;
   
   TDatagramBuffer = record                                                      // Overlays TBaseBuffer..........
@@ -82,16 +83,14 @@ type
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message was (not implemented on some buffers so be careful), see BMC_xxxx
     Tag: TBufferTag;                                                            // General Purpose useage depending on the message type (not implemented on some buffers so be careful), see BMC_xxxx
-    
-    iStateMachine: Byte;                                                        // Each Datagram Buffer holds it own place in the global statemachine, this allow interleaving and no deadlock when a target node is not responding
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit
-    iFrameCount: Byte;                                                          // Counts the number of Frames received/transmitted
     DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
-
-    iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message or during transmit the Target Node never responds
     ErrorCode: TDatagramError;                                                  // Tracks any errors that occur through the MTI/Error Codes send as the first few bytes in the datagram
+    
+    iFrameCount: Byte;
+    iStateMachine: Byte;                                                        // Each Datagram Buffer holds it own place in the global statemachine, this allow interleaving and no deadlock when a target node is not responding
+    iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message or during transmit the Target Node never responds
     iRetransmit: Byte;                                                          // Number of times the Datagram was attempted to transmit use to test before not trying any more
-
   end;
   PDatagramBuffer = ^TDatagramBuffer;
   

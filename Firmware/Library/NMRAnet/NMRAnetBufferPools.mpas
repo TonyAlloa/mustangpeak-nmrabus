@@ -39,10 +39,10 @@ type
     Count: Byte;
   end;
 
-  TDatagramBufferPool = record                                                  // Datagrams that are dynamically assigned to TMessageBuffer structures
+  TDatagramBufferPool = record
     Pool: array[0..MAX_DATAGRAM_BUFFER_POOL-1] of TDatagramBuffer;              // Max Count of Pool Buffers used
     MaxCount: Byte;                                                             // Number of Buffers currently used
-    Count: Byte;
+    Count: Byte;                                                // Datagrams that are dynamically assigned to TMessageBuffer structures
   end;
 
 procedure NMRAnetBufferPools_Initialize;

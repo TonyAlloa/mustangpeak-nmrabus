@@ -54,12 +54,13 @@ begin
     Buffer^.Tag := 0;
 
     Buffer^.iByteCount := 0;
-    Buffer^.iFrameCount := 0;
     Buffer^.iWatchdog := 0;
     Buffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_RECIEVED_OK;                // Assume Success
+    Buffer^.ErrorCode.Count := 1;                                               // Assume only the MTI
     Buffer^.ErrorCode.SubType[0] := 0;
     Buffer^.ErrorCode.SubType[1] := 0;
     Buffer^.iRetransmit := 0;
+    Buffer^.iFrameCount := 0;
     Buffer^.iStateMachine := 0;                                                 // Not sure if is TX or RX at this point but does not matter for start
     for j := 0 to LEN_DATAGRAM-1 do
       Buffer^.DataBytes[j] := 0;

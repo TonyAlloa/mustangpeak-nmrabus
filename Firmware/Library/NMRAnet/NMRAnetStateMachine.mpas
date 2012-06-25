@@ -74,6 +74,9 @@ var
 
 implementation
 
+ var
+   s1: array[0..32] of char;
+
 function NMRAnetStateMachine_TrySendAbbreviatedCDI(Node: PNMRAnetNode; Buffer: PCANBuffer; DestinationAliasID: Word): Boolean;
 var
 //  BrokenBuffer: TCANBUffer;   BUG IN VERSION 5.60 with this
@@ -425,10 +428,7 @@ var
   DataBuffer: PDataBuffer;
   DatagramBuffer: PDatagramBuffer;
   ACDIArray: ^array[0..0] of Byte;
-  
-  s1: array[0..32] of char;
-
-begin 
+begin
   LocalMsgFlags := Node^.MsgFlags;
   
   // The first thing to check is for duplicate Node ID's or Aliases and handle
@@ -563,18 +563,38 @@ begin
         case Node^.MsgBuffer^.mCode of
           BMC_DATAGRAM :                      begin
                                                 DatagramBuffer := PDatagramBuffer( Pointer( Node^.MsgBuffer));
-                                                DataBytes[0] := DatagramBuffer^.ErrorCode.MTI;
-                                                DataBytes[1] := DatagramBuffer^.ErrorCode.SubType[0];
-                                                DataBytes[2] := DatagramBuffer^.ErrorCode.SubType[1];
-                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, Node^.MsgBuffer^.Alias, 3, @DataBytes) then
+                                                if DatagramBuffer^.State and CBS_PROCESSING = 0 then
                                                 begin
-                                                  NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
-                                                  NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
+                                                  DataBytes[0] := DatagramBuffer^.ErrorCode.MTI;                // All the Errors and return codes where handled in the interrupt during reception
+                                                  DataBytes[1] := DatagramBuffer^.ErrorCode.SubType[0];
+                                                  DataBytes[2] := DatagramBuffer^.ErrorCode.SubType[1];
+                                                  
+                                                  // Hook in here to respond to Datagram........
+                                                  
+                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, Node^.MsgBuffer^.Alias, DatagramBuffer^.ErrorCode.Count, @DataBytes) then
+                                                  begin
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
+                                                    NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
+                                                  end;
                                                 end;
                                               end;
         end; // case
       end else
     end;
+  end;
+  
+  for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST - 1 do
+  begin
+    if Node^.DatagramOverflowList[i] <> 0 then
+    begin
+      DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;                          // All the Errors and return codes where handled in the interrupt during reception
+      DataBytes[1] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[0];
+      DataBytes[2] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[1];
+      if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, Node^.DatagramOverflowList[i], 3, @DataBytes) then
+        Node^.DatagramOverflowList[i] := 0
+      else
+        Break
+    end
   end;
   
   

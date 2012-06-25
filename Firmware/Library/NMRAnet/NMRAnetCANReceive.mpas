@@ -178,8 +178,6 @@ var
   VNodeSupports, PhysicalNodeSupports: Boolean;
   i: Integer;
   Offset: Byte;
-  
-  s1: array[0..32] of char;
 begin
 
   //UART1_Write_Text('NMRAnet'+LF);
@@ -368,13 +366,12 @@ begin
                                                   DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
                                              end else
                                              begin
-                                               i := LEN_DATAGRAM_BUFFER_OVERFLOW_LIST;
-                                               while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
+                                               for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST - 1 do
                                                begin
                                                  if Node^.DatagramOverflowList[i] = 0 then
                                                  begin
                                                    Node^.DatagramOverflowList[i] := SourceAlias;
-                                                   i := LEN_DATAGRAM_BUFFER_OVERFLOW_LIST;
+                                                   Break
                                                  end
                                                end
                                              end
@@ -389,7 +386,7 @@ begin
                                                DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
                                                for i := 0 to DatagramBuffer^.iByteCount - 1 do
                                                  DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
-                                             end
+                                             end // An overflow is caught in the Last Frame when we can't find a buffer in progress
                                            end;
                 MTI_DATAGRAM_FRAME       : begin
                                              if NMRAnetUtilities_MsgBufferFindDatagram(Node, SourceAlias, DatagramBuffer) then
@@ -405,6 +402,7 @@ begin
                                                  begin
                                                    DatagramBuffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_REJECTED;
                                                    DatagramBuffer^.ErrorCode.SubType := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER;
+                                                   DatagramBuffer^.ErrorCode.Count := 3;                                      // MTI + 2 Error Code Bytes
                                                  end;
                                                end
                                              end;
@@ -423,19 +421,19 @@ begin
                                                  begin
                                                    DatagramBuffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_REJECTED;
                                                    DatagramBuffer^.ErrorCode.SubType := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER;
+                                                   DatagramBuffer^.ErrorCode.Count := 3;                                      // MTI + 2 Error Code Bytes
                                                  end;
                                                  
                                                  DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING;          // Signed Sealed so Deliver.
                                                end
                                              end else
                                              begin
-                                               i := LEN_DATAGRAM_BUFFER_OVERFLOW_LIST;
-                                               while i < LEN_DATAGRAM_BUFFER_OVERFLOW_LIST do
+                                               for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST - 1 do
                                                begin
                                                  if Node^.DatagramOverflowList[i] = 0 then
                                                  begin
                                                    Node^.DatagramOverflowList[i] := SourceAlias;
-                                                   i := LEN_DATAGRAM_BUFFER_OVERFLOW_LIST;
+                                                   Break
                                                  end
                                                end
                                              end

@@ -77,7 +77,7 @@ begin
   PR2 := 31250;             // Clock ticks every 50ns * 31250 * 64 = 100ms interrupts
   T2IF_bit := 0;            // Clear T2IF
   T2IE_bit := 1;            // Enable the Interrupt
-  TON_T2CON_bit := 1;       // Turn on
+  {$IFNDEF WATCHDOGTIMER_DISABLE}TON_T2CON_bit := 1;{$ENDIF}       // Turn on
   
   {$IFDEF UART_ENABLE}
   // Initialize UART
