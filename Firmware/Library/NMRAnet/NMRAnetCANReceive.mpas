@@ -237,14 +237,14 @@ begin
                                                                                 begin
                                                                                   if VNodeSupports then
                                                                                   begin
-                                                                                    NMRAnetUtilities_MsgBufferLink(Nodes.AllocatedList[i], PBaseBuffer( Word(DataBuffer)));
+                                                                                    NMRAnetUtilities_MsgBufferLink(Nodes.AllocatedList[i], PBaseBuffer( GenericPointerAdapter(DataBuffer)));
                                                                                     Inc(DataBuffer^.RefCount);
                                                                                   end
                                                                                 end else
                                                                                 begin
                                                                                   if PhysicalNodeSupports then
                                                                                   begin
-                                                                                    NMRAnetUtilities_MsgBufferLink(Nodes.AllocatedList[i], PBaseBuffer( Word(DataBuffer)));
+                                                                                    NMRAnetUtilities_MsgBufferLink(Nodes.AllocatedList[i], PBaseBuffer( GenericPointerAdapter(DataBuffer)));
                                                                                     Inc(DataBuffer^.RefCount);
                                                                                   end
                                                                                 end
@@ -276,12 +276,12 @@ begin
                                                                               begin
                                                                                 DataBuffer^.RefCount := Nodes.Count - 1;
                                                                                 for i := 1 to Nodes.Count - 1 do
-                                                                                  NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], PBaseBuffer( Word(DataBuffer)));
+                                                                                  NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], PBaseBuffer( GenericPointerAdapter(DataBuffer)));
                                                                               end;
 
                                                                               if PhysicalNodeSupports then
                                                                               begin
-                                                                                NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[0], PBaseBuffer( Word(DataBuffer)));    //  Store it in the Nodes structure to distribute later
+                                                                                NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[0], PBaseBuffer( GenericPointerAdapter(DataBuffer)));    //  Store it in the Nodes structure to distribute later
                                                                                 Inc(DataBuffer^.RefCount);
                                                                               end
                                                                             end
@@ -345,11 +345,6 @@ begin
                                                MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin
                                                                                                   if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                                                   begin
-                                                                                                  
-                                                                                                  WordToHex(Word(BaseBuffer), s1);
-                                                                                                  UART1_Write_Text('0x'+s1+LF);
-                                                                                                  
-                                                                                                  
                                                                                                     NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
                                                                                                     BaseBuffer^.mCode := BMC_SIMPLE_NODE_INFO_REQEUST;
                                                                                                     BaseBuffer^.Alias := SourceAlias
@@ -367,7 +362,7 @@ begin
                 MTI_DATAGRAM_ONLY_FRAME :  begin
                                              if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer) then
                                              begin 
-                                                NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( Word(DatagramBuffer)));
+                                                NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( GenericPointerAdapter(DatagramBuffer)));
                                                 DatagramBuffer^.mCode := BMC_DATAGRAM;
                                                 DatagramBuffer^.Alias := SourceAlias;
                                                 DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
@@ -388,7 +383,7 @@ begin
                 MTI_DATAGRAM_FRAME_START : begin
                                              if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer) then
                                              begin
-                                               NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( Word(DatagramBuffer)));
+                                               NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( GenericPointerAdapter(DatagramBuffer)));
                                                DatagramBuffer^.State := DatagramBuffer^.State or CBS_PROCESSING;          // Not ready for the main loop to work it yet.
                                                DatagramBuffer^.mCode := BMC_DATAGRAM;
                                                DatagramBuffer^.Alias := SourceAlias;
@@ -457,10 +452,7 @@ begin
     end;
   end;
 
-  if TMR4 > MaxTime_RX then
-  begin
-    MaxTime_RX := TMR4;
-  end;
+  if TMR4 > MaxTime_RX then MaxTime_RX := TMR4;
 end;
 
 procedure ReceivedOnFilter2(Buffer: PCANBuffer);

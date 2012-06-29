@@ -59,7 +59,7 @@ function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 
 procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode);
 function NMRAnetUtilities_MsgBufferFindDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
 
 implementation
@@ -124,6 +124,13 @@ begin
   end;
   Packet^.State := Packet^.State or CBS_EXTENDED;
   Packet^.ID := $10000000 or VariableField or NodeBuffer^.Node.AliasID;
+
+// TEMPORARY TEST
+ // if (VariableField = MTI_SIMPLE_NODE_IDENTIFY_INFO) then
+ //   if DataBytes^[0] = MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY then
+  //    Packet^.ID := Packet^.ID and not $10000000;
+      
+
   if DestinationAliasID <> 0 then
     Packet^.ID := Packet^.ID or DWORD(DestinationAliasID shl 12);
 
@@ -633,12 +640,12 @@ var
   Temp: PBaseBuffer;
 begin
   if Node^.MsgBuffer = nil then
-    Node^.MsgBuffer := PBaseBuffer( Buffer)
+    Node^.MsgBuffer := Buffer
   else begin
     Temp := Node^.MsgBuffer;
-    while Temp^.Next <> nil do
-      Temp := PBaseBuffer( Temp^.Next);
-    Temp^.Next := Buffer
+    while Temp^.NextBuffer <> nil do
+      Temp := Temp^.NextBuffer;
+    Temp^.NextBuffer := Buffer
   end
 end;
 
@@ -650,13 +657,15 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode);
 var
   Temp: PBaseBuffer;
 begin
-  Buffer := Node^.MsgBuffer;
-  Temp := PBaseBuffer( Node^.MsgBuffer^.Next);
-  Node^.MsgBuffer := Temp;
+  if Node^.MsgBuffer <> nil then
+  begin
+    Temp := Node^.MsgBuffer^.NextBuffer;
+    Node^.MsgBuffer := Temp;
+  end
 end;
 
 // *****************************************************************************
@@ -677,11 +686,11 @@ begin
   begin
     if (Temp^.State and CBS_BUFFER_DATAGRAM) and (Temp^.Alias = Alias) then
     begin
-      Buffer := PDatagramBuffer( Word( Temp));
+      Buffer := PDatagramBuffer( GenericPointerAdapter( Temp));
       Result := True;
       Break
     end;
-    Temp := Temp^.Next
+    Temp := Temp^.NextBuffer
   end;
 end;
 

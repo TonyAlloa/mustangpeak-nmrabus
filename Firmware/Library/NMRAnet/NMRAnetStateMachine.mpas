@@ -460,7 +460,7 @@ begin
     end else
     if NMRAnetNode_TestMsgFlags(Node, MF_VERIFY_NODE_ID, False) then
     begin
-      NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @DataBytes);
+      NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, Buffer);
       if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_VERIFIED_NODE_ID_NUMBER, 0, 6, @DataBytes) then
         NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
     end else
@@ -475,9 +475,10 @@ begin
     end
   end else
   begin
-    if Node^.MsgBuffer <> 0 then
+    BaseBuffer := Node^.MsgBuffer;
+    if BaseBuffer <> 0 then
     begin
-      if Node^.MsgBuffer^.State and CBS_BUFFER_BASE <> 0 then                   // QUESTION ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      if BaseBuffer^.State and CBS_BUFFER_BASE <> 0 then                   // QUESTION ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       begin                                                                     // WHAT IS THE POINT OF CHECKING STATE NOW?  IT MAY HELP WITH EXECUTION TIME
         case Node^.MsgBuffer^.mCode of                                          // BY NOT RUNNING A BIG CASE STATEMENT..... NEED TO BURN SOME BRAIN CELLS ON IT
           BMC_PROTOCOL_SUPPORT_QUERY :        begin
@@ -488,7 +489,7 @@ begin
                                                     DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PROTOCOL_SUPPORT_REPLY, Node^.MsgBuffer^.Alias, 6, @DataBytes) then
                                                 begin
-                                                  NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
+                                                  NMRAnetUtilities_MsgBufferUnLink(Node);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                 end;
                                               end;
@@ -496,7 +497,7 @@ begin
                                                 DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_OPTIONAL_INTERACTION_REJECTED, Node^.MsgBuffer^.Alias, 1, @DataBytes) then
                                                 begin
-                                                  NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
+                                                  NMRAnetUtilities_MsgBufferUnLink(Node);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                 end;
                                               end;
@@ -540,32 +541,32 @@ begin
                                                     Inc(BaseBuffer^.Tag);
                                                     Inc(i);
                                                   end;
-                                                  TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PROTOCOL_SUPPORT_REPLY, BaseBuffer^.Alias, i, @DataBytes);  // Has to go, already checked for a free buffer
+                                                  TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_SIMPLE_NODE_IDENTIFY_INFO, BaseBuffer^.Alias, i, @DataBytes);  // Has to go, already checked for a free buffer
                                                   if BaseBuffer^.Tag = MaxIndex then
                                                   begin
-                                                    NMRAnetUtilities_MsgBufferUnLink(Node, BaseBuffer);
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node);
                                                     NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                   end;
                                                 end
                                               end;
         end;
       end else
-      if Node^.MsgBuffer^.State and CBS_BUFFER_DATABUFFER <> 0 then
+      if BaseBuffer^.State and CBS_BUFFER_DATABUFFER <> 0 then
       begin
         case Node^.MsgBuffer^.mCode of
           BMC_PRODUCER_IDENTIFY :             begin
-                                                DataBuffer := PDataBuffer( Word( Node^.MsgBuffer));
+                                                DataBuffer := PDataBuffer( GenericPointerAdapter( Node^.MsgBuffer));
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, Node^.MsgBuffer^.Alias, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                 begin
-                                                  NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
+                                                  NMRAnetUtilities_MsgBufferUnLink(Node);
                                                   NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
                                                 end;
                                               end;
           BMC_CONSUMER_IDENTIFY :             begin
-                                                DataBuffer := Node^.MsgBuffer);
+                                                DataBuffer := PDataBuffer( GenericPointerAdapter( Node^.MsgBuffer));
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, Node^.MsgBuffer^.Alias, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                 begin
-                                                  NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
+                                                  NMRAnetUtilities_MsgBufferUnLink(Node);
                                                   NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
                                                 end;
                                               end;
@@ -573,11 +574,11 @@ begin
                                               end;
         end; // case
       end else
-      if Node^.MsgBuffer^.State and CBS_BUFFER_DATAGRAM <> 0 then
+      if BaseBuffer^.State and CBS_BUFFER_DATAGRAM <> 0 then
       begin
         case Node^.MsgBuffer^.mCode of
           BMC_DATAGRAM :                      begin
-                                                DatagramBuffer := PDatagramBuffer( Pointer( Node^.MsgBuffer));
+                                                DatagramBuffer := PDatagramBuffer( GenericPointerAdapter( Node^.MsgBuffer));
                                                 if DatagramBuffer^.State and CBS_PROCESSING = 0 then
                                                 begin
                                                   DataBytes[0] := DatagramBuffer^.ErrorCode.MTI;                // All the Errors and return codes where handled in the interrupt during reception
@@ -588,8 +589,8 @@ begin
                                                   
                                                   if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, Node^.MsgBuffer^.Alias, DatagramBuffer^.ErrorCode.Count, @DataBytes) then
                                                   begin
-                                                    NMRAnetUtilities_MsgBufferUnLink(Node, DatagramBuffer);
-                                                    NMRAnetBufferPools_ReleaseDataBuffer(DatagramBuffer);
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node);
+                                                    NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
                                                   end;
                                                 end;
                                               end;

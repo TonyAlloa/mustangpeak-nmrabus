@@ -127,7 +127,7 @@ const
   MTI_EVENT_LEARN                    = $08ACF000;                                // Databytes = EventID
   MTI_PC_EVENT_REPORT                = $08ADF000;                                // Infamouse PCER
   
-  MTI_PROTOCOL_ACDI                  = $0E000000;
+  MTI_SIMPLE_NODE_IDENTIFY_INFO      = $0E000000;                               // MTI for ACDI
   
   MTI_DATAGRAM_REPLY                 = $0E000000;                                // MTI for Datagram Reply
   

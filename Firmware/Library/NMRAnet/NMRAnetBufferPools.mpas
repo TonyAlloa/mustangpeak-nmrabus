@@ -57,6 +57,8 @@ procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
 function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer): Boolean;
 procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
 
+procedure NMRAnetBufferPools_Print;
+
 
   // Located in NMRAnetStateMachine.mpas
   procedure NMRAnetStateMachine_InitializeDataBuffer(Buffer: PDataBuffer); external;
@@ -69,6 +71,26 @@ var
   DatagramPool: TDatagramBufferPool;
 
 implementation
+
+
+
+procedure NMRAnetBufferPools_Print;
+var
+  s1: array[0..32] of char;
+begin
+   IntToStr(BaseBufferPool.MaxCount, s1);
+   UART1_Write_Text('BaseBufferPool Max Count: '+s1+LF);
+   IntToStr(BaseBufferPool.Count, s1);
+   UART1_Write_Text('BaseBufferPool Count: '+s1+LF);
+   IntToStr(DataBufferPool.MaxCount, s1);
+   UART1_Write_Text('DataBufferPool Max Count: '+s1+LF);
+   IntToStr(DataBufferPool.Count, s1);
+   UART1_Write_Text('DataBufferPool Count: '+s1+LF);
+   IntToStr(DatagramPool.MaxCount, s1);
+   UART1_Write_Text('DatagramPool Max Count: '+s1+LF);
+   IntToStr(DatagramPool.Count, s1);
+   UART1_Write_Text('DatagramPool Count: '+s1+LF);
+end;
 
 
 
@@ -86,7 +108,7 @@ procedure NMRAnetBufferPools_InitializeBaseBuffer(Buffer: PBaseBuffer);
 begin
   Buffer^.State := CBS_EMPTY;
   Buffer^.Alias := 0;
-  Buffer^.Next := 0;
+  Buffer^.NextBuffer := nil;
   Buffer^.mCode := 0;
   Buffer^.Tag := 0;
   Buffer^.RefCount := 0;
@@ -142,11 +164,11 @@ begin
     begin
       Buffer := @BaseBufferPool.Pool[i];
       NMRAnetBufferPools_InitializeBaseBuffer(Buffer);
-      if BaseBufferPool.Count >= BaseBufferPool.MaxCount then
-        BaseBufferPool.MaxCount := BaseBufferPool.Count;
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_BASE;
       Inc(Buffer^.RefCount);
       Inc(BaseBufferPool.Count);
+      if BaseBufferPool.Count >= BaseBufferPool.MaxCount then
+        BaseBufferPool.MaxCount := BaseBufferPool.Count;
       Result := True;
       Break
     end
@@ -196,10 +218,10 @@ begin
       Buffer := @DataBufferPool.Pool[i];
       NMRAnetStateMachine_InitializeDataBuffer(Buffer);
       Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATABUFFER;
-      if DataBufferPool.Count >= DataBufferPool.MaxCount then
-        DataBufferPool.MaxCount := DataBufferPool.Count;
       Inc(Buffer^.RefCount);
       Inc(DataBufferPool.Count);
+      if DataBufferPool.Count >= DataBufferPool.MaxCount then
+        DataBufferPool.MaxCount := DataBufferPool.Count;
       Result := True;
       Break
     end
@@ -250,11 +272,11 @@ begin
       Buffer := @DatagramPool.Pool[i];
       Result := True;
       NMRAnetDatagrams_InitializeDatagramBuffer(Buffer);
-      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATAGRAM;
-      if DatagramPool.Count >= DatagramPool.MaxCount then
-        DatagramPool.MaxCount := DatagramPool.Count;
+      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATAGRAM;          
       Inc(Buffer^.RefCount);
       Inc(DatagramPool.Count);
+      if DatagramPool.Count >= DatagramPool.MaxCount then
+        DatagramPool.MaxCount := DatagramPool.Count;
       Break
     end
   end
