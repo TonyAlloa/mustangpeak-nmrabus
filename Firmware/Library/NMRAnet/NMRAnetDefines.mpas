@@ -75,7 +75,7 @@ const
   MTI_DATAGRAM_FRAME_END            = $0D000000;                                // Sub type SMTI_DATAGRAM_END
   MTI_ADDRESSED                     = $0E000000;
   MTI_STREAM_DATA_SEND              = $0F000000;
-  MTI_TYPE_MASK                     = $0F000000;                                // The lower 4 bits of the upper word that decodes the NMRAnet Format code of the message
+  MTI_TYPE_MASK                     = $0F000000;                                // The lower 4 bits of the upper Byte that decodes the NMRAnet Format code of the message, per the spec ignore the first bit of the upper nibble
 
   // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
   MTI_EXTENSION_VERIFY_NODE_ID_NUMBER_DEST       = $0A;                         // Sub-Type (in first Databyte) for a MTI with a destination in the header
@@ -171,7 +171,7 @@ type
   TDataBuffer = record                                                          // Overlays TBaseBuffer..........
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
-    Next: Pointer;                                                              // Pointer to the next Message Buffer
+    Next: PBaseBuffer;                                                          // Pointer to the next Message Buffer
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message was (not implemented on some buffers so be careful), see BMC_xxxx
     Tag: TBufferTag;                                                            // General Purpose useage depending on the message type (not implemented on some buffers so be careful), see BMC_xxxx

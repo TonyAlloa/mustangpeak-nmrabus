@@ -505,6 +505,21 @@ begin
                                                 begin
 
                                                   BaseBuffer := Node^.MsgBuffer;
+                                                  
+                                                  
+                                         {         WordToHex(Word(BaseBuffer), s1);
+                                                  UART1_Write_Text('0x'+s1+LF);
+                                                  WordToHex(Word(BaseBuffer^.Alias), s1);
+                                                  UART1_Write_Text('   Alias: '+s1+LF);
+                                                  WordToHex(Word(BaseBuffer^.Next), s1);
+                                                  UART1_Write_Text('   Next: '+s1+LF);
+                                                  WordToHex(Word(BaseBuffer^.RefCount), s1);
+                                                  UART1_Write_Text('   RefCount: '+s1+LF);
+                                                  WordToHex(Word(BaseBuffer^.mCode), s1);
+                                                  UART1_Write_Text('   mCode: '+s1+LF);
+                                                  WordToHex(Word(BaseBuffer^.Tag), s1);
+                                                  UART1_Write_Text('   Tag: '+s1+LF);   }
+                                                  
 
                                                   if Node^.State and NS_VIRTUAL <> 0 then
                                                   begin
@@ -539,7 +554,7 @@ begin
       begin
         case Node^.MsgBuffer^.mCode of
           BMC_PRODUCER_IDENTIFY :             begin
-                                                DataBuffer := PDataBuffer( Pointer( Node^.MsgBuffer));
+                                                DataBuffer := PDataBuffer( Word( Node^.MsgBuffer));
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, Node^.MsgBuffer^.Alias, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                 begin
                                                   NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
@@ -547,7 +562,7 @@ begin
                                                 end;
                                               end;
           BMC_CONSUMER_IDENTIFY :             begin
-                                                DataBuffer := PDataBuffer( Pointer( Node^.MsgBuffer));
+                                                DataBuffer := Node^.MsgBuffer);
                                                 if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, Node^.MsgBuffer^.Alias, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                 begin
                                                   NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
@@ -573,8 +588,8 @@ begin
                                                   
                                                   if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, Node^.MsgBuffer^.Alias, DatagramBuffer^.ErrorCode.Count, @DataBytes) then
                                                   begin
-                                                    NMRAnetUtilities_MsgBufferUnLink(Node, DataBuffer);
-                                                    NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node, DatagramBuffer);
+                                                    NMRAnetBufferPools_ReleaseDataBuffer(DatagramBuffer);
                                                   end;
                                                 end;
                                               end;

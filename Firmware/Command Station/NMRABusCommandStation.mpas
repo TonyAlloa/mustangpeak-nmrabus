@@ -186,8 +186,8 @@ begin
       y := MaxTime_StateMachine
     end; }
     
- //   if i = 1000 then
-  //  begin
+  //  if i = 100 then
+   // begin
       ActiveNode := NMRAnetNode_NextNode;
   //    i := 0;
   //  end;

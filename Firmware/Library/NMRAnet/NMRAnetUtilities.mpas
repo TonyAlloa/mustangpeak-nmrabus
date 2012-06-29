@@ -58,9 +58,9 @@ function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 
-procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: Pointer);
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: Pointer);
-function NMRAnetUtilities_MsgBufferFindDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: Pointer): Boolean;
+procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
+function NMRAnetUtilities_MsgBufferFindDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
 
 implementation
 
@@ -628,7 +628,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: Pointer);
+procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
 var
   Temp: PBaseBuffer;
 begin
@@ -637,7 +637,7 @@ begin
   else begin
     Temp := Node^.MsgBuffer;
     while Temp^.Next <> nil do
-      Temp := Temp^.Next;
+      Temp := PBaseBuffer( Temp^.Next);
     Temp^.Next := Buffer
   end
 end;
@@ -650,12 +650,12 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: Pointer);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; var Buffer: PBaseBuffer);
 var
   Temp: PBaseBuffer;
 begin
-  Buffer := Pointer( Node^.MsgBuffer);
-  Temp := Node^.MsgBuffer^.Next;
+  Buffer := Node^.MsgBuffer;
+  Temp := PBaseBuffer( Node^.MsgBuffer^.Next);
   Node^.MsgBuffer := Temp;
 end;
 
@@ -667,7 +667,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_MsgBufferFindDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: Pointer): Boolean;
+function NMRAnetUtilities_MsgBufferFindDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
 var
   Temp: PBaseBuffer;
 begin
@@ -677,7 +677,7 @@ begin
   begin
     if (Temp^.State and CBS_BUFFER_DATAGRAM) and (Temp^.Alias = Alias) then
     begin
-      Buffer := Temp;
+      Buffer := PDatagramBuffer( Word( Temp));
       Result := True;
       Break
     end;
