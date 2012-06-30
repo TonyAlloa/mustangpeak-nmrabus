@@ -18,14 +18,16 @@ program NMRABus_Xpressnet;
 // *****************************************************************************
 
 uses
-  NMRAnetEventDefines,
   NMRAnetStateMachine,
-  MCU_Setup_dsPIC4013,
+  NMRAnetDefines,
   CANDefines,
   CANStorage,
-  dsPIC30_CAN,
+  MCU_Setup_dsPIC4013,
+  NMRAnetEventDefines,
+  NMRAnetBufferPools,
+  NMRAnetBufferPoolsDefines,
+  NMRAnetNode,
   dsPIC30_Traps,
-  XpressnetDefines,
   XpressnetStateMachine,
   NodeIDs;
 
@@ -55,12 +57,15 @@ begin
 end;
 
 procedure INTERRUPT_Timer_1ms(); iv IVT_ADDR_T2INTERRUPT;
-// Called once every 1m
+// Called once every 100m
+var
+  i: Integer;
 begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRAnetStateMachine_1ms_Timer(@NMRAnetNode);
+  for i := 0 to Nodes.Count - 1 do
+    NMRAnetStateMachine_100ms_Timer(Nodes.AllocatedList[i]);
 end;
 
 {$IFDEF XPRESSNET_UART_ENABLE}
@@ -163,39 +168,32 @@ begin
   end;
 end;
 
-procedure SimpleActionCallback(NodeBuffer: PNMRAnetNode; Action: Word);
-begin
-
-end;
-
 
 // *******************
 // MAIN LOOP
 // *******************
 var
   Buffer: TCANBuffer;
+  ActiveNode: PNMRAnetNode;
 begin
   CANStorage_Initialize;
   MCU_Setup_Initialize;
-  NMRAnetStateMachine_Initialize;
+  NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_XPRESSNET_ID_0_LO);
   XpressnetStateMachine_Initialize;
-  
-  NMRAnetStateMachine_InitializeNode(@NMRAnetNode, MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_XPRESSNET_ID_0_LO);
-  
+
   NMRAnetStateMachine_SetComplexCallbackFunc(@ComplexActionCallback);
-  NMRAnetStateMachine_SetSimpleCallbackFunc(@SimpleActionCallback);
-  
+
   MainLoopState := 0;
   
   while (TRUE) do
     begin
-    
       Delay_us(2000);
-    
-      NMRAnetStateMachine_Process(@NMRAnetNode);
       
-      if NMRAnetCANReceive_Permited(@NMRAnetNode) then
+      ActiveNode := NMRAnetNode_NextNode;
+    
+      if ActiveNode <> PNMRAnetNode( nil) then
       begin
+        NMRAnetStateMachine_Process(ActiveNode);
         case MainLoopState of
           STATE_GATHER_COMMANDSTATIONS :
             begin

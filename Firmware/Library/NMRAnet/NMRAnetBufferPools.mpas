@@ -42,7 +42,7 @@ type
   TDatagramBufferPool = record
     Pool: array[0..MAX_DATAGRAM_BUFFER_POOL-1] of TDatagramBuffer;              // Max Count of Pool Buffers used
     MaxCount: Byte;                                                             // Number of Buffers currently used
-    Count: Byte;                                                // Datagrams that are dynamically assigned to TMessageBuffer structures
+    Count: Byte;                                                                // Datagrams that are dynamically assigned to TMessageBuffer structures
   end;
 
 procedure NMRAnetBufferPools_Initialize;
@@ -54,10 +54,15 @@ procedure NMRAnetBufferPools_ReleaseBaseBuffer(Buffer: PBaseBuffer);
 function NMRAnetBufferPools_AllocateDataBuffer(var Buffer: PDataBuffer): Boolean;
 procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
 
-function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer): Boolean;
+function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer; ForTransmit: Boolean): Boolean;
 procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
+function NMRAnetBufferPools_FindOutgoingDatagramBuffer(var Buffer: PDatagramBuffer): Boolean;
 
+procedure NMRAnetBufferPools_ReleaseBuffer(Buffer: PBaseBuffer);
+
+{$IFDEF UART_ENABLE}
 procedure NMRAnetBufferPools_Print;
+{$ENDIF}
 
 
   // Located in NMRAnetStateMachine.mpas
@@ -73,7 +78,7 @@ var
 implementation
 
 
-
+{$IFDEF UART_ENABLE}
 procedure NMRAnetBufferPools_Print;
 var
   s1: array[0..32] of char;
@@ -91,8 +96,7 @@ begin
    IntToStr(DatagramPool.Count, s1);
    UART1_Write_Text('DatagramPool Count: '+s1+LF);
 end;
-
-
+{$ENDIF}
 
 
 // *****************************************************************************
@@ -217,7 +221,7 @@ begin
     begin
       Buffer := @DataBufferPool.Pool[i];
       NMRAnetStateMachine_InitializeDataBuffer(Buffer);
-      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATABUFFER;
+      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATA;
       Inc(Buffer^.RefCount);
       Inc(DataBufferPool.Count);
       if DataBufferPool.Count >= DataBufferPool.MaxCount then
@@ -260,7 +264,7 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer): Boolean;
+function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer; ForTransmit: Boolean): Boolean;
 var
   i: Integer;
 begin
@@ -272,7 +276,9 @@ begin
       Buffer := @DatagramPool.Pool[i];
       Result := True;
       NMRAnetDatagrams_InitializeDatagramBuffer(Buffer);
-      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATAGRAM;          
+      Buffer^.State := CBS_ALLOCATED or CBS_BUFFER_DATAGRAM; 
+      if ForTransmit then
+        Buffer^.State := Buffer^.State or CBS_OUTGOING;
       Inc(Buffer^.RefCount);
       Inc(DatagramPool.Count);
       if DatagramPool.Count >= DatagramPool.MaxCount then
@@ -300,6 +306,58 @@ begin
     begin
       Buffer^.State := CBS_EMPTY;
       Dec(DatagramPool.Count);
+    end
+  end;
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_ReleaseDatagramBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure NMRAnetBufferPools_ReleaseBuffer(Buffer: PBaseBuffer);
+begin
+  if Buffer <> nil then
+  begin
+    if Buffer^.State and CBS_BUFFER_DATAGRAM <> 0 then
+      NMRAnetBufferPools_ReleaseDatagramBuffer(PDatagramBuffer( GenericPointerAdapter(Buffer)))
+    else
+    if Buffer^.State and CBS_BUFFER_BASE <> 0 then
+      NMRAnetBufferPools_ReleaseBaseBuffer(Buffer)
+    else
+    if Buffer^.State and CBS_BUFFER_DATA <> 0 then
+      NMRAnetBufferPools_ReleaseDataBuffer(PDataBuffer( GenericPointerAdapter( Buffer)))
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_FindOutgoingDatagramBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRAnetBufferPools_FindOutgoingDatagramBuffer(var Buffer: PDatagramBuffer): Boolean;
+const
+  CBS_BUFFER_DATAGRAM_OUTGOING = CBS_BUFFER_DATAGRAM or CBS_OUTGOING;
+var
+  i: Integer;
+begin
+  Result := False;
+  Buffer := nil;
+  for i := 0 to MAX_DATAGRAM_BUFFER_POOL - 1 do
+  begin    
+    if DatagramPool.Pool[i].State and CBS_BUFFER_DATAGRAM_OUTGOING = CBS_BUFFER_DATAGRAM_OUTGOING then
+    begin
+      Buffer := @DatagramPool.Pool[i];
+      Result := True;
+      Exit
     end
   end;
 end;

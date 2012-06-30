@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRABusCommandStation.mpas
+Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagramDefines.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -45,17 +45,18 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=10
+Count=11
 File0=NMRABusCommandStation.mpas
-File1=..\Library\NMRAnet\NMRAnetCANReceive.mpas
-File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPools.mpas
-File3=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPoolsDefines.mpas
-File4=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDefines.mpas
-File5=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
-File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetUtilities.mpas
-File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\CANStorage.mpas
-File8=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\CANDefines.mpas
-File9=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetCANReceive.mpas
+File1=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPools.mpas
+File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
+File3=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagramDefines.mpas
+File4=..\Library\NMRAnet\NMRAnetDatagrams.mpas
+File5=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetCANReceive.mpas
+File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDefines.mpas
+File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagrams.mpas
+File8=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPoolsDefines.mpas
+File9=NMRAnetAppDefines.mpas
+File10=..\Library\NMRAnet\NMRAnetConfigurationProtocol.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -65,7 +66,7 @@ Count=1
 File0=Options.inc
 [SEARCH_PATH]
 Count=18
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
 Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Command Station\
 Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\

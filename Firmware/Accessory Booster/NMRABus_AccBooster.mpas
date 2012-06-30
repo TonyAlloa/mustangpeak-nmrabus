@@ -18,39 +18,33 @@ program NMRABus_AccBooster;
 
 uses
   NMRAnetStateMachine,
-  NMRAnetUtilities,
-  MCU_Setup_dsPIC4013,
+  NMRAnetDefines,
   CANDefines,
   CANStorage,
+  MCU_Setup_dsPIC4013,
+  NMRAnetEventDefines,
+  NMRAnetBufferPools,
+  NMRAnetBufferPoolsDefines,
+  NMRAnetNode,
   dsPIC30_Traps,
   NodeIDs;
 
 {$I Options.inc}
-
-// ****************************************************************************
-// procedure GetUniqueIDFunc
-//
-//  Description:   Callback from NMRABus to load the 48 Bit Unique ID
-//
-// ****************************************************************************
-procedure GetUniqueIDFunc(var HiID, LoID: DWord);
-begin
-  LoID := MUSTANGPEAK_ACCESSORYBOOSTER_ID_0_LO;
-  HiID := MUSTANGPEAK_ID_0_HI;
-end;
-
 
 // *****************************************************************************
 //  INTERRUPTS
 // *****************************************************************************
 
 procedure INTERRUPT_Global_Timer(); iv IVT_ADDR_T2INTERRUPT;
-// Called once every 1m
+// Called once every 100m
+var
+  i: Integer;
 begin
-   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T2IF_bit := 0;                                                                // Clear the Flag
-  NMRAnetStateMachine_1ms_Timer;
+  for i := 0 to Nodes.Count - 1 do
+    NMRAnetStateMachine_100ms_Timer(Nodes.AllocatedList[i]);
 end;
 
 
@@ -70,20 +64,21 @@ end;
 // *******************
 // MAIN LOOP
 // *******************
+var
+  ActiveNode: PNMRAnetNode;
 begin
   CANStorage_Initialize;
-  NMRAnetStateMachine_Initialize;
+  NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_ACCESSORYBOOSTER_ID_0_LO);
   MCU_Setup_Initialize;
 
   while (TRUE) do
+  begin
+    Delay_us(2000);
+    
+    ActiveNode := NMRAnetNode_NextNode;
+    if ActiveNode <> PNMRAnetNode( nil) then
     begin
-      Delay_us(2000);
-      
-      NMRAnetStateMachine_Process;
-
-      if NMRAnetCANReceive_Permited then
-      begin
-      //  XpressnetStateMachine_Process;
-      end
+      NMRAnetStateMachine_Process(ActiveNode);
     end;
+  end
 end.

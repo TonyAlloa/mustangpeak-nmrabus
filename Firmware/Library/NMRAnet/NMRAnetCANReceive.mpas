@@ -360,7 +360,7 @@ begin
                                               end;
                                            end;
                 MTI_DATAGRAM_ONLY_FRAME :  begin
-                                             if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer) then
+                                             if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer, False) then
                                              begin 
                                                 NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( GenericPointerAdapter(DatagramBuffer)));
                                                 DatagramBuffer^.mCode := BMC_DATAGRAM;
@@ -381,7 +381,7 @@ begin
                                              end
                                            end;
                 MTI_DATAGRAM_FRAME_START : begin
-                                             if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer) then
+                                             if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer, False) then
                                              begin
                                                NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( GenericPointerAdapter(DatagramBuffer)));
                                                DatagramBuffer^.State := DatagramBuffer^.State or CBS_PROCESSING;          // Not ready for the main loop to work it yet.

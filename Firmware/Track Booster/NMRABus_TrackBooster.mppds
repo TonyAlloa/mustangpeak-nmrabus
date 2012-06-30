@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRAnetAppDefines.mpas
+Value=NMRABus_TrackBooster.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -36,11 +36,8 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=4
+Count=1
 File0=NMRABus_TrackBooster.mpas
-File1=..\Library\NodeIDs.mpas
-File2=MCU_Setup_dsPIC4013.mpas
-File3=NMRAnetAppDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -49,16 +46,23 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=9
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Track Booster\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library NMRABus\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Count=16
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Track Booster\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Track Booster\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library NMRABus\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
+Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path10=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path11=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path15=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
 [HEADER_PATH]
 Count=0
 [HEADERS]
@@ -73,6 +77,5 @@ File2=SPI
 File3=CAN
 [EXPANDED NODES]
 Node1=Sources
-Node2=Output Files
-Node3=Other Files
-Count=3
+Node2=Other Files
+Count=2

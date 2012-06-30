@@ -21,8 +21,15 @@ program Throttle_main;
 uses
   Throttle_events_code,
   MCU_Setup_dsPIC33FJ256GP710A,
+  NMRAnetStateMachine,
+  NMRAnetDefines,
+  CANDefines,
   CANStorage,
-  NMRAnetStateMachine;
+  NMRAnetEventDefines,
+  NMRAnetBufferPools,
+  NMRAnetBufferPoolsDefines,
+  NMRAnetNode,
+  NodeIDs;
   
 const
   STATE_SPLASH_SCREEN = 0;
@@ -34,10 +41,15 @@ var
   i: Integer;
   
 procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
+// Called once every 100m
+var
+  i: Integer;
 begin
-  // 1ms Timer
-  T2IF_bit := 0;  // Reset the Flag
-  NMRAnetStateMachine_1ms_Timer(@NMRAnetNode);
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+  T2IF_bit := 0;                                                                // Clear the Flag
+  for i := 0 to Nodes.Count - 1 do
+    NMRAnetStateMachine_100ms_Timer(Nodes.AllocatedList[i]);
 end;
 
 procedure NMRABusPacketHandler(CANBuffer: PCANBuffer; var DoDefault: Boolean);
@@ -45,14 +57,14 @@ begin
   // Handle the message here
 end;
 
+var
+  ActiveNode: PNMRAnetNode;
 begin
   CANStorage_Initialize;
   dsPIC33_CAN_Initialize;
+  NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_TFT_THROTTLE_ID_0_LO);       
   MCU_Setup_Initialize;
-  NMRAnetStateMachine_Initialize;
-  
-  NMRAnetStateMachine_InitializeNode(@NMRAnetNode, MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_TFT_THROTTLE_ID_0_LO);
-  
+
   MainState := STATE_SPLASH_SCREEN;
   BoxRoundProgressBar.Width := 0;
   i := 0;
@@ -63,12 +75,13 @@ begin
   begin
     Check_TP;
     
-    NMRAnetStateMachine_Process(@NMRAnetNode);
-    
     Delay_us(2000);  // USB-CAN Board can't keep up
-
-    if NMRAnetCANReceive_Permited(@NMRAnetNode) then
+    
+    ActiveNode := NMRAnetNode_NextNode;
+    if ActiveNode <> PNMRAnetNode( nil) then
     begin
+      NMRAnetStateMachine_Process(ActiveNode);
+      
       case MainState of
         STATE_SPLASH_SCREEN :
           begin

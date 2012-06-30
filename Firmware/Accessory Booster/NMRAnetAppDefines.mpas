@@ -7,14 +7,41 @@ uses
 {$I Options.inc}
 
 const
+  MAX_NODE_COUNT = 1;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
+                              // If the lower bits of this node are $0300 then the first Virtual Node is $0301 and the last is $0309 if the VIRTUAL_NODE_COUNT = 9
+                              // It also MUST fall within the lower 3 byte boundry (this is due to the way I have defined HI/LO as 3 byte) so the max virtual nodes is 4095 with a base
+                              // physical node starting at $0000;
 
-  ABBREVIATED_CDI_MFG = 'Mustangpeak';
-  ABBREVIATED_CDI_MFG_NAME = 'DCC Accessory Booster';
-  ABBREVIATED_CDI_MFG_HW_VER = '1.0.0';
-  ABBREVIATED_CDI_MFG_SW_VER = '0.0.1';
+const
+  MAX_BASE_BUFFER_POOL             = MAX_NODE_COUNT + 4;                        // Number of Base Buffers to allocate for Messages , JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
+  MAX_DATA_BUFFER_POOL             = 4;                                         // Number of CAN DataByte Buffers to allocate for Messages
+  MAX_DATAGRAM_BUFFER_POOL         = 2;                                         // Number of Datagram Buffers to allocate for Messages
 
-  ABBREVIATED_CDI_USER_NAME = 'Lower Level Accessories';
-  ABBREVIATED_CDI_USER_DISC = 'Mustangpeak DCC Accessory Booster Prototype';
+const
+  MAX_ACDI_ARRAY = 92;
+  TACDI_NODE_STRINGS: array[0..MAX_ACDI_ARRAY - 1] of byte = (
+      $31,  // Version = 1
+      $4D,$75,$73,$74,$61,$6E,$67,$70,$65,$61,$6B,$00,  // Mustangpeak
+      $44,$43,$43,$20,$41,$63,$63,$65,$73,$73,$6F,$72,$79,$20,$42,$6F,$6F,$73,$74,$65,$72,$00,  // DCC Accessory Booster
+      $31,$2E,$30,$2E,$30,$00,  // 1.0.0
+      $30,$2E,$30,$2E,$31,$00,  // 0.0.1
+      $31,  // Version = 1
+      $41,$63,$63,$65,$73,$73,$6F,$72,$69,$65,$73,$00,  // Accessories
+      $44,$43,$43,$20,$41,$63,$63,$65,$73,$73,$6F,$72,$79,$20,$42,$6F,$6F,$73,$74,$65,$72,$20,$50,$72,$6F,$74,$6F,$74,$79,$70,$65,$00  // DCC Accessory Booster Prototype
+    );
+    
+const
+  MAX_VNODE_ACDI_ARRAY = 8;
+  TACDI_VNODE_STRINGS: array[0..MAX_VNODE_ACDI_ARRAY - 1] of byte = (
+      $31,  // Version = 1
+      $00,  //
+      $00,  //
+      $00,  //
+      $00,  //
+      $31,  // Version = 1
+      $00,  //
+      $00  //
+    );
 
   PIV_SUPPORTED_PROTOCOL_COUNT = 4;    // UPDATED THIS IF ADDING OR SUBTRACTING SUPPORTED PROTOCOLS
   PIV_SUPPORTED_PROTOCOLS: array[0..PIV_SUPPORTED_PROTOCOL_COUNT-1] of TPIVProtocolValueArray = (
@@ -29,7 +56,7 @@ const
   {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT} MAX_SUPPORTED_EVENTS_CONSUMED = 1; {$ELSE} MAX_SUPPORTED_EVENTS_CONSUMED = 0; {$ENDIF}
   {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT} MAX_SUPPORTED_EVENTS_PRODUCED = 2; {$ELSE} MAX_SUPPORTED_EVENTS_PRODUCED = 0; {$ENDIF}
 
-    MAX_SUPPORTED_EVENTS = MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED;
+   MAX_SUPPORTED_EVENTS = MAX_SUPPORTED_EVENTS_PRODUCED + MAX_SUPPORTED_EVENTS_CONSUMED;
 
   // Defined the Values of the Events that are Consumed and Produced by this Node
   {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
@@ -40,6 +67,24 @@ const
   {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
   SUPPORTED_EVENTS_PRODUCED: array[0..MAX_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
     ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // This node supports Emergency Stop
+  );
+  {$ENDIF}
+  
+  // Set the number of Events that are Consumed and Produced by this Node
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT} MAX_VNODE_SUPPORTED_EVENTS_CONSUMED = 1; {$ELSE} MAX_VNODE_SUPPORTED_EVENTS_CONSUMED = 0; {$ENDIF}
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_PRODUCED_EVENT} MAX_VNODE_SUPPORTED_EVENTS_PRODUCED = 2; {$ELSE} MAX_VNODE_SUPPORTED_EVENTS_PRODUCED = 0; {$ENDIF}
+  
+  MAX_VNODE_SUPPORTED_EVENTS = MAX_VNODE_SUPPORTED_EVENTS_PRODUCED + MAX_VNODE_SUPPORTED_EVENTS_CONSUMED;
+
+  // Defined the Values of the Events that are Consumed and Produced by this Node
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT}
+  SUPPORTED_VNODE_EVENTS_CONSUMED: array[0..MAX_VNODE_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
+
+  );
+  {$ENDIF}
+  {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_PRODUCED_EVENT}
+  SUPPORTED_VNODE_EVENTS_PRODUCED: array[0..MAX_VNODE_SUPPORTED_EVENTS_PRODUCED-1] of TEventID = (
+
   );
   {$ENDIF}
   

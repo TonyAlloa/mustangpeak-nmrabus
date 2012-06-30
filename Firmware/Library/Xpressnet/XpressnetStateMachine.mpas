@@ -56,11 +56,11 @@ begin
   XpressnetStateMachineInfo.CommandStationNode.AliasID := 0;
   XpressnetStateMachineInfo.CommandStationNode.ID[0] := 0;
   XpressnetStateMachineInfo.CommandStationNode.ID[1] := 0;
-  XpressnetStateMachineInfo.CommandStationNode.State := 0;
+//  XpressnetStateMachineInfo.CommandStationNode.State := 0;
   XpressnetStateMachineInfo.ProgrammerNode.AliasID := 0;
   XpressnetStateMachineInfo.ProgrammerNode.ID[0] := 0;
   XpressnetStateMachineInfo.ProgrammerNode.ID[1] := 0;
-  XpressnetStateMachineInfo.ProgrammerNode.State := 0;
+ // XpressnetStateMachineInfo.ProgrammerNode.State := 0;
   
   // Device ID Initialization
   for i := ID_MIN_DEVICE to ID_MAX_DEVICE do
@@ -275,14 +275,14 @@ begin
   end
 end;
 
-procedure XpressnetStateMachine_Process(NodeBuffer: PNMRAnetNode);
+procedure XpressnetStateMachine_Process(Node: PNMRAnetNode);
 var
   Temp: Word;
 begin
   case XpressnetStateMachineInfo.iState of
     STATE_DISCOVERDEVICES :
       begin
-        if NMRAnetCANReceive_Permited(NodeBuffer) then
+        if Node^.State and NS_PERMITTED <> 0 then
         begin
           XpressnetStateMachineInfo.Discovering := True;
           XpressnetStateMachineInfo.iActiveDevice := 0;
@@ -336,7 +336,7 @@ begin
       end;
     STATE_QUERYDATABASE :
       begin
-        if NMRAnetCANReceive_Permited(NodeBuffer) then
+        if Node^.State and NS_PERMITTED <> 0 then
         begin
           // Send NMRANet message here......
           XpressnetStateMachineInfo.iState := STATE_XPRESSNETREPLY;
@@ -380,7 +380,7 @@ begin
       end;
     STATE_TESTFORDISCOVERYMODE :
       begin
-        if NMRAnetCANReceive_Permited(NodeBuffer) then
+        if Node^.State and NS_PERMITTED <> 0 then
         begin
           if XpressnetStateMachineInfo.Discovering then
             XpressnetStateMachineInfo.iState := STATE_DISCOVERNEXTDEVICE
