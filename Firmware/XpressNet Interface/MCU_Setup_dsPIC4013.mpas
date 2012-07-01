@@ -23,7 +23,7 @@ uses
 {$I Options.inc}
 
 const
-  CAN_SWJ        = 1;               // Set up for 125Khz Baud Rate with a 16Mhz Crystal
+  CAN_SWJ        = 1;               // Set up for 125Khz Baud
   CAN_BRP        = 10;              // All in terms of number of Tq actual value in register will be BRP-1
   CAN_PHASESEG_1 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_1-1
   CAN_PHASESEG_2 = 3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
