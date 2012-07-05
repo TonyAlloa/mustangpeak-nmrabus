@@ -24,8 +24,7 @@ uses
   NMRAnetBufferPoolsDefines,
   NMRAnetAppDefines,
   NMRAnetDefines,
-  NMRAnetDatagramDefines,
-  NMRAnetConfigurationProtocolDefines;
+  NMRAnetDatagramDefines;
   
   procedure NMRAnetNode_Initialize(PhysicalNodeID_HI, PhysicalNodeID_Lo: DWord);
   function NMRAnetNode_Allocate: PNMRAnetNode;

@@ -21,8 +21,7 @@ uses
   NMRAnetBufferPoolsDefines,
   NMRAnetDefines,
   CANDefines,
-  NMRAnetDatagramDefines,
-  NMRAnetConfigurationProtocolDefines;
+  NMRAnetDatagramDefines;
 
 {$I Options.inc}
 

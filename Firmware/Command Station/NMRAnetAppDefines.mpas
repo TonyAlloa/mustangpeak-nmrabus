@@ -22,21 +22,45 @@ unit NMRAnetAppDefines;
 uses
   CANDefines,
   NMRAnetDefines,
-  NMRAnetEventDefines;
+  NMRAnetEventDefines,
+  NMRAnetMemoryConfigurationDefines;
   
 {$I Options.inc}
+
+// **************************************************************************************************************************************************************
+// Virtual Nodes
+// **************************************************************************************************************************************************************
 
 const
   MAX_NODE_COUNT = 20;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
                               // If the lower bits of this node are $0300 then the first Virtual Node is $0301 and the last is $0309 if the VIRTUAL_NODE_COUNT = 9
                               // It also MUST fall within the lower 3 byte boundry (this is due to the way I have defined HI/LO as 3 byte) so the max virtual nodes is 4095 with a base
                               // physical node starting at $0000;
+                              
+// **************************************************************************************************************************************************************
+// Buffer Pool Allocation
+// **************************************************************************************************************************************************************
 
 const
   MAX_BASE_BUFFER_POOL             = MAX_NODE_COUNT + 4;                        // Number of Base Buffers to allocate for Messages , JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
   MAX_DATA_BUFFER_POOL             = 4;                                         // Number of CAN DataByte Buffers to allocate for Messages
   MAX_DATAGRAM_BUFFER_POOL         = 2;                                         // Number of Datagram Buffers to allocate for Messages
 
+
+// **************************************************************************************************************************************************************
+// Memory Configuration Protocol Supported Options
+// **************************************************************************************************************************************************************
+const
+  MEMORY_CONFIG_OPTIONS: TMemConfigurationOptions = (
+    MCO_UNALIGNED_READS or MCO_ACDI_MFG_READS or MCO_ACDI_USER_READS or MCO_ACDI_USER_WRITES,             // MemoryConfigOptions
+    MCWL_ARBITRARY_BYTE,                                                                                  // MemoryConfigWriteLength
+    MSI_CDI,                                                                                              // MemoryConfigHighestSpace
+    MSI_ACDI_USER_INFO                                                                                    // MemoryConfigLowestSpace
+  );
+
+// **************************************************************************************************************************************************************
+// ACDI Implementation
+// **************************************************************************************************************************************************************
 
 const
   MAX_ACDI_ARRAY = 59;
@@ -63,6 +87,10 @@ const
       $5B,$55,$73,$65,$72,$20,$4E,$61,$6D,$65,$5D,$00,  // [User Name]
       $5B,$55,$73,$65,$72,$20,$44,$65,$73,$63,$72,$69,$70,$74,$69,$6F,$6E,$5D,$00  // [User Description]
     );
+    
+// **************************************************************************************************************************************************************
+// Protocol Identification Protocol (PIP)
+// **************************************************************************************************************************************************************
 
 const
   PIV_SUPPORTED_PROTOCOL_COUNT = 4;    // UPDATE THIS IF ADDING OR SUBTRACTING SUPPORTED PROTOCOLS
@@ -72,6 +100,10 @@ const
     ($04, $00, $00, $00, $00, $00),                                             // PIV_PROTOCOL_ID_PRODUCER_CONSUMER
     ($00, $40, $00, $00, $00, $00)                                              // PIV_PROTOCOL_ID_CDI
     );
+    
+  // **************************************************************************************************************************************************************
+  // Events for Physical Node (consumed and produced)
+  // **************************************************************************************************************************************************************
 
   // DEFINED IN OPTIONS.INC
   // Set the number of Events that are Consumed and Produced by this Node
@@ -93,6 +125,10 @@ const
     ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
   );
   {$ENDIF}
+  
+  // **************************************************************************************************************************************************************
+  // Events for Virtual Nodes (consumed and produced)
+  // **************************************************************************************************************************************************************
   
   // Set the number of Events that are Consumed and Produced by this Node
   {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT} MAX_VNODE_SUPPORTED_EVENTS_CONSUMED = 1; {$ELSE} MAX_VNODE_SUPPORTED_EVENTS_CONSUMED = 0; {$ENDIF}

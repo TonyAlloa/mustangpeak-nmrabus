@@ -316,7 +316,7 @@ begin
             begin
               case CANBuffer^.ID and MTI_TYPE_MASK of                           // Now subdivide the Addressed down to Datagrams, Streams, Other Addressed
                 MTI_ADDRESSED            : begin
-                                             case CANBuffer^.Databytes[0] of
+                                             case CANBuffer^.Databytes[0] of                  // Generic Addressed message, need to look at the databytes[0] to find the reset of the MTI bits
                                                MTI_EXTENSION_VERIFY_NODE_ID_NUMBER_DEST       : begin 
                                                                                                   if CANBuffer^.DataCount = 1 then                                 // THIS IS NOT CLEAR IN THE SPEC, , with the $0A in Index 0
                                                                                                      NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID)

@@ -22,8 +22,7 @@ uses
   CANStorage,
   NMRAnetBufferPoolsDefines,
   NMRAnetDefines,
-  NMRAnetDatagramDefines,
-  NMRAnetConfigurationProtocol;
+  NMRAnetDatagramDefines;
 
 procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
