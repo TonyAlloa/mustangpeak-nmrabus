@@ -21,8 +21,8 @@ uses
 {$I Options.inc}
 
 const
-  CAN_SWJ        = 1;               // Set up for 125Khz Baud Rate with a 16Mhz Crystal
-  CAN_BRP        = 10; //10;              // All in terms of number of Tq actual value in register will be BRP-1
+  CAN_SWJ        = 1;               // Set up for 125Khz Baud Rate with a 10Mhz Crystal 80Mhz MCU
+  CAN_BRP        = 8; //10;              // All in terms of number of Tq actual value in register will be BRP-1
   CAN_PHASESEG_1 = 3; //3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_1-1
   CAN_PHASESEG_2 = 3; //3;               // All in terms of number of Tq actual value in register will be CAN_PHASESEG_2-1
   CAN_PROP_SEG   = 1; //1;               // All in terms of number of Tq actual value in register will be CAN_PROP_SEG-1
@@ -77,9 +77,17 @@ begin
 
   {$IFDEF UART_ENABLE}
   // Initialize UART
-  UART1_Init(115200);                       // Initialize UART module a
+  UART1_Init(500000);                       // Initialize UART module a
   Delay_ms(100);                            // Wait for UART module to stabilize
   U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
+  CN17PUE_bit        := 1;   // Enable the internal pull up  on the Rx Pin
+ { U1RXIP_0_Bit        := 0;   // Interrupt Priority  = 6
+  U1RXIP_1_Bit        := 1;
+  U1RXIP_2_Bit        := 1;
+  URXISEL_0_Bit      := 0;   // Interrupt with the buffer system has 1 bytes
+  URXISEL_1_Bit      := 0;
+  U1RXIF_Bit         := 0;   // Clear the interrupt flag
+  U1RXIE_bit         := 1;     // Enable the RX Interrupt, is enabled when needed  }
   {$ENDIF}
 
   {$IFDEF SPI_ENABLE}

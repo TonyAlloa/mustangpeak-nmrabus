@@ -543,11 +543,11 @@ begin
 
                                                     if Node^.State and NS_VIRTUAL <> 0 then
                                                     begin
-                                                      ACDIArray := @TACDI_VNODE_STRINGS;
+                                                      ACDIArray := @TACDI_VNODE_STRINGS[0];
                                                       MaxIndex := MAX_VNODE_ACDI_ARRAY
                                                     end else
                                                     begin
-                                                      ACDIArray := @TACDI_NODE_STRINGS;
+                                                      ACDIArray := @TACDI_NODE_STRINGS[0];
                                                       MaxIndex := MAX_ACDI_ARRAY
                                                     end;
 
@@ -599,6 +599,7 @@ begin
             BMC_DATAGRAM :                      begin
                                                   DatagramBuffer := PDatagramBuffer( GenericPointerAdapter( Node^.MsgBuffer));
                                                   
+                                                  // This is a case for an inner statemachine........ is it not......
                                                   if DatagramBuffer^.State and CBS_PROCESSING = 0 then                            // Don't do anything until the datagram is fully received
                                                   begin
                                                     if DatagramBuffer^.ErrorCode.MTI = MTI_EXTENSION_DATAGRAM_RECIEVED_OK then    // If the datagram was received successfully handle it, else pass the Error back to the sender
@@ -610,27 +611,28 @@ begin
                                                                                          //        if DatagramMemConfigurationCallbackFunc <> PDatagramTaskCallbackFunc(nil) then
                                                                                          //          DatagramMemConfigurationCallbackFunc(Node, DatagramBuffer);
 
-                                                                                                 case DatagramBuffer^.DataBytes[0] and $C0 of      // Mask off the upper 2 bits
+                                                                                                 case DatagramBuffer^.DataBytes[1] and $C0 of      // Mask off the upper 2 bits
                                                                                                    MCP_WRITE     : begin
-                                                                                                                     case DatagramBuffer^.DataBytes[0] and $03 of      // Mask off the bottom 2 bits
+                                                                                                                     case DatagramBuffer^.DataBytes[1] and $03 of      // Mask off the bottom 2 bits
                                                                                                                        MCP_CDI            : MemorySpaceIndicator := MSI_CDI;
                                                                                                                        MCP_ALL            : MemorySpaceIndicator := MSI_ALL;
                                                                                                                        MCP_CONFIGURATION  : MemorySpaceIndicator := MSI_CONFIG;
                                                                                                                        MCP_NONE           : MemorySpaceIndicator := DatagramBuffer^.DataBytes[5];
                                                                                                                      end;
                                                                                                                      MemorySpaceAddress := DWord( DatagramBuffer^.DataBytes[1] shl 24) or DWord( DatagramBuffer^.DataBytes[2] shl 16) or DWord( DatagramBuffer^.DataBytes[3] shl 8) or DWord( DatagramBuffer^.DataBytes[4]);
+                                                                                                                     DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
                                                                                                                    end;
                                                                                                    MCP_READ      : begin
-                                                                                                                     case DatagramBuffer^.DataBytes[0] and $03 of      // Mask off the bottom 2 bits
+                                                                                                                     case DatagramBuffer^.DataBytes[1] and $03 of      // Mask off the bottom 2 bits
                                                                                                                        MCP_CDI            : MemorySpaceIndicator := MSI_CDI;
                                                                                                                        MCP_ALL            : MemorySpaceIndicator := MSI_ALL;
                                                                                                                        MCP_CONFIGURATION  : MemorySpaceIndicator := MSI_CONFIG;
                                                                                                                        MCP_NONE           : MemorySpaceIndicator := DatagramBuffer^.DataBytes[5];
                                                                                                                      end;
-                                                                                                                     MemorySpaceAddress := DWord( DatagramBuffer^.DataBytes[1] shl 24) or DWord( DatagramBuffer^.DataBytes[2] shl 16) or DWord( DatagramBuffer^.DataBytes[3] shl 8) or DWord( DatagramBuffer^.DataBytes[4]);
+                                                                                                                     MemorySpaceAddress := DWord( DatagramBuffer^.DataBytes[2] shl 24) or DWord( DatagramBuffer^.DataBytes[2] shl 16) or DWord( DatagramBuffer^.DataBytes[3] shl 8) or DWord( DatagramBuffer^.DataBytes[3]);
                                                                                                                    end;
                                                                                                    MCP_OPERATION : begin
-                                                                                                                     case DatagramBuffer^.DataBytes[0] of      // Mask off the upper 2 bits
+                                                                                                                     case DatagramBuffer^.DataBytes[1] of      // Mask off the upper 2 bits
                                                                                                                        MCP_OP_GET_CONFIG         : begin
                                                                                                                                                      DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
                                                                                                                                                      DataBytes[1] := MCP_OP_GET_CONFIG_REPLY;
@@ -643,6 +645,29 @@ begin
                                                                                                                                                        DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
                                                                                                                                                    end;
                                                                                                                        MCP_OP_GET_ADD_SPACE_INFO : begin
+                                                                                                                                                     DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
+                                                                                                                                                     DataBytes[1] := MCP_OP_GET_ADD_SPACE_INFO_REPLY;
+                                                                                                                                                     DataBytes[2] := DatagramBuffer^.DataBytes[2];
+
+                                                                                                                                                     case DatagramBuffer^.DataBytes[2] of
+                                                                                                                                                       MSI_CDI       : begin
+                                                                                                                                                                         DatagramBuffer^.DataBytes[2] := (DWord(MAX_CDI_ARRAY) shr 24) and $000000FF;
+                                                                                                                                                                         DatagramBuffer^.DataBytes[3] := (DWord(MAX_CDI_ARRAY) shr 16) and $000000FF;
+                                                                                                                                                                         DatagramBuffer^.DataBytes[4] := (DWord(MAX_CDI_ARRAY) shr 8) and $000000FF;
+                                                                                                                                                                         DatagramBuffer^.DataBytes[5] := DWord(MAX_CDI_ARRAY) and $000000FF;
+                                                                                                                                                                         DatagramBuffer^.DataBytes[6] := $01;
+                                                                                                                                                                         if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 7, @DataBytes) then
+                                                                                                                                                                           DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
+                                                                                                                                                                       end;
+                                                                                                                                                       MSI_ALL       : begin
+                                                                                                                                                                       end;
+                                                                                                                                                       MSI_CONFIG    : begin
+                                                                                                                                                                       end;
+                                                                                                                                                       MSI_ACDI_MFG  : begin
+                                                                                                                                                                       end;
+                                                                                                                                                       MSI_ACDI_USER : begin
+                                                                                                                                                                       end;
+                                                                                                                                                     end;
                                                                                                                                                    end;
                                                                                                                        MCP_OP_LOCK               : begin
                                                                                                                                                    end;

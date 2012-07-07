@@ -1,0 +1,169 @@
+program MustangpeakUSB_CAN;
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+
+//
+// *****************************************************************************
+
+uses
+  NodeIDs,
+  CANStorage,
+  CANDefines,
+  NMRAnetCANReceive;
+
+{$I Options.inc}
+
+
+type
+  PStr = ^array[0..0] of char;
+
+var
+  RxBuffer: array[128] of char;
+  RxBufferIndex: Word;
+  
+  
+function HexToDec(aValue: PStr; Count: Word): LongInt;
+var
+  l: LongInt;
+begin
+  Result := 0;
+  l := 1;
+  repeat
+    dec(Count);
+    if aValue^[Count] <= '9' then
+      Result := Result + (Byte(aValue^[Count]) - 48) * l
+    else 
+      Result := Result + (Byte(aValue^[Count]) - 55) * l;
+    l := l * 16;
+  until Count = 0;
+end;
+
+procedure INTERRUPT_UART_RX(); iv IVT_ADDR_U1RXINTERRUPT;
+var
+  PrevChar: Char;
+  i, j: Integer;
+  CANBuffer: TCANBuffer;
+begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+  U1RXIF_Bit := 0;              // Clear the interrupt flag to receive the next byte
+
+  while URXDA_U1STA_bit = 1  do
+  begin
+    RxBuffer[RxBufferIndex] := U1RXREG;
+    if RxBuffer[RxBufferIndex] = ';' then
+    begin
+      i := 0;
+      while RxBuffer[i] <> 'N' do
+        Inc(i);
+      CANBuffer.ID := HexToDec(PStr( Word(@RxBuffer[2])), i);
+      Inc(i);
+      j := 0;
+      while RxBuffer[i] <> ';' do
+      begin
+        Inc(CANBuffer.DataCount);
+        CANBuffer.DataBytes[j] := HexToDec(PStr( Word(@RxBuffer[i])), 2);
+        Inc(j);
+        i := i + 2;
+      end;
+      if CANStorage_AddToList(@TX_NMRAnetBufferList, @CANBuffer) then
+       StartCANMessageEngine();
+    end;
+  end
+end;
+
+procedure NMRAnetHook(CANBuffer: PCANBuffer; var DoDefault: Boolean);
+var
+  s1: array[0..256] of char;
+  s2: array[0..32] of char;
+  i: Integer;
+begin
+  DoDefault := False;
+  if CANBuffer^.State and CBS_EXTENDED <> 0 then
+    s1 := ':X'
+  else
+    s1 := ':S';
+  LongWordToHex(CANBuffer^.ID, s2);
+  s1 := s1+s2+'N';
+
+  for i := 0 to CANBuffer^.DataCount - 1 do
+  begin
+    ByteToHex(CANBuffer^.DataBytes[i], s2);
+    s1 := s1 + s2
+  end;
+  s1 := s1 + ';';
+  UART1_Write_Text(s1);
+end;
+
+
+// *******************
+// MAIN LOOP
+// *******************
+var
+  ActiveNode: PNMRAnetNode;
+  w: Word;
+  i, j, Start: Word;
+  CANBuffer: TCANBuffer;
+begin
+  CANStorage_Initialize;
+  NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_ACCESSORYBOOSTER_ID_0_LO);
+  MCU_Setup_Initialize;
+  
+  RxBufferIndex := 0;
+  
+  UART_Write_Text('Testing');
+  
+  NMRAnetCANReceive_SetCANLayerReceiveHook(@NMRAnetHook);
+  NMRAnetCANReceive_SetNMRANetLayerReceiveHook(@NMRAnetHook);
+
+  while (TRUE) do
+  begin
+ //  if RxBufferIndex < 0 then
+ //    UART1_Write_Text('x');
+     
+   if UART1_Data_Ready then
+   begin
+     RxBuffer[RxBufferIndex] := UART1_Read;
+     if RxBuffer[RxBufferIndex] = ';' then
+      begin
+        CANBuffer.DataCount := 0;
+        CANBuffer.State := 0;
+        RxBuffer[RxBufferIndex + 1] := #0;
+        Start := 0;
+        while (RxBuffer[Start] <> 'X') and (RxBuffer[Start] <> 'S') do
+          Inc(Start);
+        if RxBuffer[Start] = 'X' then
+          CANBuffer.State := CBS_EXTENDED;
+        i := a + 1;
+        while RxBuffer[i] <> 'N' do
+          Inc(i);
+        CANBuffer.ID := HexToDec(PStr( Word(@RxBuffer[Start+1])), i-Start-1);
+        Inc(i);
+        j := 0;
+        while RxBuffer[i] <> ';' do
+        begin
+          Inc(CANBuffer.DataCount);
+          CANBuffer.DataBytes[j] := HexToDec(PStr( Word(@RxBuffer[i])), 2);
+          Inc(j);
+          i := i + 2;
+        end;
+    //    UART1_Write_Text(RxBuffer);
+        if CANStorage_AddToList(@TX_NMRAnetBufferList, @CANBuffer) then
+          StartCANMessageEngine();
+        RxBufferIndex := 0;
+      end else
+        Inc(RxBufferIndex);
+   end;
+  end
+end.

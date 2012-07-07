@@ -1,4 +1,5 @@
 object TatDiagram
+  PaintLinesFirst = True
   NettoExportOffset = 1
   AutomaticNodes = False
   AutoScroll = True
@@ -49,7 +50,7 @@ object TatDiagram
   TopRuler.Size = 16
   TopRuler.AutoFactor = True
   TopRuler.GridColor = clBlack
-  Zoom = 100
+  Zoom = 200
   BorderColor = clGray
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
@@ -94,12 +95,10 @@ object TatDiagram
   BorderStyle = bsSingle
   Color = clMedGray
   ParentColor = False
-  ExplicitWidth = 200
-  ExplicitHeight = 200
   object Bkgnd: TDgrBox
     Tag = 1
-    Width = 480.000000000000000000
-    Height = 640.000000000000000000
+    Width = 240.000000000000000000
+    Height = 320.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -107,12 +106,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = False
@@ -162,9 +166,9 @@ object TatDiagram
   end
   object Label2: TDgrLabel
     Tag = 1
-    Top = 80.000000000000000000
-    Width = 488.840000000000000000
-    Height = 72.000000000000000000
+    Top = 40.000000000000000000
+    Width = 244.420000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -176,7 +180,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -64
+        Font.Height = -32
         Font.Name = 'Tahoma'
         Font.Style = [fsBold]
         DControlAngle = True
@@ -237,10 +241,10 @@ object TatDiagram
   end
   object Label3: TDgrLabel
     Tag = 1
-    Left = 34.000000000000000000
-    Top = 174.000000000000000000
-    Width = 408.160000000000000000
-    Height = 42.000000000000000000
+    Left = 17.000000000000000000
+    Top = 87.000000000000000000
+    Width = 204.080000000000000000
+    Height = 21.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -252,7 +256,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -37
+        Font.Height = -19
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -313,10 +317,10 @@ object TatDiagram
   end
   object BoxRound1: TDgrBoxRound
     Tag = 1
-    Left = 88.000000000000000000
-    Top = 514.000000000000000000
-    Width = 304.000000000000000000
-    Height = 72.000000000000000000
+    Left = 44.000000000000000000
+    Top = 257.000000000000000000
+    Width = 152.000000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -325,12 +329,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = False
@@ -378,14 +387,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object Label4: TDgrLabel
     Tag = 1
-    Left = 180.000000000000000000
-    Top = 468.000000000000000000
-    Width = 137.040000000000000000
-    Height = 30.000000000000000000
+    Left = 90.000000000000000000
+    Top = 234.000000000000000000
+    Width = 68.519999999999990000
+    Height = 15.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -397,7 +407,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -27
+        Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -458,10 +468,10 @@ object TatDiagram
   end
   object BoxRoundProgressBar: TDgrBoxRound
     Tag = 1
-    Left = 90.720000000000000000
-    Top = 516.000000000000000000
-    Width = 2.000000000000000000
-    Height = 68.000000000000000000
+    Left = 45.360000000000000000
+    Top = 258.000000000000000000
+    Width = 1.000000000000000000
+    Height = 34.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -469,12 +479,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = False
@@ -522,14 +537,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object Label5: TDgrLabel
     Tag = 1
-    Left = 128.000000000000000000
-    Top = 394.000000000000000000
-    Width = 231.960000000000000000
-    Height = 30.000000000000000000
+    Left = 64.000000000000000000
+    Top = 197.000000000000000000
+    Width = 115.980000000000000000
+    Height = 15.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -541,7 +557,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -27
+        Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -602,10 +618,10 @@ object TatDiagram
   end
   object BoxRound3: TDgrBoxRound
     Tag = 1
-    Left = 54.000000000000000000
-    Top = 220.000000000000000000
-    Width = 374.000000000000000000
-    Height = 160.000000000000000000
+    Left = 27.000000000000000000
+    Top = 110.000000000000000000
+    Width = 187.000000000000000000
+    Height = 80.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -613,12 +629,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -666,13 +687,14 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object Image1: TDgrImage
-    Left = 88.000000000000000000
-    Top = 236.000000000000000000
-    Width = 310.000000000000000000
-    Height = 128.000000000000000000
+    Left = 44.000000000000000000
+    Top = 118.000000000000000000
+    Width = 155.000000000000000000
+    Height = 64.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -680,12 +702,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = False
@@ -1839,6 +1866,7 @@ object TatDiagram
   end
 end
 object TatDiagram
+  PaintLinesFirst = True
   NettoExportOffset = 1
   AutomaticNodes = False
   AutoScroll = True
@@ -1889,7 +1917,7 @@ object TatDiagram
   TopRuler.Size = 16
   TopRuler.AutoFactor = True
   TopRuler.GridColor = clBlack
-  Zoom = 117
+  Zoom = 234
   BorderColor = clGray
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
@@ -1933,8 +1961,8 @@ object TatDiagram
   ParentColor = False
   object BoxBkGnd: TDgrBox
     Tag = 1
-    Width = 480.000000000000000000
-    Height = 640.000000000000000000
+    Width = 240.000000000000000000
+    Height = 320.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -1942,12 +1970,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = False
@@ -1997,10 +2030,10 @@ object TatDiagram
   end
   object Label7: TDgrLabel
     Tag = 1
-    Left = 4.000000000000000000
-    Top = 18.999964338477070000
-    Width = 459.000000000000000000
-    Height = 30.000000000000000000
+    Left = 2.000000000000000000
+    Top = 9.499982169238536000
+    Width = 229.500000000000000000
+    Height = 15.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2012,7 +2045,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -27
+        Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2073,10 +2106,10 @@ object TatDiagram
   end
   object Label1: TDgrLabel
     Tag = 1
-    Left = 4.000000000000000000
-    Top = 141.249973253857800000
-    Width = 393.440000000000000000
-    Height = 30.000000000000000000
+    Left = 2.000000000000000000
+    Top = 70.624986626928900000
+    Width = 196.720000000000000000
+    Height = 15.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2088,7 +2121,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -27
+        Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2149,10 +2182,10 @@ object TatDiagram
   end
   object Label6: TDgrLabel
     Tag = 1
-    Left = 4.000000000000000000
-    Top = 263.499982169238500000
-    Width = 299.880000000000000000
-    Height = 30.000000000000000000
+    Left = 2.000000000000000000
+    Top = 131.749991084619200000
+    Width = 149.940000000000000000
+    Height = 15.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2164,7 +2197,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -27
+        Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2225,10 +2258,10 @@ object TatDiagram
   end
   object Label8: TDgrLabel
     Tag = 1
-    Left = 4.000000000000000000
-    Top = 508.000000000000000000
-    Width = 357.480000000000000000
-    Height = 30.000000000000000000
+    Left = 2.000000000000000000
+    Top = 254.000000000000000000
+    Width = 178.740000000000000000
+    Height = 15.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2240,7 +2273,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -27
+        Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2301,10 +2334,10 @@ object TatDiagram
   end
   object BoxRoundCmdStations: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 56.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 28.000000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2314,12 +2347,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -2368,14 +2406,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object BoxRoundAccyNodes: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 548.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 274.000000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2385,12 +2424,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -2439,14 +2483,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object LabelCmdStationNodes: TDgrLabel
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 76.000000000000000000
-    Width = 211.440000000000000000
-    Height = 36.000000000000000000
+    Left = 7.000000000000000000
+    Top = 38.000000000000000000
+    Width = 105.720000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2458,7 +2503,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2519,10 +2564,10 @@ object TatDiagram
   end
   object LabelAccyNodes: TDgrLabel
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 566.000000000000000000
-    Width = 299.280000000000000000
-    Height = 36.000000000000000000
+    Left = 7.000000000000000000
+    Top = 283.000000000000000000
+    Width = 149.640000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2534,7 +2579,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2595,10 +2640,10 @@ object TatDiagram
   end
   object BoxRoundProgStations: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 179.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 89.500000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2608,12 +2653,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -2662,14 +2712,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object BoxRoundTrainNodes: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 302.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 151.000000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2679,12 +2730,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -2733,14 +2789,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object LabelProgNodes: TDgrLabel
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 198.500000000000000000
-    Width = 178.600000000000000000
-    Height = 36.000000000000000000
+    Left = 7.000000000000000000
+    Top = 99.250000000000000000
+    Width = 89.300000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2752,7 +2809,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2813,10 +2870,10 @@ object TatDiagram
   end
   object LabelTrainNodes: TDgrLabel
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 321.000000000000000000
-    Width = 232.600000000000000000
-    Height = 36.000000000000000000
+    Left = 7.000000000000000000
+    Top = 160.500000000000000000
+    Width = 116.300000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2828,7 +2885,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2889,10 +2946,10 @@ object TatDiagram
   end
   object Label9: TDgrLabel
     Tag = 1
-    Left = 4.000000000000000000
-    Top = 385.749991084619300000
-    Width = 324.760000000000000000
-    Height = 30.000000000000000000
+    Left = 2.000000000000000000
+    Top = 192.874995542309700000
+    Width = 162.380000000000000000
+    Height = 15.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2904,7 +2961,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -27
+        Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -2965,10 +3022,10 @@ object TatDiagram
   end
   object BoxRound2: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 425.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 212.500000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -2978,12 +3035,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -3032,14 +3094,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object Label10: TDgrLabel
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 443.500000000000000000
-    Width = 338.600000000000000000
-    Height = 36.000000000000000000
+    Left = 7.000000000000000000
+    Top = 221.750000000000000000
+    Width = 169.300000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3051,7 +3114,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3112,6 +3175,7 @@ object TatDiagram
   end
 end
 object TatDiagram
+  PaintLinesFirst = True
   NettoExportOffset = 1
   AutomaticNodes = False
   AutoScroll = True
@@ -3162,7 +3226,7 @@ object TatDiagram
   TopRuler.Size = 16
   TopRuler.AutoFactor = True
   TopRuler.GridColor = clBlack
-  Zoom = 100
+  Zoom = 200
   BorderColor = clGray
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
@@ -3206,8 +3270,8 @@ object TatDiagram
   ParentColor = False
   object Box1: TDgrBox
     Tag = 1
-    Width = 480.000000000000000000
-    Height = 640.000000000000000000
+    Width = 240.000000000000000000
+    Height = 320.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -3215,12 +3279,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = False
@@ -3270,10 +3339,10 @@ object TatDiagram
   end
   object BoxRoundItem1: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 16.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 8.000000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3283,12 +3352,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -3336,14 +3410,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = False
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object BoxRoundItem4: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 326.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 163.000000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3353,12 +3428,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -3406,14 +3486,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = False
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object LabelItem1: TDgrLabel
     Tag = 1
-    Left = 18.000000000000000000
-    Top = 40.000000000000000000
-    Width = 115.280000000000000000
-    Height = 36.000000000000000000
+    Left = 9.000000000000000000
+    Top = 20.000000000000000000
+    Width = 57.640000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3425,7 +3506,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3486,10 +3567,10 @@ object TatDiagram
   end
   object LabelItem4: TDgrLabel
     Tag = 1
-    Left = 18.000000000000000000
-    Top = 348.000000000000000000
-    Width = 115.280000000000000000
-    Height = 36.000000000000000000
+    Left = 9.000000000000000000
+    Top = 174.000000000000000000
+    Width = 57.640000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3501,7 +3582,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3562,10 +3643,10 @@ object TatDiagram
   end
   object BoxRoundItem2: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 119.090042437212300000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 59.545021218606160000
+    Width = 225.000000000000000000
+    Height = 38.000000000000010000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3575,12 +3656,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -3628,14 +3714,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = False
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object BoxRoundItem3: TDgrBoxRound
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 222.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 7.000000000000000000
+    Top = 111.000000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3645,12 +3732,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -3698,14 +3790,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = False
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object LabelItem2: TDgrLabel
     Tag = 1
-    Left = 18.000000000000000000
-    Top = 138.000000000000000000
-    Width = 115.280000000000000000
-    Height = 36.000000000000000000
+    Left = 9.000000000000000000
+    Top = 69.000000000000000000
+    Width = 57.640000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3717,7 +3810,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3778,10 +3871,10 @@ object TatDiagram
   end
   object LabelItem3: TDgrLabel
     Tag = 1
-    Left = 20.000000000000000000
-    Top = 246.000000000000000000
-    Width = 115.280000000000000000
-    Height = 36.000000000000000000
+    Left = 10.000000000000000000
+    Top = 123.000000000000000000
+    Width = 57.640000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3793,7 +3886,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -3854,10 +3947,10 @@ object TatDiagram
   end
   object BoxRoundItem6: TDgrBoxRound
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 536.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 7.000000000000000000
+    Top = 268.000000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3867,12 +3960,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -3920,14 +4018,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = False
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object LabelItem6: TDgrLabel
     Tag = 1
-    Left = 20.000000000000000000
-    Top = 558.000000000000000000
-    Width = 115.280000000000000000
-    Height = 36.000000000000000000
+    Left = 10.000000000000000000
+    Top = 279.000000000000000000
+    Width = 57.640000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3939,7 +4038,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -4000,10 +4099,10 @@ object TatDiagram
   end
   object BoxRoundItem5: TDgrBoxRound
     Tag = 1
-    Left = 12.000000000000000000
-    Top = 434.000000000000000000
-    Width = 450.000000000000000000
-    Height = 76.000000000000000000
+    Left = 6.000000000000000000
+    Top = 217.000000000000000000
+    Width = 225.000000000000000000
+    Height = 38.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -4013,12 +4112,17 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -5
+        Font.Name = 'Tahoma'
+        Font.Style = []
         DControlAngle = True
         Width = 80.000000000000000000
         Height = 40.000000000000000000
         Clip = False
         WordWrap = True
-        DControlFont = True
+        DControlFont = False
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -4066,14 +4170,15 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = False
     Static_ = False
+    CornerRadius = 3
     Collapsed = False
   end
   object LabelItem5: TDgrLabel
     Tag = 1
-    Left = 18.000000000000000000
-    Top = 458.000000000000000000
-    Width = 115.280000000000000000
-    Height = 36.000000000000000000
+    Left = 9.000000000000000000
+    Top = 229.000000000000000000
+    Width = 57.640000000000000000
+    Height = 18.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -4085,7 +4190,7 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -32
+        Font.Height = -16
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
@@ -4145,7 +4250,6 @@ object TatDiagram
     Collapsed = False
   end
 end
-
 SCREEN_SECTION
 
 	ScreenName=ScreenStart
