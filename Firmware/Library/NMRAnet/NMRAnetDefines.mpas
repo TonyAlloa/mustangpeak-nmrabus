@@ -164,6 +164,14 @@ const
   STATE_NMRABUS_TAKE_OFFLINE                = 14;
   STATE_NMRABUS_OFFLINE                     = 15;
   
+  
+  STATE_ACDI_MFG_NAME                       = 0;
+  STATE_ACDI_MFG_MODEL                      = 1;
+  STATE_ACDI_MFG_HW_VER                     = 2;
+  STATE_ACDI_MFG_SW_VER                     = 3;
+  STATE_ACDI_USER_NAME                      = 4;
+  STATE_ACDI_USER_DESC                      = 5;
+  
 type
   TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used
 
@@ -173,8 +181,8 @@ type
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
     Next: ^TBaseBuffer;                                                         // Pointer to the next Message Buffer
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
-    mCode: Byte;                                                                // Buffer Message Code for what the message was (not implemented on some buffers so be careful), see BMC_xxxx
-    Tag: TBufferTag;                                                            // General Purpose useage depending on the message type (not implemented on some buffers so be careful), see BMC_xxxx
+    mCode: Byte;                                                                // Buffer Message Code for what the message is
+    Tag: TBufferTag;                                                            // General Purpose useage depending on the message type
     Count: Byte;                                                                // Number of Databytes that are valid
     DataBytes: TCAN_DataBytes;                                                  // Depends on mCode, could be EventID, ACDI Chunk, etc
   end;

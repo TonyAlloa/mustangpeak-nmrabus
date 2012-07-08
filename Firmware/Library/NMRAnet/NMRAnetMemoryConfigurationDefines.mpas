@@ -28,7 +28,7 @@ const
   
   MSI_CDI                            = $FF;                                     // MemorySpaceIdentifer - Access the Configuration Definition Infomation (CDI)
   MSI_ALL                            = $FE;                                     // MemorySpaceIdentifer - Access All memory (define all in the application)
-  MSI_CONFIG                         = $FD;                                     // MemorySpaceIdentifer - Access basic configuration memory (definition ???)
+  MSI_CONFIG                         = $FD;                                     // MemorySpaceIdentifer - Access basic configuration memory that feeds into the CDI
   MSI_ACDI_MFG                       = $FC;                                     // MemorySpaceIdentifer - Access the ACDI Manfacturers Info
   MSI_ACDI_USER                      = $FB;                                     // MemorySpaceIdentifer - Access the ACDI User definable Info
   
@@ -36,7 +36,7 @@ const
   MCO_UNALIGNED_READS                = $4000;                                   // MemoryConfigurationOptions - Unaligned memory Reads supported
   MCO_ACDI_MFG_READS                 = $0800;                                   // MemoryConfigurationOptions - Address Space 0xFC supported (ACDI Manufacturer Area) for reads
   MCO_ACDI_USER_READS                = $0400;                                   // MemoryConfigurationOptions - Address Space 0xFB supported (ACDI User Defined Area) for reads
-  MCO_ACDI_USER_WRITES               = $0200;                                   // MemoryConfigurationOptions - Address Space 0xFB supported (ACDI Manufacturer Area) for reads
+  MCO_ACDI_USER_WRITES               = $0200;                                   // MemoryConfigurationOptions - Address Space 0xFB supported (ACDI User Defined Area) for writes
   
   MCWL_ONE_BYTE                      = $80;                                     // MemoryConfigurationWriteLength - 1 Byte Write Supported
   MCWL_TWO_BYTE                      = $40;                                     // MemoryConfigurationWriteLength - 2 Byte Write Supported

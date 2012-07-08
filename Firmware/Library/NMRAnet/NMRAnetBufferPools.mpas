@@ -115,6 +115,7 @@ begin
   Buffer^.mCode := 0;
   Buffer^.Tag := 0;
   Buffer^.RefCount := 0;
+  Buffer^.StateMachine := 0;
 end;
 
 // *****************************************************************************

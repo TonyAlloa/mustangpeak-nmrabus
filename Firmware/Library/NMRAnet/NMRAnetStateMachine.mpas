@@ -540,6 +540,21 @@ begin
                                                   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then      // This has gotta go after updating everything
                                                   begin
                                                     BaseBuffer := Node^.MsgBuffer;
+                                                    
+                                                    case BaseBuffer^.StateMachine of
+                                                      STATE_ACDI_MFG_NAME   : begin
+                                                                              end;
+                                                      STATE_ACDI_MFG_MODEL  : begin
+                                                                              end;
+                                                      STATE_ACDI_MFG_HW_VER : begin
+                                                                              end;
+                                                      STATE_ACDI_MFG_SW_VER : begin
+                                                                              end;
+                                                      STATE_ACDI_USER_NAME : begin
+                                                                             end;
+                                                      STATE_ACDI_USER_DESC : begin
+                                                                             end;
+                                                    end;
 
                                                     if Node^.State and NS_VIRTUAL <> 0 then
                                                     begin
