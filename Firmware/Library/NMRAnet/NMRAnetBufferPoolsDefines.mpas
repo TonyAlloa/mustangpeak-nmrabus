@@ -40,8 +40,8 @@ const
   BMC_UNKNOWN_ADDRESSED_MTI                = $80;                               // [OUT] Buffer Message
   
 type 
-  TRefCount = Byte;
-  TBufferTag = Byte;
+  TRefCount = Word;
+  TBufferTag = Word;
 type
   TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDataBuffer, TDatagramBuffer,  etc
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
