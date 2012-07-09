@@ -216,7 +216,7 @@ begin
                                                                            end
                                                                         end;
                                      MTI_CONSUMER_IDENTIFY             : begin
-                                                                          if Nodes.Count > 1 then    // First node is the Virtual Node, do we have any vNodes Allocated?
+                                                                          if Nodes.Count > 1 then    // First node is the Physical Node, do we have any vNodes Allocated?
                                                                             VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsConsumer(@CANBuffer^.DataBytes)
                                                                           else
                                                                             VNodeSupports := False;
@@ -231,23 +231,17 @@ begin
                                                                               DataBuffer^.DataBytes := CANBuffer^.DataBytes;
                                                                               DataBuffer^.RefCount := 0;                         // We manipulate this manually
 
-                                                                              for i := 0 to Nodes.Count - 1 do
+                                                                              if VNodeSupports then
                                                                               begin
-                                                                                if Nodes.AllocatedList[i]^.State and NS_VIRTUAL <> 0 then
-                                                                                begin
-                                                                                  if VNodeSupports then
-                                                                                  begin
-                                                                                    NMRAnetUtilities_MsgBufferLink(Nodes.AllocatedList[i], PBaseBuffer( GenericPointerAdapter(DataBuffer)));
-                                                                                    Inc(DataBuffer^.RefCount);
-                                                                                  end
-                                                                                end else
-                                                                                begin
-                                                                                  if PhysicalNodeSupports then
-                                                                                  begin
-                                                                                    NMRAnetUtilities_MsgBufferLink(Nodes.AllocatedList[i], PBaseBuffer( GenericPointerAdapter(DataBuffer)));
-                                                                                    Inc(DataBuffer^.RefCount);
-                                                                                  end
-                                                                                end
+                                                                                DataBuffer^.RefCount := Nodes.Count - 1;
+                                                                                for i := 1 to Nodes.Count - 1 do
+                                                                                  NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], PBaseBuffer( GenericPointerAdapter(DataBuffer)));
+                                                                              end;
+
+                                                                              if PhysicalNodeSupports then
+                                                                              begin
+                                                                                NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[0], PBaseBuffer( GenericPointerAdapter(DataBuffer)));    //  Store it in the Nodes structure to distribute later
+                                                                                Inc(DataBuffer^.RefCount);
                                                                               end
                                                                             end
                                                                           end
@@ -256,7 +250,7 @@ begin
                                                                           // TODO
                                                                         end;
                                      MTI_PRODUCER_IDENDIFY             : begin
-                                                                          if Nodes.Count > 1 then     // First node is the Virtual Node, do we have any vNodes Allocated?
+                                                                          if Nodes.Count > 1 then     // First node is the Physical Node, do we have any vNodes Allocated?
                                                                             VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsProducer(@CANBuffer^.DataBytes)
                                                                           else
                                                                             VNodeSupports := False;

@@ -619,17 +619,17 @@ begin
         if BaseBuffer^.State and CBS_BUFFER_DATA <> 0 then
         begin
           case Node^.MsgBuffer^.mCode of
-            BMC_PRODUCER_IDENTIFY :             begin
+            BMC_PRODUCER_IDENTIFY :             begin   // Tested to ensure we need to send this when the message came in
                                                   DataBuffer := PDataBuffer( GenericPointerAdapter( Node^.MsgBuffer));
-                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, Node^.MsgBuffer^.Alias, DataBuffer^.Count, @DataBuffer^.DataBytes) then
+                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, 0, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                   begin
                                                     NMRAnetUtilities_MsgBufferUnLink(Node);
                                                     NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
                                                   end;
                                                 end;
-            BMC_CONSUMER_IDENTIFY :             begin
+            BMC_CONSUMER_IDENTIFY :             begin   // Tested to ensure we need to send this when the message came in
                                                   DataBuffer := PDataBuffer( GenericPointerAdapter( Node^.MsgBuffer));
-                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, Node^.MsgBuffer^.Alias, DataBuffer^.Count, @DataBuffer^.DataBytes) then
+                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, 0, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                   begin
                                                     NMRAnetUtilities_MsgBufferUnLink(Node);
                                                     NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
@@ -708,7 +708,7 @@ begin
                                                                                                                          
                                                                                                                          if MemoryCount = 0 then
                                                                                                                          begin
-                                                                                                                           TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 0, @DataBytes);
+                                                                                                                           TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 6, @DataBytes);
                                                                                                                            DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
                                                                                                                          end else
                                                                                                                          begin
@@ -807,7 +807,13 @@ begin
                                                                                                  if DatagramTrainControlCallbackFunc <> PDatagramTaskCallbackFunc( nil) then
                                                                                                    DatagramTrainControlCallbackFunc(Node, DatagramBuffer);
                                                                                                    DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;        // RETHINK JUST TO FORCE IT NOW
-                                                                                               end;
+                                                                                               end
+                                                        else  begin
+                                                          DatagramBuffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                          DatagramBuffer^.ErrorCode.SubType := DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED;
+                                                          DatagramBuffer^.ErrorCode.Count := 3;
+                                                          DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
+                                                          end;
                                                         end;
                                                       end;
                                                     end else
@@ -857,7 +863,7 @@ begin
 
   if NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then                // Last in priority to send the Event Lists
   begin
-    if Node^.State and NS_VIRTUAL <> nil then
+    if Node^.State and NS_VIRTUAL <> 0 then
     begin
        {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_PRODUCED_EVENT}
       if Node^.EventCounter < MAX_VNODE_SUPPORTED_EVENTS_PRODUCED then
