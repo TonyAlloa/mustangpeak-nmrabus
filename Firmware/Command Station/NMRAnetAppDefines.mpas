@@ -52,13 +52,13 @@ const
 const
   MEMORY_CONFIG_OPTIONS: TMemConfigurationOptions = (
     MCO_UNALIGNED_READS or MCO_ACDI_MFG_READS or MCO_ACDI_USER_READS or MCO_ACDI_USER_WRITES,             // MemoryConfigOptions
-    MCWL_ARBITRARY_BYTE,                                                                                  // MemoryConfigWriteLength
+    MCWL_ONE_BYTE or MCWL_TWO_BYTE or MCWL_FOUR_BYTE or MCWL_64_BYTE or MCWL_ARBITRARY_BYTE,              // MemoryConfigWriteLength
     MSI_CDI,                                                                                              // MemoryConfigHighestSpace
     MSI_ACDI_USER                                                                                         // MemoryConfigLowestSpace
   );
-  
+
 // **************************************************************************************************************************************************************
-// CDI Implementation
+// CDI Memory ($FF) Space Implementation
 // **************************************************************************************************************************************************************
 const
   MAX_CDI_ARRAY = 794;
@@ -157,16 +157,61 @@ const
     (409, 3)     // ManufacturerSWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
   );
 
+// **************************************************************************************************************************************************************
+// All Memory ($FE) Implementation
+// **************************************************************************************************************************************************************
+type TAllMap = record
+  LowMem,
+  HighMem: Word;
+end;
+
+const
+  ALL_MAP: TAllMap = (
+    $0000,       //  Lowest Address in the MCU memory the Memory Confguration Protocol can access  (NOT USED TODAY, REPLY ASSUMES $00 IS THE LOWEST ADDRESS)
+    $7FFF        //  Highest Address in the MCU memory the Memory Confguration Protocol can access
+  );
+  
+// **************************************************************************************************************************************************************
+// "None" Implementation (caller passes the explicit address in the databytes instead of the shortcut 2 bits in the Config Byte)
+// **************************************************************************************************************************************************************
+type
+  TNoneMap = record
+    LowMem,
+    HighMem: Word;
+  end;
+
+const
+  NONE_MAP: TNoneMap = (
+    $0000,       //  Lowest Address in the MCU memory the Memory Confguration Protocol can access (NOT USED TODAY, REPLY ASSUMES $00 IS THE LOWEST ADDRESS)
+    $7FFF        //  Highest Address in the MCU memory the Memory Confguration Protocol can access
+  );
+
+
+// **************************************************************************************************************************************************************
+// Configuration Memory ($FD) Implementation
+// **************************************************************************************************************************************************************
+
 const
   MAX_USER_NAME = 20;
   MAX_USER_DESC = 40;
 type                                                                            // THIS DATA IS IN EEPROM
-  TCDI_ConfigurationData = record
-    UserName: array[0..MAX_USER_NAME] of char;                                  // user defined Name for Node
-    UserDesc: array[0..MAX_USER_DESC] of char;                                  // user defined Description for Node
-    UserNameVNode: array[0..MAX_USER_NAME] of char;                             // user defined Name for VNode
-    UserDescVNode: array[0..MAX_USER_DESC] of char;                             // user defined Name for VNode
+  TConfigurationData = record
+    Name: array[0..MAX_USER_NAME] of char;                                      // user defined Name for Node
+    Desc: array[0..MAX_USER_DESC] of char;                                      // user defined Description for Node
   end;
+  
+  const
+    CONFIG_DATA_NODE: TConfigurationData = (                                    // TEMPORARY FOR TEST......
+      'Custom Name         ',
+      'Custom Description  '
+    );
+    
+    CONFIG_DATA_VNODE: TConfigurationData = (                                   // TEMPORARY FOR TEST......
+      'Custom Name         ',
+      'Custom Description  '
+    );
+  
+  
 
 // **************************************************************************************************************************************************************
 // ACDI Implementation

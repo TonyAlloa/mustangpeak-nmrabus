@@ -408,6 +408,7 @@ begin
             SetLength(ASCII_Line, Index);
             Strings[i] := ASCII_Line;
             ExtraLines := Strings.Count - 1 - i;
+            Strings[i] := Strings[i] + #0;
           end;
         end;
         for i := 0 to ExtraLines - 1 do
