@@ -21,6 +21,8 @@ const
   MCP_OP_GET_UNIQUEID                = $8C;                                     // MemoryConfiguratio                    nProtocol Operation - Get Unique ID Key
   MCP_OP_GET_UNIQUEID_REPLY          = $8E;                                     // MemoryConfigurationProtocol Operation - Get Unique ID Key Reply
 
+  MCP_OP_GET_ADD_SPACE_INFO_REPLY_PRESENT = $01;
+  
   MCP_OP_FREEZE                      = $A0;                                     // MemoryConfigurationProtocol Operation - Freeze Node
   MCP_OP_INDICATE                    = $A4;                                     // MemoryConfigurationProtocol Operation - Indicate
   MCP_OP_RESETS                      = $A8;                                     // MemoryConfigurationProtocol Operation - Resets

@@ -678,10 +678,7 @@ begin
                                                                                                                        MemoryCount := DatagramBuffer^.DataBytes[6];
 
                                                                                                                      MemorySpaceOffset := DWord( DatagramBuffer^.DataBytes[2] shl 24) or DWord( DatagramBuffer^.DataBytes[3] shl 16) or DWord( DatagramBuffer^.DataBytes[4] shl 8) or DWord( DatagramBuffer^.DataBytes[5]);
-                                                                                                                     
-                                                                                                                     
-                                                                                                                     
-                                                                                                                     
+
                                                                                                                      // THIS CAN ALL BE DONE FOR EACH MEMORY SPACE TYPE UPFRONT THEN PASS VARIABLES INTO THE DATAGRAM ENGINE!!!!!!!
                                                                                                                      if MemorySpaceOffset >= MAX_CDI_ARRAY then
                                                                                                                      begin
@@ -692,16 +689,15 @@ begin
                                                                                                                        if MemorySpaceOffset + MemoryCount > MAX_CDI_ARRAY then
                                                                                                                          MemoryCount := MAX_CDI_ARRAY - MemorySpaceOffset
                                                                                                                      end;
-
                                                                                                                      
                                                                                                                      // Be careful not to corrupt the DataByts[1] between calls in the StateMachine
-                                                                                                                     if MemorySpaceIndicator = MSI_CDI then
+                                                                                                                 //    if MemorySpaceIndicator = MSI_CDI then
                                                                                                                      begin
                                                                                                                        if DatagramBuffer^.Tag = 0 then
                                                                                                                        begin
                                                                                                                          DatagramBuffer^.Tag := MemorySpaceOffset;
                                                                                                                          DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
-                                                                                                                         DataBytes[1] := MCP_READ_DATAGRAM_REPLY or MCP_CDI;
+                                                                                                                         DataBytes[1] := MCP_READ_DATAGRAM_REPLY or (DatagramBuffer^.DataBytes[1] and $03); //MCP_CDI;
                                                                                                                          DataBytes[2] := DatagramBuffer^.DataBytes[2];
                                                                                                                          DataBytes[3] := DatagramBuffer^.DataBytes[3];
                                                                                                                          DataBytes[4] := DatagramBuffer^.DataBytes[4];
@@ -754,7 +750,7 @@ begin
                                                                                                                                                    end;
                                                                                                                        MCP_OP_GET_ADD_SPACE_INFO : begin
                                                                                                                                                      DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
-                                                                                                                                                     DataBytes[1] := MCP_OP_GET_ADD_SPACE_INFO_REPLY;
+                                                                                                                                                     DataBytes[1] := MCP_OP_GET_ADD_SPACE_INFO_REPLY or MCP_OP_GET_ADD_SPACE_INFO_REPLY_PRESENT;  // assumption is we support ALL Address Spaces
                                                                                                                                                      DataBytes[2] := DatagramBuffer^.DataBytes[2];
 
                                                                                                                                                      // I am not supporting the ability to return anything but a $0 for the lower address so we only deal with offsets from zero in these calls
