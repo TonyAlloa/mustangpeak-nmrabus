@@ -17,9 +17,9 @@ program NMRABusCommandStation;
 // BUGS, BUGS, BUGS,
 //
 //  July 6, 2012
-//  CDI Editor, Needs to stick a Null at the end of the CID file
 //  The Nodes are not sending all the Consumer/Producers they support when asked......
 //  Response to the Memory Configuration Protocol can respond with Datagrams MUCH larger than 72 bytes.......
+//  Memory Config Read/Write pointing to the CDI for all Address Spaces, need to fix
 //
 // ******************************************************************************
  
