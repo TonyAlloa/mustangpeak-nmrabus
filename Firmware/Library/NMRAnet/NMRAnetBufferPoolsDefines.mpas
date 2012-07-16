@@ -28,7 +28,7 @@ const
   CBS_BUFFER_STREAM                        = $10;                               // CommonBufferState buffer is a Stream
   CBS_PROCESSING                           = $20;                               // CommonBufferState is Processing (what that means depends on the Buffer type, implys that the buffer is not ready for the main loop to use yet)
   CBS_OUTGOING                             = $40;                               // CommonBufferState is an outgoing Buffer (Transmitting to the CAN Bus)
-  CBS_SEND_REPLY                           = $80;                               // CommonBufferState buffer has completed it task and needs the standard reply sent
+  CBS_REPLY_SENT                           = $80;                               // CommonBufferState buffer has completed it task and needs the standard reply sent
   
   BMC_PROTOCOL_SUPPORT_QUERY               = $01;                               // [IN] Buffer Message Code is a Protocol Support Query    [BaseBuffer]
   BMC_PRODUCER_IDENTIFY                    = $02;                               // [IN] Buffer Message Code is Producer Identify           [DataBuffer]
@@ -36,8 +36,10 @@ const
   BMC_EVENT_LEARN                          = $04;                               // [IN] Buffer Message Code is Event Learn                 [BaseBuffer]
   BMC_SIMPLE_NODE_INFO_REQEUST             = $06;                               // [IN] Buffer Message Code is ACDI Request                [BaseBuffer]
   BMC_DATAGRAM                             = $07;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
-
-  BMC_UNKNOWN_ADDRESSED_MTI                = $80;                               // [OUT] Buffer Message
+  BMC_UNKNOWN_ADDRESSED_MTI                = $08;                               // [OUT] Buffer Message
+  BMC_DATAGRAM_OUT_OF_ORDER                = $09;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
+  BMC_DATAGRAM_BUFFER_FULL                 = $0A;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
+  BMC_DATAGRAM_NOT_ACCEPTED                = $0B;                               // [OUT] Buffer Message Code is to send a Datagram Not Accepted Response [BaseBuffer]
   
 type 
   TRefCount = Word;

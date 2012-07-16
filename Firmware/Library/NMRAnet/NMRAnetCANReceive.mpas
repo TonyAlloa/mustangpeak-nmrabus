@@ -179,7 +179,7 @@ var
   i: Integer;
   Offset: Byte;
   
-  s1: array[0..32] of char;
+//  s1: array[0..32] of char;
   
   
 begin
@@ -364,14 +364,12 @@ begin
                                                   DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
                                              end else
                                              begin
-                                               for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST - 1 do
+                                               if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then    // We assume we will always allocate a BaseBuffer
                                                begin
-                                                 if Node^.DatagramOverflowList[i] = 0 then
-                                                 begin
-                                                   Node^.DatagramOverflowList[i] := SourceAlias;
-                                                   Break
-                                                 end
-                                               end
+                                                 NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
+                                                 BaseBuffer^.mCode := BMC_DATAGRAM_BUFFER_FULL;
+                                                 BaseBuffer^.Alias := SourceAlias;
+                                               end;
                                              end
                                            end;
                 MTI_DATAGRAM_FRAME_START : begin
@@ -384,55 +382,57 @@ begin
                                                DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
                                                for i := 0 to DatagramBuffer^.iByteCount - 1 do
                                                  DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
-                                             end // An overflow is caught in the Last Frame when we can't find a buffer in progress
+                                             end else
+                                             begin
+                                               if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then    // We assume we will always allocate a BaseBuffer
+                                               begin
+                                                 NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
+                                                 BaseBuffer^.mCode := BMC_DATAGRAM_BUFFER_FULL;
+                                                 BaseBuffer^.Alias := SourceAlias;
+                                                 BaseBuffer^.State := BaseBuffer^.State or CBS_PROCESSING;                   // Hold off until the End Frame is found
+                                               end;
+                                             end
                                            end;
                 MTI_DATAGRAM_FRAME       : begin
                                              if NMRAnetUtilities_MsgBufferFindDatagram(Node, SourceAlias, DatagramBuffer) then
-                                             begin
-                                               if DatagramBuffer^.ErrorCode.MTI = MTI_EXTENSION_DATAGRAM_RECIEVED_OK then
+                                             begin     // Normal Operation, going well so far we assume the sender will not send more than 72 bytes....
+                                               Offset := DatagramBuffer^.iByteCount;
+                                               for i := 0 to  CANBuffer^.DataCount - 1 do
+                                                 DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
+                                               DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
+                                             end else
+                                             if NMRAnetUtilities_MsgBufferFindDatagramErrorReply(Node, SourceAlias, BaseBuffer) then
+                                             begin      // Don't do anything, let it run its course
+                                             end else
+                                             begin     // Sender sent an intermediate frame without a start frame
+                                               if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                begin
-                                                 Offset := DatagramBuffer^.iByteCount;
-                                                 for i := 0 to  CANBuffer^.DataCount - 1 do
-                                                   DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
-                                                 DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
-                                                 
-                                                 if DatagramBuffer^.iByteCount > LEN_DATAGRAM then
-                                                 begin
-                                                   DatagramBuffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_REJECTED;
-                                                   DatagramBuffer^.ErrorCode.SubType := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER;
-                                                   DatagramBuffer^.ErrorCode.Count := 3;                                      // MTI + 2 Error Code Bytes
-                                                 end;
+                                                 NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
+                                                 BaseBuffer^.mCode := BMC_DATAGRAM_OUT_OF_ORDER;
+                                                 BaseBuffer^.Alias := SourceAlias;
+                                                 BaseBuffer^.State := BaseBuffer^.State or CBS_PROCESSING;                   // Hold off until the End Frame is found
                                                end
-                                             end;
+                                             end
                                            end;
                 MTI_DATAGRAM_FRAME_END   : begin
                                              if NMRAnetUtilities_MsgBufferFindDatagram(Node, SourceAlias, DatagramBuffer) then
                                              begin
-                                               if DatagramBuffer^.ErrorCode.MTI = MTI_EXTENSION_DATAGRAM_RECIEVED_OK then
-                                               begin
-                                                 Offset := DatagramBuffer^.iByteCount;
-                                                 for i := 0 to  CANBuffer^.DataCount - 1 do
-                                                   DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
-                                                 DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
-
-                                                 if DatagramBuffer^.iByteCount > LEN_DATAGRAM then
-                                                 begin
-                                                   DatagramBuffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_REJECTED;
-                                                   DatagramBuffer^.ErrorCode.SubType := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER;
-                                                   DatagramBuffer^.ErrorCode.Count := 3;                                      // MTI + 2 Error Code Bytes
-                                                 end;
-                                                 
-                                                 DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING;          // Signed Sealed so Deliver.
-                                               end
+                                               Offset := DatagramBuffer^.iByteCount;
+                                               for i := 0 to  CANBuffer^.DataCount - 1 do
+                                                 DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
+                                               DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
+                                               DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING;          // Signed Sealed so Deliver.
                                              end else
-                                             begin
-                                               for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST - 1 do
+                                             if NMRAnetUtilities_MsgBufferFindDatagramErrorReply(Node, SourceAlias, BaseBuffer) then
+                                             begin      // Don't do anything, let it run its course
+                                               BaseBuffer^.State := BaseBuffer^.State and not CBS_PROCESSING;                 // Deliver the Error.
+                                             end else
+                                             begin     // Sender sent an intermediate frame without a start frame
+                                               if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                begin
-                                                 if Node^.DatagramOverflowList[i] = 0 then
-                                                 begin
-                                                   Node^.DatagramOverflowList[i] := SourceAlias;
-                                                   Break
-                                                 end
+                                                 NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer);
+                                                 BaseBuffer^.mCode := BMC_DATAGRAM_OUT_OF_ORDER;
+                                                 BaseBuffer^.Alias := SourceAlias;
                                                end
                                              end
                                            end;

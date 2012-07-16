@@ -16,10 +16,9 @@ program NMRABusCommandStation;
 //
 // BUGS, BUGS, BUGS,
 //
-//  July 6, 2012
-//  The Nodes are not sending all the Consumer/Producers they support when asked......
-//  Response to the Memory Configuration Protocol can respond with Datagrams MUCH larger than 72 bytes.......
-//  Memory Config Read/Write pointing to the CDI for all Address Spaces, need to fix
+//  July 14, 2012
+//  Response to the Memory Configuration Protocol can respond with Datagrams MUCH larger than 72 bytes.......Ok per Bob
+//  Memory Config not working with VNodes
 //
 // ******************************************************************************
  
@@ -208,7 +207,7 @@ begin
   
   while (TRUE) do
   begin
-    delay_us(6000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
+    delay_us(2000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
     //  PrintBufferPools(j);
     
     ActiveNode := NMRAnetNode_NextNode;

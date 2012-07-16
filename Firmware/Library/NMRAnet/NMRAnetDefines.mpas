@@ -236,7 +236,7 @@ type
     iStateMachine: Byte;                                                        // Statemachine index for the main bus login
     EventCounter: Word;                                                         // Counts the Events when enumerating them
     MsgBuffer: PBaseBuffer;                                                     // Messages to handle in a linked list
-    DatagramOverflowList: TDatagramOverflowList;                                // List that contains Nodes that tried to send datagrams but we did not have a free buffer.  They are queued to send a Buffer_Full response
+    ActiveBuffer: PBaseBuffer;                                                  // Pointer to the Buffer that is currently being serviced
   end;
   PNMRAnetNode = ^TNMRAnetNode;
   

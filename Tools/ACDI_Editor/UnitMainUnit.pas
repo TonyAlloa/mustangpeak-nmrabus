@@ -392,8 +392,14 @@ begin
       Strings := TStringList.Create;
       ASCII := TStringList.Create;
       try
+        // Strip off characters in the beginning of the file
+        ASCII_Line := Str;
+        Index := Pos('<?xml', LowerCase(ASCII_Line));
+        for j := 0 to Index - 1 do
+          ASCII_Line[j] := ' ';
+
         AsciiArrayCount := 0;
-        Strings.Text := Str;
+        Strings.Text := ASCII_Line;
         ExtraLines := -1;
 
         // Strip off any white space, (space, tabs, etc), extra lines, garbage after </cdi>, etc
@@ -490,7 +496,8 @@ begin
         ASCII.Add('    (' + IntToStr(Map[3].Offset) + ', ' + IntToStr(Map[3].Length) + ')     // ManufacturerSWVersion - [String Offset, Length] into the CDI Memory Space ($FF)');
         ASCII.Add('  );');
 
-        MemoCDI.Text := ASCII.Text;
+        for i := 0 to ASCII.Count - 1 do
+          MemoCDI.Lines.Add(ASCII[i]);
 
         i := Map[0].Length + Map[1].Length + Map[2].Length + Map[3].Length;
         LabelMaxMfgStrLen.Caption := IntToStr(i);

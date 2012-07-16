@@ -241,7 +241,7 @@ begin
   while Node^.MsgBuffer <> nil do
   begin
     Temp := Node^.MsgBuffer;
-    NMRAnetUtilities_MsgBufferUnLink(Node);
+    NMRAnetUtilities_MsgBufferUnLink(Node, Temp);
     NMRAnetBufferPools_ReleaseBuffer(Temp);
   end;
   UnLockCANInterrupt;
@@ -346,6 +346,7 @@ end;
 procedure NMRAnetStateMachine_InitializeNode(Node: PNMRAnetNode; NodeID_HI, NodeID_LO: DWord);
 begin
   Node^.MsgBuffer := PBaseBuffer( nil);
+  Node^.ActiveBuffer := PBaseBuffer( nil);
   Node^.State := 0;
   Node^.MsgFlags := 0;
   Node^.EventCounter := 0;
@@ -436,6 +437,30 @@ begin
   end
 end;
 
+// *****************************************************************************
+//  procedure DecodeMemoryConfigurationReadWrite
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+procedure DecodeMemoryConfigurationReadWrite(DataBytes: PCAN_DataBytes; var MemorySpace: Byte; var MemorySpaceOffset: DWord; var MemorySpaceCount: Byte);
+begin
+  MemorySpaceCount := DataBytes^[6];
+  case DataBytes^[1] and $03 of      // Strip off bottom two bits
+    MCP_CDI            : MemorySpace := MSI_CDI;
+    MCP_ALL            : MemorySpace := MSI_ALL;
+    MCP_CONFIGURATION  : MemorySpace := MSI_CONFIG;
+    MCP_NONE           : begin
+                           MemorySpace := DataBytes^[6];
+                           MemorySpaceCount := DataBytes^[7]
+                         end;
+   end;
+   MemorySpaceOffset := DWord( DataBytes^[2] shl 24) or DWord( DataBytes^[3] shl 16) or DWord( DataBytes^[4] shl 8) or DWord( DataBytes^[5]);
+end;
+
+
 procedure NextACDIChar(AddressSpace: ^Byte; BaseBuffer: PBaseBuffer; MapInfo: ^TCDIStringInfo; var DataBytesCount: Byte; DataBytes: PCAN_DataBytes; NextState: Byte);
 var
   Address: ^Byte;
@@ -459,6 +484,27 @@ begin
 end;
 
 // *****************************************************************************
+//  procedure NextMsgBuffer
+//     Parameters:
+//     Returns:
+//
+//     Description: MUST be called between Interrupt Locking Calls
+//
+// *****************************************************************************
+function NextMsgBuffer(Node: PNMRAnetNode): PBaseBuffer;
+begin
+  if Node^.ActiveBuffer <> nil then
+  begin
+    Node^.ActiveBuffer := Node^.ActiveBuffer^.NextBuffer;
+    if Node^.ActiveBuffer = nil then
+      Node^.ActiveBuffer := Node^.MsgBuffer;
+  end else
+    Node^.ActiveBuffer := Node^.MsgBuffer;
+    
+  Result := Node^.ActiveBuffer;
+end;
+
+// *****************************************************************************
 //  procedure ProcessNode
 //     Parameters:
 //     Returns:
@@ -477,14 +523,15 @@ var
   LocalMsgFlags: Byte;
   DataBytes: TCAN_DataBytes;
   i, j, MaxIndex: Integer;
-  BaseBuffer: PBaseBuffer;
+  ActiveBuffer, AllocatedBuffer: PBaseBuffer;
   DataBuffer: PDataBuffer;
   DatagramBuffer, TxDatagramBuffer: PDatagramBuffer;
-  MemorySpaceIndicator,MemoryCount: Byte;
+  MemorySpace, MemoryCount: Byte;
   MemorySpaceOffset : DWord;
   AddressSpace: ^Byte;
 begin
   LockCANInterrupt;                                                             // Don't let the interrupt change things while we are working on them.....
+  
   begin
     LocalMsgFlags := Node^.MsgFlags;
 
@@ -506,7 +553,6 @@ begin
            if TryTransmitCANLayerMsg(Node, Buffer, MTI_RID) then
              NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_ALIAS_RID);
         end;
-        UnLockCANInterrupt;
         Exit;                                                                     // Bad things happening, exit
       end;
 
@@ -533,36 +579,74 @@ begin
       end
     end else
     begin
-      BaseBuffer := Node^.MsgBuffer;
-      if BaseBuffer <> 0 then
+      ActiveBuffer := NextMsgBuffer(Node);
+      if ActiveBuffer <> 0 then
       begin
-        if BaseBuffer^.State and CBS_BUFFER_BASE <> 0 then                   // QUESTION ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if ActiveBuffer^.State and CBS_BUFFER_BASE <> 0 then                   // QUESTION ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         begin                                                                     // WHAT IS THE POINT OF CHECKING STATE NOW?  IT MAY HELP WITH EXECUTION TIME
-          case Node^.MsgBuffer^.mCode of                                          // BY NOT RUNNING A BIG CASE STATEMENT..... NEED TO BURN SOME BRAIN CELLS ON IT
+          case ActiveBuffer^.mCode of                                             // BY NOT RUNNING A BIG CASE STATEMENT..... NEED TO BURN SOME BRAIN CELLS ON IT
+            BMC_DATAGRAM_OUT_OF_ORDER  :        begin
+                                                  if ActiveBuffer^.State and CBS_PROCESSING = 0 then
+                                                  begin
+                                                    DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                    DataBytes[1] := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER[0];
+                                                    DataBytes[2] := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER[1];
+                                                    if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, ActiveBuffer^.Alias, 3, @DataBytes) then
+                                                    begin
+                                                      NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                      NMRAnetBufferPools_ReleaseBaseBuffer(ActiveBuffer);
+                                                    end
+                                                  end
+                                                end;
+            BMC_DATAGRAM_BUFFER_FULL   :        begin
+                                                  if ActiveBuffer^.State and CBS_PROCESSING = 0 then
+                                                  begin
+                                                    DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                    DataBytes[1] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[0];
+                                                    DataBytes[2] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[1];
+                                                    if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, ActiveBuffer^.Alias, 3, @DataBytes) then
+                                                    begin
+                                                      NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                      NMRAnetBufferPools_ReleaseBaseBuffer(ActiveBuffer);
+                                                    end
+                                                  end
+                                                end;
+            BMC_DATAGRAM_NOT_ACCEPTED  :        begin
+                                                  if ActiveBuffer^.State and CBS_PROCESSING = 0 then
+                                                  begin
+                                                    DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                    DataBytes[1] := DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[0];
+                                                    DataBytes[2] := DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[1];
+                                                    if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, ActiveBuffer^.Alias, 3, @DataBytes) then
+                                                    begin
+                                                      NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                      NMRAnetBufferPools_ReleaseBaseBuffer(ActiveBuffer);
+                                                    end
+                                                  end
+                                                end;
             BMC_PROTOCOL_SUPPORT_QUERY :        begin
                                                   NMRAnetUtilities_ZeroCANData(DataBytes);
                                                   DataBytes[0] := $2F;
                                                   for i := 0 to LEN_PIV_PROTOCOL-1 do
                                                     for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
                                                       DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
-                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PROTOCOL_SUPPORT_REPLY, Node^.MsgBuffer^.Alias, 6, @DataBytes) then
+                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PROTOCOL_SUPPORT_REPLY, ActiveBuffer^.Alias, 6, @DataBytes) then
                                                   begin
-                                                    NMRAnetUtilities_MsgBufferUnLink(Node);
-                                                    NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                    NMRAnetBufferPools_ReleaseBaseBuffer(ActiveBuffer);
                                                   end;
                                                 end;
             BMC_UNKNOWN_ADDRESSED_MTI :         begin
                                                   DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
-                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_OPTIONAL_INTERACTION_REJECTED, Node^.MsgBuffer^.Alias, 1, @DataBytes) then
+                                                  if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_OPTIONAL_INTERACTION_REJECTED, ActiveBuffer^.Alias, 1, @DataBytes) then
                                                   begin
-                                                    NMRAnetUtilities_MsgBufferUnLink(Node);
-                                                    NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                    NMRAnetBufferPools_ReleaseBaseBuffer(ActiveBuffer);
                                                   end;
                                                 end;
             BMC_SIMPLE_NODE_INFO_REQEUST :      begin
                                                   if not CANStorage_ListFull(@TX_NMRAnetBufferList) then      // This has gotta go after updating everything
                                                   begin
-                                                    BaseBuffer := Node^.MsgBuffer;
                                                     if Node^.State and NS_VIRTUAL <> 0 then
                                                       AddressSpace := @CDI_ARRAY_VNODE[0]
                                                     else
@@ -571,64 +655,64 @@ begin
                                                     DataBytes[i] := MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY;
                                                     Inc(i);
                                                     
-                                                    while (BaseBuffer^.StateMachine <> STATE_ACDI_DONE) and (i < 8) do
+                                                    while (ActiveBuffer^.StateMachine <> STATE_ACDI_DONE) and (i < 8) do
                                                     begin
-                                                      case BaseBuffer^.StateMachine of
+                                                      case ActiveBuffer^.StateMachine of
                                                         STATE_ACDI_MFG_VERSION : begin
                                                                                   DataBytes[i] := ACDI_MFG_VERSION;
                                                                                   Inc(i);
-                                                                                  BaseBuffer^.StateMachine := STATE_ACDI_MFG_NAME;
+                                                                                  ActiveBuffer^.StateMachine := STATE_ACDI_MFG_NAME;
                                                                                  end;
-                                                        STATE_ACDI_MFG_NAME     : NextACDIChar(AddressSpace, BaseBuffer, @CDI_MAP.Manufacturer, i, @DataBytes, STATE_ACDI_MFG_MODEL);
-                                                        STATE_ACDI_MFG_MODEL    : NextACDIChar(AddressSpace, BaseBuffer, @CDI_MAP.ManufacturerModel, i, @DataBytes, STATE_ACDI_MFG_HW_VER);
-                                                        STATE_ACDI_MFG_HW_VER   : NextACDIChar(AddressSpace, BaseBuffer, @CDI_MAP.ManufacturerHWVersion, i, @DataBytes, STATE_ACDI_MFG_SW_VER);
-                                                        STATE_ACDI_MFG_SW_VER   : NextACDIChar(AddressSpace, BaseBuffer, @CDI_MAP.ManufacturerSWVersion, i, @DataBytes, STATE_ACDI_USER_VERSION);
+                                                        STATE_ACDI_MFG_NAME     : NextACDIChar(AddressSpace, ActiveBuffer, @CDI_MAP.Manufacturer, i, @DataBytes, STATE_ACDI_MFG_MODEL);
+                                                        STATE_ACDI_MFG_MODEL    : NextACDIChar(AddressSpace, ActiveBuffer, @CDI_MAP.ManufacturerModel, i, @DataBytes, STATE_ACDI_MFG_HW_VER);
+                                                        STATE_ACDI_MFG_HW_VER   : NextACDIChar(AddressSpace, ActiveBuffer, @CDI_MAP.ManufacturerHWVersion, i, @DataBytes, STATE_ACDI_MFG_SW_VER);
+                                                        STATE_ACDI_MFG_SW_VER   : NextACDIChar(AddressSpace, ActiveBuffer, @CDI_MAP.ManufacturerSWVersion, i, @DataBytes, STATE_ACDI_USER_VERSION);
                                                         STATE_ACDI_USER_VERSION : begin
                                                                                   DataBytes[i] := ACDI_MFG_VERSION;
                                                                                   Inc(i);
-                                                                                  BaseBuffer^.StateMachine := STATE_ACDI_USER_NAME;
+                                                                                  ActiveBuffer^.StateMachine := STATE_ACDI_USER_NAME;
                                                                                  end;
                                                         STATE_ACDI_USER_NAME :   begin
                                                                                    DataBytes[i] := #0;
                                                                                    Inc(i);
-                                                                                   BaseBuffer^.StateMachine := STATE_ACDI_USER_DESC;
+                                                                                   ActiveBuffer^.StateMachine := STATE_ACDI_USER_DESC;
                                                                                  end;
                                                         STATE_ACDI_USER_DESC   : begin
                                                                                    DataBytes[i] := #0;
                                                                                    Inc(i);
-                                                                                   BaseBuffer^.StateMachine := STATE_ACDI_DONE;
+                                                                                   ActiveBuffer^.StateMachine := STATE_ACDI_DONE;
                                                                                  end;
                                                         STATE_ACDI_DONE        : begin
                                                                                  end;
                                                       end;
                                                     end;
-                                                    TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_SIMPLE_NODE_IDENTIFY_INFO, BaseBuffer^.Alias, i, @DataBytes);  // Has to go, already checked for a free buffer
+                                                    TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_SIMPLE_NODE_IDENTIFY_INFO, ActiveBuffer^.Alias, i, @DataBytes);  // Has to go, already checked for a free buffer
                                                     
-                                                    if BaseBuffer^.StateMachine >= STATE_ACDI_DONE then
+                                                    if ActiveBuffer^.StateMachine >= STATE_ACDI_DONE then
                                                     begin
-                                                      NMRAnetUtilities_MsgBufferUnLink(Node);
-                                                      NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
+                                                      NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                      NMRAnetBufferPools_ReleaseBaseBuffer(ActiveBuffer);
                                                     end;
                                                   end
                                                 end;
           end;
         end else
-        if BaseBuffer^.State and CBS_BUFFER_DATA <> 0 then
+        if ActiveBuffer^.State and CBS_BUFFER_DATA <> 0 then
         begin
-          case Node^.MsgBuffer^.mCode of
+          case ActiveBuffer^.mCode of
             BMC_PRODUCER_IDENTIFY :             begin   // Tested to ensure we need to send this when the message came in
-                                                  DataBuffer := PDataBuffer( GenericPointerAdapter( Node^.MsgBuffer));
+                                                  DataBuffer := PDataBuffer( GenericPointerAdapter( ActiveBuffer));
                                                   if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, 0, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                   begin
-                                                    NMRAnetUtilities_MsgBufferUnLink(Node);
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
                                                     NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
                                                   end;
                                                 end;
             BMC_CONSUMER_IDENTIFY :             begin   // Tested to ensure we need to send this when the message came in
-                                                  DataBuffer := PDataBuffer( GenericPointerAdapter( Node^.MsgBuffer));
+                                                  DataBuffer := PDataBuffer( GenericPointerAdapter( ActiveBuffer));
                                                   if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, 0, DataBuffer^.Count, @DataBuffer^.DataBytes) then
                                                   begin
-                                                    NMRAnetUtilities_MsgBufferUnLink(Node);
+                                                    NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
                                                     NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
                                                   end;
                                                 end;
@@ -636,226 +720,213 @@ begin
                                                 end;
           end; // case
         end else
-        if BaseBuffer^.State and CBS_BUFFER_DATAGRAM <> 0 then
+        if ActiveBuffer^.State and CBS_BUFFER_DATAGRAM <> 0 then
         begin
-          case Node^.MsgBuffer^.mCode of
+          case ActiveBuffer^.mCode of
             BMC_DATAGRAM :                      begin
-                                                  DatagramBuffer := PDatagramBuffer( GenericPointerAdapter( Node^.MsgBuffer));
+                                                  DatagramBuffer := PDatagramBuffer( GenericPointerAdapter( ActiveBuffer));
                                                   
                                                   // This is a case for an inner statemachine........ is it not......
-                                                  if DatagramBuffer^.State and CBS_PROCESSING = 0 then                            // Don't do anything until the datagram is fully received
+                                                  if DatagramBuffer^.State and CBS_PROCESSING = 0 then                            // Don't do anything until a datagram is fully received
                                                   begin
-                                                    if DatagramBuffer^.ErrorCode.MTI = MTI_EXTENSION_DATAGRAM_RECIEVED_OK then    // If the datagram was received successfully handle it, else pass the Error back to the sender
+                                                    if DatagramBuffer^.State and CBS_REPLY_SENT <> 0 then                        // If Send Reply is set then the task has been completed and only the reply for the initial datgram needs to be sent
                                                     begin
-                                                      if DatagramBuffer^.State and CBS_SEND_REPLY = 0 then                        // If Send Reply is set then the task has been completed and only the reply for the initial datgram needs to be sent
-                                                      begin
-                                                        case DatagramBuffer^.DataBytes[0] of
-                                                          DATAGRAM_TYPE_MEMORY_CONFIGURATION : begin
-                                                                                         //        if DatagramMemConfigurationCallbackFunc <> PDatagramTaskCallbackFunc(nil) then
-                                                                                         //          DatagramMemConfigurationCallbackFunc(Node, DatagramBuffer);
+                                                      case DatagramBuffer^.DataBytes[0] of
+                                                        DATAGRAM_TYPE_MEMORY_CONFIGURATION : begin
+                                                                                       //        if DatagramMemConfigurationCallbackFunc <> PDatagramTaskCallbackFunc(nil) then
+                                                                                       //          DatagramMemConfigurationCallbackFunc(Node, DatagramBuffer);
 
-                                                                                                 case DatagramBuffer^.DataBytes[1] and $C0 of      // Mask off the upper 2 bits
-                                                                                                   MCP_WRITE     : begin
-                                                                                                                     case DatagramBuffer^.DataBytes[1] and $03 of      // Mask off the bottom 2 bits
-                                                                                                                       MCP_CDI            : MemorySpaceIndicator := MSI_CDI;
-                                                                                                                       MCP_ALL            : MemorySpaceIndicator := MSI_ALL;
-                                                                                                                       MCP_CONFIGURATION  : MemorySpaceIndicator := MSI_CONFIG;
-                                                                                                                       MCP_NONE           : MemorySpaceIndicator := DatagramBuffer^.DataBytes[5];
-                                                                                                                     end;
-                                                                                                                     MemorySpaceOffset := DWord( DatagramBuffer^.DataBytes[1] shl 24) or DWord( DatagramBuffer^.DataBytes[2] shl 16) or DWord( DatagramBuffer^.DataBytes[3] shl 8) or DWord( DatagramBuffer^.DataBytes[4]);
-                                                                                                                     DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
+                                                                                               case DatagramBuffer^.DataBytes[1] and $C0 of      // Mask off the upper 2 bits
+                                                                                                 MCP_WRITE     : begin
+                                                                                                                   // WE NEED TO HOLD OFF THE REPLY IF IT IS A WRITE PER THE TN
+                                                                                                                   DecodeMemoryConfigurationReadWrite(@DatagramBuffer^.DataBytes[0], MemorySpace, MemorySpaceOffset, MemoryCount);
+                                                                                                                   NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                   NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                 end;
+                                                                                                 MCP_READ      : begin
+                                                                                                                   DecodeMemoryConfigurationReadWrite(@DatagramBuffer^.DataBytes[0], MemorySpace, MemorySpaceOffset, MemoryCount);
+                                                                                                                   
+                                                                                                                   // THIS CAN ALL BE DONE FOR EACH MEMORY SPACE TYPE UPFRONT THEN PASS VARIABLES INTO THE DATAGRAM ENGINE!!!!!!!
+                                                                                                                   if MemorySpaceOffset >= MAX_CDI_ARRAY then
+                                                                                                                   begin
+                                                                                                                      MemorySpaceOffset := 0;
+                                                                                                                      MemoryCount := 0;
+                                                                                                                   end else
+                                                                                                                   begin
+                                                                                                                     if MemorySpaceOffset + MemoryCount > MAX_CDI_ARRAY then
+                                                                                                                       MemoryCount := MAX_CDI_ARRAY - MemorySpaceOffset
                                                                                                                    end;
-                                                                                                   MCP_READ      : begin
-                                                                                                                     case DatagramBuffer^.DataBytes[1] and $03 of      // Mask off the bottom 2 bits
-                                                                                                                       MCP_CDI            : MemorySpaceIndicator := MSI_CDI;
-                                                                                                                       MCP_ALL            : MemorySpaceIndicator := MSI_ALL;
-                                                                                                                       MCP_CONFIGURATION  : MemorySpaceIndicator := MSI_CONFIG;
-                                                                                                                       MCP_NONE           : MemorySpaceIndicator := DatagramBuffer^.DataBytes[5];
-                                                                                                                     end;
-                                                                                                                     if MemorySpaceIndicator = MCP_NONE then
-                                                                                                                       MemoryCount := DatagramBuffer^.DataBytes[7]
-                                                                                                                     else
-                                                                                                                       MemoryCount := DatagramBuffer^.DataBytes[6];
-
-                                                                                                                     MemorySpaceOffset := DWord( DatagramBuffer^.DataBytes[2] shl 24) or DWord( DatagramBuffer^.DataBytes[3] shl 16) or DWord( DatagramBuffer^.DataBytes[4] shl 8) or DWord( DatagramBuffer^.DataBytes[5]);
-
-                                                                                                                     // THIS CAN ALL BE DONE FOR EACH MEMORY SPACE TYPE UPFRONT THEN PASS VARIABLES INTO THE DATAGRAM ENGINE!!!!!!!
-                                                                                                                     if MemorySpaceOffset >= MAX_CDI_ARRAY then
+                                                                                                                   
+                                                                                                                   // Be careful not to corrupt the DataByts[1] between calls in the StateMachine
+                                                                                                               //    if MemorySpace = MSI_CDI then
+                                                                                                                   begin
+                                                                                                                     if DatagramBuffer^.Tag = 0 then
                                                                                                                      begin
-                                                                                                                        MemorySpaceOffset := 0;
-                                                                                                                        MemoryCount := 0;
-                                                                                                                     end else
-                                                                                                                     begin
-                                                                                                                       if MemorySpaceOffset + MemoryCount > MAX_CDI_ARRAY then
-                                                                                                                         MemoryCount := MAX_CDI_ARRAY - MemorySpaceOffset
-                                                                                                                     end;
-                                                                                                                     
-                                                                                                                     // Be careful not to corrupt the DataByts[1] between calls in the StateMachine
-                                                                                                                 //    if MemorySpaceIndicator = MSI_CDI then
-                                                                                                                     begin
-                                                                                                                       if DatagramBuffer^.Tag = 0 then
+                                                                                                                       DatagramBuffer^.Tag := MemorySpaceOffset;
+                                                                                                                       DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
+                                                                                                                       DataBytes[1] := MCP_READ_DATAGRAM_REPLY or (DatagramBuffer^.DataBytes[1] and $03); //MCP_CDI;
+                                                                                                                       DataBytes[2] := DatagramBuffer^.DataBytes[2];
+                                                                                                                       DataBytes[3] := DatagramBuffer^.DataBytes[3];
+                                                                                                                       DataBytes[4] := DatagramBuffer^.DataBytes[4];
+                                                                                                                       DataBytes[5] := DatagramBuffer^.DataBytes[5];
+                                                                                                                       
+                                                                                                                       if MemoryCount = 0 then
                                                                                                                        begin
-                                                                                                                         DatagramBuffer^.Tag := MemorySpaceOffset;
-                                                                                                                         DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
-                                                                                                                         DataBytes[1] := MCP_READ_DATAGRAM_REPLY or (DatagramBuffer^.DataBytes[1] and $03); //MCP_CDI;
-                                                                                                                         DataBytes[2] := DatagramBuffer^.DataBytes[2];
-                                                                                                                         DataBytes[3] := DatagramBuffer^.DataBytes[3];
-                                                                                                                         DataBytes[4] := DatagramBuffer^.DataBytes[4];
-                                                                                                                         DataBytes[5] := DatagramBuffer^.DataBytes[5];
-                                                                                                                         
-                                                                                                                         if MemoryCount = 0 then
+                                                                                                                         TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 6, @DataBytes);
+                                                                                                                       end else
+                                                                                                                       begin
+                                                                                                                         DataBytes[6] := CDI_ARRAY[DatagramBuffer^.Tag];
+                                                                                                                         if MemoryCount > 1 then
+                                                                                                                           DataBytes[7] := CDI_ARRAY[DatagramBuffer^.Tag+1]; // Don't increment Tag until after Transmit Successful
+                                                                                                                         if MemoryCount < 3 then
                                                                                                                          begin
-                                                                                                                           TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 6, @DataBytes);
-                                                                                                                           DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
-                                                                                                                         end else
+                                                                                                                           if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 6 + MemoryCount, @DataBytes) then
+                                                                                                                           begin
+                                                                                                                             NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                             NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                           end
+                                                                                                                         end else 
                                                                                                                          begin
-                                                                                                                           DataBytes[6] := CDI_ARRAY[DatagramBuffer^.Tag];
-                                                                                                                           if MemoryCount > 1 then
-                                                                                                                             DataBytes[7] := CDI_ARRAY[DatagramBuffer^.Tag+1]; // Don't increment Tag until after Transmit Successful
-                                                                                                                           if MemoryCount < 3 then
+                                                                                                                           if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME_START, DatagramBuffer^.Alias, 8, @DataBytes) then
                                                                                                                            begin
-                                                                                                                             if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 6 + MemoryCount, @DataBytes) then
-                                                                                                                               DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
-                                                                                                                           end else
-                                                                                                                           begin
-                                                                                                                             if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME_START, DatagramBuffer^.Alias, 8, @DataBytes) then
-                                                                                                                               DatagramBuffer^.Tag := DatagramBuffer^.Tag + 2;
+                                                                                                                             DatagramBuffer^.Tag := DatagramBuffer^.Tag + 2;
                                                                                                                            end
                                                                                                                          end
-                                                                                                                       end else
-                                                                                                                       if ((MemorySpaceOffset + MemoryCount) - DatagramBuffer^.Tag <= 8)  then
+                                                                                                                       end
+                                                                                                                     end else
+                                                                                                                     if ((MemorySpaceOffset + MemoryCount) - DatagramBuffer^.Tag <= 8)  then
+                                                                                                                     begin
+                                                                                                                       i := (MemorySpaceOffset + MemoryCount) - DatagramBuffer^.Tag;
+                                                                                                                       if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME_END, DatagramBuffer^.Alias, i, @CDI_ARRAY[DatagramBuffer^.Tag]) then
                                                                                                                        begin
-                                                                                                                         i := (MemorySpaceOffset + MemoryCount) - DatagramBuffer^.Tag;
-                                                                                                                         if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME_END, DatagramBuffer^.Alias, i, @CDI_ARRAY[DatagramBuffer^.Tag]) then
-                                                                                                                           DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
-                                                                                                                       end else
+                                                                                                                         NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                         NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                       end
+                                                                                                                     end else
+                                                                                                                     begin
+                                                                                                                       if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME, DatagramBuffer^.Alias, 8, @CDI_ARRAY[DatagramBuffer^.Tag]) then
                                                                                                                        begin
-                                                                                                                         if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME, DatagramBuffer^.Alias, 8, @CDI_ARRAY[DatagramBuffer^.Tag]) then
-                                                                                                                           DatagramBuffer^.Tag := DatagramBuffer^.Tag + 8;
+                                                                                                                         DatagramBuffer^.Tag := DatagramBuffer^.Tag + 8;
                                                                                                                        end
                                                                                                                      end
-                                                                                                                   end;
-                                                                                                   MCP_OPERATION : begin
-                                                                                                                     case DatagramBuffer^.DataBytes[1] of      // Mask off the upper 2 bits
-                                                                                                                       MCP_OP_GET_CONFIG         : begin
-                                                                                                                                                     DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
-                                                                                                                                                     DataBytes[1] := MCP_OP_GET_CONFIG_REPLY;
-                                                                                                                                                     DataBytes[2] := Hi( MEMORY_CONFIG_OPTIONS.MemoryConfigOptions);
-                                                                                                                                                     DataBytes[3] := Lo( MEMORY_CONFIG_OPTIONS.MemoryConfigOptions);
-                                                                                                                                                     DataBytes[4] := MEMORY_CONFIG_OPTIONS.MemoryConfigWriteLength;
-                                                                                                                                                     DataBytes[5] := MEMORY_CONFIG_OPTIONS.MemoryConfigHighestSpace;
-                                                                                                                                                     DataBytes[6] := MEMORY_CONFIG_OPTIONS.MemoryConfigLowestSpace;
-                                                                                                                                                     if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 7, @DataBytes) then
-                                                                                                                                                       DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
-                                                                                                                                                   end;
-                                                                                                                       MCP_OP_GET_ADD_SPACE_INFO : begin
-                                                                                                                                                     DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
-                                                                                                                                                     DataBytes[1] := MCP_OP_GET_ADD_SPACE_INFO_REPLY or MCP_OP_GET_ADD_SPACE_INFO_REPLY_PRESENT;  // assumption is we support ALL Address Spaces
-                                                                                                                                                     DataBytes[2] := DatagramBuffer^.DataBytes[2];                                                // Pass the Address Space back
-
-                                                                                                                                                     // I am not supporting the ability to return anything but a $0 for the lower address so we only deal with offsets from zero in these calls
-                                                                                                                                                     case DatagramBuffer^.DataBytes[2] of
-                                                                                                                                                       MSI_CDI       : MemorySpaceOffset := MAX_CDI_ARRAY;
-                                                                                                                                                       MSI_ALL       : MemorySpaceOffset := ALL_MAP.HighMem;
-                                                                                                                                                       MSI_CONFIG    : MemorySpaceOffset := MAX_USER_NAME+MAX_USER_DESC;
-                                                                                                                                                       MSI_ACDI_MFG  : MemorySpaceOffset := 1 + CDI_MAP.Manufacturer.Length+CDI_MAP.ManufacturerModel.Length+CDI_MAP.ManufacturerHWVersion.Length+CDI_MAP.ManufacturerSWVersion.Length;
-                                                                                                                                                       MSI_ACDI_USER : MemorySpaceOffset := 1 + MAX_USER_NAME+MAX_USER_DESC  // PLUS 1 HERE???????????????????????????
-                                                                                                                                                     else
-                                                                                                                                                       MemorySpaceOffset := 0;
-                                                                                                                                                     end;
-                                                                                                                                                     DataBytes[3] := (DWord(MemorySpaceOffset) shr 24) and $000000FF;
-                                                                                                                                                     DataBytes[4] := (DWord(MemorySpaceOffset) shr 16) and $000000FF;
-                                                                                                                                                     DataBytes[5] := (DWord(MemorySpaceOffset) shr 8) and $000000FF;
-                                                                                                                                                     DataBytes[6] := DWord(MemorySpaceOffset) and $000000FF;
-                                                                                                                                                     case DatagramBuffer^.DataBytes[2] of
-                                                                                                                                                       MSI_CONFIG, MSI_ACDI_MFG, MSI_ACDI_USER : DataBytes[7] := $01        // Read/Write Only
-                                                                                                                                                     else
-                                                                                                                                                       DataBytes[7] := $00;                                                 // Read Only
-                                                                                                                                                     end;
-                                                                                                                                                     if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 8, @DataBytes) then
-                                                                                                                                                       DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
-                                                                                                                                                   end;
-                                                                                                                       MCP_OP_LOCK               : begin
-                                                                                                                                                    DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
-                                                                                                                                                   end;
-                                                                                                                       MCP_OP_GET_UNIQUEID       : begin
-                                                                                                                                                     DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
-                                                                                                                                                   end;
-                                                                                                                       MCP_OP_FREEZE             : begin
-                                                                                                                                                     DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
-                                                                                                                                                   end;
-                                                                                                                       MCP_OP_INDICATE           : begin
-                                                                                                                                                     DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
-                                                                                                                                                   end;
-                                                                                                                       MCP_OP_RESETS             : begin
-                                                                                                                                                     DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
-                                                                                                                                                   end
-                                                                                                                     else   // case
-                                                                                                                       DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
-                                                                                                                     end
                                                                                                                    end
-                                                                                                 else   // case
-                                                                                                   DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY; // TEMPORARY
-                                                                                                 end;
+                                                                                                                 end;
+                                                                                                 MCP_OPERATION : begin
+                                                                                                                   case DatagramBuffer^.DataBytes[1] of      // Mask off the upper 2 bits
+                                                                                                                     MCP_OP_GET_CONFIG         : begin
+                                                                                                                                                   DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
+                                                                                                                                                   DataBytes[1] := MCP_OP_GET_CONFIG_REPLY;
+                                                                                                                                                   DataBytes[2] := Hi( MEMORY_CONFIG_OPTIONS.MemoryConfigOptions);
+                                                                                                                                                   DataBytes[3] := Lo( MEMORY_CONFIG_OPTIONS.MemoryConfigOptions);
+                                                                                                                                                   DataBytes[4] := MEMORY_CONFIG_OPTIONS.MemoryConfigWriteLength;
+                                                                                                                                                   DataBytes[5] := MEMORY_CONFIG_OPTIONS.MemoryConfigHighestSpace;
+                                                                                                                                                   DataBytes[6] := MEMORY_CONFIG_OPTIONS.MemoryConfigLowestSpace;
+                                                                                                                                                   if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 7, @DataBytes) then
+                                                                                                                                                   begin
+                                                                                                                                                     NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                                                     NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                                                   end
+                                                                                                                                                 end;
+                                                                                                                     MCP_OP_GET_ADD_SPACE_INFO : begin
+                                                                                                                                                   DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
+                                                                                                                                                   DataBytes[1] := MCP_OP_GET_ADD_SPACE_INFO_REPLY or MCP_OP_GET_ADD_SPACE_INFO_REPLY_PRESENT;  // assumption is we support ALL Address Spaces
+                                                                                                                                                   DataBytes[2] := DatagramBuffer^.DataBytes[2];
+
+                                                                                                                                                   // I am not supporting the ability to return anything but a $0 for the lower address so we only deal with offsets from zero in these calls
+                                                                                                                                                   case DatagramBuffer^.DataBytes[2] of
+                                                                                                                                                     MSI_CDI       : MemorySpaceOffset := MAX_CDI_ARRAY;
+                                                                                                                                                     MSI_ALL       : MemorySpaceOffset := ALL_MAP.HighMem;
+                                                                                                                                                     MSI_CONFIG    : MemorySpaceOffset := MAX_USER_NAME+MAX_USER_DESC;
+                                                                                                                                                     MSI_ACDI_MFG  : MemorySpaceOffset := 1 + CDI_MAP.Manufacturer.Length+CDI_MAP.ManufacturerModel.Length+CDI_MAP.ManufacturerHWVersion.Length+CDI_MAP.ManufacturerSWVersion.Length;
+                                                                                                                                                     MSI_ACDI_USER : MemorySpaceOffset := 1 + MAX_USER_NAME+MAX_USER_DESC;  // PLUS 1 HERE???????????????????????????
+                                                                                                                                                   end;
+                                                                                                                                                   DatagramBuffer^.DataBytes[2] := (DWord(MemorySpaceOffset) shr 24) and $000000FF;
+                                                                                                                                                   DatagramBuffer^.DataBytes[3] := (DWord(MemorySpaceOffset) shr 16) and $000000FF;
+                                                                                                                                                   DatagramBuffer^.DataBytes[4] := (DWord(MemorySpaceOffset) shr 8) and $000000FF;
+                                                                                                                                                   DatagramBuffer^.DataBytes[5] := DWord(MemorySpaceOffset) and $000000FF;
+                                                                                                                                                   case DatagramBuffer^.DataBytes[2] of
+                                                                                                                                                     MSI_CONFIG, MSI_ACDI_MFG, MSI_ACDI_USER : DatagramBuffer^.DataBytes[6] := $01        // Read/Write Only
+                                                                                                                                                   else
+                                                                                                                                                     DatagramBuffer^.DataBytes[6] := $00;                                                 // Read Only
+                                                                                                                                                   end;
+                                                                                                                                                   if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, DatagramBuffer^.Alias, 7, @DataBytes) then
+                                                                                                                                                   begin
+                                                                                                                                                     NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                                                     NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                                                   end;
+                                                                                                                                                 end;
+                                                                                                                     MCP_OP_LOCK               : begin
+                                                                                                                                                   NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                                                   NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                                                 end;
+                                                                                                                     MCP_OP_GET_UNIQUEID       : begin
+                                                                                                                                                   NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                                                   NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                                                 end;
+                                                                                                                     MCP_OP_FREEZE             : begin
+                                                                                                                                                   NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                                                   NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                                                 end;
+                                                                                                                     MCP_OP_INDICATE           : begin
+                                                                                                                                                   NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                                                   NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                                                 end;
+                                                                                                                     MCP_OP_RESETS             : begin
+                                                                                                                                                   NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                                                                                   NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                                                                 end;
+                                                                                                                   end
+                                                                                                                 end;
                                                                                                end;
-                                                          DATAGRAM_TYPE_TRAIN_CONTROL        : begin
-                                                                                                 if DatagramTrainControlCallbackFunc <> PDatagramTaskCallbackFunc( nil) then
-                                                                                                   DatagramTrainControlCallbackFunc(Node, DatagramBuffer);
-                                                                                                   DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;        // RETHINK JUST TO FORCE IT NOW
-                                                                                               end
-                                                        else  begin
-                                                          DatagramBuffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_REJECTED;
-                                                          DatagramBuffer^.ErrorCode.SubType := DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED;
-                                                          DatagramBuffer^.ErrorCode.Count := 3;
-                                                          DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;
-                                                          end;
+                                                                                             end;
+                                                        DATAGRAM_TYPE_TRAIN_CONTROL        : begin
+                                                                                               if DatagramTrainControlCallbackFunc <> PDatagramTaskCallbackFunc( nil) then
+                                                                                                 DatagramTrainControlCallbackFunc(Node, DatagramBuffer);
+                                                                                               NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                                                               NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                             end
+                                                      else begin  // Unknown Datagram Type
+                                                         if NMRAnetBufferPools_AllocateBaseBuffer(AllocatedBuffer) then      // Assume we always can allocate a BaseBuffer
+                                                          begin
+                                                            NMRAnetUtilities_MsgBufferLink(Node, AllocatedBuffer);
+                                                            AllocatedBuffer^.mCode := BMC_DATAGRAM_NOT_ACCEPTED;
+                                                            AllocatedBuffer^.Alias := DatagramBuffer^.Alias;
+                                                            NMRAnetUtilities_MsgBufferUnLink(Node, ActiveBuffer);
+                                                            NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                          end
                                                         end;
-                                                      end;
+                                                      end;  // case [Datagram Type]
                                                     end else
-                                                      DatagramBuffer^.State := DatagramBuffer^.State or CBS_SEND_REPLY;        // Set it to send the reply since we had an error
-                                                      
-                                                    if DatagramBuffer^.State and CBS_SEND_REPLY <> 0 then
                                                     begin
-                                                      DataBytes[0] := DatagramBuffer^.ErrorCode.MTI;                              // All the Errors and return codes where handled in the interrupt during reception
-                                                      DataBytes[1] := DatagramBuffer^.ErrorCode.SubType[0];
-                                                      DataBytes[2] := DatagramBuffer^.ErrorCode.SubType[1];
-                                                      if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, DatagramBuffer^.Alias, DatagramBuffer^.ErrorCode.Count, @DataBytes) then
-                                                      begin
-                                                        NMRAnetUtilities_MsgBufferUnLink(Node);
-                                                        NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
-                                                      end;
+                                                      DataBytes[0] := MTI_EXTENSION_DATAGRAM_RECIEVED_OK;          // OK return codes where handled in the interrupt during reception
+                                                      if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, DatagramBuffer^.Alias, 1, @DataBytes) then
+                                                        DatagramBuffer^.State := DatagramBuffer^.State or CBS_REPLY_SENT
                                                     end
                                                   end;
                                                 end;
           end; // case
-        end else
+        end
       end;
-    end;
-
-    for i := 0 to LEN_DATAGRAM_BUFFER_OVERFLOW_LIST - 1 do
-    begin
-      if Node^.DatagramOverflowList[i] <> 0 then
-      begin
-        DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;                          // All the Errors and return codes where handled in the interrupt during reception
-        DataBytes[1] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[0];
-        DataBytes[2] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[1];
-        if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, Node^.DatagramOverflowList[i], 3, @DataBytes) then
-          Node^.DatagramOverflowList[i] := 0
-        else
-          Break
-      end
     end;
   end;
   UnLockCANInterrupt;
 end;
 
-procedure ProccessOutgoingNode(Node: PNMRAnetNode; Buffer: PCANBuffer);
+
+// *****************************************************************************
+//  procedure ProcessOutgoingNode
+//     Parameters:
+//     Returns:
+//
+//     Description: If outgoing messages need to be queued up then this function
+//                  ensures all needed messages are sent
+//
+// *****************************************************************************
+procedure ProcessOutgoingNode(Node: PNMRAnetNode; Buffer: PCANBuffer);
 var
   DatagramBuffer: PDatagramBuffer;
 begin
-  // Chugging through the Event Enumeration is lowest on the list of priorites so it
-  // gets the last crack at succeeding at the end of the statemachine
-
+  // Chug through the All Event Enumeration
   if NMRAnetNode_TestStateFlag(Node, NS_ENUMERATING_EVENTS) then                // Last in priority to send the Event Lists
   begin
     if Node^.State and NS_VIRTUAL <> 0 then
@@ -875,7 +946,6 @@ begin
       end else
       {$ENDIF}
         NMRAnetNode_ClearStateFlag(Node, NS_ENUMERATING_EVENTS);
-      Inc(Node^.EventCounter);
     end else
     begin
       {$IFDEF SUPPORT_AT_LEAST_ONE_PRODUCED_EVENT}
@@ -893,7 +963,6 @@ begin
       end else
       {$ENDIF}
         NMRAnetNode_ClearStateFlag(Node, NS_ENUMERATING_EVENTS);
-      Inc(Node^.EventCounter);
     end;
   end;
   
@@ -1014,7 +1083,7 @@ begin
     STATE_NMRABUS_PERMITTED :
       begin
         ProcessNode(Node, @Buffer);                                             // Handle auto Actions to CAN/NMRAnet messages coming in
-        ProccessOutgoingNode(Node, @Buffer);
+        ProcessOutgoingNode(Node, @Buffer);
       end;
     STATE_NMRABUS_INHIBITED :
       begin

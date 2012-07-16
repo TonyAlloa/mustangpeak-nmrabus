@@ -59,8 +59,9 @@ function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 
 procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
 function NMRAnetUtilities_MsgBufferFindDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
+function NMRAnetUtilities_MsgBufferFindDatagramErrorReply(Node: PNMRAnetNode; Alias: Word; var Buffer: PBaseBuffer): Boolean;
 
 implementation
 
@@ -654,18 +655,31 @@ end;
 //     Parameters:
 //     Returns:
 //
-//     Description:
+//     Description: MUST be called between Interrupt Locking Calls
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
 var
-  Temp: PBaseBuffer;
+  Temp, Parent: PBaseBuffer;
 begin
-  if Node^.MsgBuffer <> nil then
+  Temp := Node^.MsgBuffer;
+  Parent := nil;
+  while Temp <> nil do
   begin
-    Temp := Node^.MsgBuffer^.NextBuffer;
-    Node^.MsgBuffer := Temp;
-  end
+    if Temp = Buffer then
+    begin
+      if Parent = nil then
+        Node^.MsgBuffer := Node^.MsgBuffer^.NextBuffer
+      else begin
+        Parent^.NextBuffer := Temp^.NextBuffer;
+        Break
+      end
+    end;
+    Parent := Temp;
+    Temp := Temp^.NextBuffer
+  end;
+  if Buffer = Node^.ActiveBuffer then
+    Node^.ActiveBuffer := Node^.MsgBuffer;
 end;
 
 // *****************************************************************************
@@ -689,6 +703,35 @@ begin
       Buffer := PDatagramBuffer( GenericPointerAdapter( Temp));
       Result := True;
       Break
+    end;
+    Temp := Temp^.NextBuffer
+  end;
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetUtilities_MsgBufferFindDatagramErrorReply
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRAnetUtilities_MsgBufferFindDatagramErrorReply(Node: PNMRAnetNode; Alias: Word; var Buffer: PBaseBuffer): Boolean;
+var
+  Temp: PBaseBuffer;
+begin
+  Result := False;
+  Temp := Node^.MsgBuffer;
+  while Temp <> nil do
+  begin
+    if Temp^.Alias = Alias then
+    begin
+      if (Temp^.mCode = BMC_DATAGRAM_BUFFER_FULL) or (Temp^.mCode = BMC_DATAGRAM_OUT_OF_ORDER) then
+      begin
+        Buffer := Temp;
+        Result := True;
+        Break
+      end;
     end;
     Temp := Temp^.NextBuffer
   end;
