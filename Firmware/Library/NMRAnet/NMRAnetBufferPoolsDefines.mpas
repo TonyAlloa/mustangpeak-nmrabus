@@ -21,26 +21,22 @@ type
   
 const
   CBS_ALLOCATED                            = $01;                               // CommonBufferState is allocated but may be in Process, need to check for inprocess flags
-  CBS_BUFFER_BASE                          = $02;                               // CommonBufferState is a base Buffer
-  CBS_BUFFER_DATA                          = $04;                               // CommonBufferState is a DataBuffer with the 8 CAN bytes
-  CBS_BUFFER_DATAGRAM                      = $08;                               // CommonBufferState buffer is a Datagram
-  CBS_BUFFER_STREAM                        = $10;                               // CommonBufferState buffer is a Stream
-  CBS_PROCESSING                           = $20;                               // CommonBufferState is Processing (what that means depends on the Buffer type, implys that the buffer is not ready for the main loop to use yet)
-  CBS_OUTGOING                             = $40;                               // CommonBufferState is an outgoing Buffer (Transmitting to the CAN Bus)
-  CBS_ACKNOWLEDGED                         = $80;                               // CommonBufferState is an outgoing Buffer that has been acknowleded and read to continue based on the ACK or NAK (Transmitting to the CAN Bus)
-
+  CBS_PROCESSING                           = $02;                               // CommonBufferState is Processing (what that means depends on the Buffer type, implys that the buffer is not ready for the main loop to use yet)
+  CBS_OUTGOING                             = $04;                               // CommonBufferState is an outgoing Buffer (Transmitting to the CAN Bus)
+  CBS_TRANSFER_COMPLETE                    = $08;                               // Multi Frame Message transfer is complete
+  
   // These must be in Priority Order for transmit, higher = higher priority
-  BMC_DATAGRAM_OUT_OF_ORDER                = $0B;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
-  BMC_DATAGRAM_BUFFER_FULL                 = $0A;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
+  BMC_PROTOCOL_SUPPORT_QUERY               = $01;                               // [IN] Buffer Message Code is a Protocol Support Query    [BaseBuffer]
+  BMC_PRODUCER_IDENTIFY                    = $02;                               // [IN] Buffer Message Code is Producer Identify           [DataBuffer]
+  BMC_CONSUMER_IDENTIFY                    = $03;                               // [IN] Buffer Message Code is Consumer Identify           [DataBuffer]
+  BMC_EVENT_LEARN                          = $04;                               // [IN] Buffer Message Code is Event Learn                 [BaseBuffer]
+  BMC_SIMPLE_NODE_INFO_REQEUST             = $05;                               // [IN] Buffer Message Code is ACDI Request                [BaseBuffer]
+  BMC_UNKNOWN_ADDRESSED_MTI                = $06;                               // [OUT] Buffer Message Code is of an unknown MTI type
+  BMC_DATAGRAM_OUT_OF_ORDER                = $07;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
+  BMC_DATAGRAM_BUFFER_FULL                 = $08;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
   BMC_DATAGRAM_NOT_ACCEPTED                = $09;                               // [OUT] Buffer Message Code is to send a Datagram Not Accepted Response [BaseBuffer]
-  BMC_DATAGRAM_OKAY                        = $08;                               // [OUT] Buffer Message Code is to send a Datagram Ok Response [BaseBuffer]
-  BMC_UNKNOWN_ADDRESSED_MTI                = $07;                               // [OUT] Buffer Message Code is of an unknown MTI type
-  BMC_PROTOCOL_SUPPORT_QUERY               = $06;                               // [IN] Buffer Message Code is a Protocol Support Query    [BaseBuffer]
-  BMC_PRODUCER_IDENTIFY                    = $05;                               // [IN] Buffer Message Code is Producer Identify           [DataBuffer]
-  BMC_CONSUMER_IDENTIFY                    = $04;                               // [IN] Buffer Message Code is Consumer Identify           [DataBuffer]
-  BMC_EVENT_LEARN                          = $03;                               // [IN] Buffer Message Code is Event Learn                 [BaseBuffer]
-  BMC_SIMPLE_NODE_INFO_REQEUST             = $02;                               // [IN] Buffer Message Code is ACDI Request                [BaseBuffer]
-  BMC_DATAGRAM                             = $01;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
+  BMC_DATAGRAM_OKAY                        = $0A;                               // [OUT] Buffer Message Code is to send a Datagram Ok Response [BaseBuffer]
+  BMC_DATAGRAM                             = $0B;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
   
 type 
   TRefCount = Word;
@@ -49,7 +45,7 @@ type
   TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDataBuffer, TDatagramBuffer,  etc
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
-    NextBuffer: ^TBaseBuffer;                                                   // Pointer to the next Message Buffer
+    Next: ^TBaseBuffer;                                                         // Pointer to the next Message Buffer
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message is
     StateMachine: Byte;                                                         // Local StateMachine Index for use

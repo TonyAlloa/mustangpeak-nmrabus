@@ -55,7 +55,6 @@ const
   STATE_MEM_CONFIG_LOAD_DATAGRAM     = $02;
   STATE_MEM_CONFIG_WRITE             = $03;
   STATE_MEM_CONFIG_WAITFOR_REPLY     = $04;
-  STATE_MEM_CONFIG_DONE              = $05;
   
 type
   TMemConfigurationOptions = record

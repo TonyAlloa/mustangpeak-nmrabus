@@ -26,6 +26,7 @@ uses
   NMRAnetNode,
   NMRAnetDatagrams,
   NMRAnetDatagramDefines,
+  NMRAnetMemoryConfigurationDefines,
   NMRAnetAppDefines,
   CANDefines;
   
@@ -174,13 +175,10 @@ var
   DataBuffer: PDataBuffer;
   BaseBuffer: PBaseBuffer;
   DatagramBuffer: PDatagramBuffer;
-  SourceAlias: Word;
+  SourceAlias, ErrorCode: Word;
   VNodeSupports, PhysicalNodeSupports: Boolean;
   i: Integer;
   Offset: Byte;
-  
-//  s1: array[0..32] of char;
-  
   
 begin
 
@@ -204,9 +202,9 @@ begin
       // If we see a reset then we need to check if there is a partial datagram assigned to that node ID
       if CANBuffer^.ID and MTI_AMR = MTI_AMR then
       begin
-        if NMRAnetBufferPools_FindDatagramBufferByAlias(DatagramBuffer, SourceAlias) then
+        if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_PROCESSING or CBS_TRANSFER_COMPLETE) then
         begin
-          NMRAnetUtilities_MsgBufferUnLink(Node); // Alias is no longer valid for this Datagram (it was reset) so we need to throw it away
+          NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer); // Alias is no longer valid for this Datagram (it was reset) so we need to throw it away
           NMRAnetBufferPools_ReleaseDatagramBuffer( DatagramBuffer);
         end
       end;
@@ -237,6 +235,7 @@ begin
                                                                           begin
                                                                             if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
                                                                             begin
+                                                                              DataBuffer^.mCode := BMC_CONSUMER_IDENTIFY;
                                                                               DataBuffer^.Alias := SourceAlias;
                                                                               DataBuffer^.Count := CANBuffer^.DataCount;
                                                                               DataBuffer^.DataBytes := CANBuffer^.DataBytes;
@@ -246,12 +245,12 @@ begin
                                                                               begin
                                                                                 DataBuffer^.RefCount := Nodes.Count - 1;
                                                                                 for i := 1 to Nodes.Count - 1 do
-                                                                                  NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], PBaseBuffer( GenericPointerAdapter(DataBuffer)), BMC_CONSUMER_IDENTIFY);
+                                                                                  NMRAnetUtilities_DataBufferLink(@Nodes.RawList[i], DataBuffer);
                                                                               end;
 
                                                                               if PhysicalNodeSupports then
                                                                               begin
-                                                                                NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[0], PBaseBuffer( GenericPointerAdapter(DataBuffer)), BMC_CONSUMER_IDENTIFY); //  Store it in the Nodes structure to distribute later
+                                                                                NMRAnetUtilities_DataBufferLink(@Nodes.RawList[0], DataBuffer); //  Store it in the Nodes structure to distribute later
                                                                                 Inc(DataBuffer^.RefCount);
                                                                               end
                                                                             end
@@ -273,6 +272,7 @@ begin
                                                                             begin
                                                                               DataBuffer^.Alias := SourceAlias;
                                                                               DataBuffer^.Count := CANBuffer^.DataCount;
+                                                                              DataBuffer^.mCode := BMC_PRODUCER_IDENTIFY;
                                                                               DataBuffer^.DataBytes := CANBuffer^.DataBytes;
                                                                               DataBuffer^.RefCount := 0;                         // We manipulate this manually
 
@@ -280,12 +280,12 @@ begin
                                                                               begin
                                                                                 DataBuffer^.RefCount := Nodes.Count - 1;
                                                                                 for i := 1 to Nodes.Count - 1 do
-                                                                                  NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[i], PBaseBuffer( GenericPointerAdapter(DataBuffer)), BMC_PRODUCER_IDENTIFY);
+                                                                                  NMRAnetUtilities_DataBufferLink(@Nodes.RawList[i], DataBuffer);
                                                                               end;
 
                                                                               if PhysicalNodeSupports then
                                                                               begin
-                                                                                NMRAnetUtilities_MsgBufferLink(@Nodes.RawList[0], PBaseBuffer( GenericPointerAdapter(DataBuffer)), BMC_PRODUCER_IDENTIFY);  //  Store it in the Nodes structure to distribute later
+                                                                                NMRAnetUtilities_DataBufferLink(@Nodes.RawList[0], DataBuffer);  //  Store it in the Nodes structure to distribute later
                                                                                 Inc(DataBuffer^.RefCount);
                                                                               end
                                                                             end
@@ -336,36 +336,49 @@ begin
                                                MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           : begin 
                                                                                                   if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                                                   begin
-                                                                                                    NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer, BMC_PROTOCOL_SUPPORT_QUERY);
+                                                                                                    NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                                                                    BaseBuffer^.mCode := BMC_PROTOCOL_SUPPORT_QUERY;
                                                                                                     BaseBuffer^.Alias := SourceAlias
                                                                                                   end
                                                                                                 end;
                                                MTI_EXTENSION_IDENTIFY_EVENTS                  : begin
                                                                                                   NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
                                                                                                 end;
-                                               MTI_EXTENSION_DATAGRAM_RECIEVED_OK,
-                                               MTI_EXTENSION_DATAGRAM_REJECTED                 : begin
-                                                                                                   // Need to signal Datagram that was sent it was received (un)successfully
-                                                                                                   if NMRAnetBufferPools_FindDatagramBufferByAlias(DatagramBuffer, SourceAlias) then
-                                                                                                   begin
-                                                                                                     DatagramBuffer^.ErrorCode.MTI := CANBuffer^.DataBytes[0];
-                                                                                                     DatagramBuffer^.ErrorCode.SubType[1] := CANBuffer^.DataBytes[1];
-                                                                                                     DatagramBuffer^.ErrorCode.SubType[0] := CANBuffer^.DataBytes[2];
-                                                                                                     DatagramBuffer^.ErrorCode.Count := 3;
-                                                                                                     DatagramBuffer^.State := DatagramBuffer^.State or CBS_ACKNOWLEDGED;
-                                                                                                   end;
+                                               MTI_EXTENSION_DATAGRAM_RECIEVED_OK             : begin
+                                                                                                  if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_OUTGOING or CBS_TRANSFER_COMPLETE) then
+                                                                                                  begin   UART1_Write_Text('DG_RESPONSE_OK');
+                                                                                                    NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
+                                                                                                    NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                  end
+                                                                                                end;
+                                               MTI_EXTENSION_DATAGRAM_REJECTED                : begin
+                                                                                                  if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_OUTGOING or CBS_TRANSFER_COMPLETE) then
+                                                                                                  begin     UART1_Write_Text('DG_RESPONSE_REJECT');
+                                                                                                    ErrorCode := (CANBuffer^.DataBytes[1] shl 8) or CANBuffer^.DataBytes[2];
+                                                                                                    if ErrorCode and DATAGRAM_RESULT_REJECTED_RESEND_MASK <> 0 then
+                                                                                                    begin     // Try it again
+                                                                                                      DatagramBuffer^.State := (DatagramBuffer^.State or CBS_OUTGOING or CBS_PROCESSING) and not CBS_TRANSFER_COMPLETE;  // Turn it into an outgoing Datagram
+                                                                                                      DatagramBuffer^.Tag := 0;
+                                                                                                    end else   // Done
+                                                                                                    begin
+                                                                                                      NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
+                                                                                                      NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                    end
+                                                                                                  end
                                                                                                 end;
                                                MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST : begin
                                                                                                   if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                                                   begin
-                                                                                                    NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer, BMC_SIMPLE_NODE_INFO_REQEUST);
+                                                                                                    NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                                                                    BaseBuffer^.mCode := BMC_SIMPLE_NODE_INFO_REQEUST;
                                                                                                     BaseBuffer^.Alias := SourceAlias
                                                                                                   end;
                                                                                                 end
                                               else
                                                 if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                 begin
-                                                  NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer, BMC_UNKNOWN_ADDRESSED_MTI);
+                                                  NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                  BaseBuffer^.mCode := BMC_UNKNOWN_ADDRESSED_MTI;
                                                   BaseBuffer^.Alias := SourceAlias
                                                 end;
                                               end;
@@ -373,16 +386,18 @@ begin
                 MTI_DATAGRAM_ONLY_FRAME :  begin
                                              if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer, False) then
                                              begin 
-                                                NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( GenericPointerAdapter(DatagramBuffer)), BMC_DATAGRAM);
+                                                NMRAnetUtilities_DatagramBufferLink(Node, DatagramBuffer);
+                                                DatagramBuffer^.mCode := BMC_DATAGRAM;
                                                 DatagramBuffer^.Alias := SourceAlias;
                                                 DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
                                                 for i := 0 to DatagramBuffer^.iByteCount - 1 do
                                                   DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
                                              end else
-                                             begin      UART1_Write_Text('FULL'+LF);
+                                             begin
                                                if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then    // We assume we will always allocate a BaseBuffer
-                                               begin        UART1_Write_Text('FULL ALLOC'+LF);
-                                                 NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer, BMC_DATAGRAM_BUFFER_FULL);
+                                               begin
+                                                 NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                 BaseBuffer^.mCode := BMC_DATAGRAM_BUFFER_FULL;
                                                  BaseBuffer^.Alias := SourceAlias;
                                                end;
                                              end
@@ -390,7 +405,8 @@ begin
                 MTI_DATAGRAM_FRAME_START : begin
                                              if NMRAnetBufferPools_AllocateDatagramBuffer(DatagramBuffer, False) then
                                              begin
-                                               NMRAnetUtilities_MsgBufferLink(Node, PBaseBuffer( GenericPointerAdapter(DatagramBuffer)), BMC_DATAGRAM);
+                                               NMRAnetUtilities_DatagramBufferLink(Node, DatagramBuffer);
+                                               DatagramBuffer^.mCode := BMC_DATAGRAM;
                                                DatagramBuffer^.State := DatagramBuffer^.State or CBS_PROCESSING;          // Not ready for the main loop to work it yet.
                                                DatagramBuffer^.Alias := SourceAlias;
                                                DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
@@ -400,49 +416,54 @@ begin
                                              begin
                                                if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then    // We assume we will always allocate a BaseBuffer
                                                begin
-                                                 NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer, BMC_DATAGRAM_BUFFER_FULL);
+                                                 NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                 BaseBuffer^.mCode := BMC_DATAGRAM_BUFFER_FULL;
                                                  BaseBuffer^.Alias := SourceAlias;
                                                  BaseBuffer^.State := BaseBuffer^.State or CBS_PROCESSING;                   // Hold off until the End Frame is found
                                                end;
                                              end
                                            end;
                 MTI_DATAGRAM_FRAME       : begin
-                                             if NMRAnetUtilities_MsgBufferFindDatagram(Node, SourceAlias, DatagramBuffer) then
+                                             if NMRAnetUtilities_FindInProcessDatagram(Node, SourceAlias, DatagramBuffer) then
                                              begin     // Normal Operation, going well so far we assume the sender will not send more than 72 bytes....
                                                Offset := DatagramBuffer^.iByteCount;
                                                for i := 0 to  CANBuffer^.DataCount - 1 do
                                                  DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
                                                DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
                                              end else
-                                             if NMRAnetUtilities_MsgBufferFindDatagramErrorReply(Node, SourceAlias, BaseBuffer) then
-                                             begin      // Don't do anything, let it run its course
+                                             if NMRAnetUtilities_FindDatagramErrorReply(Node, SourceAlias, BaseBuffer) then
+                                             begin   // If found it says that we did get a Start Frame but we could not allocate a buffer
                                              end else
-                                             begin     // Sender sent an intermediate frame without a start frame
+                                             begin   // We received this without a Start Frame
                                                if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                begin
-                                                 NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer, BMC_DATAGRAM_OUT_OF_ORDER);
+                                                 NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                 BaseBuffer^.mCode := BMC_DATAGRAM_OUT_OF_ORDER;
                                                  BaseBuffer^.Alias := SourceAlias;
-                                                 BaseBuffer^.State := BaseBuffer^.State or CBS_PROCESSING;                   // Hold off until the End Frame is found
+                                                 BaseBuffer^.State := BaseBuffer^.State or CBS_PROCESSING;               // Hold off until the End Frame is found
                                                end
                                              end
                                            end;
                 MTI_DATAGRAM_FRAME_END   : begin
-                                             if NMRAnetUtilities_MsgBufferFindDatagram(Node, SourceAlias, DatagramBuffer) then
-                                             begin
+                                             if NMRAnetUtilities_FindInProcessDatagram(Node, SourceAlias, DatagramBuffer) then
+                                             begin    //  UART1_Write_Text('DG_END'+LF);
                                                Offset := DatagramBuffer^.iByteCount;
                                                for i := 0 to  CANBuffer^.DataCount - 1 do
                                                  DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
                                                DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
-                                               DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING;          // Signed Sealed so Deliver.
+                                               DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING or CBS_TRANSFER_COMPLETE;  // Signed Sealed so Deliver.
                                              end else
-                                             if NMRAnetUtilities_MsgBufferFindDatagramErrorReply(Node, SourceAlias, BaseBuffer) then
-                                             begin
+                                             if NMRAnetUtilities_FindDatagramErrorReply(Node, SourceAlias, BaseBuffer) then
+                                             begin  // If found it says that we did get a Start Frame but we could not allocate a buffer
+                                               
+                                             //  UART1_Write_Text('DG_END No Start Mid Frame'+LF);
                                                BaseBuffer^.State := BaseBuffer^.State and not CBS_PROCESSING;                 // Deliver the Error.
                                              end else
-                                             begin     // Sender sent an intermediate frame without a start frame
+                                             begin  // We received this without a Start Frame
                                                if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
-                                               begin
-                                                 NMRAnetUtilities_MsgBufferLink(Node, BaseBuffer, BMC_DATAGRAM_OUT_OF_ORDER);
+                                               begin          //   UART1_Write_Text('DG_END No Start End Frame'+LF);
+                                                 NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                 BaseBuffer^.mCode := BMC_DATAGRAM_OUT_OF_ORDER;
                                                  BaseBuffer^.Alias := SourceAlias;
                                                end
                                              end

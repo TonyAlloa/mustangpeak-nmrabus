@@ -94,10 +94,6 @@ begin
 end;
 {$ENDIF}
 
-var
-  s1: array[32] of char;
-  s2: array[32] of char;
-
 procedure TrainControlCallback(Node: PNMRAnetNode; Datagram: PDatagramBuffer);
 //
 // The Interrupts are LOCKED within the callbacks.

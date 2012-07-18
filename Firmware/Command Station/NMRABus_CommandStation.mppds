@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetUtilities.mpas
+Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetCANReceive.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -44,21 +44,15 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=14
+Count=8
 File0=NMRABusCommandStation.mpas
-File1=NMRAnetAppDefines.mpas
-File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagrams.mpas
-File3=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetUtilities.mpas
+File1=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetUtilities.mpas
+File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPools.mpas
+File3=..\Library\NMRAnet\NMRAnetStateMachine.mpas
 File4=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetCANReceive.mpas
-File5=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagramDefines.mpas
-File6=..\Library\NMRAnet\NMRAnetStateMachine.mpas
+File5=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPoolsDefines.mpas
+File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetMemoryConfigurationDefines.mpas
 File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
-File8=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPools.mpas
-File9=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPoolsDefines.mpas
-File10=..\Library\NMRAnet\NMRAnetBufferPools.mpas
-File11=..\Library\NMRAnet\NMRAnetBufferPoolsDefines.mpas
-File12=..\Library\NMRAnet\NMRAnetCANReceive.mpas
-File13=..\Library\NMRAnet\NMRAnetUtilities.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -67,27 +61,25 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=20
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Count=18
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\Defs\
 Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
 Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Command Station\
-Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
-Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path10=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path11=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
-Path12=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Math\
-Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
-Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
-Path15=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path16=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path17=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
-Path18=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
-Path19=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Math\
+Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
+Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
+Path10=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Math\
+Path11=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
+Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path15=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
+Path16=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
+Path17=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Math\
 [HEADER_PATH]
 Count=0
 [HEADERS]
