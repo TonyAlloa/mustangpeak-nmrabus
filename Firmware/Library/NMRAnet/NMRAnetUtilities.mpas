@@ -58,8 +58,8 @@ function NMRAnetUtilities_EqualEventID(Event1, Event2: PEventID): Boolean;
 
 procedure NMRANetUtilities_LoadDatagramResultBytes(Datagram: PDatagramBuffer; MTI: Byte; CodeType: PDatagramErrorCode);
 
-procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer; mCode: Byte);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode);
 function NMRAnetUtilities_MsgBufferFindDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
 function NMRAnetUtilities_MsgBufferFindDatagramErrorReply(Node: PNMRAnetNode; Alias: Word; var Buffer: PBaseBuffer): Boolean;
 
@@ -636,17 +636,43 @@ end;
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferLink(Node: PNMRAnetNode; Buffer: PBaseBuffer; mCode: Byte);
 var
-  Temp: PBaseBuffer;
+  Temp, Parent: PBaseBuffer;
+  Found: Boolean;
 begin
+  Found := False;
+  Buffer^.mCode := mCode;
   if Node^.MsgBuffer = nil then
     Node^.MsgBuffer := Buffer
   else begin
-    Temp := Node^.MsgBuffer;
-    while Temp^.NextBuffer <> nil do
-      Temp := Temp^.NextBuffer;
-    Temp^.NextBuffer := Buffer
+    Temp := Node^.MsgBuffer;                     // Temp can't be nil here
+    Parent := nil;
+    while (Buffer^.mCode < Temp^.mCode) do
+    begin
+      if Temp^.NextBuffer = nil then
+      begin
+        Temp^.NextBuffer := Buffer;    // Tack it on the end (low priority)
+        Found := True;
+        Break
+      end else
+      begin
+        Parent := Temp;
+        Temp := Temp^.NextBuffer;
+      end
+    end;
+    if not Found then
+    begin
+      if Parent = nil then   // Insert as the first item under the Node
+      begin
+        Buffer^.NextBuffer := Node^.MsgBuffer;
+        Node^.MsgBuffer := Buffer;
+      end else
+      begin
+        Parent^.NextBuffer := Buffer;  // Insert it in the chain
+        Buffer^.NextBuffer := Temp;
+      end
+    end
   end
 end;
 
@@ -658,28 +684,13 @@ end;
 //     Description: MUST be called between Interrupt Locking Calls
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode; Buffer: PBaseBuffer);
+procedure NMRAnetUtilities_MsgBufferUnLink(Node: PNMRAnetNode);
 var
   Temp, Parent: PBaseBuffer;
 begin
-  Temp := Node^.MsgBuffer;
-  Parent := nil;
-  while Temp <> nil do
-  begin
-    if Temp = Buffer then
-    begin
-      if Parent = nil then
-        Node^.MsgBuffer := Node^.MsgBuffer^.NextBuffer
-      else begin
-        Parent^.NextBuffer := Temp^.NextBuffer;
-        Break
-      end
-    end;
-    Parent := Temp;
-    Temp := Temp^.NextBuffer
-  end;
-  if Buffer = Node^.ActiveBuffer then
-    Node^.ActiveBuffer := Node^.MsgBuffer;
+  if Node^.MsgBuffer <> nil then
+
+    Node^.MsgBuffer := Node^.MsgBuffer^.NextBuffer
 end;
 
 // *****************************************************************************
@@ -726,7 +737,7 @@ begin
   begin
     if Temp^.Alias = Alias then
     begin
-      if (Temp^.mCode = BMC_DATAGRAM_BUFFER_FULL) or (Temp^.mCode = BMC_DATAGRAM_OUT_OF_ORDER) then
+      if (Temp^.mCode = BMC_DATAGRAM_BUFFER_FULL) or (Temp^.mCode = BMC_DATAGRAM_OUT_OF_ORDER) or (Temp^.mCode = BMC_DATAGRAM_NOT_ACCEPTED) then
       begin
         Buffer := Temp;
         Result := True;
@@ -736,6 +747,8 @@ begin
     Temp := Temp^.NextBuffer
   end;
 end;
+
+
 
 
 end.

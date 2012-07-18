@@ -50,6 +50,13 @@ const
   ACDI_MFG_VERSION                   = 1;                                       // Manufacturers Version for ACDI
   ACDI_USER_VERSION                  = 1;                                       // User Data Version for ACDI
   
+  STATE_MEM_CONFIG_SEND_REPLY        = $00;
+  STATE_MEM_CONFIG_ALLOC_DATAGRAM    = $01;
+  STATE_MEM_CONFIG_LOAD_DATAGRAM     = $02;
+  STATE_MEM_CONFIG_WRITE             = $03;
+  STATE_MEM_CONFIG_WAITFOR_REPLY     = $04;
+  STATE_MEM_CONFIG_DONE              = $05;
+  
 type
   TMemConfigurationOptions = record
     MemoryConfigOptions: Word;                                                  // The commands that are avialable to the system, see the MCO_xxx constants

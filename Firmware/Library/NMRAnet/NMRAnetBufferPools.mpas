@@ -55,7 +55,8 @@ procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
 
 function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer; ForTransmit: Boolean): Boolean;
 procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
-function NMRAnetBufferPools_FindOutgoingDatagramBuffer(var Buffer: PDatagramBuffer): Boolean;
+function NMRAnetBufferPools_FindOutgoingDatagramBuffer(var Buffer: PDatagramBuffer; ProcessingOnly: Boolean): Boolean;
+function NMRAnetBufferPools_FindDatagramBufferByAlias(var Buffer: PDatagramBuffer; Alias: Word): Boolean;
 
 procedure NMRAnetBufferPools_ReleaseBuffer(Buffer: PBaseBuffer);
 
@@ -109,7 +110,7 @@ end;
 // *****************************************************************************
 procedure NMRAnetBufferPools_InitializeBaseBuffer(Buffer: PBaseBuffer);
 begin
-  Buffer^.State := CBS_EMPTY;
+  Buffer^.State := 0;
   Buffer^.Alias := 0;
   Buffer^.NextBuffer := nil;
   Buffer^.mCode := 0;
@@ -164,7 +165,7 @@ begin
   Result := False;
   for i := 0 to MAX_BASE_BUFFER_POOL - 1 do
   begin
-    if BaseBufferPool.Pool[i].State = CBS_EMPTY then
+    if BaseBufferPool.Pool[i].State = 0 then
     begin
       Buffer := @BaseBufferPool.Pool[i];
       NMRAnetBufferPools_InitializeBaseBuffer(Buffer);
@@ -175,7 +176,7 @@ begin
         BaseBufferPool.MaxCount := BaseBufferPool.Count;
       Result := True;
       Break
-    end
+    end        else UART1_Write_Text('BaseAllocateFail');
   end
 end;
 
@@ -195,7 +196,7 @@ begin
     Dec(Buffer^.RefCount);
     if Buffer^.RefCount = 0 then
     begin
-      Buffer^.State := CBS_EMPTY;
+      Buffer^.State := 0;
       Dec(BaseBufferPool.Count);
     end
   end;
@@ -217,7 +218,7 @@ begin
   Result := False;
   for i := 0 to MAX_DATA_BUFFER_POOL - 1 do
   begin
-    if DataBufferPool.Pool[i].State = CBS_EMPTY then
+    if DataBufferPool.Pool[i].State = 0 then
     begin
       Buffer := @DataBufferPool.Pool[i];
       NMRAnetStateMachine_InitializeDataBuffer(Buffer);
@@ -228,7 +229,7 @@ begin
         DataBufferPool.MaxCount := DataBufferPool.Count;
       Result := True;
       Break
-    end
+    end else UART1_Write_Text('DataAllocateFail');
   end
 end;
 
@@ -248,7 +249,7 @@ begin
     Dec(Buffer^.RefCount);
     if Buffer^.RefCount = 0 then
     begin
-      Buffer^.State := CBS_EMPTY;
+      Buffer^.State := 0;
       Dec(DataBufferPool.Count);
     end
   end;
@@ -271,7 +272,7 @@ begin
   Result := False;
   for i := 0 to MAX_DATAGRAM_BUFFER_POOL - 1 do
   begin
-    if DatagramPool.Pool[i].State = DGS_EMPTY then
+    if DatagramPool.Pool[i].State = 0 then
     begin
       Buffer := @DatagramPool.Pool[i];
       Result := True;
@@ -284,7 +285,7 @@ begin
       if DatagramPool.Count >= DatagramPool.MaxCount then
         DatagramPool.MaxCount := DatagramPool.Count;
       Break
-    end
+    end else UART1_Write_Text('DatagramAllocateFail');
   end
 end;
 
@@ -304,7 +305,7 @@ begin
     Dec(Buffer^.RefCount);
     if Buffer^.RefCount = 0 then
     begin
-      Buffer^.State := CBS_EMPTY;
+      Buffer^.State := 0;
       Dec(DatagramPool.Count);
     end
   end;
@@ -343,22 +344,44 @@ end;
 //
 //  Description:
 // *****************************************************************************
-function NMRAnetBufferPools_FindOutgoingDatagramBuffer(var Buffer: PDatagramBuffer): Boolean;
-const
-  CBS_BUFFER_DATAGRAM_OUTGOING = CBS_BUFFER_DATAGRAM or CBS_OUTGOING;
+function NMRAnetBufferPools_FindOutgoingDatagramBuffer(var Buffer: PDatagramBuffer; ProcessingOnly: Boolean): Boolean;
 var
   i: Integer;
+  Mask: Byte;
 begin
   Result := False;
   Buffer := nil;
+  Mask := CBS_BUFFER_DATAGRAM or CBS_OUTGOING;
+  if ProcessingOnly then
+    Mask := Mask or CBS_PROCESSING;
+
   for i := 0 to MAX_DATAGRAM_BUFFER_POOL - 1 do
   begin    
-    if DatagramPool.Pool[i].State and CBS_BUFFER_DATAGRAM_OUTGOING = CBS_BUFFER_DATAGRAM_OUTGOING then
+    if DatagramPool.Pool[i].State and Mask = Mask then
     begin
       Buffer := @DatagramPool.Pool[i];
       Result := True;
       Exit
     end
+  end;
+end;
+
+function NMRAnetBufferPools_FindDatagramBufferByAlias(var Buffer: PDatagramBuffer; Alias: Word): Boolean;
+var
+  i: Integer;
+  Mask: Byte;
+begin
+  Result := False;
+  Buffer := nil;
+  for i := 0 to MAX_DATAGRAM_BUFFER_POOL - 1 do
+  begin  
+    if DatagramPool.Pool[i].State and CBS_BUFFER_DATAGRAM <> 0 then
+      if DatagramPool.Pool[i].Alias = Alias then
+      begin
+        Buffer := @DatagramPool.Pool[i];
+        Result := True;
+        Exit
+      end
   end;
 end;
 

@@ -241,45 +241,46 @@ const
   );
   
 // **************************************************************************************************************************************************************
-// "None" Implementation (caller passes the explicit address in the databytes instead of the shortcut 2 bits in the Config Byte)
-// **************************************************************************************************************************************************************
-type
-  TNoneMap = record
-    LowMem,
-    HighMem: Word;
-  end;
-
-const
-  NONE_MAP: TNoneMap = (
-    $0000,       //  Lowest Address in the MCU memory the Memory Confguration Protocol can access (NOT USED TODAY, REPLY ASSUMES $00 IS THE LOWEST ADDRESS)
-    $7FFF        //  Highest Address in the MCU memory the Memory Confguration Protocol can access
-  );
-
-
-// **************************************************************************************************************************************************************
 // Configuration Memory ($FD) Implementation
 // **************************************************************************************************************************************************************
 
 const
   MAX_USER_NAME = 20;
   MAX_USER_DESC = 40;
+  
 type                                                                            // THIS DATA IS IN EEPROM
   TConfigurationData = record
-    Name: array[0..MAX_USER_NAME] of char;                                      // user defined Name for Node
-    Desc: array[0..MAX_USER_DESC] of char;                                      // user defined Description for Node
+    Name: array[0..MAX_USER_NAME-1] of Byte;                                      // user defined Name for Node
+    Desc: array[0..MAX_USER_DESC-1] of Byte;                                      // user defined Description for Node
   end;
+
+const
+  MAX_CONFIG_DATA = MAX_USER_NAME + MAX_USER_DESC;
+
+
+// **************************************************************************************************************************************************************
+// ACDI Mfg Memory ($FC) Implementation
+// **************************************************************************************************************************************************************
+const
+  MAX_ACDI_MFG_DATA = 22;                                                       // Total Length of the Mfg Data carried in the CDI XML
+  MAX_ACDI_MFG_DATA_VNODE = 22;
   
-  const
-    CONFIG_DATA_NODE: TConfigurationData = (                                    // TEMPORARY FOR TEST......
-      'Custom Name          ',
-      'Custom Description                       '
-    );
-    
-    CONFIG_DATA_VNODE: TConfigurationData = (                                   // TEMPORARY FOR TEST......
-      'Custom Name          ',
-      'Custom Description                       '
-    );
+// **************************************************************************************************************************************************************
+// ACDI User Memory ($FB) Implementation
+// **************************************************************************************************************************************************************
+const
+  MAX_ACDI_USER_DATA = MAX_USER_NAME + MAX_USER_DESC;
+  MAX_ACDI_USER_DATA_VNODE = MAX_USER_NAME + MAX_USER_DESC;
   
+  CONFIG_DATA_NODE: TConfigurationData = (                                    // TEMPORARY FOR TEST......
+    ($43, $55, $53, $54, $4F, $6D, $20, $4E, $61, $6D, $65, $00, $00, $00, $00, $00, $00, $00, $00, $00), // 'Custom Name          ',
+    ($43, $55, $53, $54, $4F, $6D, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00)  //'Custom Description                       '
+  );
+
+  CONFIG_DATA_VNODE: TConfigurationData = (                                   // TEMPORARY FOR TEST......
+    ($43, $55, $53, $54, $4F, $6D, $20, $4E, $61, $6D, $65, $00, $00, $00, $00, $00, $00, $00, $00, $00), // 'Custom Name          ',
+    ($43, $55, $53, $54, $4F, $6D, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00)  //'Custom Description                       '
+  );
   
 
 // **************************************************************************************************************************************************************

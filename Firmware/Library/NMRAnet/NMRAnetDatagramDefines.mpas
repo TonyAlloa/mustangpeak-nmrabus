@@ -22,9 +22,9 @@ const
   // Error that was a transport problem
   DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER                   : TDatagramErrorCode = ($60, $00);
 
-  DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK                 : TDatagramErrorCode = ($10, $00);
-  DATAGRAM_RESULT_REJECTED_RESEND_MASK                    : TDatagramErrorCode = ($20, $00);
-  DATAGRAM_RESULT_REJECTED_TRANSPORT_ERROR_MASK           : TDatagramErrorCode = ($40, $00);
+  DATAGRAM_RESULT_REJECTED_NO_RESENT_MASK                 = $1000;
+  DATAGRAM_RESULT_REJECTED_RESEND_MASK                    = $2000;
+  DATAGRAM_RESULT_REJECTED_TRANSPORT_ERROR_MASK           = $4000;
 
 
   LEN_DATAGRAM       = 72;                                                      // How many Bytes in the datagram
@@ -79,6 +79,7 @@ type
     Next: ^TBaseBuffer;                                                         // Pointer to the next Message Buffer
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message is
+    StateMachine: Byte;                                                         // Local StateMachine Index for use
     Tag: TBufferTag;                                                            // General Purpose useage depending on the message type
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit
     DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
