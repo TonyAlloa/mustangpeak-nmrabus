@@ -18,6 +18,11 @@ unit NMRAnetCANReceive;
 //
 // ******************************************************************************
 
+{$I Options.inc}
+
+{.$DEFINE TRACE_DATAGRAM_TX}
+{.$DEFINE TRACE_DATAGRAM_RESPOSES}
+
 uses
   NMRAnetDefines,
   NMRAnetUtilities,
@@ -103,6 +108,9 @@ var
   DoDefault: Boolean;
   Node: PNMRAnetNode;
   NodeID: TNodeID;
+  SourceAlias: Word;
+  DatagramBuffer: PDatagramBuffer;
+  i: Integer;
 begin
 
  //UART1_Write_Text('CAN'+LF);
@@ -114,7 +122,8 @@ begin
   if DoDefault then
   begin
     // First thing is the extract the Source Alias and make sure it is not a duplicate of one of our Node or vNode Aliases
-    Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractSourceAlias(CANBuffer));
+    SourceAlias := NMRAnetUtilities_ExtractSourceAlias(CANBuffer);
+    Node := NMRAnetNode_FindByAlias(SourceAlias);
     if Node <> nil then                                                         // Check for a Duplicate Alias
     begin
       if (CANBuffer^.ID and MTI_CID_MASK = MTI_CID0) or (CANBuffer^.ID and MTI_CID_MASK = MTI_CID1) or (CANBuffer^.ID and MTI_CID_MASK = MTI_CID2) or (CANBuffer^.ID and MTI_CID_MASK = MTI_CID3) then
@@ -148,9 +157,28 @@ begin
                       Node := NMRAnetNode_FindByNodeID(NodeID);                 // *************** Need to characterize how much time this may take with a large number of nodes
                       if Node <> nil then
                         Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_NODE_ID;
-                    end
+                    end;
+                    for i := 0 to Nodes.Count - 1 do  // *************** Need to characterize how much time this may take with a large number of nodes
+                     begin
+                       if NMRAnetUtilities_FindInDatagramByState(Nodes.AllocatedList[i], SourceAlias, DatagramBuffer, CBS_PROCESSING or CBS_TRANSFER_COMPLETE, True) then
+                       begin
+                         NMRAnetUtilities_DatagramBufferUnLink(Nodes.AllocatedList[i], DatagramBuffer); // Alias is no longer valid for this Datagram (it was reset) so we need to throw it away
+                         NMRAnetBufferPools_ReleaseDatagramBuffer( DatagramBuffer);
+                        // UART1_Write_Text('AMD FreeDatagram'+LF);
+                       end
+                     end
                   end;
         MTI_AMR  : begin
+                     // If we see a reset then we need to check if there is a partial datagram assigned to that node ID
+                     for i := 0 to Nodes.Count - 1 do  // *************** Need to characterize how much time this may take with a large number of nodes
+                     begin
+                       if NMRAnetUtilities_FindInDatagramByState(Nodes.AllocatedList[i], SourceAlias, DatagramBuffer, CBS_PROCESSING or CBS_TRANSFER_COMPLETE, True) then
+                       begin
+                         NMRAnetUtilities_DatagramBufferUnLink(Nodes.AllocatedList[i], DatagramBuffer); // Alias is no longer valid for this Datagram (it was reset) so we need to throw it away
+                         NMRAnetBufferPools_ReleaseDatagramBuffer( DatagramBuffer);
+                      //   UART1_Write_Text('AMR FreeDatagram'+LF);
+                       end
+                     end
                   end;
       end;
     end
@@ -198,17 +226,6 @@ begin
       Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS                    // A "bad" duplicate Alias
     end else 
     begin
-    
-      // If we see a reset then we need to check if there is a partial datagram assigned to that node ID
-      if CANBuffer^.ID and MTI_AMR = MTI_AMR then
-      begin
-        if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_PROCESSING or CBS_TRANSFER_COMPLETE) then
-        begin
-          NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer); // Alias is no longer valid for this Datagram (it was reset) so we need to throw it away
-          NMRAnetBufferPools_ReleaseDatagramBuffer( DatagramBuffer);
-        end
-      end;
-    
       // Run the gauntlet to see what is in the message
       case CANBuffer^.ID and MTI_TYPE_MASK of                                   // First subdivide between Unaddressed and Addressed Messages
         MTI_UNADDRESSED        : begin                                          // Unaddressed Messages
@@ -345,24 +362,27 @@ begin
                                                                                                   NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
                                                                                                 end;
                                                MTI_EXTENSION_DATAGRAM_RECIEVED_OK             : begin
-                                                                                                  if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_OUTGOING or CBS_TRANSFER_COMPLETE) then
-                                                                                                  begin   UART1_Write_Text('DG_RESPONSE_OK');
+                                                                                                  if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_OUTGOING or CBS_TRANSFER_COMPLETE, False) then
+                                                                                                  begin
                                                                                                     NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
                                                                                                     NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                    {$IFDEF TRACE_DATAGRAM_RESPOSES} UART1_Write_Text('DG_RESPONSE_OK'+LF); {$ENDIF}
                                                                                                   end
                                                                                                 end;
                                                MTI_EXTENSION_DATAGRAM_REJECTED                : begin
-                                                                                                  if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_OUTGOING or CBS_TRANSFER_COMPLETE) then
-                                                                                                  begin     UART1_Write_Text('DG_RESPONSE_REJECT');
+                                                                                                  if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_OUTGOING or CBS_TRANSFER_COMPLETE, False) then
+                                                                                                  begin
                                                                                                     ErrorCode := (CANBuffer^.DataBytes[1] shl 8) or CANBuffer^.DataBytes[2];
                                                                                                     if ErrorCode and DATAGRAM_RESULT_REJECTED_RESEND_MASK <> 0 then
                                                                                                     begin     // Try it again
+                                                                                                      {$IFDEF TRACE_DATAGRAM_RESPOSES} UART1_Write_Text('DG_RESPONSE_REJECT_RESEND'+LF);  {$ENDIF}
                                                                                                       DatagramBuffer^.State := (DatagramBuffer^.State or CBS_OUTGOING or CBS_PROCESSING) and not CBS_TRANSFER_COMPLETE;  // Turn it into an outgoing Datagram
                                                                                                       DatagramBuffer^.Tag := 0;
                                                                                                     end else   // Done
                                                                                                     begin
                                                                                                       NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
                                                                                                       NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+                                                                                                      {$IFDEF TRACE_DATAGRAM_RESPOSES} UART1_Write_Text('DG_RESPONSE_REJECT_NORESED'+LF);  {$ENDIF}
                                                                                                     end
                                                                                                   end
                                                                                                 end;
@@ -389,6 +409,7 @@ begin
                                                 NMRAnetUtilities_DatagramBufferLink(Node, DatagramBuffer);
                                                 DatagramBuffer^.mCode := BMC_DATAGRAM;
                                                 DatagramBuffer^.Alias := SourceAlias;
+                                                DatagramBuffer^.State := DatagramBuffer^.State or CBS_TRANSFER_COMPLETE;
                                                 DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
                                                 for i := 0 to DatagramBuffer^.iByteCount - 1 do
                                                   DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
@@ -446,7 +467,8 @@ begin
                                            end;
                 MTI_DATAGRAM_FRAME_END   : begin
                                              if NMRAnetUtilities_FindInProcessDatagram(Node, SourceAlias, DatagramBuffer) then
-                                             begin    //  UART1_Write_Text('DG_END'+LF);
+                                             begin   
+                                               {$IFDEF TRACE_DATAGRAM_TX}   UART1_Write_Text('DG_END'+LF);  {$ENDIF}
                                                Offset := DatagramBuffer^.iByteCount;
                                                for i := 0 to  CANBuffer^.DataCount - 1 do
                                                  DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
@@ -455,13 +477,13 @@ begin
                                              end else
                                              if NMRAnetUtilities_FindDatagramErrorReply(Node, SourceAlias, BaseBuffer) then
                                              begin  // If found it says that we did get a Start Frame but we could not allocate a buffer
-                                               
-                                             //  UART1_Write_Text('DG_END No Start Mid Frame'+LF);
+                                              {$IFDEF TRACE_DATAGRAM_TX}   UART1_Write_Text('DG_END No Start Mid Frame'+LF); {$ENDIF}
                                                BaseBuffer^.State := BaseBuffer^.State and not CBS_PROCESSING;                 // Deliver the Error.
                                              end else
                                              begin  // We received this without a Start Frame
                                                if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
-                                               begin          //   UART1_Write_Text('DG_END No Start End Frame'+LF);
+                                               begin          
+                                                 {$IFDEF TRACE_DATAGRAM_TX}  UART1_Write_Text('DG_END No Start End Frame'+LF); {$ENDIF}
                                                  NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
                                                  BaseBuffer^.mCode := BMC_DATAGRAM_OUT_OF_ORDER;
                                                  BaseBuffer^.Alias := SourceAlias;

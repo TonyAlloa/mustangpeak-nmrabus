@@ -26,7 +26,7 @@ uses
 
 {$I Options.inc}
 
-{$DEFINE TRACK_BUFFER_ALLOCATIONS}
+{.$DEFINE TRACK_BUFFER_ALLOCATIONS}
 {$DEFINE TRACK_BUFFER_OVERFLOWS}
 
 type
@@ -185,7 +185,7 @@ begin
   if not Result then
   begin
     UART1_Write_Text('BaseAllocateFail: ' + LF);
-    NMRAnetBufferPools_Print;
+  //  NMRAnetBufferPools_Print;
   end
   {$ENDIF}
 end;
@@ -255,7 +255,7 @@ begin
   if not Result then
   begin
     UART1_Write_Text('DataAllocateFail: ' + LF);
-    NMRAnetBufferPools_Print;
+  //  NMRAnetBufferPools_Print;
   end
   {$ENDIF}
 end;
@@ -328,7 +328,7 @@ begin
   if not Result then
   begin
     UART1_Write_Text('DatagramAllocateFail: ' + LF);
-    NMRAnetBufferPools_Print;
+  //  NMRAnetBufferPools_Print;
   end
   {$ENDIF}
 end;

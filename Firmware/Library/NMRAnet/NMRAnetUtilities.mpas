@@ -67,7 +67,7 @@ procedure NMRAnetUtilities_DatagramBufferUnLink(Node: PNMRAnetNode; Buffer: PDat
 function NMRAnetUtilities_FindInProcessDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
 function NMRAnetUtilities_FindCompletedDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
 function NMRAnetUtilities_FindOutgoingDatagram(Node: PNMRAnetNode; var Buffer: PDatagramBuffer; ProcessingOnly: Boolean): Boolean;
-function NMRAnetUtilities_FindInDatagramByState(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer; AState: Byte): Boolean;
+function NMRAnetUtilities_FindInDatagramByState(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer; AState: Byte; AnyBit: Boolean): Boolean;
 function NMRAnetUtilities_FindDatagramErrorReply(Node: PNMRAnetNode; Alias: Word; var Buffer: PBaseBuffer): Boolean;
 
 function NMRAnetUtilities_NextBaseBuffer(Node: PNMRAnetNode): PBaseBuffer;
@@ -809,7 +809,7 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_FindInDatagramByState(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer; AState: Byte): Boolean;
+function NMRAnetUtilities_FindInDatagramByState(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer; AState: Byte; AnyBit: Boolean): Boolean;
 var
   Temp: PDatagramBuffer;
 begin
@@ -818,12 +818,25 @@ begin
   while Temp <> nil do
   begin
     if Temp^.Alias = Alias then
-      if Temp^.State and AState = AState then
+    begin
+      if AnyBit then
       begin
-        Buffer := Temp;
-        Result := True;
-        Break
-      end;
+        if Temp^.State and AState <> 0 then
+        begin
+          Buffer := Temp;
+          Result := True;
+          Break
+        end;
+      end else
+      begin
+        if Temp^.State and AState = AState then
+        begin
+          Buffer := Temp;
+          Result := True;
+          Break
+        end;
+      end
+    end;
     Temp := Temp^.Next
   end;
 end;
@@ -839,7 +852,7 @@ end;
 // *****************************************************************************
 function NMRAnetUtilities_FindInProcessDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
 begin
-  Result := NMRAnetUtilities_FindInDatagramByState(Node, Alias, Buffer, CBS_PROCESSING);
+  Result := NMRAnetUtilities_FindInDatagramByState(Node, Alias, Buffer, CBS_PROCESSING, False);
 end;
 
 // *****************************************************************************
@@ -852,7 +865,7 @@ end;
 // *****************************************************************************
 function NMRAnetUtilities_FindCompletedDatagram(Node: PNMRAnetNode; Alias: Word; var Buffer: PDatagramBuffer): Boolean;
 begin
-  Result := NMRAnetUtilities_FindInDatagramByState(Node, Alias, Buffer, CBS_TRANSFER_COMPLETE);
+  Result := NMRAnetUtilities_FindInDatagramByState(Node, Alias, Buffer, CBS_TRANSFER_COMPLETE, False);
 end;
 
 // *****************************************************************************
