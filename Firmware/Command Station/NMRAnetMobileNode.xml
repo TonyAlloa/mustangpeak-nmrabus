@@ -13,6 +13,7 @@
       </relation>
     </map>
   </identification>
+  <acdi fixed="1" var="1" />
   <segment origin="0" space="253">
     <group offset="60">
       <name>User Data</name>
@@ -22,6 +23,42 @@
       </string>
       <string size="40">
         <name>User Description`</name>
+      </string>
+    </group>
+  </segment>
+  <segment origin="0" space="252">
+    <group>
+      <name>Manufacturer Information</name>
+      <description>Manufacturer-provided fixed node description</description>
+      <int size="1">
+        <name>Version</name>
+      </int>
+      <string size="11">
+        <name>Manufacturer Name</name>
+      </string>
+      <string size="5">
+        <name>Manufacturer Info</name>
+      </string>
+      <string size="3">
+        <name>Hardware Version</name>
+      </string>
+      <string size="3">
+        <name>Software Version</name>
+      </string>
+    </group>
+  </segment>
+  <segment origin="0" space="251">
+    <group offset="0">
+      <name>User Data</name>
+      <description>Add your own unique node info here</description>
+      <int size="1">
+        <name>Version</name>
+      </int>
+      <string size="20">
+        <name>User Name</name>
+      </string>
+      <string size="40">
+        <name>User Description</name>
       </string>
     </group>
   </segment>

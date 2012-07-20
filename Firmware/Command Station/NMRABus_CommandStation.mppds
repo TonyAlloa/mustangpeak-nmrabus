@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
+Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPools.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -44,16 +44,12 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=9
+Count=5
 File0=NMRABusCommandStation.mpas
-File1=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetUtilities.mpas
-File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPools.mpas
-File3=..\Library\NMRAnet\NMRAnetStateMachine.mpas
-File4=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetCANReceive.mpas
-File5=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetMemoryConfigurationDefines.mpas
-File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
-File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagramDefines.mpas
-File8=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetNodeDefines.mpas
+File1=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPools.mpas
+File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetCANReceive.mpas
+File3=NMRAnetAppDefines.mpas
+File4=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

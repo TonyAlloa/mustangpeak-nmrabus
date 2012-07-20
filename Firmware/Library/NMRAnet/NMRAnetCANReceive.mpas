@@ -223,8 +223,8 @@ begin
     Node := NMRAnetNode_FindByAlias(SourceAlias);                               // The Source Alias that we receive should NEVER contain our alias
     if Node <> nil then
     begin
-      Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS                    // A "bad" duplicate Alias
-    end else 
+      Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS;                    // A "bad" duplicate Alias
+    end else
     begin
       // Run the gauntlet to see what is in the message
       case CANBuffer^.ID and MTI_TYPE_MASK of                                   // First subdivide between Unaddressed and Addressed Messages
