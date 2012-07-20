@@ -33,16 +33,16 @@
       <int size="1">
         <name>Version</name>
       </int>
-      <string size="11">
+      <string size="12">
         <name>Manufacturer Name</name>
       </string>
-      <string size="5">
+      <string size="6">
         <name>Manufacturer Info</name>
       </string>
-      <string size="3">
+      <string size="4">
         <name>Hardware Version</name>
       </string>
-      <string size="3">
+      <string size="4">
         <name>Software Version</name>
       </string>
     </group>

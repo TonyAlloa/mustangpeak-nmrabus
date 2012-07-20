@@ -32,7 +32,7 @@ uses
 // **************************************************************************************************************************************************************
 
 const
-  MAX_NODE_COUNT = 20;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
+  MAX_NODE_COUNT = 1;        // The number of Physical and vNodes this physical node support.  Note that these nodes are defined as the Node ID defined + 1 up to VIRTUAL_NODE_COUNT past that
                               // If the lower bits of this node are $0300 then the first Virtual Node is $0301 and the last is $0309 if the VIRTUAL_NODE_COUNT = 9
                               // It also MUST fall within the lower 3 byte boundry (this is due to the way I have defined HI/LO as 3 byte) so the max virtual nodes is 4095 with a base
                               // physical node starting at $0000;
@@ -42,7 +42,7 @@ const
 // **************************************************************************************************************************************************************
 
 const
-  MAX_BASE_BUFFER_POOL             = MAX_NODE_COUNT+2;                            // Number of Base Buffers to allocate for Messages , JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
+  MAX_BASE_BUFFER_POOL             = MAX_NODE_COUNT+2;                          // Number of Base Buffers to allocate for Messages , JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
   MAX_DATA_BUFFER_POOL             = 1;                                         // Number of CAN DataByte Buffers to allocate for Messages
   MAX_DATAGRAM_BUFFER_POOL         = 1;                                         // Number of Datagram Buffers to allocate for Messages
 
@@ -98,16 +98,16 @@ const
     $3C, $69, $6E, $74, $20, $73, $69, $7A, $65, $3D, $22, $31, $22, $3E,    // <int size="1">
     $3C, $6E, $61, $6D, $65, $3E, $56, $65, $72, $73, $69, $6F, $6E, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Version</name>
     $3C, $2F, $69, $6E, $74, $3E,    // </int>
-    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $31, $31, $22, $3E,    // <string size="11">
+    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $31, $32, $22, $3E,    // <string size="12">
     $3C, $6E, $61, $6D, $65, $3E, $4D, $61, $6E, $75, $66, $61, $63, $74, $75, $72, $65, $72, $20, $4E, $61, $6D, $65, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Manufacturer Name</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
-    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $35, $22, $3E,    // <string size="5">
+    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $36, $22, $3E,    // <string size="6">
     $3C, $6E, $61, $6D, $65, $3E, $4D, $61, $6E, $75, $66, $61, $63, $74, $75, $72, $65, $72, $20, $49, $6E, $66, $6F, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Manufacturer Info</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
-    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $33, $22, $3E,    // <string size="3">
+    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $34, $22, $3E,    // <string size="4">
     $3C, $6E, $61, $6D, $65, $3E, $48, $61, $72, $64, $77, $61, $72, $65, $20, $56, $65, $72, $73, $69, $6F, $6E, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Hardware Version</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
-    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $33, $22, $3E,    // <string size="3">
+    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $34, $22, $3E,    // <string size="4">
     $3C, $6E, $61, $6D, $65, $3E, $53, $6F, $66, $74, $77, $61, $72, $65, $20, $56, $65, $72, $73, $69, $6F, $6E, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Software Version</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
     $3C, $2F, $67, $72, $6F, $75, $70, $3E,    // </group>
@@ -168,16 +168,16 @@ const
     $3C, $69, $6E, $74, $20, $73, $69, $7A, $65, $3D, $22, $31, $22, $3E,    // <int size="1">
     $3C, $6E, $61, $6D, $65, $3E, $56, $65, $72, $73, $69, $6F, $6E, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Version</name>
     $3C, $2F, $69, $6E, $74, $3E,    // </int>
-    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $31, $31, $22, $3E,    // <string size="11">
+    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $31, $32, $22, $3E,    // <string size="12">
     $3C, $6E, $61, $6D, $65, $3E, $4D, $61, $6E, $75, $66, $61, $63, $74, $75, $72, $65, $72, $20, $4E, $61, $6D, $65, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Manufacturer Name</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
-    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $35, $22, $3E,    // <string size="5">
+    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $36, $22, $3E,    // <string size="6">
     $3C, $6E, $61, $6D, $65, $3E, $4D, $61, $6E, $75, $66, $61, $63, $74, $75, $72, $65, $72, $20, $49, $6E, $66, $6F, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Manufacturer Info</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
-    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $33, $22, $3E,    // <string size="3">
+    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $34, $22, $3E,    // <string size="4">
     $3C, $6E, $61, $6D, $65, $3E, $48, $61, $72, $64, $77, $61, $72, $65, $20, $56, $65, $72, $73, $69, $6F, $6E, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Hardware Version</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
-    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $33, $22, $3E,    // <string size="3">
+    $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $34, $22, $3E,    // <string size="4">
     $3C, $6E, $61, $6D, $65, $3E, $53, $6F, $66, $74, $77, $61, $72, $65, $20, $56, $65, $72, $73, $69, $6F, $6E, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>Software Version</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
     $3C, $2F, $67, $72, $6F, $75, $70, $3E,    // </group>
@@ -217,19 +217,19 @@ type
 
 const
   CDI_MAP: TCDIStringMap = (
-    (308, 11),    // Manufacturer - [String Offset, Length] into the CDI Memory Space ($FF)
-    (341, 5),    // ManufacturerModel - [String Offset, Length] into the CDI Memory Space ($FF)
-    (371, 3),    // ManufacturerHWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
-    (409, 3)     // ManufacturerSWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
+    (308, 12),    // Manufacturer - [String Offset, Length] into the CDI Memory Space ($FF)
+    (341, 6),    // ManufacturerModel - [String Offset, Length] into the CDI Memory Space ($FF)
+    (371, 4),    // ManufacturerHWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
+    (409, 4)     // ManufacturerSWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
   );
 
 
 const
   CDI_MAP_VNODE: TCDIStringMap = (
-    (308, 11),    // Manufacturer - [String Offset, Length] into the CDI Memory Space ($FF)
-    (341, 5),    // ManufacturerModel - [String Offset, Length] into the CDI Memory Space ($FF)
-    (371, 3),    // ManufacturerHWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
-    (409, 3)     // ManufacturerSWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
+    (308, 12),    // Manufacturer - [String Offset, Length] into the CDI Memory Space ($FF)
+    (341, 6),    // ManufacturerModel - [String Offset, Length] into the CDI Memory Space ($FF)
+    (371, 4),    // ManufacturerHWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
+    (409, 4)     // ManufacturerSWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
   );
 
 
@@ -255,64 +255,59 @@ const
   MAX_USER_NAME = 20;
   MAX_USER_DESC = 40;
   
-type                                                                            // THIS DATA IS IN EEPROM
-  TConfigurationData = record
-    Name: array[0..MAX_USER_NAME-1] of Byte;                                      // user defined Name for Node
-    Desc: array[0..MAX_USER_DESC-1] of Byte;                                      // user defined Description for Node
-  end;
-
 const
   MAX_CONFIG_DATA = MAX_USER_NAME + MAX_USER_DESC;
-  MAX_CONFIG_DATA_VNODE = MAX_USER_NAME + MAX_USER_DESC;
+  MAX_CONFIG_DATA_VNODE = MAX_USER_NAME + MAX_USER_DESC;                         // THIS DATA IS IN EEPROM
   
-  CONFIG_DATA_NODE: TConfigurationData = (                                    // TEMPORARY FOR TEST......
-    ($43, $75, $73, $74, $6F, $6D, $20, $4E, $61, $6D, $65, $00, $00, $00, $00, $00, $00, $00, $00, $00), // 'Custom Name          ',
-    ($43, $75, $73, $74, $6F, $6D, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00)  //'Custom Description                       '
+  CONFIG_DATA: array[0..MAX_CONFIG_DATA-1] of Byte = (                          // TEMPORARY FOR TEST......
+    $43, $75, $73, $74, $6F, $6D, $20, $4E, $61, $6D, $65, $00, $00, $00, $00, $00, $00, $00, $00, $00, // 'Custom Name          ',
+    $43, $75, $73, $74, $6F, $6D, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  //'Custom Description                       '
   );
 
-  CONFIG_DATA_VNODE: TConfigurationData = (                                   // TEMPORARY FOR TEST......
-    ($43, $75, $73, $74, $6F, $6D, $20, $4E, $61, $6D, $65, $00, $00, $00, $00, $00, $00, $00, $00, $00), // 'Custom Name          ',
-    ($43, $75, $73, $74, $6F, $6D, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00)  //'Custom Description                       '
+  CONFIG_DATA_VNODE: array[0..MAX_CONFIG_DATA_VNODE-1] of Byte = (              // TEMPORARY FOR TEST......
+    $43, $75, $73, $74, $6F, $6D, $20, $4E, $61, $6D, $65, $00, $00, $00, $00, $00, $00, $00, $00, $00, // 'Custom Name          ',
+    $43, $75, $73, $74, $6F, $6D, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  //'Custom Description                       '
   );
   
 // **************************************************************************************************************************************************************
 // ACDI Mfg Memory ($FC) Implementation
 // **************************************************************************************************************************************************************
+const 
+  ACDI_MFG_VERSION = 1;
+  
 const
-  MAX_ACDI_ARRAY = 59;
-  ACDI_NODE_STRINGS: array[0..MAX_ACDI_ARRAY - 1] of byte = (
-      $31,  // Version = 1
+  MAX_ACDI_MFG_ARRAY = 26;
+  ACDI_MFG_STRINGS: array[0..MAX_ACDI_MFG_ARRAY - 1] of byte = (
       $4D,$75,$73,$74,$61,$6E,$67,$70,$65,$61,$6B,$00,  // Mustangpeak
       $43,$53,$31,$30,$30,$00,  // CS100
       $30,$2E,$31,$00,  // 0.1
-      $30,$2E,$33,$00,  // 0.3
-      $31,  // Version = 1
-      $5B,$55,$73,$65,$72,$20,$4E,$61,$6D,$65,$5D,$00,  // [User Name]
-      $5B,$55,$73,$65,$72,$20,$44,$65,$73,$63,$72,$69,$70,$74,$69,$6F,$6E,$5D,$00  // [User Description]
+      $30,$2E,$33,$00  // 0.3
     );
 
 const
-  MAX_ACDI_ARRAY_VNODE = 59;
-  ACDI_STRINGS_VNODE: array[0..MAX_ACDI_ARRAY_VNODE - 1] of byte = (
-      $31,  // Version = 1
+  ACDI_MFG_VERSION_VNODE = 1;
+  
+const
+  MAX_ACDI_MFG_ARRAY_VNODE = 26;
+  ACDI_MFG_STRINGS_VNODE: array[0..MAX_ACDI_MFG_ARRAY_VNODE - 1] of byte = (
       $4D,$75,$73,$74,$61,$6E,$67,$70,$65,$61,$6B,$00,  // Mustangpeak
       $4D,$4E,$31,$30,$30,$00,  // MN100
       $30,$2E,$32,$00,  // 0.2
-      $30,$2E,$33,$00,  // 0.3
-      $31,  // Version = 1
-      $5B,$55,$73,$65,$72,$20,$4E,$61,$6D,$65,$5D,$00,  // [User Name]
-      $5B,$55,$73,$65,$72,$20,$44,$65,$73,$63,$72,$69,$70,$74,$69,$6F,$6E,$5D,$00  // [User Description]
+      $30,$2E,$33,$00  // 0.3
     );
 
 
   
 // **************************************************************************************************************************************************************
 // ACDI User Memory ($FB) Implementation
+//
+//  See the Config Data area
 // **************************************************************************************************************************************************************
 const
-  MAX_ACDI_USER_DATA = MAX_USER_NAME + MAX_USER_DESC;
-  MAX_ACDI_USER_DATA_VNODE = MAX_USER_NAME + MAX_USER_DESC;
-  
+  ACDI_USER_VERSION = 1;
+
+const
+  ACDI_USER_VERSION_VNODE = 1;
 
 
 // **************************************************************************************************************************************************************

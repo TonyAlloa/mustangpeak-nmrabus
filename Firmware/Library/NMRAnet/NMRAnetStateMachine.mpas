@@ -38,7 +38,7 @@ uses
 {.$DEFINE TRACE_BUFFER_ADDRESSES}
 {.$DEFINE TRACE_MEM_CONFIG_STATEMACHINE}
 {.$DEFINE TRACE_DATAGRAM_REPLY}
-{.$DEFINE TRACE_CONFIG_MEM_DECODE}
+{$DEFINE TRACE_CONFIG_MEM_DECODE}
 {.$DEFINE TRACE_NODE_STATEMACHINE}
 
 
@@ -463,6 +463,34 @@ begin
 end;
 
 // *****************************************************************************
+//  procedure TransmitNMRABusLayerMsg
+//     Parameters:
+//     Returns:
+//
+//     Description: This assumes the caller has tested for room in the buffer
+//
+// *****************************************************************************
+procedure TransmitNMRABusLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes);
+begin
+  NMRAnetUtilities_CreateNMRABusMessagePacket(Node, Buffer, VariableField, DestinationAlias, DataCount, DataBytes);
+  CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer);
+  StartCANMessageEngine();
+end;
+
+// *****************************************************************************
+//  procedure NMRABusBufferAvailable
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRABusBufferAvailable: Boolean;
+begin
+  Result := not CANStorage_ListFull(@TX_NMRAnetBufferList)
+end;
+
+// *****************************************************************************
 //  procedure DecodeMemoryConfigurationReadWrite
 //     Parameters:
 //     Returns:
@@ -483,29 +511,6 @@ begin
                          end;
    end;
    MemorySpaceOffset := DWord( DataBytes^[2] shl 24) or DWord( DataBytes^[3] shl 16) or DWord( DataBytes^[4] shl 8) or DWord( DataBytes^[5]);
-end;
-
-
-procedure NextACDIChar(AddressSpace: ^Byte; BaseBuffer: PBaseBuffer; MapInfo: ^TCDIStringInfo; var DataBytesCount: Byte; DataBytes: PCAN_DataBytes; NextState: Byte);
-var
-  Address: ^Byte;
-begin
-  Address := AddressSpace + MapInfo^.Offset + BaseBuffer^.Tag;
-  if BaseBuffer^.Tag < MapInfo^.Length then
-  begin
-    DataBytes^[DataBytesCount] := Address^;
-    Inc(BaseBuffer^.Tag);
-    Inc(DataBytesCount);
-  end else
-  begin
-    if DataBytesCount < 7 then
-    begin
-      DataBytes^[DataBytesCount] := #0;
-      BaseBuffer^.Tag := 0;
-      Inc(DataBytesCount);
-      BaseBuffer^.StateMachine := NextState
-    end
-  end
 end;
 
 // *****************************************************************************
@@ -577,9 +582,12 @@ begin
       end else
       if NMRAnetNode_TestMsgFlags(Node, MF_VERIFY_NODE_ID, False) then
       begin
-        NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, Buffer);
-        if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_VERIFIED_NODE_ID_NUMBER, 0, 6, @DataBytes) then
+        if NMRABusBufferAvailable then
+        begin
+          NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, Buffer);
+          TransmitNMRABusLayerMsg(Node, Buffer, MTI_VERIFIED_NODE_ID_NUMBER, 0, 6, @DataBytes);
           NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
+        end;
       end else
       if NMRAnetNode_TestMsgFlags(Node, MF_IDENTIFY_ALL_EVENTS, False) then
       begin
@@ -602,74 +610,76 @@ begin
         {$ENDIF}
         case BaseBuffer^.mCode of
           BMC_DATAGRAM_OUT_OF_ORDER  :        begin
-                                                DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
-                                                DataBytes[1] := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER[0];
-                                                DataBytes[2] := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER[1];
-                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, BaseBuffer^.Alias, 3, @DataBytes) then
+                                                if NMRABusBufferAvailable then
                                                 begin
+                                                  DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                  DataBytes[1] := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER[0];
+                                                  DataBytes[2] := DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER[1];
+                                                  TransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, BaseBuffer^.Alias, 3, @DataBytes);
                                                   NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                   {$IFDEF TRACE_DATAGRAM_REPLY}  UART1_Write_Text('DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER'+LF); {$ENDIF}
                                                 end
                                               end;
           BMC_DATAGRAM_BUFFER_FULL   :        begin
-                                                DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
-                                                DataBytes[1] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[0];
-                                                DataBytes[2] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[1];
-                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, BaseBuffer^.Alias, 3, @DataBytes) then
+                                                if NMRABusBufferAvailable then
                                                 begin
+                                                  DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                  DataBytes[1] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[0];
+                                                  DataBytes[2] := DATAGRAM_RESULT_REJECTED_BUFFER_FULL[1];
+                                                  TransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, BaseBuffer^.Alias, 3, @DataBytes);
                                                   NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                   {$IFDEF TRACE_DATAGRAM_REPLY}  UART1_Write_Text('DATAGRAM_RESULT_REJECTED_BUFFER_FULL'+LF); {$ENDIF}
                                                 end
                                               end;
           BMC_DATAGRAM_NOT_ACCEPTED  :        begin
-                                                DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
-                                                DataBytes[1] := DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[0];
-                                                DataBytes[2] := DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[1];
-                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, BaseBuffer^.Alias, 3, @DataBytes) then
+                                                if NMRABusBufferAvailable then
                                                 begin
+                                                  DataBytes[0] := MTI_EXTENSION_DATAGRAM_REJECTED;
+                                                  DataBytes[1] := DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[0];
+                                                  DataBytes[2] := DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED[1];
+                                                  TransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, BaseBuffer^.Alias, 3, @DataBytes);
                                                   NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                   {$IFDEF TRACE_DATAGRAM_REPLY}  UART1_Write_Text('DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED'+LF); {$ENDIF}
                                                 end
                                               end;
           BMC_DATAGRAM_OKAY          :        begin
-                                                DataBytes[0] := MTI_EXTENSION_DATAGRAM_RECIEVED_OK;
-                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, BaseBuffer^.Alias, 1, @DataBytes) then
+                                                if NMRABusBufferAvailable then
                                                 begin
+                                                  DataBytes[0] := MTI_EXTENSION_DATAGRAM_RECIEVED_OK;
+                                                  TransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REPLY, BaseBuffer^.Alias, 1, @DataBytes);
                                                   NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                   {$IFDEF TRACE_DATAGRAM_REPLY}  UART1_Write_Text('MTI_EXTENSION_DATAGRAM_RECIEVED_OK'+LF); {$ENDIF}
                                                 end
                                               end;
           BMC_PROTOCOL_SUPPORT_QUERY :        begin
-                                                NMRAnetUtilities_ZeroCANData(DataBytes);
-                                                DataBytes[0] := $2F;
-                                                for i := 0 to LEN_PIV_PROTOCOL-1 do
-                                                  for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
-                                                    DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
-                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_PROTOCOL_SUPPORT_REPLY, BaseBuffer^.Alias, 6, @DataBytes) then
+                                                if NMRABusBufferAvailable then
                                                 begin
+                                                  NMRAnetUtilities_ZeroCANData(DataBytes);
+                                                  DataBytes[0] := $2F;
+                                                  for i := 0 to LEN_PIV_PROTOCOL-1 do
+                                                    for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
+                                                      DataBytes[i+1] := DataBytes[i+1] or PIV_SUPPORTED_PROTOCOLS[j][i];
+                                                  TransmitNMRABusLayerMsg(Node, Buffer, MTI_PROTOCOL_SUPPORT_REPLY, BaseBuffer^.Alias, 6, @DataBytes);
                                                   NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                 end;
                                               end;
           BMC_UNKNOWN_ADDRESSED_MTI :         begin
-                                                DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
-                                                if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_OPTIONAL_INTERACTION_REJECTED, BaseBuffer^.Alias, 1, @DataBytes) then
+                                                if NMRABusBufferAvailable then
                                                 begin
+                                                  DataBytes[0] := MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED;
+                                                  TransmitNMRABusLayerMsg(Node, Buffer, MTI_OPTIONAL_INTERACTION_REJECTED, BaseBuffer^.Alias, 1, @DataBytes);
                                                   NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                 end;
                                               end;
           BMC_SIMPLE_NODE_INFO_REQEUST :      begin
-                                                if not CANStorage_ListFull(@TX_NMRAnetBufferList) then      // This has gotta go after updating everything
+                                                if NMRABusBufferAvailable then
                                                 begin
-                                                  if Node^.State and NS_VIRTUAL <> 0 then
-                                                    AddressSpace := @CDI_ARRAY_VNODE[0]
-                                                  else
-                                                    AddressSpace := @CDI_ARRAY[0];
                                                   i := 0;
                                                   DataBytes[i] := MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY;
                                                   Inc(i);
@@ -677,35 +687,100 @@ begin
                                                   while (BaseBuffer^.StateMachine <> STATE_ACDI_DONE) and (i < 8) do
                                                   begin
                                                     case BaseBuffer^.StateMachine of
-                                                      STATE_ACDI_MFG_VERSION : begin
-                                                                                DataBytes[i] := ACDI_MFG_VERSION;
-                                                                                Inc(i);
-                                                                                BaseBuffer^.StateMachine := STATE_ACDI_MFG_NAME;
-                                                                               end;
-                                                      STATE_ACDI_MFG_NAME     : NextACDIChar(AddressSpace, BaseBuffer, @CDI_MAP.Manufacturer, i, @DataBytes, STATE_ACDI_MFG_MODEL);
-                                                      STATE_ACDI_MFG_MODEL    : NextACDIChar(AddressSpace, BaseBuffer, @CDI_MAP.ManufacturerModel, i, @DataBytes, STATE_ACDI_MFG_HW_VER);
-                                                      STATE_ACDI_MFG_HW_VER   : NextACDIChar(AddressSpace, BaseBuffer, @CDI_MAP.ManufacturerHWVersion, i, @DataBytes, STATE_ACDI_MFG_SW_VER);
-                                                      STATE_ACDI_MFG_SW_VER   : NextACDIChar(AddressSpace, BaseBuffer, @CDI_MAP.ManufacturerSWVersion, i, @DataBytes, STATE_ACDI_USER_VERSION);
+                                                      STATE_ACDI_MFG_VERSION  : begin
+                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
+                                                                                   DataBytes[i] := ACDI_MFG_VERSION_VNODE
+                                                                                 else
+                                                                                   DataBytes[i] := ACDI_MFG_VERSION;
+                                                                                 Inc(i);
+                                                                                 BaseBuffer^.Tag := 0;
+                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_MFG_INFO;
+                                                                                end;
+                                                      STATE_ACDI_MFG_INFO    :  begin
+                                                                                  if Node^.State and NS_VIRTUAL <> 0 then
+                                                                                  begin   
+                                                                                    if BaseBuffer^.Tag < MAX_ACDI_MFG_ARRAY_VNODE then                  STILL SEEMS TO BE ISSUE HERE>>>>
+                                                                                    begin
+                                                                                      DataBytes[i] := ACDI_MFG_STRINGS_VNODE[BaseBuffer^.Tag];
+                                                                                      Inc(BaseBuffer^.Tag);
+                                                                                      Inc(i);
+                                                                                    end else
+                                                                                      BaseBuffer^.StateMachine := STATE_ACDI_USER_VERSION;
+                                                                                  end else
+                                                                                  begin
+                                                                                    if BaseBuffer^.Tag < MAX_ACDI_MFG_ARRAY then
+                                                                                    begin
+                                                                                      DataBytes[i] := ACDI_MFG_STRINGS[BaseBuffer^.Tag];
+                                                                                      Inc(BaseBuffer^.Tag);
+                                                                                      Inc(i);
+                                                                                    end else
+                                                                                      BaseBuffer^.StateMachine := STATE_ACDI_USER_VERSION;
+                                                                                  end;
+                                                                                end;
                                                       STATE_ACDI_USER_VERSION : begin
-                                                                                DataBytes[i] := ACDI_MFG_VERSION;
-                                                                                Inc(i);
-                                                                                BaseBuffer^.StateMachine := STATE_ACDI_USER_NAME;
-                                                                               end;
-                                                      STATE_ACDI_USER_NAME :   begin
-                                                                                 DataBytes[i] := #0;
-                                                                                 Inc(i);
-                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_USER_DESC;
-                                                                               end;
-                                                      STATE_ACDI_USER_DESC   : begin
-                                                                                 DataBytes[i] := #0;
-                                                                                 Inc(i);
-                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_DONE;
-                                                                               end;
-                                                      STATE_ACDI_DONE        : begin
-                                                                               end;
+                                                                                  if Node^.State and NS_VIRTUAL <> 0 then
+                                                                                   DataBytes[i] := ACDI_USER_VERSION_VNODE
+                                                                                 else
+                                                                                   DataBytes[i] := ACDI_USER_VERSION;
+                                                                                  Inc(i);
+                                                                                  BaseBuffer^.StateMachine := STATE_ACDI_USER_NAME;
+                                                                                  BaseBuffer^.Tag := 0;
+                                                                                end;
+                                                      STATE_ACDI_USER_NAME    : begin
+                                                                                  if Node^.State and NS_VIRTUAL <> 0 then
+                                                                                  begin
+                                                                                    if BaseBuffer^.Tag < MAX_USER_NAME then
+                                                                                    begin
+                                                                                      DataBytes[i] :=  CONFIG_DATA_VNODE[BaseBuffer^.Tag];
+                                                                                      if CONFIG_DATA_VNODE[BaseBuffer^.Tag] = #0 then
+                                                                                        BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
+                                                                                    end else
+                                                                                      BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
+                                                                                  end else
+                                                                                  begin
+                                                                                    if BaseBuffer^.Tag < MAX_USER_NAME then
+                                                                                    begin
+                                                                                      DataBytes[i] := CONFIG_DATA[BaseBuffer^.Tag];
+                                                                                      if CONFIG_DATA[BaseBuffer^.Tag] = #0 then
+                                                                                        BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
+                                                                                    end else
+                                                                                      BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
+                                                                                  end;
+                                                                                  Inc(BaseBuffer^.Tag);
+                                                                                  Inc(i);
+                                                                                end;
+                                                      STATE_ACDI_START_DESC   : begin
+                                                                                  BaseBuffer^.Tag := MAX_USER_NAME;
+                                                                                  BaseBuffer^.StateMachine := STATE_ACDI_USER_DESC;
+                                                                                end;
+                                                      STATE_ACDI_USER_DESC    : begin
+                                                                                  if Node^.State and NS_VIRTUAL <> 0 then
+                                                                                  begin
+                                                                                    if BaseBuffer^.Tag < MAX_USER_DESC then
+                                                                                    begin
+                                                                                      DataBytes[i] :=  CONFIG_DATA_VNODE[BaseBuffer^.Tag];
+                                                                                      if CONFIG_DATA_VNODE[BaseBuffer^.Tag] = #0 then
+                                                                                        BaseBuffer^.StateMachine := STATE_ACDI_DONE;
+                                                                                    end else
+                                                                                      BaseBuffer^.StateMachine := STATE_ACDI_DONE;
+                                                                                  end else
+                                                                                  begin
+                                                                                    if BaseBuffer^.Tag < MAX_USER_DESC - 1 then
+                                                                                    begin
+                                                                                      DataBytes[i] := CONFIG_DATA[BaseBuffer^.Tag];
+                                                                                      if CONFIG_DATA[BaseBuffer^.Tag] = #0 then
+                                                                                        BaseBuffer^.StateMachine := STATE_ACDI_DONE;
+                                                                                    end else
+                                                                                      BaseBuffer^.StateMachine := STATE_ACDI_DONE;
+                                                                                  end;
+                                                                                  Inc(BaseBuffer^.Tag);
+                                                                                  Inc(i);
+                                                                                end;
+                                                      STATE_ACDI_DONE         : begin
+                                                                                end;
                                                     end;
                                                   end;
-                                                  TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_SIMPLE_NODE_IDENTIFY_INFO, BaseBuffer^.Alias, i, @DataBytes);  // Has to go, already checked for a free buffer
+                                                  TransmitNMRABusLayerMsg(Node, Buffer, MTI_SIMPLE_NODE_IDENTIFY_INFO, BaseBuffer^.Alias, i, @DataBytes);
 
                                                   if BaseBuffer^.StateMachine >= STATE_ACDI_DONE then
                                                   begin
@@ -850,15 +925,15 @@ begin
                                                                                                                                 end;
                                                                                                               MSI_ACDI_MFG    : begin
                                                                                                                                   if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                    MemorySpaceMax := MAX_ACDI_ARRAY_VNODE
+                                                                                                                                    MemorySpaceMax := MAX_ACDI_MFG_ARRAY_VNODE + 1 // for the Version ID Byte
                                                                                                                                   else
-                                                                                                                                    MemorySpaceMax := MAX_ACDI_ARRAY
+                                                                                                                                    MemorySpaceMax := MAX_ACDI_MFG_ARRAY + 1 // for the Version ID Byte
                                                                                                                                 end;
                                                                                                               MSI_ACDI_USER   : begin
                                                                                                                                   if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                    MemorySpaceMax := MAX_ACDI_USER_DATA_VNODE
+                                                                                                                                    MemorySpaceMax := MAX_CONFIG_DATA_VNODE + 1 // for the Version ID Byte
                                                                                                                                   else
-                                                                                                                                    MemorySpaceMax := MAX_ACDI_USER_DATA
+                                                                                                                                    MemorySpaceMax := MAX_CONFIG_DATA + 1 // for the Version ID Byte
                                                                                                                                 end
                                                                                                             else
                                                                                                               MemorySpaceMax := 0;
@@ -905,30 +980,64 @@ begin
                                                                                                                                 end;
                                                                                                                 MSI_CONFIG    : begin
                                                                                                                                   if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                    ByteArray := PByteArray( @CONFIG_DATA_VNODE.Name[0])
-                                                                                                                                  else
-                                                                                                                                    ByteArray := PByteArray( @CONFIG_DATA_NODE.Name[0]);
-                                                                                                                                  for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := ByteArray^[i+MemorySpaceOffset]
+                                                                                                                                  begin
+                                                                                                                                    for i := 0 to MemorySpaceCount - 1 do
+                                                                                                                                      DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA_VNODE[i+MemorySpaceOffset]
+                                                                                                                                  end else
+                                                                                                                                  begin
+                                                                                                                                    for i := 0 to MemorySpaceCount - 1 do
+                                                                                                                                      DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA[i+MemorySpaceOffset]
+                                                                                                                                  end
                                                                                                                                 end;
                                                                                                                 MSI_ACDI_MFG  : begin
                                                                                                                                   if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                   begin
+                                                                                                                                    if MemorySpaceOffset = 0 then
+                                                                                                                                    begin
+                                                                                                                                      DatagramBuffer^.DataBytes[DatagramOffset] := ACDI_MFG_VERSION_VNODE;
+                                                                                                                                      Inc(DatagramOffset);
+                                                                                                                                      Dec(MemorySpaceCount);
+                                                                                                                                      MemorySpaceOffset := 0;
+                                                                                                                                    end;
                                                                                                                                     for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                      DatagramBuffer^.DataBytes[i+DatagramOffset] := ACDI_STRINGS_VNODE[i+MemorySpaceOffset]
+                                                                                                                                      DatagramBuffer^.DataBytes[i+DatagramOffset] := ACDI_MFG_STRINGS_VNODE[i+MemorySpaceOffset-1]
                                                                                                                                   end else
                                                                                                                                   begin
+                                                                                                                                    if MemorySpaceOffset = 0 then
+                                                                                                                                    begin
+                                                                                                                                      DatagramBuffer^.DataBytes[DatagramOffset] := ACDI_MFG_VERSION;
+                                                                                                                                      Inc(DatagramOffset);
+                                                                                                                                      Dec(MemorySpaceCount);
+                                                                                                                                      MemorySpaceOffset := 0;
+                                                                                                                                    end;
                                                                                                                                     for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                      DatagramBuffer^.DataBytes[i+DatagramOffset] := ACDI_NODE_STRINGS[i+MemorySpaceOffset]
+                                                                                                                                      DatagramBuffer^.DataBytes[i+DatagramOffset] := ACDI_MFG_STRINGS[i+MemorySpaceOffset-1]
                                                                                                                                   end;
                                                                                                                                 end;
                                                                                                                 MSI_ACDI_USER : begin
                                                                                                                                   if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                    ByteArray := PByteArray( @CONFIG_DATA_VNODE.Name[0])
-                                                                                                                                  else
-                                                                                                                                    ByteArray := PByteArray( @CONFIG_DATA_NODE.Name[0]);
-                                                                                                                                  for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := ByteArray^[i+MemorySpaceOffset-1]
+                                                                                                                                  begin
+                                                                                                                                    if MemorySpaceOffset = 0 then
+                                                                                                                                    begin
+                                                                                                                                      DatagramBuffer^.DataBytes[DatagramOffset] := ACDI_USER_VERSION_VNODE;
+                                                                                                                                      Inc(DatagramOffset);
+                                                                                                                                      Dec(MemorySpaceCount);
+                                                                                                                                      MemorySpaceOffset := 0;
+                                                                                                                                    end;
+                                                                                                                                    for i := 0 to MemorySpaceCount - 1 do
+                                                                                                                                      DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA_VNODE[i+MemorySpaceOffset-1] // -1 is for the Version ID offset
+                                                                                                                                  end else
+                                                                                                                                  begin
+                                                                                                                                    if MemorySpaceOffset = 0 then
+                                                                                                                                    begin
+                                                                                                                                      DatagramBuffer^.DataBytes[DatagramOffset] := ACDI_USER_VERSION;
+                                                                                                                                      Inc(DatagramOffset);
+                                                                                                                                      Dec(MemorySpaceCount);
+                                                                                                                                      MemorySpaceOffset := 0;
+                                                                                                                                    end;
+                                                                                                                                    for i := 0 to MemorySpaceCount - 1 do
+                                                                                                                                      DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA[i+MemorySpaceOffset-1]       // -1 is for the Version ID offset
+                                                                                                                                  end
                                                                                                                                 end;
                                                                                                               end
                                                                                                             end;

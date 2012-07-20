@@ -165,14 +165,12 @@ const
   STATE_NMRABUS_OFFLINE                     = 15;
   
   STATE_ACDI_MFG_VERSION                    = 0;
-  STATE_ACDI_MFG_NAME                       = 1;
-  STATE_ACDI_MFG_MODEL                      = 2;
-  STATE_ACDI_MFG_HW_VER                     = 3;
-  STATE_ACDI_MFG_SW_VER                     = 4;
-  STATE_ACDI_USER_VERSION                   = 5;
-  STATE_ACDI_USER_NAME                      = 6;
-  STATE_ACDI_USER_DESC                      = 7;
-  STATE_ACDI_DONE                           = 8;
+  STATE_ACDI_MFG_INFO                       = 1;
+  STATE_ACDI_USER_VERSION                   = 3;
+  STATE_ACDI_USER_NAME                      = 4;
+  STATE_ACDI_START_DESC                     = 5;
+  STATE_ACDI_USER_DESC                      = 6;
+  STATE_ACDI_DONE                           = 7;
   
 type
   TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used

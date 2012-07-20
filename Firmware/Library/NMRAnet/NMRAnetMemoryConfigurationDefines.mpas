@@ -62,9 +62,6 @@ const
   MCWL_ARBITRARY_BYTE                = $02;                                     // MemoryConfigurationWriteLength - Any Number of Byte Write Supported
   MCWL_STREAM_WRITE_SUPPORTED        = $01;                                     // MemoryConfigurationWriteLength - Stream Write Supported
   
-  ACDI_MFG_VERSION                   = 1;                                       // Manufacturers Version for ACDI
-  ACDI_USER_VERSION                  = 1;                                       // User Data Version for ACDI
-  
   STATE_MEM_CONFIG_SEND_REPLY        = $00;
   STATE_MEM_CONFIG_ALLOC_DATAGRAM    = $01;
   STATE_MEM_CONFIG_LOAD_DATAGRAM     = $02;
