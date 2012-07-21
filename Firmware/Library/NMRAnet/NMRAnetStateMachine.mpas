@@ -38,8 +38,9 @@ uses
 {.$DEFINE TRACE_BUFFER_ADDRESSES}
 {.$DEFINE TRACE_MEM_CONFIG_STATEMACHINE}
 {.$DEFINE TRACE_DATAGRAM_REPLY}
-{$DEFINE TRACE_CONFIG_MEM_DECODE}
+{.$DEFINE TRACE_CONFIG_MEM_DECODE}
 {.$DEFINE TRACE_NODE_STATEMACHINE}
+{.DEFINE TRACE_ACDI}
 
 
   procedure NMRAnetStateMachine_Process(Node: PNMRAnetNode);
@@ -680,26 +681,25 @@ begin
           BMC_SIMPLE_NODE_INFO_REQEUST :      begin
                                                 if NMRABusBufferAvailable then
                                                 begin
-                                                  i := 0;
-                                                  DataBytes[i] := MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY;
-                                                  Inc(i);
+                                                  DataBytes[0] := MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY;
+                                                  i := 1;
 
                                                   while (BaseBuffer^.StateMachine <> STATE_ACDI_DONE) and (i < 8) do
                                                   begin
                                                     case BaseBuffer^.StateMachine of
                                                       STATE_ACDI_MFG_VERSION  : begin
-                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                   DataBytes[i] := ACDI_MFG_VERSION_VNODE
-                                                                                 else
-                                                                                   DataBytes[i] := ACDI_MFG_VERSION;
-                                                                                 Inc(i);
-                                                                                 BaseBuffer^.Tag := 0;
-                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_MFG_INFO;
+                                                                                  if Node^.State and NS_VIRTUAL <> 0 then
+                                                                                    DataBytes[i] := ACDI_MFG_VERSION_VNODE
+                                                                                  else
+                                                                                    DataBytes[i] := ACDI_MFG_VERSION;
+                                                                                  Inc(i);
+                                                                                  BaseBuffer^.Tag := 0;
+                                                                                  BaseBuffer^.StateMachine := STATE_ACDI_MFG_INFO;
                                                                                 end;
                                                       STATE_ACDI_MFG_INFO    :  begin
                                                                                   if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                  begin   
-                                                                                    if BaseBuffer^.Tag < MAX_ACDI_MFG_ARRAY_VNODE then                  STILL SEEMS TO BE ISSUE HERE>>>>
+                                                                                  begin
+                                                                                    if BaseBuffer^.Tag < MAX_ACDI_MFG_ARRAY_VNODE then             //     STILL SEEMS TO BE ISSUE HERE>>>>
                                                                                     begin
                                                                                       DataBytes[i] := ACDI_MFG_STRINGS_VNODE[BaseBuffer^.Tag];
                                                                                       Inc(BaseBuffer^.Tag);
@@ -719,9 +719,9 @@ begin
                                                                                 end;
                                                       STATE_ACDI_USER_VERSION : begin
                                                                                   if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                   DataBytes[i] := ACDI_USER_VERSION_VNODE
-                                                                                 else
-                                                                                   DataBytes[i] := ACDI_USER_VERSION;
+                                                                                    DataBytes[i] := ACDI_USER_VERSION_VNODE
+                                                                                  else
+                                                                                    DataBytes[i] := ACDI_USER_VERSION;
                                                                                   Inc(i);
                                                                                   BaseBuffer^.StateMachine := STATE_ACDI_USER_NAME;
                                                                                   BaseBuffer^.Tag := 0;
@@ -732,8 +732,10 @@ begin
                                                                                     if BaseBuffer^.Tag < MAX_USER_NAME then
                                                                                     begin
                                                                                       DataBytes[i] :=  CONFIG_DATA_VNODE[BaseBuffer^.Tag];
-                                                                                      if CONFIG_DATA_VNODE[BaseBuffer^.Tag] = #0 then
-                                                                                        BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
+                                                                                      Inc(BaseBuffer^.Tag);
+                                                                                      Inc(i);
+                                                                                      if CONFIG_DATA_VNODE[BaseBuffer^.Tag-1] = #0 then
+                                                                                        BaseBuffer^.StateMachine := STATE_ACDI_START_DESC
                                                                                     end else
                                                                                       BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
                                                                                   end else
@@ -741,13 +743,13 @@ begin
                                                                                     if BaseBuffer^.Tag < MAX_USER_NAME then
                                                                                     begin
                                                                                       DataBytes[i] := CONFIG_DATA[BaseBuffer^.Tag];
-                                                                                      if CONFIG_DATA[BaseBuffer^.Tag] = #0 then
-                                                                                        BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
+                                                                                      Inc(BaseBuffer^.Tag);
+                                                                                      Inc(i);
+                                                                                      if CONFIG_DATA[BaseBuffer^.Tag-1] = #0 then
+                                                                                        BaseBuffer^.StateMachine := STATE_ACDI_START_DESC
                                                                                     end else
                                                                                       BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
                                                                                   end;
-                                                                                  Inc(BaseBuffer^.Tag);
-                                                                                  Inc(i);
                                                                                 end;
                                                       STATE_ACDI_START_DESC   : begin
                                                                                   BaseBuffer^.Tag := MAX_USER_NAME;
@@ -756,30 +758,40 @@ begin
                                                       STATE_ACDI_USER_DESC    : begin
                                                                                   if Node^.State and NS_VIRTUAL <> 0 then
                                                                                   begin
-                                                                                    if BaseBuffer^.Tag < MAX_USER_DESC then
+                                                                                    if BaseBuffer^.Tag < MAX_CONFIG_DATA_VNODE then
                                                                                     begin
                                                                                       DataBytes[i] :=  CONFIG_DATA_VNODE[BaseBuffer^.Tag];
-                                                                                      if CONFIG_DATA_VNODE[BaseBuffer^.Tag] = #0 then
+                                                                                      Inc(BaseBuffer^.Tag);
+                                                                                      Inc(i);
+                                                                                      if CONFIG_DATA_VNODE[BaseBuffer^.Tag-1] = #0 then
                                                                                         BaseBuffer^.StateMachine := STATE_ACDI_DONE;
                                                                                     end else
                                                                                       BaseBuffer^.StateMachine := STATE_ACDI_DONE;
                                                                                   end else
                                                                                   begin
-                                                                                    if BaseBuffer^.Tag < MAX_USER_DESC - 1 then
+                                                                                    if BaseBuffer^.Tag < MAX_CONFIG_DATA then
                                                                                     begin
                                                                                       DataBytes[i] := CONFIG_DATA[BaseBuffer^.Tag];
-                                                                                      if CONFIG_DATA[BaseBuffer^.Tag] = #0 then
+                                                                                      Inc(BaseBuffer^.Tag);
+                                                                                      Inc(i);
+                                                                                      if CONFIG_DATA[BaseBuffer^.Tag-1] = #0 then
                                                                                         BaseBuffer^.StateMachine := STATE_ACDI_DONE;
                                                                                     end else
                                                                                       BaseBuffer^.StateMachine := STATE_ACDI_DONE;
                                                                                   end;
-                                                                                  Inc(BaseBuffer^.Tag);
-                                                                                  Inc(i);
                                                                                 end;
                                                       STATE_ACDI_DONE         : begin
                                                                                 end;
                                                     end;
                                                   end;
+
+                                                  {$IFDEF TRACE_ACDI}
+                                                  IntToStr(i, s1);
+                                                  UART1_Write_Text('i  = '+s1+LF);
+                                                  IntToStr(BaseBuffer^.Tag, s1);
+                                                  UART1_Write_Text('tag= '+s1+LF+LF);
+                                                  {$ENDIF}
+                                                  
                                                   TransmitNMRABusLayerMsg(Node, Buffer, MTI_SIMPLE_NODE_IDENTIFY_INFO, BaseBuffer^.Alias, i, @DataBytes);
 
                                                   if BaseBuffer^.StateMachine >= STATE_ACDI_DONE then
@@ -789,6 +801,7 @@ begin
                                                   end;
                                                 end
                                               end;
+
         end;
       end;
       

@@ -181,12 +181,12 @@ begin
     RichEdit1.Lines.Add(s1);
     if CheckBoxACDI.Checked then
     begin
-      RichEdit1.Lines.Add('  MAX_VNODE_ACDI_ARRAY = ' + IntToStr(ACDILen)+';');
-      s1 := '  TACDI_VNODE_STRINGS: array[0..MAX_VNODE_ACDI_ARRAY - 1] of byte = (';
+      RichEdit1.Lines.Add('  MAX_ACDI_ARRAY_VNODE = ' + IntToStr(ACDILen)+';');
+      s1 := '  ACDI_VNODE_STRINGS: array[0..MAX_ACDI_ARRAY_VNODE - 1] of byte = (';
     end else
     begin
        RichEdit1.Lines.Add('  MAX_ACDI_ARRAY = ' + IntToStr(ACDILen)+';');
-      s1 := '  TACDI_NODE_STRINGS: array[0..MAX_ACDI_ARRAY - 1] of byte = (';
+      s1 := '  ACDI_NODE_STRINGS: array[0..MAX_ACDI_ARRAY - 1] of byte = (';
     end;
     RichEdit1.Lines.Add(s1);
     RichEdit1.Lines.Add(PackString(EditMfgInfoVer.Text, True, True));
