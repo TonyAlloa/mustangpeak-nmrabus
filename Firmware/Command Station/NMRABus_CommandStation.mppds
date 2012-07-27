@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetBufferPools.mpas
+Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -51,8 +51,8 @@ File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Libr
 File3=NMRAnetAppDefines.mpas
 File4=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
 File5=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDefines.mpas
-File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagramDefines.mpas
-File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetUtilities.mpas
+File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetUtilities.mpas
+File7=..\Library\NMRAnet\NMRAnetDatagramDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

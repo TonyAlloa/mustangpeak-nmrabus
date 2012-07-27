@@ -56,8 +56,8 @@ begin
   CAN1SetMask(_CAN_MASK_B2, LongInt( $08000000), _CAN_CONFIG_XTD_MSG);          // This is the Message Layer so only filter on bit 27 that is a 1 if it is a Message layer packet, a CAN Layer packet is a 0
   CAN1SetFilter(_CAN_FILTER_B2_F1, LongInt( $08000000), _CAN_CONFIG_XTD_MSG);   // Bit 27 must be a 1 to filter in only the Message layer packets
   CAN1SetOperationMode(_CAN_MODE_NORMAL,0xFF);                                  // set NORMAL mode
-  C1IP_0_bit := 0;                                                              // Priority 6 right behind the DCC if this is a command station
-  C1IP_1_bit := 1;
+  C1IP_0_bit := 0;                                                              // Priority 4
+  C1IP_1_bit := 0;
   C1IP_2_bit := 1;
   TXB0IE_bit := 1;                                                              // Common Transmit Interrupt Enable
   RXB0IE_bit := 1;                                                              // CAN Layer Receive Interrupt Enable
@@ -67,27 +67,30 @@ begin
   C1IE_bit := 1;                                                                // Enabled the CAN 1 interrupt
 
 
-  T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
-  T2IP_1_bit := 1;
-  T2IP_2_bit := 0;
-  PR2 := 20000;             // Clock ticks every 50ns * 20000 = 1ms interrupts
-  T2IF_bit := 0;            // Clear T2IF
-  T2IE_bit := 1;            // Enable the Interrupt
-  TON_T2CON_bit := 1;       // Turn on
-
+  T1IP_0_bit := 1;          // Timer 2 Interrupt Priority = 7   (1 means off)
+  T1IP_1_bit := 1;
+  T1IP_2_bit := 1;
+  PR1 := 1800;              // Clock ticks every 50ns * 1800 = 90us interrupts
+  T1IF_bit := 0;            // Clear T2IF
+  TON_T1CON_bit := 1;       // Turn on
+  
   {$IFDEF UART_ENABLE}
   // Initialize UART
-  UART1_Init(500000);                       // Initialize UART module a
+  UART1_Init(333333);                       // Initialize UART module a
   Delay_ms(100);                            // Wait for UART module to stabilize
-  U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
-  CN17PUE_bit        := 1;   // Enable the internal pull up  on the Rx Pin
- { U1RXIP_0_Bit        := 0;   // Interrupt Priority  = 6
+  U1MODE.ALTIO        := 1;   // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
+  CN17PUE_bit         := 1;   // Enable the internal pull up  on the Rx Pin
+  U1RXIP_0_Bit        := 1;   // Interrupt Priority  = 7
   U1RXIP_1_Bit        := 1;
   U1RXIP_2_Bit        := 1;
-  URXISEL_0_Bit      := 0;   // Interrupt with the buffer system has 1 bytes
-  URXISEL_1_Bit      := 0;
-  U1RXIF_Bit         := 0;   // Clear the interrupt flag
-  U1RXIE_bit         := 1;     // Enable the RX Interrupt, is enabled when needed  }
+  URXISEL_0_Bit       := 0;   // Interrupt with the buffer system has 1 bytes
+  URXISEL_1_Bit       := 0;
+  U1RXIF_Bit          := 0;   // Clear the interrupt flag
+  U1TXIP_0_Bit        := 0;   // Interrupt Priority  = 6
+  U1TXIP_1_Bit        := 1;
+  U1TXIP_2_Bit        := 1;
+  UTXISEL_Bit         := 0;   // Interrupt with the buffer system has 1 bytes
+  U1TXIF_Bit          := 0;   // Clear the interrupt flag
   {$ENDIF}
 
   {$IFDEF SPI_ENABLE}
@@ -117,6 +120,10 @@ begin
 
   PinChangeState := PORTF;
   {$ENDIF}
+  
+  TON_T3CON_bit := 1;
+  TON_T4CON_bit := 1;
+  
 end;
 
 end.

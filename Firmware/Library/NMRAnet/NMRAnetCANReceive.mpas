@@ -470,7 +470,7 @@ begin
                                              begin   
                                                {$IFDEF TRACE_DATAGRAM_TX}   UART1_Write_Text('DG_END'+LF);  {$ENDIF}
                                                Offset := DatagramBuffer^.iByteCount;
-                                               for i := 0 to  CANBuffer^.DataCount - 1 do
+                                               for i := 0 to CANBuffer^.DataCount - 1 do
                                                  DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
                                                DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
                                                DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING or CBS_TRANSFER_COMPLETE;  // Signed Sealed so Deliver.

@@ -1,5 +1,4 @@
 unit CANDefines;
-
 // ******************************************************************************
 //
 // * Copyright:
@@ -17,8 +16,14 @@ unit CANDefines;
 //
 // *****************************************************************************
 
+{$I Options.inc}
+
 const
   LF = #13+#10;
+  
+const
+  TX_CAN_BUFFER_LEN = 1;
+  TX_NMRANET_BUFFER_LEN = 1;
   
 const
   CAN_DIRECTION_READ = 1;
@@ -26,11 +31,6 @@ const
   
 const
   CES_TRANSMITTING = $0001;                                                     // CAN State constants
-  
-  
-  // defined in the user program
-  TX_CAN_BUFFER_LEN = 1;
-  TX_NMRANET_BUFFER_LEN = 1;
 
   CAN_DATA_LEN = 8;
 
