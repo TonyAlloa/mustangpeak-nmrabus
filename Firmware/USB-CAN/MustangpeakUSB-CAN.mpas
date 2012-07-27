@@ -74,43 +74,53 @@ begin
   until Count = 0;
 end;
 
+  var
+      Temp: Char;
 procedure INTERRUPT_UART_RX(); iv IVT_ADDR_U1RXINTERRUPT;
 var
-  Temp: Char;
+//  Temp: Char;
   RxBufferHead: PUARTBuffer;
 begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   U1RXIF_Bit := 0;              // Clear the interrupt flag to receive the next byte
 
- (* Inc(BytesReceived);
+  Inc(BytesReceived);
   
-  while (URXDA_U1STA_bit = 1) do
+  if OERR_U1STA_bit = 1 then
+   Inc(BytesReceived);
+
+  while U1STA and $0001 <> 0 do
   begin
     Temp := U1RXREG;
-    if ((Temp >= '0') and (Temp <= 'z')) then                // Throw away the carrage returns
-    begin
-      RxBufferHead := @RxBufferArray[iRxBufferHead];
-      
-      RxBufferHead^[RxBufferCharIndex] := Temp;
-      if RxBufferHead^[RxBufferCharIndex] = ';' then
+ //   if ((Temp >= '0') and (Temp <= ';')) or ((Temp >= 'A') and (Temp <= 'F')) or (Temp = #10) or (Temp = #13) or (Temp = 'N') or (Temp = ' ') or (Temp = 'X') or (Temp = 'S') then     // Throw away the carrage returns
+  //  begin
+    //  if (Temp <> ' ') and (Temp <> #10) and (Temp <> #13) then
       begin
-      
-        Inc(PacketsReceived);
-        
-        Inc(iRxBufferHead);
-        if iRxBufferHead >= MAX_RX_BUFFER then
-          iRxBufferHead := 0;
-        Inc(RxBufferArrayCount);
+        RxBufferHead := @RxBufferArray[iRxBufferHead];
 
-        if RxBufferArrayCount > MaxRxBufferArrayCount then
-        MaxRxBufferArrayCount := RxBufferArrayCount;
+        RxBufferHead^[RxBufferCharIndex] := Temp;
+        if RxBufferHead^[RxBufferCharIndex] = ';' then
+        begin
 
-        RxBufferCharIndex := 0;
-      end else
-        Inc(RxBufferCharIndex);
-    end
-  end;      *)
+          Inc(PacketsReceived);
+
+          Inc(iRxBufferHead);
+          if iRxBufferHead >= MAX_RX_BUFFER then
+            iRxBufferHead := 0;
+          Inc(RxBufferArrayCount);
+
+          if RxBufferArrayCount > MaxRxBufferArrayCount then
+          MaxRxBufferArrayCount := RxBufferArrayCount;
+
+          RxBufferCharIndex := 0;
+        end else
+          Inc(RxBufferCharIndex);
+      end
+ //   end else
+ //     Inc(BytesReceived);
+  end;
+  OERR_U1STA_bit := 0;
 end;
 
 procedure INTERRUPT_UART_TX(); iv IVT_ADDR_U1TXINTERRUPT;
@@ -151,34 +161,7 @@ begin
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   T1IF_bit := 0;              // Clear the interrupt flag to receive the next byte
 
-  Inc(BytesReceived);
 
-  while (URXDA_U1STA_bit = 1) do
-  begin
-    Temp := U1RXREG;
-    if ((Temp >= '0') and (Temp <= 'z')) then                // Throw away the carrage returns
-    begin
-      RxBufferHead := @RxBufferArray[iRxBufferHead];
-
-      RxBufferHead^[RxBufferCharIndex] := Temp;
-      if RxBufferHead^[RxBufferCharIndex] = ';' then
-      begin
-
-        Inc(PacketsReceived);
-
-        Inc(iRxBufferHead);
-        if iRxBufferHead >= MAX_RX_BUFFER then
-          iRxBufferHead := 0;
-        Inc(RxBufferArrayCount);
-
-        if RxBufferArrayCount > MaxRxBufferArrayCount then
-        MaxRxBufferArrayCount := RxBufferArrayCount;
-
-        RxBufferCharIndex := 0;
-      end else
-        Inc(RxBufferCharIndex);
-    end
-  end;
 end;
 
 procedure NMRAnetHook(CANBuffer: PCANBuffer; var DoDefault: Boolean);
@@ -267,6 +250,7 @@ var
   x, y, pr: Word;
   ShortCan: Word;
   RxBufferTail: PUARTBuffer;
+  TempChar: Char;
 begin
   CANStorage_Initialize;
   NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_ACCESSORYBOOSTER_ID_0_LO);
@@ -299,10 +283,12 @@ begin
   TxBufferCharIndex := 0;
   MaxTxBufferArrayCount := 0;
   UART_Transmitting := False;
+  while (URXDA_U1STA_bit = 1) do TempChar := U1RXREG;
+  OERR_U1STA_bit := 0;
   CN0PUE_bit          := 1;   // UART RX Pullup
   U1TXIE_bit          := 1;   // Enable the TX Interrupt after setting up the variables
- // U1RXIE_bit          := 1;   // Enable the RX Interrupt, is enabled when needed
-  T1IE_bit := 1;            // Enable the Interrupt for Rx
+  U1RXIE_bit          := 1;   // Enable the RX Interrupt, is enabled when needed
+//  T1IE_bit := 1;            // Enable the Interrupt for Rx
 
   for i := 0 to MAX_TX_BUFFER - 1 do
     for j := 0 to MAX_BUFFER_LEN - 1 do
@@ -346,9 +332,6 @@ begin
           i := i + 2;
         end;
         
-        if CANBuffer.State and CBS_EXTENDED = nil then
-          Inc(ShortCan);
-          
       {  for i := 0 to MAX_BUFFER_LEN - 1 do
           RxBufferTail^[i] := #0;  }
           

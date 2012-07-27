@@ -203,7 +203,7 @@ begin
   
   while (TRUE) do
   begin
-  //  delay_us(1000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
+    delay_us(2000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
     //  PrintBufferPools(j);
     
     if C1IE_bit = 0 then
