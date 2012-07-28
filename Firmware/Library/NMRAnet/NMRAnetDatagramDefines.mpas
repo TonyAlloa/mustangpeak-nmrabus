@@ -26,7 +26,7 @@ type
   PDatagramErrorCode = ^TDatagramErrorCode;
 
 const
-  DATAGRAM_RESULT_REJECTED                                : TDatagramErrorCode = ($00, $00);
+  DATAGRAM_RESULT_OKAY                                    : TDatagramErrorCode = ($00, $00);
   // Errors that will cause sender to not retry
   DATAGRAM_RESULT_REJECTED_PERMANENT_ERROR                : TDatagramErrorCode = ($10, $00);
   DATAGRAM_RESULT_REJECTED_INFORMATION_LOGGED             : TDatagramErrorCode = ($10, $10);
@@ -82,7 +82,6 @@ type
   PDatagram = ^TDatagram;
   
   TDatagramError = record
-    MTI: Byte;
     SubType: TDatagramErrorCode;
     Count: Byte;                                                                // Number of Bytes to move into the CAN Databyte (MTI + SubType if needed)
   end;

@@ -28,13 +28,6 @@ procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
 procedure NMRAnetDatagrams_100ms_TimeTick(Node: PNMRAnetNode);
 procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
-procedure NMRAnetDatagrams_SendDatagramFrame(Node: PNMRAnetNode; Buffer: PCANBuffer; Alias: Word; MessageLength: DWord; var DatagramIndex: Byte; DataByteCount: Byte; DataBytes: PCAN_DataBytes);
-
-// defined in the dsPICxx_CAN_Interrupt.mpas file
-  procedure StartCANMessageEngine; external;
-  procedure EnableCANInterrupt(Enable: Boolean); external;
-// defined in the NMRAnetStateMachine.mpas file
-  function TryTransmitNMRABusLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; DestinationAlias: Word; DataCount: Byte; DataBytes: PCAN_DataBytes): Boolean; external;
 
 implementation
 
@@ -55,7 +48,6 @@ begin
 
     Buffer^.iByteCount := 0;
     Buffer^.iWatchdog := 0;
-    Buffer^.ErrorCode.MTI := MTI_EXTENSION_DATAGRAM_RECIEVED_OK;                // Assume Success
     Buffer^.ErrorCode.Count := 1;                                               // Assume only the MTI
     Buffer^.ErrorCode.SubType[0] := 0;
     Buffer^.ErrorCode.SubType[1] := 0;
@@ -140,42 +132,6 @@ begin
         Inc( DatagramBuffer^.iWatchdog)                                          // Increase the Watchdog counter
     end
   end; }
-end;
-
-// *****************************************************************************
-//
-// procedure NMRAnetDatagrams_SendDatagramFrame;
-//
-//  Parameters:
-//
-//  Returns:
-//
-//  Description:
-//
-// *****************************************************************************
-procedure NMRAnetDatagrams_SendDatagramFrame(Node: PNMRAnetNode; Buffer: PCANBuffer; Alias: Word; MessageLength: DWord; var DatagramIndex: Byte; DataByteCount: Byte; DataBytes: PCAN_DataBytes);
-begin
-  if DatagramIndex = 0 then
-  begin                                                                         // First Frame of the Datagram....
-    if MessageLength < 9 then                                                   // Single Frame Datagram
-    begin
-      if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_ONLY_FRAME, Alias, DataByteCount, DataBytes) then
-        DatagramIndex := DatagramIndex + DataByteCount;                         // Now wait for ACK
-    end else
-    begin
-      if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME_START, Alias, DataByteCount, DataBytes) then
-        DatagramIndex := DatagramIndex + DataByteCount;
-    end
-  end else
-  if DatagramIndex + DataByteCount > MessageLength - 1 then
-  begin
-    if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME_END, Alias, DataByteCount, DataBytes) then
-      DatagramIndex := DatagramIndex + DataByteCount;                           // Now wait for ACK
-  end else
-  begin
-    if TryTransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_FRAME, Alias, DataByteCount, DataBytes) then
-      DatagramIndex := DatagramIndex + DataByteCount;
-  end
 end;
 
 end.

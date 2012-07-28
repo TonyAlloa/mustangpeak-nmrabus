@@ -67,72 +67,53 @@ const
   MTI_AME                            = $00702000;                                // Alias Mapping Enquiry
   MTI_AMR                            = $00703000;                                // Alias Map Reset Frame
 
-  MTI_UNADDRESSED                   = $08000000;
-  MTI_RESERVED                      = $09000000;
-  MTI_DATAGRAM_ONLY_FRAME           = $0A000000;
-  MTI_DATAGRAM_FRAME_START          = $0B000000;
-  MTI_DATAGRAM_FRAME                = $0C000000;
-  MTI_DATAGRAM_FRAME_END            = $0D000000;                                // Sub type SMTI_DATAGRAM_END
-  MTI_ADDRESSED                     = $0E000000;
-  MTI_STREAM_DATA_SEND              = $0F000000;
-  MTI_TYPE_MASK                     = $0F000000;                                // The lower 4 bits of the upper Byte that decodes the NMRAnet Format code of the message, per the spec ignore the first bit of the upper nibble
+  MTI_MASK                              = $0FFFF000;
+  MTI_FRAME_TYPE_MASK                   = $0F000000;
+  MTI_FRAME_TYPE_GENERAL                = $09000000;
+  MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME    = $0A000000;
+  MTI_FRAME_TYPE_DATAGRAM_FRAME_START   = $0B000000;
+  MTI_FRAME_TYPE_DATAGRAM_FRAME         = $0C000000;
+  MTI_FRAME_TYPE_DATAGRAM_FRAME_END     = $0D000000;
+  MTI_FRAME_TYPE_STREAM_SEND            = $0F000000;
 
-  // Base MTIs that reside in the CAN 8 Byte Data Fields for Addressed CAN Headers
-  MTI_EXTENSION_VERIFY_NODE_ID_NUMBER_DEST       = $0A;                         // Sub-Type (in first Databyte) for a MTI with a destination in the header
-  MTI_EXTENSION_OPTIONAL_INTERACTION_REJECTED    = $0C;
-  MTI_EXTENSION_TERMINATE_DUE_TO_ERROR           = $0D;
-  // Protocol Support MTIs
-  MTI_EXTENSION_PROTOCOL_SUPPORT_QUERY           = $2E;
-  MTI_EXTENSION_PROTOCOL_SUPPORT_REPLY           = $2F;                         // Datagram DataBytes: 2F xx vv vv vv vv vv vv
-  // Event Exchange MTIs
-  MTI_EXTENSION_IDENTIFY_EVENTS                  = $2B;
-  // Abbreviated Configuration Decription Information
-  MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REQUEST = $52;                         // Abbreviated Configuration Decription Information Request, make sure set PIP value if supported
-  MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY   = $53;                         // Abbreviated Configuration Decription Information Reply
-  // Datagram MTIs
-  MTI_EXTENSION_DATAGRAM_RECIEVED_OK             = $4C;
-  MTI_EXTENSION_DATAGRAM_REJECTED                = $4D;
-  // Stream MTIs
-  MTI_EXTENSION_STREAM_INITIATE_REQUEST          = $4E;
-  MTI_EXTENSION_STREAM_INITIATE_REPLY            = $4F;
-  MTI_EXTENSION_STREAMDATA_PROCEED               = $6A;
-  MTI_EXTENSION_STREAMDATA_COMPLETE              = $6B;
-
-  MTI_UNADDRESSED_MASK               = $0FFFF000;
+  MTI_ADDRESSED_MASK                 = $00008000;
+  MTI_SIMPLE_PROTOCOL_MASK           = $00010000;
+  MTI_EVENT_PRESENT_MASK             = $00002000;
   
-  MTI_INITIALIZATION_COMPLETE        = $08087000;
-  MTI_VERIFY_NODE_ID_NUMBER_DEST     = $0E000000;
-  MTI_VERIFY_NODE_ID_NUMBER          = $088A7000;
-  MTI_VERIFIED_NODE_ID_NUMBER        = $088B7000;
-  MTI_OPTIONAL_INTERACTION_REJECTED  = $0E000000;
-  MTI_TERMINATE_DUE_TO_ERROR         = $0E000000;
+  MTI_INITIALIZATION_COMPLETE        = $09100000;                                // Databytes = Full Node ID
+  MTI_VERIFY_NODE_ID_NUMBER_DEST     = $09488000;                                // Databytes = Destination Alias
+  MTI_VERIFY_NODE_ID_NUMBER          = $09490000;                                //
+  MTI_VERIFIED_NODE_ID_NUMBER        = $09170000;                                // {Optional Full Node ID}
+  MTI_OPTIONAL_INTERACTION_REJECTED  = $09068000;                                // Databytes = Destination Alias, Error, {Optional Info}
+  MTI_TERMINATE_DUE_TO_ERROR         = $090A8000;                                // Databytes = Destination Alias, Error, {Optional Info}
   
-  MTI_PROTOCOL_SUPPORT_INQUIRY       = $0E000000;
-  MTI_PROTOCOL_SUPPORT_REPLY         = $0E000000;
+  MTI_PROTOCOL_SUPPORT_INQUIRY       = $09828000;                                // Databytes = Destination Alias
+  MTI_PROTOCOL_SUPPORT_REPLY         = $09668000;                                // Databytes = Destination Alias, Protocol Flags
   
-  MTI_CONSUMER_IDENTIFY              = $08A4F000;                                // Databytes = EventID
-  MTI_CONSUMER_IDENTIFY_RANGE        = $0825F000;                                // Databytes = EventID
-  MTI_CONSUMER_IDENTIFIED_UNKNOWN    = $0826B000;                                // Databytes = EventID
-  MTI_CONSUMER_IDENTIFIED_SET        = $08268000;                                // Databytes = EventID
-  MTI_CONSUMER_IDENTIFIED_CLEAR      = $08269000;                                // Databytes = EventID
-  MTI_CONSUMER_IDENTIFIED_RESERVED   = $0826A000;                                // Databytes = EventID
-  MTI_PRODUCER_IDENDIFY              = $08A8F000;                                // Databytes = EventID
-  MTI_PRODUCER_IDENTIFY_RANGE        = $0829F000;                                // Databytes = EventID
-  MTI_PRODUCER_IDENTIFIED_UNKNOWN    = $082AB000;                                // Databytes = EventID
-  MTI_PRODUCER_IDENTIFIED_SET        = $082A8000;                                // Databytes = EventID
-  MTI_PRODUCER_IDENTIFIED_CLEAR      = $082A9000;                                // Databytes = EventID
-  MTI_PRODUCER_IDENTIFIED_RESERVED   = $082AA000;                                // Databytes = EventID
-  MTI_EVENTS_IDENTIFY_DEST           = $08000000;                                // Databytes = 2B (see MTI_IDENTIFY_EVENTS)
-  MTI_EVENTS_IDENTIFY                = $08AB7000;
-  MTI_EVENT_LEARN                    = $08ACF000;                                // Databytes = EventID
-  MTI_PC_EVENT_REPORT                = $08ADF000;                                // Infamouse PCER
+  MTI_CONSUMER_IDENTIFY              = $098F4000;                                // Databytes = EventID
+  MTI_CONSUMER_IDENTIFY_RANGE        = $094A4000;                                // Databytes = EventID with Mask
+  MTI_CONSUMER_IDENTIFIED_UNKNOWN    = $094C7000;                                // Databytes = EventID
+  MTI_CONSUMER_IDENTIFIED_SET        = $094C4000;                                // Databytes = EventID
+  MTI_CONSUMER_IDENTIFIED_CLEAR      = $094C5000;                                // Databytes = EventID
+  MTI_CONSUMER_IDENTIFIED_RESERVED   = $094C6000;                                // Databytes = EventID
+  MTI_PRODUCER_IDENDIFY              = $09914000;                                // Databytes = EventID
+  MTI_PRODUCER_IDENTIFY_RANGE        = $09524000;                                // Databytes = EventID with Mask
+  MTI_PRODUCER_IDENTIFIED_UNKNOWN    = $09547000;                                // Databytes = EventID
+  MTI_PRODUCER_IDENTIFIED_SET        = $09544000;                                // Databytes = EventID
+  MTI_PRODUCER_IDENTIFIED_CLEAR      = $09545000;                                // Databytes = EventID
+  MTI_PRODUCER_IDENTIFIED_RESERVED   = $09546000;                                // Databytes = EventID
+  MTI_EVENTS_IDENTIFY_DEST           = $09968000;                                // Databytes = Destination Alias
+  MTI_EVENTS_IDENTIFY                = $09970000;                                //
+  MTI_EVENT_LEARN                    = $09594000;                                // Databytes = EventID
+  MTI_PC_EVENT_REPORT                = $095B4000;                                // Databytes = EventID  (Infamouse PCER)
   
-  MTI_SIMPLE_NODE_IDENTIFY_INFO      = $0E000000;                               // MTI for ACDI
+  MTI_SIMPLE_NODE_INFO_REQUEST       = $09DE8000;                                // Databytes = Destination Alias
+  MTI_SIMPLE_NODE_INFO_REPLY         = $09A08000;                                // Databytes = Destination Alias, ACDI Data
   
-  MTI_DATAGRAM_REPLY                 = $0E000000;                                // MTI for Datagram Reply
+  MTI_DATAGRAM_OK_REPLY              = $09A28000;                                // Databytes = Destination Alias
+  MTI_DATAGRAM_REJECTED_REPLY        = $09A48000;                                // Databytes = Destination Alias, Error Code
   
-  MASK_DEST_ALIAS                   = $00FFF000;                                // Masks out just the Destination Alias Address
-  MASK_SOURCE_ALIAS                 = $00000FFF;                                // Masks out just the Source Alias Address
+  MASK_SOURCE_ALIAS                  = $00000FFF;                                // Masks out just the Source Alias Address
 
 
   LEN_PIV_PROTOCOL = 6;                                                         // 6 Bytes long
