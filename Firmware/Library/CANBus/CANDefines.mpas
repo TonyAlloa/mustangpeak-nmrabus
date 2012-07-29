@@ -22,8 +22,8 @@ const
   LF = #13+#10;
   
 const
-  TX_CAN_BUFFER_LEN = 1;
-  TX_NMRANET_BUFFER_LEN = 1;
+  TX_CAN_BUFFER_LEN = 2;
+  TX_NMRANET_BUFFER_LEN = 2;
   
 const
   CAN_DIRECTION_READ = 1;

@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\Library\NMRAnet\NMRAnetStateMachine.mpas
+Value=NMRAnetAppDefines.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -36,15 +36,16 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=8
+Count=9
 File0=NMRABus_AccBooster.mpas
 File1=MCU_Setup_dsPIC4013.mpas
-File2=NMRAnetAppDefines.mpas
-File3=..\Library\NMRAnet\NMRAnetNodeDefines.mpas
-File4=..\Library\NMRAnet\NMRAnetBufferPools.mpas
-File5=..\Library\NMRAnet\NMRAnetStateMachine.mpas
-File6=..\Command Station\NMRABusCommandStation.mpas
-File7=..\Library\NMRAnet\NMRAnetMemoryConfigurationDefines.mpas
+File2=..\Library\NMRAnet\NMRAnetBufferPools.mpas
+File3=..\Library\NMRAnet\NMRAnetStateMachine.mpas
+File4=..\Library\NMRAnet\NMRAnetMemoryConfigurationDefines.mpas
+File5=..\Library\NMRAnet\NMRAnetDefines.mpas
+File6=..\Library\NMRAnet\NMRAnetUtilities.mpas
+File7=..\Library\CANBus\CANDefines.mpas
+File8=NMRAnetAppDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]

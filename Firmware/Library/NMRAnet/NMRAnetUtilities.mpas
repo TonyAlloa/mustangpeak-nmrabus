@@ -121,9 +121,6 @@ begin
   if MTI = MTI_CID1 then Packet^.ID := Packet^.ID or ((NodeBuffer^.Node.ID[1] shl 12) and $00FFF000) else
   if MTI = MTI_CID2 then Packet^.ID := Packet^.ID or (NodeBuffer^.Node.ID[0] and $00FFF000) else
   if MTI = MTI_CID3 then Packet^.ID := Packet^.ID or ((NodeBuffer^.Node.ID[0] shl 12) and $00FFF000);
-
-  if (MTI = MTI_AMD) or (MTI = MTI_AME) or (MTI = MTI_AMR) then
-    NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer, Packet);
 end;
 
 // *****************************************************************************
@@ -156,9 +153,6 @@ begin
 
   Packet^.State := Packet^.State or CBS_EXTENDED;
   Packet^.ID := $10000000 or MTI or NodeBuffer^.Node.AliasID;
-
- if (MTI = MTI_INITIALIZATION_COMPLETE) or (MTI = MTI_VERIFIED_NODE_ID_NUMBER) then
-    NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer, Packet);
 end;
 
 // *****************************************************************************
@@ -180,17 +174,8 @@ begin
   Packet^.State := Packet^.State or CBS_EXTENDED;
   Packet^.ID := $10000000 or MTI or NodeBuffer^.Node.AliasID;
 
-// TEMPORARY TEST
- // if (VariableField = MTI_SIMPLE_NODE_IDENTIFY_INFO) then
- //   if DataBytes^[0] = MTI_EXTENSION_SIMPLENODE_IDENTIFY_INFO_REPLY then
-  //    Packet^.ID := Packet^.ID and not $10000000;
-
-
   if DestinationAlias <> 0 then
     Packet^.ID := Packet^.ID or DWORD(DestinationAlias shl 12);
-
- if (MTI = MTI_INITIALIZATION_COMPLETE) or (MTI = MTI_VERIFIED_NODE_ID_NUMBER) then
-    NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer, Packet);
 end;
 
 

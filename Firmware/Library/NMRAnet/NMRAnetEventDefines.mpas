@@ -41,6 +41,7 @@ const
   EVENT_LC_STATIC_NODE: TEventID      = ($01, $10, $00, $00, $00, $00, $01, $02);
   EVENT_LC_MOBILE_NODE: TEventID      = ($01, $10, $00, $00, $00, $00, $01, $03);
   EVENT_LC_CONTROLLER_NODE: TEventID  = ($01, $10, $00, $00, $00, $00, $01, $04);
+  EVENT_LC_ACCESSORY_NODE: TEventID   = ($01, $10, $00, $00, $00, $00, $01, $05);
 
   
 implementation

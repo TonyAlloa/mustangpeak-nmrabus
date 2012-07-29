@@ -8,6 +8,10 @@
     <softwareVersion>0.2</softwareVersion>
     <map>
       <relation>
+        <property>Description</property>
+        <value>Mustangpeak Command Station Node</value>
+      </relation>
+      <relation>
         <property>Status</property>
         <value>Prototype</value>
       </relation>

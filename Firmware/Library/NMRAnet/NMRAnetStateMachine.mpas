@@ -91,13 +91,13 @@ function NMRABusBufferAvailable: Boolean; forward;
 // *****************************************************************************
 function NMRAnetStateMachine_TrySendAbbreviatedCDI(Node: PNMRAnetNode; DestinationAliasID: Word): Boolean;
 var
-  Buffer: TCANBUffer;
+  CANBuffer: TCANBUffer;
   DataBytes: TCAN_DataBytes;
 begin
   Result := False;
   if NMRABusBufferAvailable then
   begin
-    TransmitNMRABusLayerMsg(Node, @Buffer, MTI_SIMPLE_NODE_INFO_REQUEST, DestinationAliasID, 0, @DataBytes, False);
+    TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_SIMPLE_NODE_INFO_REQUEST, DestinationAliasID, 0, @DataBytes, False);
     Result := True
   end;
 end;
@@ -112,12 +112,12 @@ end;
 // *****************************************************************************
 function NMRAnetStateMachine_TrySendIdentifyProducer(Node: PNMRAnetNode; EventID: PEventID): Boolean;
 var
-  Buffer: TCANBUffer;
+  CANBuffer: TCANBUffer;
 begin
   Result := False;
   if NMRABusBufferAvailable then
   begin
-    TransmitNMRABusLayerMsg(Node, @Buffer, MTI_PRODUCER_IDENDIFY, 0, EVENT_ARRAY_LENGTH, PCAN_DataBytes( EventID), False);
+    TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_PRODUCER_IDENDIFY, 0, EVENT_ARRAY_LENGTH, PCAN_DataBytes( EventID), False);
     Result := True
   end
 end;
@@ -132,12 +132,12 @@ end;
 // *****************************************************************************
 function NMRAnetStateMachine_TrySendIdentifyConsumer(Node: PNMRAnetNode; EventID: PEventID): Boolean;
 var
-  Buffer: TCANBUffer;
+  CANBuffer: TCANBUffer;
 begin
   Result := False;
   if NMRABusBufferAvailable then
   begin
-    TransmitNMRABusLayerMsg(Node, @Buffer, MTI_CONSUMER_IDENTIFY, 0, EVENT_ARRAY_LENGTH,  PCAN_DataBytes( EventID), False);
+    TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_CONSUMER_IDENTIFY, 0, EVENT_ARRAY_LENGTH,  PCAN_DataBytes( EventID), False);
     Result := True
   end
 end;
@@ -152,12 +152,12 @@ end;
 // *****************************************************************************
 function NMRAnetStateMachine_TrySendIdentifyEvents(Node: PNMRAnetNode): Boolean;
 var
-  Buffer: TCANBUffer;
+  CANBuffer: TCANBUffer;
 begin
   Result := False;
   if NMRABusBufferAvailable then
   begin
-     TransmitNMRABusLayerMsg(Node, @Buffer, MTI_EVENTS_IDENTIFY, 0, 0, nil, False);
+     TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_EVENTS_IDENTIFY, 0, 0, nil, False);
      Result := True
   end
 end;
@@ -172,12 +172,13 @@ end;
 // *****************************************************************************
 function NMRAnetStateMachine_TrySendAliasMapEnquiry(Node: PNMRAnetNode): Boolean;
 var
-  Buffer: TCANBUffer;
+  CANBuffer: TCANBUffer;
 begin
   Result := False;
   if NMRABusBufferAvailable then
   begin
-    TransmitNMRABusLayerMsg(Node, @Buffer, MTI_AME, 0, 0, nil, False);
+    NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @CANBuffer);
+    TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_AME, 0, 6, @CANBuffer.DataBytes, False);
     Result := True
   end
 end;
@@ -193,16 +194,16 @@ end;
 function NMRAnetStateMachine_TrySendVerifyNodeID(Node: PNMRAnetNode; DestinationAliasID: Word): Boolean;
 var
   DataBytes: TCAN_DataBytes;
-  Buffer: TCANBUffer;
+  CANBuffer: TCANBUffer;
 begin
   Result := False;
   if NMRABusBufferAvailable then
   begin
     if DestinationAliasID <> 0 then
     begin
-      TransmitNMRABusLayerMsg(Node, @Buffer, MTI_VERIFY_NODE_ID_NUMBER_DEST, DestinationAliasID, 0, @DataBytes, False);
+      TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_VERIFY_NODE_ID_NUMBER_DEST, DestinationAliasID, 0, @DataBytes, False);
     end else
-      TransmitNMRABusLayerMsg(Node, @Buffer, MTI_VERIFY_NODE_ID_NUMBER, 0, 0, nil, False);
+      TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_VERIFY_NODE_ID_NUMBER, 0, 0, nil, False);
     Result := True
   end
 end;
@@ -449,25 +450,31 @@ begin
 end;
 
 // *****************************************************************************
-//  procedure TryTransmitCANLayerMsg
+//  procedure TransmitCANLayerMsg
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-function TryTransmitCANLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord): Boolean;
+procedure TransmitCANLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord);
 begin
-  Result := False;
-  if not CANStorage_ListFull(@TX_CANBufferList) then
-  begin
-    NMRAnetUtilities_CreateCANControlFramePacket(Node, Buffer, VariableField);
-    if CANStorage_AddToList(@TX_CANBufferList, Buffer) then
-    begin
-      StartCANMessageEngine();
-      Result := True
-    end
-  end ;
+  NMRAnetUtilities_CreateCANControlFramePacket(Node, Buffer, VariableField);
+  CANStorage_AddToList(@TX_CANBufferList, Buffer);
+   StartCANMessageEngine();
+end;
+
+// *****************************************************************************
+//  procedure CANBusBufferAvailable
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function CANBusBufferAvailable: Boolean;
+begin
+  Result := not CANStorage_ListFull(@TX_CANBufferList)
 end;
 
 // *****************************************************************************
@@ -582,38 +589,45 @@ begin
 
   if Node^.MsgFlags <> 0 then
   begin
-    if Node^.MsgFlags and CRITICAL_MSG_MASK <> 0 then                            // Subdivide to Critical vs. Noncritical messages
+    if Node^.MsgFlags and CRITICAL_MSG_MASK <> 0 then                           // Subdivide to Critical vs. Noncritical messages
     begin
-      LockCANInterrupt;                                                           // Don't let the interrupt change things while we are working on them.....
+      LockCANInterrupt;                                                         // Don't let the interrupt change things while we are working on them.....
       // Critial Fault Messages
-      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_NODE_ID, True) then          // Jump Statemachine here
+      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_NODE_ID, True) then        // Jump Statemachine here
         Node^.iStateMachine := STATE_NMRABUS_DUPLICATE_FULL_ID
       else
-      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then            // Jump Statemachine here
+      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then          // Jump Statemachine here
         Node^.iStateMachine := STATE_NMRABUS_INHIBITED
       else
-      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS_RID, False) then
+      if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS_RID, False) then     // Tell the node that is our Alias
       begin
-         if TryTransmitCANLayerMsg(Node, CANBuffer, MTI_RID) then
-           NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_ALIAS_RID);
+        if CANBusBufferAvailable then
+        begin
+         TransmitCANLayerMsg(Node, CANBuffer, MTI_RID);
+         NMRAnetNode_ClearMsgFlag(Node, MF_DUPLICATE_ALIAS_RID);
+        end
       end;
       UnLockCANInterrupt;
-      Exit;                                                                     // Bad things happening, exit
+      Exit;                                                                     // Important things happened and were handled, exit
     end;
 
     // Non Critical Fault Messages that require a response
     LockCANInterrupt;                                                           // Don't let the interrupt change things while we are working on them.....
     if NMRAnetNode_TestMsgFlags(Node, MF_ALIAS_MAP_ENQUIRY, False) then
     begin
-       if TryTransmitCANLayerMsg(Node, CANBuffer, MTI_AMD) then                   // DataBytes get loaded automatically
-         NMRAnetNode_ClearMsgFlag(Node, MF_ALIAS_MAP_ENQUIRY);
+      if CANBusBufferAvailable then
+      begin
+        NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, CANBuffer);
+        TransmitCANLayerMsg(Node, CANBuffer, MTI_AMD);
+        NMRAnetNode_ClearMsgFlag(Node, MF_ALIAS_MAP_ENQUIRY);
+      end
     end else
     if NMRAnetNode_TestMsgFlags(Node, MF_VERIFY_NODE_ID, False) then
     begin
       if NMRABusBufferAvailable then
       begin
         NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, CANBuffer);
-        TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_VERIFIED_NODE_ID_NUMBER, 0, 6, @DataBytes, False);
+        TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_VERIFIED_NODE_ID_NUMBER, 0, 6, @CANBuffer^.DataBytes, False);
         NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
       end;
     end else
@@ -686,16 +700,16 @@ begin
                                                 while (BaseBuffer^.StateMachine <> STATE_ACDI_DONE) and (i < 6) do
                                                 begin
                                                   case BaseBuffer^.StateMachine of
-                                                    STATE_ACDI_MFG_VERSION  : begin
+                                                    STATE_ACDI_MFG_VERSION  : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                   DataBytes[i] := ACDI_MFG_VERSION_VNODE
-                                                                                else
+                                                                                else {$ENDIF}
                                                                                   DataBytes[i] := ACDI_MFG_VERSION;
                                                                                 Inc(i);
                                                                                 BaseBuffer^.Tag := 0;
                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_MFG_INFO;
                                                                               end;
-                                                    STATE_ACDI_MFG_INFO    :  begin
+                                                    STATE_ACDI_MFG_INFO    :  begin  {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                 begin
                                                                                   if BaseBuffer^.Tag < MAX_ACDI_MFG_ARRAY_VNODE then             //     STILL SEEMS TO BE ISSUE HERE>>>>
@@ -703,9 +717,9 @@ begin
                                                                                     DataBytes[i] := ACDI_MFG_STRINGS_VNODE[BaseBuffer^.Tag];
                                                                                     Inc(BaseBuffer^.Tag);
                                                                                     Inc(i);
-                                                                                  end else
+  end else                                                                        else if
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_USER_VERSION;
-                                                                                end else
+                                                                                end else {$ENDIF}
                                                                                 begin
                                                                                   if BaseBuffer^.Tag < MAX_ACDI_MFG_ARRAY then
                                                                                   begin
@@ -716,16 +730,16 @@ begin
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_USER_VERSION;
                                                                                 end;
                                                                               end;
-                                                    STATE_ACDI_USER_VERSION : begin
+                                                    STATE_ACDI_USER_VERSION : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                   DataBytes[i] := ACDI_USER_VERSION_VNODE
-                                                                                else
+                                                                                else {$ENDIF}
                                                                                   DataBytes[i] := ACDI_USER_VERSION;
                                                                                 Inc(i);
                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_USER_NAME;
                                                                                 BaseBuffer^.Tag := 0;
                                                                               end;
-                                                    STATE_ACDI_USER_NAME    : begin
+                                                    STATE_ACDI_USER_NAME    : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                 begin
                                                                                   if BaseBuffer^.Tag < MAX_USER_NAME then
@@ -737,7 +751,7 @@ begin
                                                                                       BaseBuffer^.StateMachine := STATE_ACDI_START_DESC
                                                                                   end else
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
-                                                                                end else
+                                                                                end else {$ENDIF}
                                                                                 begin
                                                                                   if BaseBuffer^.Tag < MAX_USER_NAME then
                                                                                   begin
@@ -754,7 +768,7 @@ begin
                                                                                 BaseBuffer^.Tag := MAX_USER_NAME;
                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_USER_DESC;
                                                                               end;
-                                                    STATE_ACDI_USER_DESC    : begin
+                                                    STATE_ACDI_USER_DESC    : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                 begin
                                                                                   if BaseBuffer^.Tag < MAX_CONFIG_DATA_VNODE then
@@ -766,7 +780,7 @@ begin
                                                                                       BaseBuffer^.StateMachine := STATE_ACDI_DONE;
                                                                                   end else
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_DONE;
-                                                                                end else
+                                                                                end else {$ENDIF}
                                                                                 begin
                                                                                   if BaseBuffer^.Tag < MAX_CONFIG_DATA then
                                                                                   begin
@@ -886,9 +900,10 @@ begin
                                                                                                                                            // I am not supporting the ability to return anything but a $0 for the lower address so we only deal with offsets from zero in these calls
                                                                                                                                           case DatagramBuffer^.DataBytes[2] of
                                                                                                                                             MSI_CDI       : begin
+                                                                                                                                                              {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                                               if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                                                 MemorySpaceOffset := MAX_CDI_ARRAY_VNODE
-                                                                                                                                                              else
+                                                                                                                                                              else {$ENDIF}
                                                                                                                                                                 MemorySpaceOffset := MAX_CDI_ARRAY;
                                                                                                                                                             end;
                                                                                                                                             MSI_ALL       : MemorySpaceOffset := ALL_MAP.HighMem;
@@ -941,28 +956,30 @@ begin
 
                                                                                                           case MemorySpace of
                                                                                                             MSI_CDI         : begin
+                                                                                                                                {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                   MemorySpaceMax := MAX_CDI_ARRAY_VNODE
-                                                                                                                                else
+                                                                                                                                else {$ENDIF}
                                                                                                                                   MemorySpaceMax := MAX_CDI_ARRAY
                                                                                                                               end;
                                                                                                             MSI_ALL         : MemorySpaceMax := ALL_MAP.HighMem;
                                                                                                             MSI_CONFIG      : begin
+                                                                                                                                {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                   MemorySpaceMax := MAX_CONFIG_DATA_VNODE
-                                                                                                                                else
+                                                                                                                                else {$ENDIF}
                                                                                                                                   MemorySpaceMax := MAX_CONFIG_DATA
                                                                                                                               end;
-                                                                                                            MSI_ACDI_MFG    : begin
+                                                                                                            MSI_ACDI_MFG    : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                   MemorySpaceMax := MAX_ACDI_MFG_ARRAY_VNODE + 1 // for the Version ID Byte
-                                                                                                                                else
+                                                                                                                                else {$ENDIF}
                                                                                                                                   MemorySpaceMax := MAX_ACDI_MFG_ARRAY + 1 // for the Version ID Byte
                                                                                                                               end;
-                                                                                                            MSI_ACDI_USER   : begin
+                                                                                                            MSI_ACDI_USER   : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                   MemorySpaceMax := MAX_CONFIG_DATA_VNODE + 1 // for the Version ID Byte
-                                                                                                                                else
+                                                                                                                                else {$ENDIF}
                                                                                                                                   MemorySpaceMax := MAX_CONFIG_DATA + 1 // for the Version ID Byte
                                                                                                                               end
                                                                                                           else
@@ -989,10 +1006,7 @@ begin
                                                                                                           ShortToStr(MemorySpaceCount, s1);
                                                                                                           UART1_Write_Text('MemorySpaceCount= '+s1+LF);
                                                                                                           {$ENDIF}
-                                                                                                          
-                                                                                                          if (MemorySpaceCount > 16) or (MemorySpaceCount < 0) then
-                                                                                                            UART1_Write_Text('oops');
-                                                                                                            
+
                                                                                                           // Now we have all we need:
                                                                                                           //    MemorySpaceOffset = Offset from start of Memory Space use as the starting position for copying/writing memory
                                                                                                           //    MemorySpaceCount = Number of bytes to copy, corrected for possible overrunning the end of valid Memory Space
@@ -1008,12 +1022,12 @@ begin
                                                                                                             DatagramBuffer^.DataBytes[1] := MCP_READ_DATAGRAM_REPLY or DatagramBuffer^.DataBytes[1];
                                                                                                             DatagramOffset := 6;
                                                                                                             case MemorySpace of
-                                                                                                              MSI_CDI       : begin
+                                                                                                              MSI_CDI       : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                 begin
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
                                                                                                                                     DatagramBuffer^.DataBytes[i+DatagramOffset] := CDI_ARRAY_VNODE[i+MemorySpaceOffset]
-                                                                                                                                end else
+                                                                                                                                end else {$ENDIF}
                                                                                                                                 begin
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
                                                                                                                                     DatagramBuffer^.DataBytes[i+DatagramOffset] := CDI_ARRAY[i+MemorySpaceOffset]
@@ -1024,18 +1038,18 @@ begin
                                                                                                                                 for i := 0 to MemorySpaceCount - 1 do
                                                                                                                                   DatagramBuffer^.DataBytes[i+DatagramOffset] := ByteArray^[i+MemorySpaceOffset]
                                                                                                                               end;
-                                                                                                              MSI_CONFIG    : begin
+                                                                                                              MSI_CONFIG    : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                 begin
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
                                                                                                                                     DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA_VNODE[i+MemorySpaceOffset]
-                                                                                                                                end else
+                                                                                                                                end else {$ENDIF}
                                                                                                                                 begin
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
                                                                                                                                     DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA[i+MemorySpaceOffset]
                                                                                                                                 end
                                                                                                                               end;
-                                                                                                              MSI_ACDI_MFG  : begin
+                                                                                                              MSI_ACDI_MFG  : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                 begin
                                                                                                                                   if MemorySpaceOffset = 0 then
@@ -1047,7 +1061,7 @@ begin
                                                                                                                                   end;
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
                                                                                                                                     DatagramBuffer^.DataBytes[i+DatagramOffset] := ACDI_MFG_STRINGS_VNODE[i+MemorySpaceOffset-1]
-                                                                                                                                end else
+                                                                                                                                end else {$ENDIF}
                                                                                                                                 begin
                                                                                                                                   if MemorySpaceOffset = 0 then
                                                                                                                                   begin
@@ -1060,7 +1074,7 @@ begin
                                                                                                                                     DatagramBuffer^.DataBytes[i+DatagramOffset] := ACDI_MFG_STRINGS[i+MemorySpaceOffset-1]
                                                                                                                                 end;
                                                                                                                               end;
-                                                                                                              MSI_ACDI_USER : begin
+                                                                                                              MSI_ACDI_USER : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                 begin
                                                                                                                                   if MemorySpaceOffset = 0 then
@@ -1072,7 +1086,7 @@ begin
                                                                                                                                   end;
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
                                                                                                                                     DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA_VNODE[i+MemorySpaceOffset-1] // -1 is for the Version ID offset
-                                                                                                                                end else
+                                                                                                                                end else {$ENDIF}
                                                                                                                                 begin
                                                                                                                                   if MemorySpaceOffset = 0 then
                                                                                                                                   begin
@@ -1215,7 +1229,7 @@ end;
 
 procedure NMRAnetStateMachine_Process(Node: PNMRAnetNode);
 var
-  Buffer: TCANBuffer;     
+  CANBuffer: TCANBuffer;
   VariableField: DWord;
 begin
   case Node^.iStateMachine of
@@ -1247,8 +1261,11 @@ begin
           2 : VariableField := MTI_CID2;
           3 : VariableField := MTI_CID3;
         end;
-        if TryTransmitCANLayerMsg(Node, @Buffer, VariableField) then
+        if CANBusBufferAvailable then
+        begin
+          TransmitCANLayerMsg(Node, @CANBuffer, VariableField);
           Node^.iStateMachine := STATE_NMRABUS_NEXT_CDI;
+        end
       end;
     STATE_NMRABUS_NEXT_CDI :
       begin   {$IFDEF TRACE_NODE_STATEMACHINE} UART1_Write_Text('STATE_NMRABUS_NEXT_CDI'+LF); {$ENDIF}
@@ -1275,8 +1292,11 @@ begin
         if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then    
           Node^.iStateMachine := STATE_RANDOM_NUMBER_GENERATOR
         else begin
-          if TryTransmitCANLayerMsg(Node, @Buffer, MTI_RID) then
-            Node^.iStateMachine := STATE_NMRABUS_SEND_LOGIN_AMD;
+          if CANBusBufferAvailable then
+          begin
+            TransmitCANLayerMsg(Node, @CANBuffer, MTI_RID);
+           Node^.iStateMachine := STATE_NMRABUS_SEND_LOGIN_AMD;
+          end
         end
       end;
     STATE_NMRABUS_SEND_LOGIN_AMD :
@@ -1284,8 +1304,9 @@ begin
         if NMRAnetNode_TestMsgFlags(Node, MF_DUPLICATE_ALIAS, True) then
           Node^.iStateMachine := STATE_RANDOM_NUMBER_GENERATOR
         else begin
-          if TryTransmitCANLayerMsg(Node, @Buffer, MTI_AMD) then
+          if CANBusBufferAvailable then
           begin
+            TransmitCANLayerMsg(Node, @CANBuffer, MTI_AMD);
             NMRAnetNode_SetStateFlag(Node, NS_PERMITTED);
             Node^.iStateMachine := STATE_NMRABUS_INITIALIZED
           end
@@ -1298,7 +1319,8 @@ begin
         else begin
           if NMRABusBufferAvailable then
           begin
-            TransmitNMRABusLayerMsg(Node, @Buffer, MTI_INITIALIZATION_COMPLETE, 0, 0, nil, False);
+            NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @CANBuffer);
+            TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_INITIALIZATION_COMPLETE, 0, 6, @CANBuffer.DataBytes, False);
             Node^.iStateMachine := STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS;
             NMRAnetNode_SetStateFlag(Node, NS_INITIALIZED);
           end
@@ -1311,13 +1333,15 @@ begin
       end;
     STATE_NMRABUS_PERMITTED :
       begin  //    {$IFDEF TRACE_NODE_STATEMACHINE} UART1_Write_Text('STATE_NMRABUS_PERMITTED'+LF); {$ENDIF}
-        ProcessNode(Node, @Buffer);                                             // Handle auto Actions to CAN/NMRAnet messages coming in
-        ProcessOutgoingNode(Node, @Buffer);
+        ProcessNode(Node, @CANBuffer);                                             // Handle auto Actions to CAN/NMRAnet messages coming in
+        ProcessOutgoingNode(Node, @CANBuffer);
       end;
     STATE_NMRABUS_INHIBITED :
       begin  {$IFDEF TRACE_NODE_STATEMACHINE} UART1_Write_Text('STATE_NMRABUS_INHIBITED'+LF); {$ENDIF}
-        if TryTransmitCANLayerMsg(Node, @Buffer, MTI_AMR) then
+        if CANBusBufferAvailable then
         begin
+          NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @CANBuffer);
+          TransmitCANLayerMsg(Node, @CANBuffer, MTI_AMR);
       //    FlushLists(Node);
           ReleaseBuffers(Node);
           NMRAnetNode_ClearStateFlag(Node, NS_PERMITTED);
@@ -1330,8 +1354,10 @@ begin
       end;
     STATE_NMRABUS_DUPLICATE_FULL_ID :
       begin  {$IFDEF TRACE_NODE_STATEMACHINE} UART1_Write_Text('STATE_NMRABUS_DUPLICATE_FULL_ID'+LF); {$ENDIF}
-        if TryTransmitCANLayerMsg(Node, @Buffer, MTI_AMR) then
+        if CANBusBufferAvailable then
         begin
+          NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @CANBuffer);
+          TransmitCANLayerMsg(Node, @CANBuffer, MTI_AMR);
           FlushLists(Node);
           ReleaseBuffers(Node);
           NMRAnetNode_ClearStateFlag(Node, NS_PERMITTED);
@@ -1346,7 +1372,7 @@ begin
       begin  {$IFDEF TRACE_NODE_STATEMACHINE} UART1_Write_Text('STATE_NMRABUS_TAKE_OFFLINE'+LF); {$ENDIF}
         if NMRABusBufferAvailable then
         begin
-          TransmitNMRABusLayerMsg(Node, @Buffer, MTI_PC_EVENT_REPORT, 0, 8, @EVENT_DUPLICATE_ID_DETECTED, False);
+          TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_PC_EVENT_REPORT, 0, 8, @EVENT_DUPLICATE_ID_DETECTED, False);
           Node^.iStateMachine := STATE_NMRABUS_OFFLINE
         end
       end;
