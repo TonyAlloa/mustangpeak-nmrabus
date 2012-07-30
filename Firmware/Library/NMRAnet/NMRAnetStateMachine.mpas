@@ -717,7 +717,7 @@ begin
                                                                                     DataBytes[i] := ACDI_MFG_STRINGS_VNODE[BaseBuffer^.Tag];
                                                                                     Inc(BaseBuffer^.Tag);
                                                                                     Inc(i);
-  end else                                                                        else if
+                                                                                  end else
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_USER_VERSION;
                                                                                 end else {$ENDIF}
                                                                                 begin

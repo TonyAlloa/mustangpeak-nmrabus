@@ -40,7 +40,7 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=9
+Count=8
 File0=MustangpeakUSB-CAN.mpas
 File1=..\Library\NMRAnet\NMRAnetCANReceive.mpas
 File2=..\Library\NMRAnet\NMRAnetStateMachine.mpas
@@ -49,7 +49,6 @@ File4=..\Library\CANBus\CANStorage.mpas
 File5=..\Library\NMRAnet\NMRAnetDefines.mpas
 File6=MCU_Setup_dsPIC4013.mpas
 File7=..\Library\dsPIC30F\dsPIC30_Traps.mpas
-File8=..\..\..\..\..\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\P30F4013.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -58,24 +57,25 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=17
-Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\USB-CAN\
-Path3=C:\Users\Jim\Desktop\NMRABus\Firmware\Accessory Booster\
-Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path5=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Accessory Booster\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
-Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
-Path9=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path10=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path11=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
-Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
-Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
-Path14=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path15=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path16=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Count=18
+Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\USB-CAN\
+Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\USB-CAN\
+Path6=C:\Users\Jim\Desktop\NMRABus\Firmware\Accessory Booster\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Accessory Booster\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANDefines\dsPIC30F4013\
+Path10=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path11=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
+Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Xpressnet\
+Path15=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path16=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path17=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
 [HEADER_PATH]
 Count=0
 [HEADERS]

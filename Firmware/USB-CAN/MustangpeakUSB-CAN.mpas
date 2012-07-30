@@ -74,51 +74,43 @@ begin
   until Count = 0;
 end;
 
-  var
-      Temp: Char;
 procedure INTERRUPT_UART_RX(); iv IVT_ADDR_U1RXINTERRUPT;
 var
-//  Temp: Char;
+  Temp: Char;
   RxBufferHead: PUARTBuffer;
 begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
   U1RXIF_Bit := 0;              // Clear the interrupt flag to receive the next byte
-
   Inc(BytesReceived);
-  
-  if OERR_U1STA_bit = 1 then
-   Inc(BytesReceived);
-
+ // if OERR_U1STA_bit = 1 then
+ //  Inc(BytesReceived);
   while U1STA and $0001 <> 0 do
   begin
     Temp := U1RXREG;
- //   if ((Temp >= '0') and (Temp <= ';')) or ((Temp >= 'A') and (Temp <= 'F')) or (Temp = #10) or (Temp = #13) or (Temp = 'N') or (Temp = ' ') or (Temp = 'X') or (Temp = 'S') then     // Throw away the carrage returns
-  //  begin
-    //  if (Temp <> ' ') and (Temp <> #10) and (Temp <> #13) then
+  if ((Temp >= '0') and (Temp <= ';')) or ((Temp >= 'A') and (Temp <= 'F')) or (Temp = #10) or (Temp = #13) or (Temp = 'N') or (Temp = ' ') or (Temp = 'X') or (Temp = 'S') then     // Throw away the carrage returns
+    begin
+      if (Temp <> ' ') and (Temp <> #10) and (Temp <> #13) then  // Strip out carrage returns
       begin
-        RxBufferHead := @RxBufferArray[iRxBufferHead];
-
+        RxBufferHead := @RxBufferArray[iRxBufferHead];       // Store the next character
         RxBufferHead^[RxBufferCharIndex] := Temp;
-        if RxBufferHead^[RxBufferCharIndex] = ';' then
+        if RxBufferHead^[RxBufferCharIndex] = ';' then      // If at the end if the packet string save it and get next buffer
         begin
-
-          Inc(PacketsReceived);
-
-          Inc(iRxBufferHead);
+          Inc(PacketsReceived);                    // Count the packets for testing
+          Inc(iRxBufferHead);                      // Circular Buffer
           if iRxBufferHead >= MAX_RX_BUFFER then
             iRxBufferHead := 0;
           Inc(RxBufferArrayCount);
 
-          if RxBufferArrayCount > MaxRxBufferArrayCount then
-          MaxRxBufferArrayCount := RxBufferArrayCount;
+          if RxBufferArrayCount > MaxRxBufferArrayCount then  // Track the max buffer size
+            MaxRxBufferArrayCount := RxBufferArrayCount;
 
           RxBufferCharIndex := 0;
         end else
           Inc(RxBufferCharIndex);
       end
- //   end else
- //     Inc(BytesReceived);
+    end else
+      LATD0_bit := 1; // Not a valid Character Toggle the D0 Pin
   end;
   OERR_U1STA_bit := 0;
 end;
@@ -169,7 +161,7 @@ const
   Terminator: array[0..2] of char = (';', #13, #10);
   
 var
-  s2: array[0..32] of char;
+  s2: array[0..8] of char;
   i: Integer;
   TxBufferHead: PUARTBuffer;
 begin
@@ -332,8 +324,8 @@ begin
           i := i + 2;
         end;
         
-      {  for i := 0 to MAX_BUFFER_LEN - 1 do
-          RxBufferTail^[i] := #0;  }
+        for i := 0 to MAX_BUFFER_LEN - 1 do
+          RxBufferTail^[i] := #0;
           
         Inc(iRxBufferTail);
         if iRxBufferTail >= MAX_RX_BUFFER then
