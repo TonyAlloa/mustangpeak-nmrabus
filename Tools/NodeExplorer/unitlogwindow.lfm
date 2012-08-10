@@ -1,0 +1,32 @@
+object FormLog: TFormLog
+  Left = 780
+  Height = 415
+  Top = 273
+  Width = 320
+  BorderStyle = bsSizeToolWin
+  Caption = 'Log Window'
+  ClientHeight = 415
+  ClientWidth = 320
+  OnActivate = FormActivate
+  OnHide = FormHide
+  LCLVersion = '0.9.31'
+  object MemoLog: TMemo
+    Left = 0
+    Height = 376
+    Top = 0
+    Width = 320
+    Align = alTop
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ScrollBars = ssAutoBoth
+    TabOrder = 0
+  end
+  object ButtonClear: TButton
+    Left = 171
+    Height = 22
+    Top = 384
+    Width = 125
+    Action = FormMain.ActionClear
+    Anchors = [akRight, akBottom]
+    TabOrder = 1
+  end
+end
