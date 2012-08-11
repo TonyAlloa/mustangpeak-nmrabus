@@ -76,7 +76,7 @@ type
 
   TOpenLCBTestState = (ts_Idle, ts_Sending, ts_Receiving, ts_Complete);
 
-  TOpenLCBTest = class
+  TOpenLCBTest = class(TPersistent)
   private
     FCompareMasks: TStringList;
     FMessageHelper: TOpenLCBMessageHelper;
@@ -101,9 +101,16 @@ type
     function Process: Boolean; virtual; abstract;
   end;
 
-  { TOpenLCBTest_VerifyNodeID }
+  { TTestVerifyNodeID }
 
-  TOpenLCBTest_VerifyNodeID = class(TOpenLCBTest)
+  TTestVerifyNodeID = class(TOpenLCBTest)
+    constructor Create(AProxyNodeAlias: Word); override;
+    function Process: Boolean; override;
+  end;
+
+  { TTestAliasMapEnquiry }
+
+  TTestAliasMapEnquiry = class(TOpenLCBTest)
     constructor Create(AProxyNodeAlias: Word); override;
     function Process: Boolean; override;
   end;
@@ -208,6 +215,18 @@ begin
   Result := BuildCANLayerMessage(MTI, ByteCount, Bytes, AddCarrageReturn);
 end;
 
+{ TTestAliasMapEnquiry }
+
+constructor TTestAliasMapEnquiry.Create(AProxyNodeAlias: Word);
+begin
+  inherited Create(AProxyNodeAlias);
+end;
+
+function TTestAliasMapEnquiry.Process: Boolean;
+begin
+
+end;
+
 { TOpenLCBTestMatrix }
 
 constructor TOpenLCBTestMatrix.Create;
@@ -273,16 +292,16 @@ begin
   FProxyNodeAlias := $0AAA
 end;
 
-{ TOpenLCBTest_VerifyNodeID }
+{ TTestVerifyNodeID }
 
-constructor TOpenLCBTest_VerifyNodeID.Create(AProxyNodeAlias: Word);
+constructor TTestVerifyNodeID.Create(AProxyNodeAlias: Word);
 begin
   inherited Create(AProxyNodeAlias);
   Description := 'Global Verify Node ID';
   FStateMachineIndex := 0;
 end;
 
-function TOpenLCBTest_VerifyNodeID.Process: Boolean;
+function TTestVerifyNodeID.Process: Boolean;
 begin
   Result := True;
   case StateMachineIndex of
@@ -561,6 +580,9 @@ begin
   end;
 end;
 
+initialization
+  RegisterClass(TTestVerifyNodeID);
+  RegisterClass(TTestAliasMapEnquiry);
 
 end.
 

@@ -22,10 +22,10 @@ unit UnitMainForm;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, SynHighlighterXML, SynEdit, SynMemo, RTTICtrls,
-  Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList, Menus,
-  ExtCtrls, synaser, lcltype, unitlogwindow, olcb_utilities,
-  unitolcb_defines, unitsettings;
+  Classes, SysUtils, FileUtil, SynHighlighterXML, SynMemo, SynEdit,
+  RTTICtrls, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList,
+  Menus, ExtCtrls, synaser, lcltype, unitlogwindow, olcb_utilities,
+  unitolcb_defines, unitsettings, DOM, XMLRead, XMLWrite;
 
 
 const
@@ -37,6 +37,8 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
+    ActionSaveTestMatrix: TAction;
+    ActionLoadTestMatrix: TAction;
     ActionRescanPorts: TAction;
     ActionShowOptionsWin: TAction;
     ActionShowPreferencesMac: TAction;
@@ -47,28 +49,20 @@ type
     ActionReadXML: TAction;
     ActionSendDatagramReply: TAction;
     ActionConnect: TAction;
-    ActionRunCANTests: TAction;
     ActionSendPacket: TAction;
-    ActionRunOpenLCBTests: TAction;
     ActionClear: TAction;
     ActionListMain: TActionList;
     ApplicationProperties1: TApplicationProperties;
     ButtonConnect: TButton;
-    ButtonConnect1: TButton;
-    ButtonConnect2: TButton;
-    ButtonConnect3: TButton;
+    ButtonDiscoverNodes: TButton;
+    ButtonSaveTests: TButton;
+    ButtonShowLog: TButton;
+    ButtonRescanPorts: TButton;
+    ButtonLoadTests: TButton;
     ButtonSendPacket: TButton;
     ButtonReadXML: TButton;
     ButtonReadEvents: TButton;
-    ButtonRunOpenLCBTests: TButton;
     ButtonSendDatagramReply: TButton;
-    ButtonRunOpenLCBTests1: TButton;
-    CheckGroupCANPhysicalLayer: TCheckGroup;
-    CheckGroupEvents: TCheckGroup;
-    CheckGroupMemoryProtocol: TCheckGroup;
-    CheckGroupDatagrams: TCheckGroup;
-    CheckGroupCANMessages: TCheckGroup;
-    CheckGroupMisc: TCheckGroup;
     ComboBoxBaud: TComboBox;
     ComboBoxPorts: TComboBox;
     EditBaudRate: TEdit;
@@ -77,62 +71,59 @@ type
     EditPacket: TEdit;
     EditSourceNodeAlias: TEdit;
     EditTargetNodeAlias: TEdit;
-    GroupBox1: TGroupBox;
+    GroupBoxComPort: TGroupBox;
     GroupBoxEventReaderConsumers: TGroupBox;
     GroupBoxEventReaderProducers: TGroupBox;
     GroupBoxNodeDiscovery: TGroupBox;
     ImageOpenLCB: TImage;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
+    LabelTargetAlias: TLabel;
+    LabelSourceAlias: TLabel;
+    LabelPacket: TLabel;
     LabelBaud: TLabel;
     LabelCustomBaud: TLabel;
     LabelDiscoverNodeAlias: TLabel;
     LabelDiscoverNodeID: TLabel;
     LabelPort: TLabel;
+    ListViewTestMatrix: TListView;
     ListViewConsumers: TListView;
-    ListViewConsumers1: TListView;
+    ListViewNodeDiscovery: TListView;
     ListViewDiscovery: TListView;
     ListViewProducers: TListView;
     MainMenu: TMainMenu;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItemFile: TMenuItem;
+    OpenDialog: TOpenDialog;
     PageControl: TPageControl;
-    Panel1: TPanel;
-    SynEdit1: TSynEdit;
+    PanelLogo: TPanel;
+    SaveDialog: TSaveDialog;
+    SynEditCDI: TSynEdit;
     SynXMLSyn: TSynXMLSyn;
+    TabSheetVerification: TTabSheet;
     TabSheetDiscover: TTabSheet;
     TabSheetEventReader: TTabSheet;
     TabSheetHome: TTabSheet;
     TabSheetCustom: TTabSheet;
-    TabSheetCANLayer: TTabSheet;
-    TabSheetOpenLCBLayer: TTabSheet;
     TabSheetCDIReader: TTabSheet;
     TimerCAN: TTimer;
     procedure ActionClearExecute(Sender: TObject);
     procedure ActionConnectExecute(Sender: TObject);
     procedure ActionDiscoverNodeExecute(Sender: TObject);
-    procedure ActionEventReaderExecute(Sender: TObject);
     procedure ActionHideLogExecute(Sender: TObject);
-    procedure ActionReadXMLExecute(Sender: TObject);
+    procedure ActionLoadTestMatrixExecute(Sender: TObject);
     procedure ActionRescanPortsExecute(Sender: TObject);
-    procedure ActionRunCANTestsExecute(Sender: TObject);
-    procedure ActionRunOpenLCBTestsExecute(Sender: TObject);
+    procedure ActionSaveTestMatrixExecute(Sender: TObject);
     procedure ActionSendDatagramReplyExecute(Sender: TObject);
     procedure ActionSendPacketExecute(Sender: TObject);
     procedure ActionShowLogExecute(Sender: TObject);
     procedure ActionShowOptionsWinExecute(Sender: TObject);
     procedure ActionShowPreferencesMacExecute(Sender: TObject);
-    procedure ApplicationProperties1Activate(Sender: TObject);
-    procedure ApplicationProperties1Idle(Sender: TObject; var Done: Boolean);
-    procedure ApplicationProperties1IdleEnd(Sender: TObject);
     procedure ComboBoxBaudChange(Sender: TObject);
-    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure PageControlChange(Sender: TObject);
     procedure TimerCANTimer(Sender: TObject);
   private
     FNodeManager: TOpenLCBNodeManager;
@@ -140,6 +131,7 @@ type
     FShownOnce: Boolean;
     FTestMatrix: TOpenLCBTestMatrix;
     FTestStrings: TStringList;
+    FXMLDoc: TXMLDocument;
   protected
     { protected declarations }
     {$IFDEF DARWIN}
@@ -151,10 +143,12 @@ type
   public
     { public declarations }
     procedure Log(Line: String);
+    procedure LoadTestMatrix;
     property ShownOnce: Boolean read FShownOnce write FShownOnce;
     property TestStrings: TStringList read FTestStrings write FTestStrings;
     property NodeManager: TOpenLCBNodeManager read FNodeManager write FNodeManager;
     property TestMatrix: TOpenLCBTestMatrix read FTestMatrix write FTestMatrix;
+    property XMLDoc: TXMLDocument read FXMLDoc write FXMLDoc;
   end; 
 
 var
@@ -218,18 +212,13 @@ end;
 
 procedure TFormMain.ActionDiscoverNodeExecute(Sender: TObject);
 var
-  Test: TOpenLCBTest_VerifyNodeID;
+  Test: TTestVerifyNodeID;
 begin
  // TestMatrix.ClearTestList;
-  Test := TOpenLCBTest_VerifyNodeID.Create(NodeManager.ProxyNodeAlias);
+  Test := TTestVerifyNodeID.Create(NodeManager.ProxyNodeAlias);
   TestMatrix.Add(Test);
   TestMatrix.Run;
   TimerCAN.Enabled := True;
-end;
-
-procedure TFormMain.ActionEventReaderExecute(Sender: TObject);
-begin
-
 end;
 
 procedure TFormMain.ActionHideLogExecute(Sender: TObject);
@@ -237,9 +226,17 @@ begin
   FormLog.Hide;
 end;
 
-procedure TFormMain.ActionReadXMLExecute(Sender: TObject);
+procedure TFormMain.ActionLoadTestMatrixExecute(Sender: TObject);
 begin
-
+  OpenDialog.DefaultExt := '*.xml';
+  OpenDialog.Filter := 'XML Files|*.xml';
+  OpenDialog.Options := [ofFileMustExist];
+  if OpenDialog.Execute then
+  begin
+    if FileExistsUTF8(OpenDialog.FileName) then
+      ReadXMLFile(FXMLDoc, UTF8ToSys(OpenDialog.FileName));
+    LoadTestMatrix
+  end;
 end;
 
 procedure TFormMain.ActionRescanPortsExecute(Sender: TObject);
@@ -250,67 +247,14 @@ begin
     ComboBoxPorts.ItemIndex:= 0;
 end;
 
-procedure TFormMain.ActionRunCANTestsExecute(Sender: TObject);
+procedure TFormMain.ActionSaveTestMatrixExecute(Sender: TObject);
 begin
-
-end;
-
-procedure TFormMain.ActionRunOpenLCBTestsExecute(Sender: TObject);
-var
-  i: integer;
-  Str: AnsiString;
-  ByteArray: TByteArray;
-begin
-  TimerCAN.Enabled := False;
-  try
-    if CheckGroupMisc.Checked[0] then
-    begin
-      Log('Testing Simple Node Identification Protocol (SNII)');
-      WordToByteArray(ByteArray, StrToInt( '$' + EditDiscoverNodeAlias.Text), 0);
-      Str := BuildNMRALayerMessage(MTI_SIMPLE_NODE_INFO_REQUEST, SOURCE_ALIAS, 2, ByteArray, False);
-      Log('Sending: ' + Str);
-
-  //    ReadResult(TestStrings, False);
-      for i := 0 to 2 do
-      begin
-        Log('Sending: ' + Str);
-   //     ser.SendString(Str + LF);
-      end;
-  //    ReadResult(TestStrings, False);
-    end;
-
-    if CheckGroupMisc.Checked[1] then
-    begin
-      Log('Testing Protocol Identification Protocol (PIP)');
-      WordToByteArray(ByteArray, StrToInt( '$' + EditDiscoverNodeAlias.Text), 0);
-      Str := BuildNMRALayerMessage(MTI_PROTOCOL_SUPPORT_INQUIRY, SOURCE_ALIAS, 2, ByteArray, False);
-      Log('Sending: ' + Str);
-   //   ser.SendString(Str + LF);
-   //   ReadResult(TestStrings, False);
-    end;
-
-    if CheckGroupEvents.Checked[0] then
-    begin
-      Log('Testing Global Identify Events');
-      Str := BuildNMRALayerMessage(MTI_EVENTS_IDENTIFY, SOURCE_ALIAS, 0, ByteArray, False);
-      Log('Sending: ' + Str);
-  //    ser.SendString(Str + LF);
-   //   ReadResult(TestStrings, False);
-    end;
-
-    if CheckGroupEvents.Checked[1] then
-    begin
-      Log('Testing Addressed Identify Events');
-      WordToByteArray(ByteArray, StrToInt( '$' + EditDiscoverNodeAlias.Text), 0);
-      Str := BuildNMRALayerMessage(MTI_EVENTS_IDENTIFY_DEST, SOURCE_ALIAS, 2, ByteArray, False);
-      Log('Sending: ' + Str);
-  //    ser.SendString(Str + LF);
-  //    ReadResult(TestStrings, False);
-    end;
-  finally
-    TimerCAN.Enabled := True;
+  SaveDialog.DefaultExt := '*.xml';
+  SaveDialog.Filter := 'XML Files|*.xml';
+  if SaveDialog.Execute then
+  begin
+    WriteXMLFile(FXMLDoc, SaveDialog.FileName);
   end;
-
 end;
 
 procedure TFormMain.ActionSendDatagramReplyExecute(Sender: TObject);
@@ -345,31 +289,10 @@ begin
   FormSettings.Show;
 end;
 
-procedure TFormMain.ApplicationProperties1Activate(Sender: TObject);
-begin
-
-end;
-
-procedure TFormMain.ApplicationProperties1Idle(Sender: TObject;
-  var Done: Boolean);
-begin
-
-end;
-
-procedure TFormMain.ApplicationProperties1IdleEnd(Sender: TObject);
-begin
-
-end;
-
 procedure TFormMain.ComboBoxBaudChange(Sender: TObject);
 begin
   EditBaudRate.Enabled := ComboBoxBaud.ItemIndex = 0;
   LabelCustomBaud.Enabled := ComboBoxBaud.ItemIndex = 0;
-end;
-
-procedure TFormMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);
-begin
-
 end;
 
 procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: boolean);
@@ -412,6 +335,7 @@ begin
   FreeAndNil(FTestStrings);
   FreeAndNil(FNodeManager);
   FreeAndNil(FTestMatrix);
+  FreeAndNil(FXMLDoc);
 end;
 
 procedure TFormMain.FormShow(Sender: TObject);
@@ -421,6 +345,11 @@ begin
     TimerCAN.Enabled := True;
   end;
   ShownOnce := True;
+end;
+
+procedure TFormMain.PageControlChange(Sender: TObject);
+begin
+
 end;
 
 
@@ -447,6 +376,42 @@ begin
   if FormLog.Visible then
   begin
     FormLog.MemoLog.Lines.Add(Line);
+  end;
+end;
+
+procedure TFormMain.LoadTestMatrix;
+var
+  i: Integer;
+  TestMatrixNode, TestNode, NameNode, DescNode, ReqtNode, ClassnameNode: TDOMNode;
+  ListItem: TListItem;
+  s: string;
+begin
+  ListviewTestMatrix.Items.BeginUpdate;
+  try
+    TestMatrixNode := XMLDoc.FindNode('TestMatrix');
+    if Assigned(TestMatrixNode) then
+    begin
+      ListviewTestMatrix.Items.Clear;
+      i := 0;
+      TestNode := TestMatrixNode.FindNode('Test' + IntToStr(i));
+      while Assigned(TestNode) do
+      begin
+        NameNode := TestNode.FindNode('Name');
+        DescNode := TestNode.FindNode('Description');
+        ReqtNode := TestNode.FindNode('SpecDoc');
+        ClassnameNode := TestNode.FindNode('Classname');
+        ListItem := ListviewTestMatrix.Items.Add;
+        ListItem.Caption := NameNode.FirstChild.NodeValue;
+        ListItem.SubItems.Add(DescNode.FirstChild.NodeValue);
+        ListItem.SubItems.Add(ReqtNode.FirstChild.NodeValue);
+        ListItem.SubItems.Add(ClassnameNode.FirstChild.NodeValue);
+        ListItem.Data := TestNode;                                 // Link the XML node to the Listview Item
+        Inc(i);
+        TestNode := TestMatrixNode.FindNode('Test' + IntToStr(i));
+      end;
+    end;
+  finally
+    ListviewTestMatrix.Items.EndUpdate
   end;
 end;
 
