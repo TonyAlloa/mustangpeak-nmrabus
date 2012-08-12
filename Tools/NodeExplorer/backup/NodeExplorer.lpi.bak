@@ -894,7 +894,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <BreakPoints Count="3">
+    <BreakPoints Count="2">
       <Item1>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
@@ -909,13 +909,6 @@
         <Source Value="unitmainform.pas"/>
         <Line Value="233"/>
       </Item2>
-      <Item3>
-        <Kind Value="bpkSource"/>
-        <WatchScope Value="wpsLocal"/>
-        <WatchKind Value="wpkWrite"/>
-        <Source Value="unitmainform.pas"/>
-        <Line Value="332"/>
-      </Item3>
     </BreakPoints>
     <Watches Count="2">
       <Item1>

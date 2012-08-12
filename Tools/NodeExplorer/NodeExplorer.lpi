@@ -307,7 +307,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="433"/>
         <CursorPos X="48" Y="443"/>
-        <UsageCount Value="124"/>
+        <UsageCount Value="127"/>
       </Unit33>
       <Unit34>
         <Filename Value="..\..\OpenLCB_NodeExplorer\olcb_stringconstants.pas"/>
@@ -316,7 +316,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="26" Y="1"/>
-        <UsageCount Value="123"/>
+        <UsageCount Value="126"/>
       </Unit34>
       <Unit35>
         <Filename Value="..\..\OpenLCB_NodeExplorer\unitolcb_defines.pas"/>
@@ -325,7 +325,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="22" Y="1"/>
-        <UsageCount Value="121"/>
+        <UsageCount Value="124"/>
       </Unit35>
       <Unit36>
         <Filename Value="W:\Developer\lazarus\lcl\include\control.inc"/>
@@ -418,7 +418,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="25" Y="18"/>
-        <UsageCount Value="89"/>
+        <UsageCount Value="92"/>
       </Unit47>
       <Unit48>
         <Filename Value="W:\Developer\lazarus\components\fppkg\svn\svnclasses.pas"/>
@@ -516,7 +516,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="332"/>
         <CursorPos X="32" Y="345"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="25"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit59>
@@ -565,7 +565,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="21"/>
         <Loaded Value="True"/>
       </Unit65>
       <Unit66>
@@ -575,7 +575,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="112"/>
         <CursorPos X="1" Y="129"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="21"/>
         <Loaded Value="True"/>
       </Unit66>
       <Unit67>
@@ -585,7 +585,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="64" Y="2"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="21"/>
         <Loaded Value="True"/>
       </Unit67>
       <Unit68>
@@ -595,7 +595,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="22" Y="1"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="21"/>
         <Loaded Value="True"/>
       </Unit68>
       <Unit69>
@@ -605,7 +605,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="21"/>
         <Loaded Value="True"/>
       </Unit69>
       <Unit70>
@@ -648,7 +648,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="158"/>
         <CursorPos X="3" Y="169"/>
-        <UsageCount Value="32"/>
+        <UsageCount Value="35"/>
         <Loaded Value="True"/>
       </Unit74>
       <Unit75>
@@ -659,7 +659,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="25" Y="9"/>
-        <UsageCount Value="32"/>
+        <UsageCount Value="35"/>
         <Loaded Value="True"/>
       </Unit75>
       <Unit76>
@@ -670,7 +670,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="44"/>
         <CursorPos X="41" Y="63"/>
-        <UsageCount Value="32"/>
+        <UsageCount Value="35"/>
         <Loaded Value="True"/>
       </Unit76>
       <Unit77>
