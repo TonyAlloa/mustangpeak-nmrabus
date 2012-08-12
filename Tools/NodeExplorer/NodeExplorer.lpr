@@ -21,4 +21,4 @@ begin
   Application.CreateForm(TFormSettings, FormSettings);
   Application.Run;
 end.
-
+

@@ -4,7 +4,7 @@ object FormMain: TFormMain
   Top = 168
   Width = 715
   Caption = 'OpenLCB NodeExplorer'
-  ClientHeight = 497
+  ClientHeight = 516
   ClientWidth = 715
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
@@ -14,7 +14,7 @@ object FormMain: TFormMain
   LCLVersion = '0.9.31'
   object PageControl: TPageControl
     Left = 8
-    Height = 480
+    Height = 499
     Top = 8
     Width = 698
     ActivePage = TabSheetHome
@@ -22,24 +22,25 @@ object FormMain: TFormMain
     MultiLine = True
     TabIndex = 0
     TabOrder = 0
+    OnChange = PageControlChange
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
       Caption = 'Home'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       object GroupBoxComPort: TGroupBox
         Left = 13
-        Height = 237
+        Height = 243
         Top = 164
-        Width = 667
+        Width = 669
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'COM Port Settings'
-        ClientHeight = 219
-        ClientWidth = 663
+        ClientHeight = 221
+        ClientWidth = 661
         TabOrder = 0
         object EditBaudRate: TEdit
           Left = 405
-          Height = 21
+          Height = 22
           Top = 25
           Width = 109
           Enabled = False
@@ -47,19 +48,19 @@ object FormMain: TFormMain
         end
         object LabelCustomBaud: TLabel
           Left = 397
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 64
+          Width = 85
           Caption = 'Custom Baud'
           Enabled = False
           ParentColor = False
         end
         object ComboBoxBaud: TComboBox
           Left = 285
-          Height = 21
+          Height = 20
           Top = 26
           Width = 100
-          ItemHeight = 13
+          ItemHeight = 0
           ItemIndex = 10
           Items.Strings = (
             'Custom'
@@ -82,27 +83,28 @@ object FormMain: TFormMain
         end
         object LabelBaud: TLabel
           Left = 277
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 25
+          Width = 32
           Caption = 'Baud'
           ParentColor = False
         end
         object ComboBoxPorts: TComboBox
           Left = 20
-          Height = 21
+          Height = 20
           Top = 26
           Width = 248
-          ItemHeight = 13
+          ItemHeight = 0
+          OnChange = ComboBoxPortsChange
           Style = csDropDownList
           TabOrder = 0
           TabStop = False
         end
         object LabelPort: TLabel
           Left = 13
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 21
+          Width = 26
           Caption = 'Port'
           ParentColor = False
         end
@@ -116,23 +118,23 @@ object FormMain: TFormMain
         end
         object LabelDiscoverNodeID: TLabel
           Left = 127
-          Height = 14
+          Height = 17
           Top = 88
-          Width = 98
+          Width = 124
           Caption = 'Proxy NodeID (Hex)'
           ParentColor = False
         end
         object LabelDiscoverNodeAlias: TLabel
           Left = 13
-          Height = 14
+          Height = 17
           Top = 86
-          Width = 84
+          Width = 108
           Caption = 'Proxy Alias (Hex)'
           ParentColor = False
         end
         object EditDiscoverNodeAlias: TEdit
           Left = 21
-          Height = 21
+          Height = 22
           Top = 110
           Width = 88
           ParentShowHint = False
@@ -140,16 +142,16 @@ object FormMain: TFormMain
         end
         object EditDiscoverNodeID: TEdit
           Left = 135
-          Height = 21
+          Height = 22
           Top = 109
           Width = 200
           TabOrder = 5
         end
         object Label1: TLabel
           Left = 20
-          Height = 64
+          Height = 66
           Top = 142
-          Width = 632
+          Width = 630
           Anchors = [akTop, akLeft, akRight, akBottom]
           AutoSize = False
           Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages places on the OpenLCB bus by NodeExplorer. '#13#10#13#10'Note: NodeExplorer will not respond to arbitrary messages as it is not a real node on the network.'
@@ -158,18 +160,18 @@ object FormMain: TFormMain
         end
       end
       object ButtonConnect: TButton
-        Left = 528
+        Left = 530
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionConnect
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonShowLog: TButton
-        Left = 371
+        Left = 373
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionShowLog
         Anchors = [akRight, akBottom]
@@ -179,17 +181,17 @@ object FormMain: TFormMain
         Left = 13
         Height = 153
         Top = 3
-        Width = 667
+        Width = 669
         Anchors = [akTop, akLeft, akRight]
         Caption = 'PanelLogo'
         ClientHeight = 153
-        ClientWidth = 667
+        ClientWidth = 669
         TabOrder = 3
         object ImageOpenLCB: TImage
           Left = 1
           Height = 151
           Top = 1
-          Width = 665
+          Width = 667
           Align = alClient
           Center = True
           Picture.Data = {
@@ -474,12 +476,12 @@ object FormMain: TFormMain
     end
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       object ButtonDiscoverNodes: TButton
-        Left = 524
+        Left = 526
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionDiscoverNode
         Anchors = [akRight, akBottom]
@@ -487,9 +489,9 @@ object FormMain: TFormMain
       end
       object ListViewNodeDiscovery: TListView
         Left = 12
-        Height = 387
+        Height = 393
         Top = 10
-        Width = 665
+        Width = 667
         Align = alCustom
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
@@ -514,13 +516,13 @@ object FormMain: TFormMain
     end
     object TabSheetVerification: TTabSheet
       Caption = 'VerificationTests'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       object ListViewTestMatrix: TListView
         Left = 12
-        Height = 387
+        Height = 393
         Top = 10
-        Width = 665
+        Width = 667
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
         Checkboxes = True
@@ -549,27 +551,27 @@ object FormMain: TFormMain
         OnDeletion = ListViewTestMatrixDeletion
       end
       object ButtonLoadTests: TButton
-        Left = 214
+        Left = 216
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionLoadTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonSaveTests: TButton
-        Left = 371
+        Left = 373
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionSaveTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 2
       end
       object ButtonExecuteTests: TButton
-        Left = 528
+        Left = 530
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionExecuteTests
         Anchors = [akRight, akBottom]
@@ -578,13 +580,13 @@ object FormMain: TFormMain
     end
     object TabSheetCDIReader: TTabSheet
       Caption = 'CDI Reader'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       inline SynEditCDI: TSynEdit
         Left = 0
-        Height = 403
+        Height = 409
         Top = 0
-        Width = 690
+        Width = 692
         Align = alTop
         Anchors = [akTop, akLeft, akRight, akBottom]
         Font.Height = 12
@@ -594,7 +596,7 @@ object FormMain: TFormMain
         ParentColor = False
         ParentFont = False
         TabOrder = 0
-        Gutter.Width = 51
+        Gutter.Width = 55
         Gutter.MouseActions = <>
         RightGutter.Width = 0
         RightGutter.MouseActions = <>
@@ -1043,7 +1045,7 @@ object FormMain: TFormMain
             MouseActions = <>
           end
           object SynGutterLineNumber1: TSynGutterLineNumber
-            Width = 11
+            Width = 15
             MouseActions = <>
             MarkupInfo.Background = clBtnFace
             MarkupInfo.Foreground = clNone
@@ -1072,9 +1074,9 @@ object FormMain: TFormMain
         end
       end
       object ButtonReadXML: TButton
-        Left = 528
+        Left = 530
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionReadXML
         Anchors = [akRight, akBottom]
@@ -1083,21 +1085,68 @@ object FormMain: TFormMain
     end
     object TabSheetEventReader: TTabSheet
       Caption = 'Event Reader'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       object GroupBoxEventReaderConsumers: TGroupBox
         Left = 13
         Height = 192
         Top = 4
-        Width = 664
+        Width = 666
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Consumers'
-        ClientHeight = 174
-        ClientWidth = 660
+        ClientHeight = 170
+        ClientWidth = 658
         TabOrder = 0
         object ListViewConsumers: TListView
           Left = 0
-          Height = 174
+          Height = 170
+          Top = 0
+          Width = 658
+          Align = alClient
+          AutoWidthLastColumn = True
+          Checkboxes = True
+          Columns = <          
+            item
+              Alignment = taCenter
+              Caption = 'MTI'
+              Width = 90
+            end          
+            item
+              Alignment = taCenter
+              Caption = ' Alias'
+              Width = 90
+            end          
+            item
+              Alignment = taCenter
+              Caption = 'State'
+              Width = 90
+            end          
+            item
+              Alignment = taCenter
+              Caption = 'EventID'
+              Width = 382
+            end>
+          DragMode = dmAutomatic
+          GridLines = True
+          MultiSelect = True
+          RowSelect = True
+          TabOrder = 0
+          ViewStyle = vsReport
+        end
+      end
+      object GroupBoxEventReaderProducers: TGroupBox
+        Left = 13
+        Height = 206
+        Top = 212
+        Width = 668
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        Caption = 'Producers'
+        ClientHeight = 184
+        ClientWidth = 660
+        TabOrder = 1
+        object ListViewProducers: TListView
+          Left = 0
+          Height = 184
           Top = 0
           Width = 660
           Align = alClient
@@ -1122,54 +1171,7 @@ object FormMain: TFormMain
             item
               Alignment = taCenter
               Caption = 'EventID'
-              Width = 386
-            end>
-          DragMode = dmAutomatic
-          GridLines = True
-          MultiSelect = True
-          RowSelect = True
-          TabOrder = 0
-          ViewStyle = vsReport
-        end
-      end
-      object GroupBoxEventReaderProducers: TGroupBox
-        Left = 13
-        Height = 200
-        Top = 212
-        Width = 666
-        Anchors = [akTop, akLeft, akRight, akBottom]
-        Caption = 'Producers'
-        ClientHeight = 182
-        ClientWidth = 662
-        TabOrder = 1
-        object ListViewProducers: TListView
-          Left = 0
-          Height = 182
-          Top = 0
-          Width = 662
-          Align = alClient
-          AutoWidthLastColumn = True
-          Checkboxes = True
-          Columns = <          
-            item
-              Alignment = taCenter
-              Caption = 'MTI'
-              Width = 90
-            end          
-            item
-              Alignment = taCenter
-              Caption = ' Alias'
-              Width = 90
-            end          
-            item
-              Alignment = taCenter
-              Caption = 'State'
-              Width = 90
-            end          
-            item
-              Alignment = taCenter
-              Caption = 'EventID'
-              Width = 388
+              Width = 384
             end>
           DragMode = dmAutomatic
           GridLines = True
@@ -1180,9 +1182,9 @@ object FormMain: TFormMain
         end
       end
       object ButtonReadEvents: TButton
-        Left = 528
+        Left = 530
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionEventReader
         Anchors = [akRight, akBottom]
@@ -1191,11 +1193,11 @@ object FormMain: TFormMain
     end
     object TabSheetCustom: TTabSheet
       Caption = 'Custom'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       object EditTargetNodeAlias: TEdit
         Left = 36
-        Height = 21
+        Height = 22
         Top = 32
         Width = 80
         TabOrder = 0
@@ -1203,15 +1205,15 @@ object FormMain: TFormMain
       end
       object LabelTargetAlias: TLabel
         Left = 21
-        Height = 14
+        Height = 17
         Top = 12
-        Width = 86
+        Width = 113
         Caption = 'Target Node Alias'
         ParentColor = False
       end
       object EditSourceNodeAlias: TEdit
         Left = 164
-        Height = 21
+        Height = 22
         Top = 32
         Width = 80
         TabOrder = 1
@@ -1219,15 +1221,15 @@ object FormMain: TFormMain
       end
       object LabelSourceAlias: TLabel
         Left = 151
-        Height = 14
+        Height = 17
         Top = 12
-        Width = 87
+        Width = 115
         Caption = 'Source Node Alias'
         ParentColor = False
       end
       object EditPacket: TEdit
         Left = 36
-        Height = 21
+        Height = 22
         Top = 84
         Width = 456
         TabOrder = 2
@@ -1235,9 +1237,9 @@ object FormMain: TFormMain
       end
       object LabelPacket: TLabel
         Left = 21
-        Height = 14
+        Height = 17
         Top = 62
-        Width = 37
+        Width = 46
         Caption = 'Packet:'
         ParentColor = False
       end
@@ -1291,10 +1293,12 @@ object FormMain: TFormMain
     object ActionReadXML: TAction
       Category = 'CDI_Reader'
       Caption = 'Read XML'
+      OnExecute = ActionReadXMLExecute
     end
     object ActionEventReader: TAction
       Category = 'Event_Reader'
       Caption = 'Read Events'
+      OnExecute = ActionEventReaderExecute
     end
     object ActionShowLog: TAction
       Caption = 'Show Log Window'
@@ -1382,4 +1386,4 @@ object FormMain: TFormMain
     left = 40
     top = 336
   end
-end
+end

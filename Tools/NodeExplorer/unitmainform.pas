@@ -19,7 +19,7 @@ unit UnitMainForm;
 
 {$mode objfpc}{$H+}
 
-{$DEFINE DISABLE_UI_UPDATE}
+{.$DEFINE DISABLE_UI_UPDATE}
 
 interface
 
@@ -113,9 +113,11 @@ type
     procedure ActionClearExecute(Sender: TObject);
     procedure ActionConnectExecute(Sender: TObject);
     procedure ActionDiscoverNodeExecute(Sender: TObject);
+    procedure ActionEventReaderExecute(Sender: TObject);
     procedure ActionExecuteTestsExecute(Sender: TObject);
     procedure ActionHideLogExecute(Sender: TObject);
     procedure ActionLoadTestMatrixExecute(Sender: TObject);
+    procedure ActionReadXMLExecute(Sender: TObject);
     procedure ActionRescanPortsExecute(Sender: TObject);
     procedure ActionSaveTestMatrixExecute(Sender: TObject);
     procedure ActionSendDatagramReplyExecute(Sender: TObject);
@@ -124,11 +126,13 @@ type
     procedure ActionShowOptionsWinExecute(Sender: TObject);
     procedure ActionShowPreferencesMacExecute(Sender: TObject);
     procedure ComboBoxBaudChange(Sender: TObject);
+    procedure ComboBoxPortsChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
+    procedure PageControlChange(Sender: TObject);
     procedure TimerCANTimer(Sender: TObject);
   private
     { private declarations }
@@ -226,9 +230,14 @@ begin
   TimerCAN.Enabled := True;
 end;
 
+procedure TFormMain.ActionEventReaderExecute(Sender: TObject);
+begin
+   ShowMessage('Not implemented yet');
+end;
+
 procedure TFormMain.ActionExecuteTestsExecute(Sender: TObject);
 begin
-  // Run the tests
+  ShowMessage('Not implemented yet');
 end;
 
 procedure TFormMain.ActionHideLogExecute(Sender: TObject);
@@ -249,12 +258,18 @@ begin
   end;
 end;
 
+procedure TFormMain.ActionReadXMLExecute(Sender: TObject);
+begin
+   ShowMessage('Not implemented yet');
+end;
+
 procedure TFormMain.ActionRescanPortsExecute(Sender: TObject);
 begin
   ComboBoxPorts.Items.Delimiter:=';';
-  ComboBoxPorts.Items.DelimitedText:=StringReplace(GetSerialPortNames, ',', ';', [rfReplaceAll, rfIgnoreCase]);
+  ComboBoxPorts.Items.DelimitedText := StringReplace(GetSerialPortNames, ',', ';', [rfReplaceAll, rfIgnoreCase]);
   if ComboBoxPorts.Items.Count > 0 then
     ComboBoxPorts.ItemIndex:= 0;
+  UpdateUI
 end;
 
 procedure TFormMain.ActionSaveTestMatrixExecute(Sender: TObject);
@@ -282,15 +297,12 @@ end;
 
 procedure TFormMain.ActionSendDatagramReplyExecute(Sender: TObject);
 begin
- // Log('Sending: :X19A28AAAN0641;');
- // ser.SendString(':X19A28AAAN0641;');
+  ShowMessage('Not implemented yet');
 end;
 
 procedure TFormMain.ActionSendPacketExecute(Sender: TObject);
 begin
-//  if FormLog.Visible then
- //   FormLog.MemoLog.Lines.Add('Sending: '+EditPacket.Text);
- // ser.SendString(EditPacket.Text);
+  ShowMessage('Not implemented yet');
 end;
 
 procedure TFormMain.ActionShowLogExecute(Sender: TObject);
@@ -316,6 +328,11 @@ procedure TFormMain.ComboBoxBaudChange(Sender: TObject);
 begin
   EditBaudRate.Enabled := ComboBoxBaud.ItemIndex = 0;
   LabelCustomBaud.Enabled := ComboBoxBaud.ItemIndex = 0;
+end;
+
+procedure TFormMain.ComboBoxPortsChange(Sender: TObject);
+begin
+  UpdateUI;
 end;
 
 procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: boolean);
@@ -408,6 +425,11 @@ begin
   FreeAndNil( Test);
 end;
 
+procedure TFormMain.PageControlChange(Sender: TObject);
+begin
+
+end;
+
 
 procedure TFormMain.TimerCANTimer(Sender: TObject);
 var
@@ -452,6 +474,7 @@ begin
   ActionEventReader.Enabled := Connected;
   ActionSendPacket.Enabled := Connected;
   ActionSendDatagramReply.Enabled := Connected;
+  ActionConnect.Enabled :=  ComboBoxPorts.ItemIndex > -1;
   {$ENDIF}
 end;
 
@@ -512,4 +535,4 @@ begin
 end;
 
 end.
-
+
