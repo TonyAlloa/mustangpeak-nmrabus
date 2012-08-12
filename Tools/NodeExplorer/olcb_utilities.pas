@@ -35,9 +35,9 @@ type
 
   TOpenLCBLayer = (ol_CAN, ol_OpenLCB);
 
-  { TOpenLCBNodeManager }
+  { TSettings }
 
-  TOpenLCBNodeManager = class
+  TSettings = class
   private
     FProxyNodeAlias: Word;
   public
@@ -72,48 +72,48 @@ type
     procedure Load(ALayer: TOpenLCBLayer; AMTI: DWord; ASourceAlias: Word; ADestinationAlias: Word; ADataCount: Integer; AData0, AData1, AData2, AData3, AData4, AData5, AData6, AData7: Byte);
   end;
 
-  { TOpenLCBTest }
+  { TTestBase }
 
-  TOpenLCBTestState = (ts_Idle, ts_Sending, ts_Receiving, ts_Complete);
+  TTestState = (ts_Idle, ts_Sending, ts_Receiving, ts_Complete);
 
-  TOpenLCBTest = class(TPersistent)
+  TTestBase = class(TPersistent)
   private
     FCompareMasks: TStringList;
     FMessageHelper: TOpenLCBMessageHelper;
-    FProxyNodeAlias: Word;
     FTestStrings: TStringList;
     FStateMachineIndex: Integer;
-    FTestState: TOpenLCBTestState;
+    FTestState: TTestState;
     FWaitTime: Integer;
     FWideString: WideString;
   protected
     property MessageHelper: TOpenLCBMessageHelper read FMessageHelper write FMessageHelper;
     property StateMachineIndex: Integer read FStateMachineIndex write FStateMachineIndex;
-    property ProxyNodeAlias: Word read FProxyNodeAlias write FProxyNodeAlias;
   public
     property Description: WideString read FWideString write FWideString;
     property TestStrings: TStringList read FTestStrings write FTestStrings;        // List of TOpenLCBMessageHelpers to send for test
     property CompareMasks: TStringList read FCompareMasks write FCompareMasks;        // List of expected messages Masks that the NUT should have sent (format TBD)
     property WaitTime: Integer read FWaitTime write FWaitTime;                  // Time to wait for the messages to sent (varies depending on what is being sent)
-    property TestState: TOpenLCBTestState read FTestState write FTestState;
-    constructor Create(AProxyNodeAlias: Word); virtual;
+    property TestState: TTestState read FTestState write FTestState;
+    constructor Create; virtual;
     destructor Destroy; override;
     function Process: Boolean; virtual; abstract;
+    class function CreateInstanceFromString(AClassname: String): TTestBase;
   end;
+  TTestBaseClass = class of TTestBase;
 
   { TTestVerifyNodeID }
 
-  TTestVerifyNodeID = class(TOpenLCBTest)
-    constructor Create(AProxyNodeAlias: Word); override;
+  TTestVerifyNodeID = class(TTestBase)
     function Process: Boolean; override;
   end;
+  TTestVerifyNodeIDClass = class of TTestVerifyNodeID;
 
   { TTestAliasMapEnquiry }
 
-  TTestAliasMapEnquiry = class(TOpenLCBTest)
-    constructor Create(AProxyNodeAlias: Word); override;
+  TTestAliasMapEnquiry = class(TTestBase)
     function Process: Boolean; override;
   end;
+  TTestAliasMapEnquiryClass = class of TTestAliasMapEnquiry;
 
    { TComPortThread }
 
@@ -152,75 +152,18 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure ClearTestList;
-    procedure Add(Test: TOpenLCBTest);
+    procedure Add(Test: TTestBase);
     procedure Run;
   end;
 
-const
-  NullByteArray: TByteArray = (0, 0, 0, 0, 0, 0, 0, 0);
 
+var
+  Settings: TSettings;
 
-function LoadByteArray(var Bytes: TByteArray; Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte): TByteArray;
-function BuildCANLayerMessage(MTI: DWord; ByteCount: Byte; Bytes: TByteArray; AddCarrageReturn: Boolean): AnsiString;
-function BuildNMRALayerMessage(MTI: DWord; SourceAlias: Word; ByteCount: Byte; Bytes: TByteArray; AddCarrageReturn: Boolean): AnsiString;
-procedure WordToByteArray(var Bytes: TByteArray; AWord: Word; Offset: Byte);
-procedure DWordToByteArray(var Bytes: TByteArray; ADWord: DWord; Offset: Byte);
 
 implementation
 
-procedure WordToByteArray(var Bytes: TByteArray; AWord: Word; Offset: Byte);
-begin
-  Bytes[Offset] := (AWord shr 8) and $00FF;
-  Bytes[Offset+1] := AWord and $00FF;
-
-end;
-
-procedure DWordToByteArray(var Bytes: TByteArray; ADWord: DWord; Offset: Byte);
-begin
-  Bytes[Offset+3] :=  ADWord and $000000FF;
-  Bytes[Offset+2] := (ADWord shr 8)  and $000000FF;
-  Bytes[Offset+1] := (ADWord shr 16) and $000000FF;
-  Bytes[Offset]   := (ADWord shr 24) and $000000FF;
-end;
-
-function LoadByteArray(var Bytes: TByteArray; Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte): TByteArray;
-begin
-  Bytes[0] := Byte0;
-  Bytes[1] := Byte1;
-  Bytes[2] := Byte2;
-  Bytes[3] := Byte3;
-  Bytes[4] := Byte4;
-  Bytes[5] := Byte5;
-  Bytes[6] := Byte6;
-  Bytes[7] := Byte7;
-  Result := Bytes;
-end;
-
-
-function BuildCANLayerMessage(MTI: DWord; ByteCount: Byte; Bytes: TByteArray; AddCarrageReturn: Boolean): AnsiString;
-var
-  i: Integer;
-begin
-  Result := ':X' + IntToHex(MTI, 8) + 'N';
-  for i := 0 to ByteCount-1 do
-    Result := Result + IntToHex(Bytes[i], 2);
-  Result := Result + ';';
-  if AddCarrageReturn then
-    Result := Result + LF;
-end;
-
-function BuildNMRALayerMessage(MTI: DWord; SourceAlias: Word; ByteCount: Byte; Bytes: TByteArray; AddCarrageReturn: Boolean): AnsiString;
-begin
-  MTI := MTI or $10000000 or SourceAlias;
-  Result := BuildCANLayerMessage(MTI, ByteCount, Bytes, AddCarrageReturn);
-end;
-
 { TTestAliasMapEnquiry }
-
-constructor TTestAliasMapEnquiry.Create(AProxyNodeAlias: Word);
-begin
-  inherited Create(AProxyNodeAlias);
-end;
 
 function TTestAliasMapEnquiry.Process: Boolean;
 begin
@@ -260,7 +203,7 @@ begin
   end;
 end;
 
-procedure TOpenLCBTestMatrix.Add(Test: TOpenLCBTest);
+procedure TOpenLCBTestMatrix.Add(Test: TTestBase);
 begin
   TestList.Add(Test);
 end;
@@ -269,13 +212,13 @@ procedure TOpenLCBTestMatrix.Run;
 var
   i: Integer;
   List: TList;
-  Test: TOpenLCBTest;
+  Test: TTestBase;
 begin
   List := ComPortThread.ThreadTestList.LockList;
   try
     for i := 0 to TestList.Count - 1 do
     begin
-      Test := TOpenLCBTest( TestList[i]);
+      Test := TTestBase( TestList[i]);
       Test.Process;       // Run first State
       List.Add(Test);
     end;
@@ -284,9 +227,9 @@ begin
   end;
 end;
 
-{ TOpenLCBNodeManager }
+{ TSettings }
 
-constructor TOpenLCBNodeManager.Create;
+constructor TSettings.Create;
 begin
   inherited Create;
   FProxyNodeAlias := $0AAA
@@ -294,19 +237,12 @@ end;
 
 { TTestVerifyNodeID }
 
-constructor TTestVerifyNodeID.Create(AProxyNodeAlias: Word);
-begin
-  inherited Create(AProxyNodeAlias);
-  Description := 'Global Verify Node ID';
-  FStateMachineIndex := 0;
-end;
-
 function TTestVerifyNodeID.Process: Boolean;
 begin
   Result := True;
   case StateMachineIndex of
     0 : begin
-          MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
           TestStrings.Add(Description);
           TestStrings.Add(MessageHelper.Encode);
           Inc(FStateMachineIndex);
@@ -317,12 +253,11 @@ begin
   end;
 end;
 
-{ TOpenLCBTest }
+{ TTestBase }
 
-constructor TOpenLCBTest.Create(AProxyNodeAlias: Word);
+constructor TTestBase.Create;
 begin
   inherited Create;
-  FProxyNodeAlias := AProxyNodeAlias;
   Description := '';
   FTestStrings := TStringList.Create;
   FCompareMasks := TStringList.Create;
@@ -331,12 +266,23 @@ begin
   WaitTime := DEFAULT_TIMEOUT;
 end;
 
-destructor TOpenLCBTest.Destroy;
+destructor TTestBase.Destroy;
 begin
   FreeAndNil(FTestStrings);
   FreeAndNil(FCompareMasks);
   FreeAndNil(FMessageHelper);
+  FStateMachineIndex := 0;
   inherited Destroy;
+end;
+
+class function TTestBase.CreateInstanceFromString(AClassname: String): TTestBase;
+var
+  TestBaseClass: TTestBaseClass;
+begin
+  Result := nil;
+  TestBaseClass := TTestBaseClass( FindClass(AClassname));
+  if Assigned(TestBaseClass) then
+    Result := TestBaseClass.Create;
 end;
 
 
@@ -453,7 +399,7 @@ procedure TComPortThread.Execute;
 var
   List: TList;
   i: Integer;
-  ActiveTest: TOpenLCBTest;
+  ActiveTest: TTestBase;
 begin
   Serial := TBlockSerial.Create;
   Serial.LinuxLock:=False;
@@ -469,7 +415,7 @@ begin
       try
         if List.Count > 0 then
         begin
-          ActiveTest := TOpenLCBTest( List[0]);
+          ActiveTest := TTestBase( List[0]);
           if ActiveTest.TestState = ts_Idle then
           begin
             ActiveTest.TestState := ts_Sending;
@@ -499,6 +445,9 @@ begin
               end;
             end;
           end;
+        end else
+        begin
+
         end;
       finally
         ThreadTestList.UnlockList;
@@ -557,13 +506,13 @@ end;
 procedure TComPortThread.TimerCallback(Sender: TObject);
 var
   List: TList;
-  ActiveTest: TOpenLCBTest;
+  ActiveTest: TTestBase;
 begin
   List := ThreadTestList.LockList;     // This is called in the context of the Thread so this is safe
   try
     if List.Count > 0 then
     begin
-      ActiveTest := TOpenLCBTest( List[0]);      // The assumption here is the main thread loop started this and it did not fire randomly
+      ActiveTest := TTestBase( List[0]);      // The assumption here is the main thread loop started this and it did not fire randomly
       if ActiveTest.TestState = ts_Receiving then
       begin;
         if ActiveTest.Process then                 // Move to next state of the Test
@@ -583,6 +532,10 @@ end;
 initialization
   RegisterClass(TTestVerifyNodeID);
   RegisterClass(TTestAliasMapEnquiry);
+  Settings := TSettings.Create;
+
+finalization
+  FreeAndNil(Settings);
 
 end.
 

@@ -1,11 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<TestMatrix>
+<?xml version="1.0" encoding="utf-8"?>
+<Settings>
   <DefaultNode>
     <NodeID>010203040506</NodeID>
-    <Alias>$AAA</Alias>
+    <Alias>$0AAA</Alias>
   </DefaultNode>
   <DefaultCOM>
     <Port>COM4</Port>
     <Baud>333333</Baud>
   </DefaultCOM>
-</TestMatrix>
+</Settings>

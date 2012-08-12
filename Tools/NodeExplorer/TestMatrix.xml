@@ -1,10 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <TestMatrix>
   <Test0>
     <Name>IdentifyNodes</Name>
     <Description>Identifies all nodes on the network using VerifyNodeID</Description>
     <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
     <Classname>TTestVerifyNodeID</Classname>
+    <Enabled>True</Enabled>
     <TestObjective1>
       <Objective>Send global Verify Node ID MessageNetwork Layer Message</Objective>
       <Results>Verified Node ID from all nodes on the network</Results>
@@ -15,6 +16,7 @@
     <Description>Test the Alias Map Enquiry Message</Description>
     <SpecDoc>"OpenLCB-CAN Frame Transfer Paragraph 6.2.3</SpecDoc>
     <Classname>TTestAliasMapEnquiry</Classname>
+    <Enabled>False</Enabled>
     <TestObjective1>
       <Objective>Send AME message with Full Node ID of Node Under Test as CAN data payload</Objective>
       <Results>Receive Alias Map Definition (AMD) from node matching the Full Node ID sent</Results>

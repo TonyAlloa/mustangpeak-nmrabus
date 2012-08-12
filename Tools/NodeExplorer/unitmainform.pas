@@ -25,7 +25,7 @@ uses
   Classes, SysUtils, FileUtil, SynHighlighterXML, SynMemo, SynEdit,
   RTTICtrls, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList,
   Menus, ExtCtrls, synaser, lcltype, unitlogwindow, olcb_utilities,
-  unitolcb_defines, unitsettings, DOM, XMLRead, XMLWrite;
+  unitolcb_defines, unitsettings, Laz2_DOM, Laz2_XMLRead, Laz2_XMLWrite;
 
 
 const
@@ -37,6 +37,7 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
+    ActionExecuteTests: TAction;
     ActionSaveTestMatrix: TAction;
     ActionLoadTestMatrix: TAction;
     ActionRescanPorts: TAction;
@@ -55,6 +56,7 @@ type
     ApplicationProperties1: TApplicationProperties;
     ButtonConnect: TButton;
     ButtonDiscoverNodes: TButton;
+    ButtonLoadTests1: TButton;
     ButtonSaveTests: TButton;
     ButtonShowLog: TButton;
     ButtonRescanPorts: TButton;
@@ -74,19 +76,19 @@ type
     GroupBoxComPort: TGroupBox;
     GroupBoxEventReaderConsumers: TGroupBox;
     GroupBoxEventReaderProducers: TGroupBox;
-    GroupBoxNodeDiscovery: TGroupBox;
     ImageOpenLCB: TImage;
+    Label1: TLabel;
+    LabelDiscoverNodeAlias: TLabel;
+    LabelDiscoverNodeID: TLabel;
     LabelTargetAlias: TLabel;
     LabelSourceAlias: TLabel;
     LabelPacket: TLabel;
     LabelBaud: TLabel;
     LabelCustomBaud: TLabel;
-    LabelDiscoverNodeAlias: TLabel;
-    LabelDiscoverNodeID: TLabel;
     LabelPort: TLabel;
+    ListViewNodeDiscovery: TListView;
     ListViewTestMatrix: TListView;
     ListViewConsumers: TListView;
-    ListViewNodeDiscovery: TListView;
     ListViewDiscovery: TListView;
     ListViewProducers: TListView;
     MainMenu: TMainMenu;
@@ -109,6 +111,7 @@ type
     procedure ActionClearExecute(Sender: TObject);
     procedure ActionConnectExecute(Sender: TObject);
     procedure ActionDiscoverNodeExecute(Sender: TObject);
+    procedure ActionExecuteTestsExecute(Sender: TObject);
     procedure ActionHideLogExecute(Sender: TObject);
     procedure ActionLoadTestMatrixExecute(Sender: TObject);
     procedure ActionRescanPortsExecute(Sender: TObject);
@@ -123,10 +126,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure PageControlChange(Sender: TObject);
+    procedure ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
     procedure TimerCANTimer(Sender: TObject);
   private
-    FNodeManager: TOpenLCBNodeManager;
     { private declarations }
     FShownOnce: Boolean;
     FTestMatrix: TOpenLCBTestMatrix;
@@ -146,15 +148,36 @@ type
     procedure LoadTestMatrix;
     property ShownOnce: Boolean read FShownOnce write FShownOnce;
     property TestStrings: TStringList read FTestStrings write FTestStrings;
-    property NodeManager: TOpenLCBNodeManager read FNodeManager write FNodeManager;
     property TestMatrix: TOpenLCBTestMatrix read FTestMatrix write FTestMatrix;
     property XMLDoc: TXMLDocument read FXMLDoc write FXMLDoc;
-  end; 
+  end;
+
+  { TListNodeObj }
+
+  TListNodeObj = class
+  private
+    FTest: TTestBase;
+    FXMLNode: TDOMNode;
+  public
+    property XMLNode: TDOMNode read FXMLNode write FXMLNode;
+    property Test: TTestBase read FTest write FTest;
+    destructor Destroy; virtual;
+  end;
+
 
 var
   FormMain: TFormMain;
 
 implementation
+
+{ TListNodeObj }
+
+destructor TListNodeObj.Destroy;
+begin
+  FreeAndNil(FTest);
+  FXMLNode := nil;           // Owned by the Forms XML document
+  inherited Destroy;
+end;
 
 {$R *.lfm}
 
@@ -215,10 +238,14 @@ var
   Test: TTestVerifyNodeID;
 begin
  // TestMatrix.ClearTestList;
-  Test := TTestVerifyNodeID.Create(NodeManager.ProxyNodeAlias);
   TestMatrix.Add(Test);
   TestMatrix.Run;
   TimerCAN.Enabled := True;
+end;
+
+procedure TFormMain.ActionExecuteTestsExecute(Sender: TObject);
+begin
+  // Run the tests
 end;
 
 procedure TFormMain.ActionHideLogExecute(Sender: TObject);
@@ -248,11 +275,24 @@ begin
 end;
 
 procedure TFormMain.ActionSaveTestMatrixExecute(Sender: TObject);
+var
+  ListItemObj: TListNodeObj;
+  EnabledNode: TDOMNode;
+  i: Integer;
 begin
   SaveDialog.DefaultExt := '*.xml';
   SaveDialog.Filter := 'XML Files|*.xml';
   if SaveDialog.Execute then
   begin
+    for i := 0 to ListViewTestMatrix.Items.Count - 1 do
+    begin
+      ListItemObj := TListNodeObj( ListViewTestMatrix.Items[i].Data);
+      EnabledNode := ListItemObj.XMLNode.FindNode('Enabled');
+      if ListViewTestMatrix.Items[i].Checked then
+        EnabledNode.FirstChild.NodeValue := 'True'
+      else
+        EnabledNode.FirstChild.NodeValue := 'False'
+     end;
     WriteXMLFile(FXMLDoc, SaveDialog.FileName);
   end;
 end;
@@ -325,7 +365,6 @@ begin
 
   ShownOnce := False;
   FTestStrings := TStringList.Create;
-  FNodeManager := TOpenLCBNodeManager.Create;
   FTestMatrix := TOpenLCBTestMatrix.Create;
   ActionRescanPorts.Execute;
 end;
@@ -333,7 +372,6 @@ end;
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FTestStrings);
-  FreeAndNil(FNodeManager);
   FreeAndNil(FTestMatrix);
   FreeAndNil(FXMLDoc);
 end;
@@ -347,20 +385,27 @@ begin
   ShownOnce := True;
 end;
 
-procedure TFormMain.PageControlChange(Sender: TObject);
+procedure TFormMain.ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
+var
+  NodeObj: TListNodeObj;
+  Test: TTestBase;
 begin
-
+  Test := TListNodeObj( Item.Data).Test;
+  NodeObj := TListNodeObj( Item.Data);
+  FreeAndNil( Test);
+  NodeObj.XMLNode := nil;
+  FreeAndNil( NodeObj);
 end;
 
 
 procedure TFormMain.TimerCANTimer(Sender: TObject);
 var
   i: Integer;
-  Test: TOpenLCBTest;
+  Test: TTestBase;
 begin
   if TestMatrix.TestList.Count > 0 then
   begin
-    Test := TOpenLCBTest( TestMatrix.TestList[0]);
+    Test := TTestBase( TestMatrix.TestList[0]);
     if Test.TestState = ts_Complete then
     begin
       for i := 0 to Test.TestStrings.Count - 1 do
@@ -382,8 +427,10 @@ end;
 procedure TFormMain.LoadTestMatrix;
 var
   i: Integer;
-  TestMatrixNode, TestNode, NameNode, DescNode, ReqtNode, ClassnameNode: TDOMNode;
+  TestMatrixNode, TestNode, NameNode, DescNode, ReqtNode, ClassnameNode, EnabledNode: TDOMNode;
   ListItem: TListItem;
+  Test: TTestBase;
+  ListItemObj: TListNodeObj;
   s: string;
 begin
   ListviewTestMatrix.Items.BeginUpdate;
@@ -400,14 +447,25 @@ begin
         DescNode := TestNode.FindNode('Description');
         ReqtNode := TestNode.FindNode('SpecDoc');
         ClassnameNode := TestNode.FindNode('Classname');
-        ListItem := ListviewTestMatrix.Items.Add;
-        ListItem.Caption := NameNode.FirstChild.NodeValue;
-        ListItem.SubItems.Add(DescNode.FirstChild.NodeValue);
-        ListItem.SubItems.Add(ReqtNode.FirstChild.NodeValue);
-        ListItem.SubItems.Add(ClassnameNode.FirstChild.NodeValue);
-        ListItem.Data := TestNode;                                 // Link the XML node to the Listview Item
-        Inc(i);
-        TestNode := TestMatrixNode.FindNode('Test' + IntToStr(i));
+        EnabledNode := TestNode.FindNode('Enabled');
+        Test := TTestBase.CreateInstanceFromString(ClassNameNode.FirstChild.NodeValue);
+        if not Assigned(Test) then
+          ShowMessage('Invalid Classname for Test ' + NameNode.FirstChild.NodeValue)
+        else begin
+          ListItem := ListviewTestMatrix.Items.Add;
+          ListItem.Caption := NameNode.FirstChild.NodeValue;
+          ListItem.SubItems.Add(DescNode.FirstChild.NodeValue);
+          ListItem.SubItems.Add(ReqtNode.FirstChild.NodeValue);
+          ListItem.SubItems.Add(ClassnameNode.FirstChild.NodeValue);
+          ListItem.Checked := EnabledNode.FirstChild.NodeValue = 'True';
+          ListItemObj := TListNodeObj.Create;
+          ListItemObj.XMLNode := TestNode;
+          ListItemObj.Test := Test;
+          ListItem.Data := ListItemObj;                                // Link the XML node to the Listview Item
+
+          Inc(i);                                                      // Next Test
+          TestNode := TestMatrixNode.FindNode('Test' + IntToStr(i));
+        end;
       end;
     end;
   finally
@@ -417,4 +475,3 @@ end;
 
 end.
 
-
