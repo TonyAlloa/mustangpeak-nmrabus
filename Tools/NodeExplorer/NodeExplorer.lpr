@@ -9,8 +9,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, runtimetypeinfocontrols, UnitMainForm, unitlogwindow, olcb_utilities,
   olcb_stringconstants, unitolcb_defines, unitsettings, serialport_thread,
-olcb_testmatrix, nodeexplorer_settings
-  { you can add units after this };
+olcb_testmatrix, nodeexplorer_settings;
 
 {$R *.res}
 

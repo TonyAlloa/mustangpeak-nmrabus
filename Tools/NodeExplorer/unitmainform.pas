@@ -436,7 +436,10 @@ var
   i: Integer;
   Test: TTestBase;
   List: TList;
+  LocalStrings: TStringList;
 begin
+  Test := nil;
+  LocalStrings := nil;
   if Assigned(TestMatrix.ComPortThread) then
   begin
     List := TestMatrix.ComPortThread.ThreadTestList.LockList;
@@ -446,15 +449,22 @@ begin
         Test := TTestBase( List[0]);
         if Test.TestState = ts_Complete then
         begin
-          for i := 0 to Test.TestStrings.Count - 1 do
-            Log(Test.TestStrings[i]);
+          LocalStrings := TStringList.Create;
+          LocalStrings.Text := Test.TestStrings.Text;  // Make a copy
           List.Remove(Test);
-          if Test.FreeOnComplete then
-            Test.Free;
-        end;
+        end else
+          Test := nil;
       end;
     finally
       TestMatrix.ComPortThread.ThreadTestList.UnLockList;
+    end;
+
+    // Do this outside of the thread lock so the thread can keep churning
+    if Assigned(LocalStrings) then
+    begin
+      for i := 0 to LocalStrings.Count - 1 do
+        Log(LocalStrings[i]);
+      LocalStrings.Free;
     end;
   end;
 end;
@@ -535,4 +545,4 @@ begin
 end;
 
 end.
-
+

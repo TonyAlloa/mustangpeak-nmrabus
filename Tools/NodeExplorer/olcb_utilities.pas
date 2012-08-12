@@ -87,7 +87,6 @@ implementation
 
 procedure ExtractTestsFromXML(XMLDoc: TXMLDocument; TestList: TList);
 var
-  i: Integer;
   TestMatrixNode, Child: TDOMNode;
 begin
   TestMatrixNode := XMLDoc.FindNode('TestMatrix');
@@ -108,8 +107,7 @@ end;
 
 procedure ExtractTestObjectivesFromTestNode(TestNode: TDOMNode; TestList: TList);
 var
-  i: Integer;
-  Child: TDOMNode;
+   Child: TDOMNode;
 begin
   Child := TestNode.FirstChild;
   while Assigned(Child) do

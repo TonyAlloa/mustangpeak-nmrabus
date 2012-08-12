@@ -72,10 +72,13 @@ begin
         begin
           ActiveTest := TTestBase( List[0]);
 
-          if ActiveTest.TestState = ts_Idle then
+          if ActiveTest.TestState = ts_Processing then
           begin
             ActiveTest.TestState := ts_Sending;
-            for i := 0 to ActiveTest.TestStrings.Count - 1 do
+            ActiveTest.TestStrings.Add('<objective>');
+            ActiveTest.TestStrings.Add('<send>');
+            ActiveTest.Process;                                                 // Run State
+            for i := iTestStrings to ActiveTest.TestStrings.Count - 1 do  // Start with the next objective information
             begin
               if Length(ActiveTest.TestStrings[i]) > 0 then
               begin
@@ -86,17 +89,35 @@ begin
             while Serial.SendingData > 0 do
               ThreadSwitch;                                             // Wait till "done" transmitting
             ActiveTest.TestState := ts_Receiving;
+            ActiveTest.TestStrings.Add('</send>');
+            ActiveTest.TestStrings.Add('<receive>);
           end else
           if ActiveTest.TestState = ts_Receiving then
           begin
             TempStr := Serial.Recvstring(ActiveTest.WaitTime);
             if TempStr <> '' then
-              ActiveTest.TestStrings.Add('Receiving: '+Trim(TempStr))
-            else
-              ActiveTest.TestState := ts_Complete;
+              ActiveTest.TestStrings.Add(Trim(TempStr))
+            else begin
+              if ActiveTest.Process then
+              begin
+                ActiveTest.TestStrings.Add('</objective>);
+                ActiveTest.TestState := ts_Processing  // Next send cycle
+              end else
+              begin
+                ActiveTest.TestState := ts_Complete;
+              end
             end;
           end;
-       finally
+        end else
+        begin
+          // Unsolicited Information
+          TempStr := Serial.Recvstring(0);
+          if TempStr <> '' then
+          begin
+            ///  Do something?///
+          end;
+        end;
+      finally
         ThreadTestList.UnlockList;
       end;
     end;
@@ -171,7 +192,9 @@ begin
     for i := 0 to TestList.Count - 1 do
     begin
       Test := TTestBase( TestList[i]);
-      Test.Process;       // Run first State
+      Test.TestStrings.Clear;
+      Test.StateMachineIndex := 0;
+      Test.TestState := ts_Processing;
       List.Add(Test);     // Add it to the Thread List
     end;
   finally
@@ -188,4 +211,4 @@ finalization
 
 
 end.
-
+
