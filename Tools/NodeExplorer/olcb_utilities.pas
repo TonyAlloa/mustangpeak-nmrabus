@@ -22,12 +22,21 @@ unit olcb_utilities;
 interface
 
 uses
-  Classes, SysUtils, strutils, ExtCtrls;
+  Classes, SysUtils, strutils, ExtCtrls, DOM, XMLRead, XMLWrite;
 
 const
   LF = #13+#10;
   CAN_BYTE_COUNT = 8;
   DEFAULT_TIMEOUT = 200;                  // 200ms of no activity on the UART signals the receoption is complete
+
+  XML_ELEMENT_NAME               = 'Name';
+  XML_ELEMENT_DESCRIPTION        = 'Description';
+  XML_ELEMENT_SPECDOC            = 'SpecDoc';
+  XML_ELEMENT_CLASSNAME          = 'Classname';
+  XML_ELEMENT_ENABLED            = 'Enabled';
+  XML_ELEMENT_TESTOBJECTIVE      = 'TestObjective';
+  XML_ELEMENT_OBJECTIVE          = 'Objective';
+  XML_ELEMENT_OBJECTIVERESULTS   = 'Results';
 
 type
   TByteArray = array[0..CAN_BYTE_COUNT-1] of Byte;
@@ -62,8 +71,112 @@ type
     procedure Load(ALayer: TOpenLCBLayer; AMTI: DWord; ASourceAlias: Word; ADestinationAlias: Word; ADataCount: Integer; AData0, AData1, AData2, AData3, AData4, AData5, AData6, AData7: Byte);
   end;
 
+  procedure ExtractTestsFromXML(XMLDoc: TXMLDocument; TestList: TList);
+  procedure ExtractTestObjectivesFromTestNode(TestNode: TDOMNode; TestList: TList);
+  function TestNameFromTestNode(TestNode: TDOMNode): WideString;
+  function TestDescriptionFromTestNode(TestNode: TDOMNode): WideString;
+  function TestSpecDocFromTestNode(TestNode: TDOMNode): WideString;
+  function TestClassnameFromTestNode(TestNode: TDOMNode): WideString;
+  function TestEnabledStateFromTestNode(TestNode: TDOMNode): WideString;
+  function ObjectiveFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
+  function ObjectiveResultFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
+  function ExtractElementValue(Node: TDOMNode; ElementName: WideString): WideString;
+  function ValidateTestNode(TestNode: TDOMNode): Boolean;
 
 implementation
+
+procedure ExtractTestsFromXML(XMLDoc: TXMLDocument; TestList: TList);
+var
+  i: Integer;
+  TestMatrixNode, Child: TDOMNode;
+begin
+  TestMatrixNode := XMLDoc.FindNode('TestMatrix');
+  Child := TestMatrixNode.FirstChild;
+  while Assigned(Child) do
+  begin
+    if Child.HasChildNodes then
+    begin
+      if Child.NodeName = 'Test' then
+      begin
+        if ValidateTestNode(Child) then
+          TestList.Add(Child);
+      end;
+    end;
+    Child := Child.NextSibling;
+  end;
+end;
+
+procedure ExtractTestObjectivesFromTestNode(TestNode: TDOMNode; TestList: TList);
+var
+  i: Integer;
+  Child: TDOMNode;
+begin
+  Child := TestNode.FirstChild;
+  while Assigned(Child) do
+  begin
+    if Child.HasChildNodes then
+    begin
+      if Child.NodeName = 'TestObjective' then
+        TestList.Add(Child);
+    end;
+    Child := Child.NextSibling;
+  end;
+end;
+
+function TestNameFromTestNode(TestNode: TDOMNode): WideString;
+begin
+  Result := ExtractElementValue(TestNode, XML_ELEMENT_NAME)
+end;
+
+function TestDescriptionFromTestNode(TestNode: TDOMNode): WideString;
+begin
+  Result := ExtractElementValue(TestNode, XML_ELEMENT_DESCRIPTION)
+end;
+
+function TestSpecDocFromTestNode(TestNode: TDOMNode): WideString;
+begin
+  Result := ExtractElementValue(TestNode, XML_ELEMENT_SPECDOC)
+end;
+
+function TestClassnameFromTestNode(TestNode: TDOMNode): WideString;
+begin
+  Result := ExtractElementValue(TestNode, XML_ELEMENT_CLASSNAME)
+end;
+
+function TestEnabledStateFromTestNode(TestNode: TDOMNode): WideString;
+begin
+  Result := ExtractElementValue(TestNode, XML_ELEMENT_ENABLED)
+end;
+
+function ObjectiveFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
+begin
+  Result := ExtractElementValue(ObjectiveNode, XML_ELEMENT_OBJECTIVE)
+end;
+
+function ObjectiveResultFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
+begin
+  Result := ExtractElementValue(ObjectiveNode, XML_ELEMENT_OBJECTIVERESULTS)
+end;
+
+function ExtractElementValue(Node: TDOMNode; ElementName: WideString): WideString;
+var
+  Child: TDOMNode;
+begin
+  Result := '';
+  Child := Node.FindNode(ElementName);
+  if Assigned(Child) then
+  begin
+    if Child.HasChildNodes then
+      Result := Child.FirstChild.NodeValue;
+  end;
+end;
+
+function ValidateTestNode(TestNode: TDOMNode): Boolean;
+begin
+  Result := Assigned( TestNode.FindNode(XML_ELEMENT_NAME)) and Assigned( TestNode.FindNode(XML_ELEMENT_DESCRIPTION)) and
+            Assigned( TestNode.FindNode(XML_ELEMENT_SPECDOC)) and Assigned( TestNode.FindNode(XML_ELEMENT_CLASSNAME)) and
+            Assigned( TestNode.FindNode(XML_ELEMENT_ENABLED)) and Assigned( TestNode.FindNode(XML_ELEMENT_TESTOBJECTIVE));
+end;
 
 { TOpenLCBMessageHelper }
 

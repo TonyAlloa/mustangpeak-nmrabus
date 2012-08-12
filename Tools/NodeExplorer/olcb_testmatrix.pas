@@ -5,7 +5,8 @@ unit olcb_testmatrix;
 interface
 
 uses
-  Classes, SysUtils, olcb_utilities, unitolcb_defines, nodeexplorer_settings;
+  Classes, SysUtils, olcb_utilities, unitolcb_defines, nodeexplorer_settings,
+  DOM, XMLRead, XMLWrite;
 
 { TTestBase }
 
@@ -22,6 +23,7 @@ type
     FTestState: TTestState;
     FWaitTime: Integer;
     FWideString: WideString;
+    FXMLNode: TDOMNode;
   protected
     property MessageHelper: TOpenLCBMessageHelper read FMessageHelper write FMessageHelper;
     property StateMachineIndex: Integer read FStateMachineIndex write FStateMachineIndex;
@@ -32,6 +34,7 @@ type
     property CompareMasks: TStringList read FCompareMasks write FCompareMasks;        // List of expected messages Masks that the NUT should have sent (format TBD)
     property WaitTime: Integer read FWaitTime write FWaitTime;                  // Time to wait for the messages to sent (varies depending on what is being sent)
     property TestState: TTestState read FTestState write FTestState;
+    property XMLNode: TDOMNode  read FXMLNode write FXMLNode;
     constructor Create; virtual;
     destructor Destroy; override;
     function Process: Boolean; virtual; abstract;

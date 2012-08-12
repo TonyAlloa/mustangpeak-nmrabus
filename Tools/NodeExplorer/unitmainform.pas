@@ -19,6 +19,8 @@ unit UnitMainForm;
 
 {$mode objfpc}{$H+}
 
+{$DEFINE DISABLE_UI_UPDATE}
+
 interface
 
 uses
@@ -26,7 +28,7 @@ uses
   RTTICtrls, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList,
   Menus, ExtCtrls, synaser, lcltype, unitlogwindow, unitsettings,
   DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
-  nodeexplorer_settings;
+  nodeexplorer_settings, olcb_utilities;
 
 
 const
@@ -56,7 +58,7 @@ type
     ApplicationProperties1: TApplicationProperties;
     ButtonConnect: TButton;
     ButtonDiscoverNodes: TButton;
-    ButtonLoadTests1: TButton;
+    ButtonExecuteTests: TButton;
     ButtonSaveTests: TButton;
     ButtonShowLog: TButton;
     ButtonRescanPorts: TButton;
@@ -133,7 +135,9 @@ type
     FShownOnce: Boolean;
     FTestMatrix: TOpenLCBTestMatrix;
     FTestStrings: TStringList;
+    FVerifyNodeIDTest: TTestVerifyNodeID;
     FXMLDoc: TXMLDocument;
+    function GetConnected: Boolean;
   protected
     { protected declarations }
     {$IFDEF DARWIN}
@@ -142,43 +146,23 @@ type
       AppSep1Cmd  : TMenuItem;
       AppPrefCmd  : TMenuItem;
     {$ENDIF}
+    procedure UpdateUI;
+    property Connected: Boolean read GetConnected;
   public
     { public declarations }
     procedure Log(Line: String);
     procedure LoadTestMatrix;
-    function ExtractTestFromNode(ANode: TListItem): TTestBase;
     property ShownOnce: Boolean read FShownOnce write FShownOnce;
     property TestStrings: TStringList read FTestStrings write FTestStrings;
     property TestMatrix: TOpenLCBTestMatrix read FTestMatrix write FTestMatrix;
+    property VerifyNodeIDTest: TTestVerifyNodeID read FVerifyNodeIDTest write FVerifyNodeIDTest;
     property XMLDoc: TXMLDocument read FXMLDoc write FXMLDoc;
   end;
-
-  { TListNodeObj }
-
-  TListNodeObj = class
-  private
-    FTest: TTestBase;
-    FXMLNode: TDOMNode;
-  public
-    property XMLNode: TDOMNode read FXMLNode write FXMLNode;
-    property Test: TTestBase read FTest write FTest;
-    destructor Destroy; override;
-  end;
-
 
 var
   FormMain: TFormMain;
 
 implementation
-
-{ TListNodeObj }
-
-destructor TListNodeObj.Destroy;
-begin
-  FreeAndNil(FTest);
-  FXMLNode := nil;           // Owned by the Forms XML document
-  inherited Destroy;
-end;
 
 {$R *.lfm}
 
@@ -196,7 +180,7 @@ end;
 
 procedure TFormMain.ActionConnectExecute(Sender: TObject);
 begin
-  if Assigned(TestMatrix.ComPortThread) then
+  if Connected then
   begin
     TestMatrix.ComportThread.Terminate;
     TestMatrix.ComPortThread := nil;
@@ -231,16 +215,13 @@ begin
       end;
       ActionConnect.Caption:='Connect';
     end;
-  end
+  end;
+  UpdateUI;
 end;
 
 procedure TFormMain.ActionDiscoverNodeExecute(Sender: TObject);
-var
-  Test: TTestVerifyNodeID;
 begin
-  Test := TTestVerifyNodeID.Create;
-  Test.FreeOnComplete := True;
-  TestMatrix.Add(Test);
+  TestMatrix.Add(VerifyNodeIDTest);
   TestMatrix.Run;
   TimerCAN.Enabled := True;
 end;
@@ -278,8 +259,8 @@ end;
 
 procedure TFormMain.ActionSaveTestMatrixExecute(Sender: TObject);
 var
-  ListItemObj: TListNodeObj;
   EnabledNode: TDOMNode;
+  Test: TTestBase;
   i: Integer;
 begin
   SaveDialog.DefaultExt := '*.xml';
@@ -288,8 +269,8 @@ begin
   begin
     for i := 0 to ListViewTestMatrix.Items.Count - 1 do
     begin
-      ListItemObj := TListNodeObj( ListViewTestMatrix.Items[i].Data);
-      EnabledNode := ListItemObj.XMLNode.FindNode('Enabled');
+      Test := TTestBase( ListViewTestMatrix.Items[i].Data);
+      EnabledNode := Test.XMLNode.FindNode('Enabled');
       if ListViewTestMatrix.Items[i].Checked then
         EnabledNode.FirstChild.NodeValue := 'True'
       else
@@ -366,6 +347,7 @@ begin
   {$ENDIF}
 
   ShownOnce := False;
+  FVerifyNodeIDTest := nil;
   FTestStrings := TStringList.Create;
   FTestMatrix := TOpenLCBTestMatrix.Create;
   ActionRescanPorts.Execute;
@@ -412,20 +394,18 @@ begin
         Break;
       end;
     end;
+    UpdateUI;
   end;
   ShownOnce := True;
 end;
 
 procedure TFormMain.ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
 var
-  NodeObj: TListNodeObj;
   Test: TTestBase;
 begin
-  Test := TListNodeObj( Item.Data).Test;
-  NodeObj := TListNodeObj( Item.Data);
+  Test := TTestBase( Item.Data);
+  Test.XMLNode := nil;                    // The XML Document owns this
   FreeAndNil( Test);
-  NodeObj.XMLNode := nil;
-  FreeAndNil( NodeObj);
 end;
 
 
@@ -457,6 +437,24 @@ begin
   end;
 end;
 
+function TFormMain.GetConnected: Boolean;
+begin
+  Result := Assigned(TestMatrix.ComPortThread)
+end;
+
+procedure TFormMain.UpdateUI;
+begin
+  {$IFNDEF DISABLE_UI_UPDATE}
+  ActionDiscoverNode.Enabled := Assigned(VerifyNodeIDTest) and Connected;
+  ActionExecuteTests.Enabled := Assigned(XMLDoc) and Connected;
+  ActionSaveTestMatrix.Enabled := Assigned(XMLDoc);
+  ActionReadXML.Enabled := Connected;
+  ActionEventReader.Enabled := Connected;
+  ActionSendPacket.Enabled := Connected;
+  ActionSendDatagramReply.Enabled := Connected;
+  {$ENDIF}
+end;
+
 procedure TFormMain.Log(Line: String);
 begin
   if FormLog.Visible then
@@ -468,55 +466,49 @@ end;
 procedure TFormMain.LoadTestMatrix;
 var
   i: Integer;
-  TestMatrixNode, TestNode, NameNode, DescNode, ReqtNode, ClassnameNode, EnabledNode: TDOMNode;
+  TestNode: TDOMNode;
   ListItem: TListItem;
   Test: TTestBase;
-  ListItemObj: TListNodeObj;
-
+  TestList: TList;
 begin
   ListviewTestMatrix.Items.BeginUpdate;
   try
-    TestMatrixNode := XMLDoc.FindNode('TestMatrix');
-    if Assigned(TestMatrixNode) then
-    begin
-      ListviewTestMatrix.Items.Clear;
-      i := 0;
-      TestNode := TestMatrixNode.FindNode('Test' + IntToStr(i));
-      while Assigned(TestNode) do
+    VerifyNodeIDTest := nil;          // Need to find it again
+    ListviewTestMatrix.Items.Clear;
+    TestList := TList.Create;
+    try
+      ExtractTestsFromXML(XMLDoc, TestList);
+      for i := 0 to TestList.Count - 1 do
       begin
-        NameNode := TestNode.FindNode('Name');
-        DescNode := TestNode.FindNode('Description');
-        ReqtNode := TestNode.FindNode('SpecDoc');
-        ClassnameNode := TestNode.FindNode('Classname');
-        EnabledNode := TestNode.FindNode('Enabled');
-        Test := TTestBase.CreateInstanceFromString(ClassNameNode.FirstChild.NodeValue);
+        TestNode := TDOMNode( TestList[i]);
+        Test := TTestBase.CreateInstanceFromString( TestClassnameFromTestNode(TestNode));  // Create a Test Object from the Classname in the XML
+
+        if not Assigned(VerifyNodeIDTest) then
+        begin
+          if Test is TTestVerifyNodeID then   // Local Copy of the
+          VerifyNodeIDTest := Test as TTestVerifyNodeID;
+        end;
+
         if not Assigned(Test) then
-          ShowMessage('Invalid Classname for Test ' + NameNode.FirstChild.NodeValue)
+          ShowMessage('Invalid Classname for Test ' + TestNameFromTestNode(TestNode))
         else begin
           ListItem := ListviewTestMatrix.Items.Add;
-          ListItem.Caption := NameNode.FirstChild.NodeValue;
-          ListItem.SubItems.Add(DescNode.FirstChild.NodeValue);
-          ListItem.SubItems.Add(ReqtNode.FirstChild.NodeValue);
-          ListItem.SubItems.Add(ClassnameNode.FirstChild.NodeValue);
-          ListItem.Checked := EnabledNode.FirstChild.NodeValue = 'True';
-          ListItemObj := TListNodeObj.Create;
-          ListItemObj.XMLNode := TestNode;
-          ListItemObj.Test := Test;
-          ListItem.Data := ListItemObj;                                // Link the XML node to the Listview Item
-
-          Inc(i);                                                      // Next Test
-          TestNode := TestMatrixNode.FindNode('Test' + IntToStr(i));
+          ListItem.Caption := TestNameFromTestNode(TestNode);
+          ListItem.SubItems.Add(TestDescriptionFromTestNode(TestNode));
+          ListItem.SubItems.Add(TestSpecDocFromTestNode(TestNode));
+          ListItem.SubItems.Add(TestClassnameFromTestNode(TestNode));
+          ListItem.Checked := CompareText(TestEnabledStateFromTestNode(TestNode), 'True') = 0;
+          ListItem.Data := Test;
+          Test.XMLNode := TestNode;
         end;
       end;
+    finally
+      TestList.Free;  // Does not own the nodes
+      UpdateUI;
     end;
   finally
     ListviewTestMatrix.Items.EndUpdate
   end;
-end;
-
-function TFormMain.ExtractTestFromNode(ANode: TListItem): TTestBase;
-begin
-    Result := TListNodeObj( ANode.Data).Test;
 end;
 
 end.
