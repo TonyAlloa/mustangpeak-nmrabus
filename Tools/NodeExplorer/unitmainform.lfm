@@ -2,10 +2,10 @@ object FormMain: TFormMain
   Left = 470
   Height = 516
   Top = 169
-  Width = 708
-  Caption = 'OpenLCB Node Validator'
+  Width = 715
+  Caption = 'OpenLCB NodeExplorer'
   ClientHeight = 497
-  ClientWidth = 708
+  ClientWidth = 715
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
@@ -16,7 +16,7 @@ object FormMain: TFormMain
     Left = 8
     Height = 480
     Top = 8
-    Width = 691
+    Width = 698
     ActivePage = TabSheetHome
     Anchors = [akTop, akLeft, akRight, akBottom]
     MultiLine = True
@@ -26,22 +26,23 @@ object FormMain: TFormMain
     object TabSheetHome: TTabSheet
       Caption = 'Home'
       ClientHeight = 454
-      ClientWidth = 683
+      ClientWidth = 690
       object GroupBoxComPort: TGroupBox
         Left = 13
         Height = 237
         Top = 164
-        Width = 660
+        Width = 667
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'COM Port Settings'
         ClientHeight = 219
-        ClientWidth = 656
+        ClientWidth = 663
         TabOrder = 0
         object EditBaudRate: TEdit
           Left = 405
           Height = 21
           Top = 25
           Width = 109
+          Enabled = False
           TabOrder = 1
         end
         object LabelCustomBaud: TLabel
@@ -50,6 +51,7 @@ object FormMain: TFormMain
           Top = 6
           Width = 64
           Caption = 'Custom Baud'
+          Enabled = False
           ParentColor = False
         end
         object ComboBoxBaud: TComboBox
@@ -115,23 +117,23 @@ object FormMain: TFormMain
         object LabelDiscoverNodeID: TLabel
           Left = 127
           Height = 14
-          Top = 112
-          Width = 68
-          Caption = 'Proxy NodeID'
+          Top = 88
+          Width = 98
+          Caption = 'Proxy NodeID (Hex)'
           ParentColor = False
         end
         object LabelDiscoverNodeAlias: TLabel
           Left = 13
           Height = 14
-          Top = 110
-          Width = 54
-          Caption = 'Proxy Alias'
+          Top = 86
+          Width = 84
+          Caption = 'Proxy Alias (Hex)'
           ParentColor = False
         end
         object EditDiscoverNodeAlias: TEdit
           Left = 21
           Height = 21
-          Top = 134
+          Top = 110
           Width = 88
           ParentShowHint = False
           TabOrder = 4
@@ -139,24 +141,24 @@ object FormMain: TFormMain
         object EditDiscoverNodeID: TEdit
           Left = 135
           Height = 21
-          Top = 133
+          Top = 109
           Width = 200
           TabOrder = 5
         end
         object Label1: TLabel
           Left = 20
-          Height = 46
-          Top = 166
-          Width = 625
+          Height = 64
+          Top = 142
+          Width = 632
           Anchors = [akTop, akLeft, akRight, akBottom]
           AutoSize = False
-          Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages places on the OpenLCB bus.  NodeExplorer will not respond to arbitrary messages as it is not a real node on the networks'
+          Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages places on the OpenLCB bus by NodeExplorer. '#13#10#13#10'Note: NodeExplorer will not respond to arbitrary messages as it is not a real node on the network.'
           ParentColor = False
           WordWrap = True
         end
       end
       object ButtonConnect: TButton
-        Left = 521
+        Left = 528
         Height = 22
         Top = 417
         Width = 150
@@ -165,7 +167,7 @@ object FormMain: TFormMain
         TabOrder = 1
       end
       object ButtonShowLog: TButton
-        Left = 364
+        Left = 371
         Height = 22
         Top = 417
         Width = 150
@@ -177,17 +179,17 @@ object FormMain: TFormMain
         Left = 13
         Height = 153
         Top = 3
-        Width = 660
+        Width = 667
         Anchors = [akTop, akLeft, akRight]
         Caption = 'PanelLogo'
         ClientHeight = 153
-        ClientWidth = 660
+        ClientWidth = 667
         TabOrder = 3
         object ImageOpenLCB: TImage
           Left = 1
           Height = 151
           Top = 1
-          Width = 658
+          Width = 665
           Align = alClient
           Center = True
           Picture.Data = {
@@ -473,20 +475,21 @@ object FormMain: TFormMain
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
       ClientHeight = 454
-      ClientWidth = 683
+      ClientWidth = 690
       object ButtonDiscoverNodes: TButton
-        Left = 521
+        Left = 524
         Height = 22
         Top = 417
         Width = 150
         Action = ActionDiscoverNode
+        Anchors = [akRight, akBottom]
         TabOrder = 0
       end
       object ListViewNodeDiscovery: TListView
         Left = 12
         Height = 387
         Top = 10
-        Width = 658
+        Width = 665
         Align = alCustom
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
@@ -499,7 +502,7 @@ object FormMain: TFormMain
           item
             Alignment = taCenter
             Caption = 'Full Node iD'
-            Width = 504
+            Width = 511
           end>
         DragMode = dmAutomatic
         GridLines = True
@@ -512,12 +515,12 @@ object FormMain: TFormMain
     object TabSheetVerification: TTabSheet
       Caption = 'VerificationTests'
       ClientHeight = 454
-      ClientWidth = 683
+      ClientWidth = 690
       object ListViewTestMatrix: TListView
         Left = 12
         Height = 387
         Top = 10
-        Width = 658
+        Width = 665
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
         Checkboxes = True
@@ -546,7 +549,7 @@ object FormMain: TFormMain
         OnDeletion = ListViewTestMatrixDeletion
       end
       object ButtonLoadTests: TButton
-        Left = 207
+        Left = 214
         Height = 22
         Top = 417
         Width = 150
@@ -555,7 +558,7 @@ object FormMain: TFormMain
         TabOrder = 1
       end
       object ButtonSaveTests: TButton
-        Left = 364
+        Left = 371
         Height = 22
         Top = 417
         Width = 150
@@ -564,7 +567,7 @@ object FormMain: TFormMain
         TabOrder = 2
       end
       object ButtonLoadTests1: TButton
-        Left = 521
+        Left = 528
         Height = 22
         Top = 417
         Width = 150
@@ -1259,12 +1262,12 @@ object FormMain: TFormMain
     end
   end
   object ApplicationProperties1: TApplicationProperties
-    left = 840
-    top = 176
+    left = 40
+    top = 192
   end
   object ActionListMain: TActionList
-    left = 840
-    top = 56
+    left = 40
+    top = 72
     object ActionClear: TAction
       Category = 'Global'
       Caption = 'Clear'
@@ -1331,8 +1334,8 @@ object FormMain: TFormMain
     end
   end
   object MainMenu: TMainMenu
-    left = 840
-    top = 136
+    left = 40
+    top = 152
     object MenuItemFile: TMenuItem
       Caption = 'File'
       object MenuItem1: TMenuItem
@@ -1347,8 +1350,8 @@ object FormMain: TFormMain
     Enabled = False
     Interval = 100
     OnTimer = TimerCANTimer
-    left = 840
-    top = 96
+    left = 40
+    top = 112
   end
   object SynXMLSyn: TSynXMLSyn
     DefaultFilter = 'XML Document (*.xml,*.xsd,*.xsl,*.xslt,*.dtd)|*.xml;*.xsd;*.xsl;*.xslt;*.dtd'
@@ -1367,16 +1370,16 @@ object FormMain: TFormMain
     SpaceAttri.FrameEdges = sfeAround
     SymbolAttri.FrameEdges = sfeAround
     WantBracesParsed = False
-    left = 840
-    top = 216
+    left = 40
+    top = 232
   end
   object OpenDialog: TOpenDialog
     DefaultExt = '.*.xml'
-    left = 840
-    top = 264
+    left = 40
+    top = 280
   end
   object SaveDialog: TSaveDialog
-    left = 840
-    top = 320
+    left = 40
+    top = 336
   end
 end

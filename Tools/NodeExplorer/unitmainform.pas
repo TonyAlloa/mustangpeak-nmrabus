@@ -22,15 +22,15 @@ unit UnitMainForm;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, SynHighlighterXML, SynMemo, SynEdit,
+  Classes, SysUtils, FileUtil, SynHighlighterXML, SynEdit,
   RTTICtrls, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList,
-  Menus, ExtCtrls, synaser, lcltype, unitlogwindow, olcb_utilities,
-  unitolcb_defines, unitsettings, Laz2_DOM, Laz2_XMLRead, Laz2_XMLWrite;
+  Menus, ExtCtrls, synaser, lcltype, unitlogwindow, unitsettings,
+  DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
+  nodeexplorer_settings;
 
 
 const
-  BUNDLENAME = 'OpenLCB Node Validator';
-  SOURCE_ALIAS = $0AAA;
+  BUNDLENAME = 'NodeExplorer';
 
 type
 
@@ -161,7 +161,7 @@ type
   public
     property XMLNode: TDOMNode read FXMLNode write FXMLNode;
     property Test: TTestBase read FTest write FTest;
-    destructor Destroy; virtual;
+    destructor Destroy; override;
   end;
 
 
@@ -234,13 +234,13 @@ begin
 end;
 
 procedure TFormMain.ActionDiscoverNodeExecute(Sender: TObject);
-var
-  Test: TTestVerifyNodeID;
+//var
+ // Test: TTestVerifyNodeID;
 begin
  // TestMatrix.ClearTestList;
-  TestMatrix.Add(Test);
-  TestMatrix.Run;
-  TimerCAN.Enabled := True;
+//  TestMatrix.Add(Test);
+//  TestMatrix.Run;
+//  TimerCAN.Enabled := True;
 end;
 
 procedure TFormMain.ActionExecuteTestsExecute(Sender: TObject);
@@ -377,10 +377,39 @@ begin
 end;
 
 procedure TFormMain.FormShow(Sender: TObject);
+var
+  i: Integer;
 begin
   if not ShownOnce then
   begin
     TimerCAN.Enabled := True;
+    Settings.ReadSettings;
+    EditDiscoverNodeAlias.Text := IntToHex(Settings.ProxyNodeAlias, 4);
+    EditDiscoverNodeID.Text := IntToHex(Settings.ProxyNodeID, 6);
+    for i := 0 to ComboBoxPorts.Items.Count - 1 do
+    begin
+      if CompareText(ComboBoxPorts.Items[i], Settings.ComPort) = 0 then
+      begin
+        ComboBoxPorts.ItemIndex := i;
+        Break;
+      end
+    end;
+    ComboBoxPorts.ItemIndex := ComboBoxPorts.Items.IndexOfName(Settings.ComPort);
+    EditBaudRate.Enabled := True;
+    LabelCustomBaud.Enabled := True;
+    ComboBoxBaud.ItemIndex := 0; // Custom
+    EditBaudRate.Text := IntToStr(Settings.BaudRate);
+    for i := 0 to ComboBoxBaud.Items.Count - 1 do
+    begin
+      if CompareText(ComboBoxBaud.Items[i], IntToStr(Settings.BaudRate)) = 0 then
+      begin
+        ComboBoxBaud.ItemIndex := i;
+        EditBaudRate.Text := '';
+        EditBaudRate.Enabled := False;
+        LabelCustomBaud.Enabled := False;
+        Break;
+      end;
+    end;
   end;
   ShownOnce := True;
 end;
@@ -431,7 +460,7 @@ var
   ListItem: TListItem;
   Test: TTestBase;
   ListItemObj: TListNodeObj;
-  s: string;
+
 begin
   ListviewTestMatrix.Items.BeginUpdate;
   try

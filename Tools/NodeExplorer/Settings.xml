@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Settings>
-  <DefaultNode>
-    <NodeID>010203040506</NodeID>
+  <Node>
+    <ID>010203040506</ID>
     <Alias>$0AAA</Alias>
-  </DefaultNode>
-  <DefaultCOM>
+  </Node>
+  <COM>
     <Port>COM4</Port>
     <Baud>333333</Baud>
-  </DefaultCOM>
+  </COM>
 </Settings>
