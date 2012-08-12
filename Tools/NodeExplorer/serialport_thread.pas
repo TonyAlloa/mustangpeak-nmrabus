@@ -16,7 +16,6 @@ type
     FConnected: Boolean;
     FPort: String;
     FSerial: TBlockSerial;
-    FNoReplyWaitTimer: TTimer;
     FThreadTestList: TThreadList;
     protected
       procedure Execute; override;
@@ -26,11 +25,8 @@ type
       property BaudRate: DWord read FBaudRate write FBaudRate;
       property Port: String read FPort write FPort;
       property ThreadTestList: TThreadList read FThreadTestList write FThreadTestList;
-      property NoReplyWaitTimer: TTimer read FNoReplyWaitTimer write FNoReplyWaitTimer;
       constructor Create(CreateSuspended: Boolean);
       destructor Destroy; override;
-      procedure ClearThreadList(AList: TThreadList);
-      procedure TimerCallback(Sender: TObject);
   end;
 
   { TOpenLCBTestMatrix }
@@ -58,8 +54,9 @@ var
   List: TList;
   i: Integer;
   ActiveTest: TTestBase;
+  TempStr: AnsiString;
 begin
-  Serial := TBlockSerial.Create;
+  Serial := TBlockSerial.Create;                           // Create the Serial object in the context of the thread
   Serial.LinuxLock:=False;
   Serial.RaiseExcept:=False;
   Serial.Connect(Port);
@@ -74,6 +71,7 @@ begin
         if List.Count > 0 then
         begin
           ActiveTest := TTestBase( List[0]);
+
           if ActiveTest.TestState = ts_Idle then
           begin
             ActiveTest.TestState := ts_Sending;
@@ -85,29 +83,20 @@ begin
                   Serial.SendString(ActiveTest.TestStrings[i] + LF);
               end;
             end;
-            while Serial.SendingData > 0 do ThreadSwitch;          // Wait till "done" transmitting
-            NoReplyWaitTimer.Interval := ActiveTest.WaitTime;      // Timer to detect no response
-            NoReplyWaitTimer.Enabled := True;
+            while Serial.SendingData > 0 do
+              ThreadSwitch;                                             // Wait till "done" transmitting
             ActiveTest.TestState := ts_Receiving;
           end else
           if ActiveTest.TestState = ts_Receiving then
           begin
-            if Serial.WaitingDataEx > 0 then
-            begin
-              try
-                NoReplyWaitTimer.Enabled := False;            // Reset the No Reply Timer
-                ActiveTest.TestStrings.Add('Receiving:');
-                ActiveTest.TestStrings.Add(Trim( Serial.Recvstring(0)));
-              finally
-                NoReplyWaitTimer.Enabled := True;            // Restart the No Reply Timer
-              end;
+            TempStr := Serial.Recvstring(ActiveTest.WaitTime);
+            if TempStr <> '' then
+              ActiveTest.TestStrings.Add('Receiving: '+Trim(TempStr))
+            else
+              ActiveTest.TestState := ts_Complete;
             end;
           end;
-        end else
-        begin
-
-        end;
-      finally
+       finally
         ThreadTestList.UnlockList;
       end;
     end;
@@ -124,68 +113,14 @@ begin
   FThreadTestList := TThreadList.Create;
   FBaudRate := 9600;
   FPort := '';
-  FNoReplyWaitTimer := TTimer.Create(nil);
-  FNoReplyWaitTimer.Enabled := False;
-  FNoReplyWaitTimer.OnTimer := @TimerCallback;
 end;
 
 destructor TComPortThread.Destroy;
 begin
-  ClearThreadList(FThreadTestList);
-  FreeAndNil(FThreadTestList);
-  FreeAndNil(FNoReplyWaitTimer);
+  FreeAndNil(FThreadTestList);   // Thread does not own the items so just empty the list
   inherited Destroy;
 end;
 
-procedure TComPortThread.ClearThreadList(AList: TThreadList);
-var
-  List: TList;
-  i: Integer;
-begin
-  if Assigned(AList) then
-  begin
-    List := AList.LockList;
-    try
-      if Assigned(List) then
-      begin
-        try
-          for i := 0 to List.Count - 1 do
-            TObject( List[i]).Free;
-        finally
-          List.Clear;
-        end;
-      end;
-    finally
-      AList.UnlockList;
-    end;
-  end;
-end;
-
-procedure TComPortThread.TimerCallback(Sender: TObject);
-var
-  List: TList;
-  ActiveTest: TTestBase;
-begin
-  List := ThreadTestList.LockList;     // This is called in the context of the Thread so this is safe
-  try
-    if List.Count > 0 then
-    begin
-      ActiveTest := TTestBase( List[0]);      // The assumption here is the main thread loop started this and it did not fire randomly
-      if ActiveTest.TestState = ts_Receiving then
-      begin;
-        if ActiveTest.Process then                 // Move to next state of the Test
-          ActiveTest.TestState := ts_Idle          // There is another state, run it
-        else begin
-          List.Remove( List.First);                // Test is complete
-          ActiveTest.TestState := ts_Complete;     // Remove it from the Thread List to Run
-        end;
-        NoReplyWaitTimer.Enabled := False;
-      end;
-    end;
-  finally
-    ThreadTestList.UnlockList;
-  end;
-end;
 
 { TOpenLCBTestMatrix }
 
@@ -237,9 +172,10 @@ begin
     begin
       Test := TTestBase( TestList[i]);
       Test.Process;       // Run first State
-      List.Add(Test);
+      List.Add(Test);     // Add it to the Thread List
     end;
   finally
+     TestList.Clear;
      ComPortThread.ThreadTestList.UnLockList;
   end;
 end;

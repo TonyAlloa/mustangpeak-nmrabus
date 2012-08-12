@@ -7,7 +7,7 @@
     <Classname>TTestVerifyNodeID</Classname>
     <Enabled>True</Enabled>
     <TestObjective1>
-      <Objective>Send global Verify Node ID MessageNetwork Layer Message</Objective>
+      <Objective>Send global Verify Node ID Message Network Layer Message</Objective>
       <Results>Verified Node ID from all nodes on the network</Results>
     </TestObjective1>
   </Test0>

@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="84">
+    <Units Count="85">
       <Unit0>
         <Filename Value="NodeExplorer.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -307,7 +307,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="433"/>
         <CursorPos X="48" Y="443"/>
-        <UsageCount Value="115"/>
+        <UsageCount Value="119"/>
       </Unit33>
       <Unit34>
         <Filename Value="..\..\OpenLCB_NodeExplorer\olcb_stringconstants.pas"/>
@@ -316,7 +316,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="26" Y="1"/>
-        <UsageCount Value="114"/>
+        <UsageCount Value="118"/>
       </Unit34>
       <Unit35>
         <Filename Value="..\..\OpenLCB_NodeExplorer\unitolcb_defines.pas"/>
@@ -325,7 +325,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="22" Y="1"/>
-        <UsageCount Value="112"/>
+        <UsageCount Value="116"/>
       </Unit35>
       <Unit36>
         <Filename Value="W:\Developer\lazarus\lcl\include\control.inc"/>
@@ -418,7 +418,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="25" Y="18"/>
-        <UsageCount Value="80"/>
+        <UsageCount Value="84"/>
       </Unit47>
       <Unit48>
         <Filename Value="W:\Developer\lazarus\components\fppkg\svn\svnclasses.pas"/>
@@ -514,9 +514,9 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="379"/>
-        <CursorPos X="40" Y="397"/>
-        <UsageCount Value="20"/>
+        <TopLine Value="426"/>
+        <CursorPos X="53" Y="446"/>
+        <UsageCount Value="22"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit59>
@@ -561,51 +561,51 @@
       <Unit65>
         <Filename Value="olcb_stringconstants.pas"/>
         <UnitName Value="olcb_stringconstants"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="18"/>
         <Loaded Value="True"/>
       </Unit65>
       <Unit66>
         <Filename Value="olcb_utilities.pas"/>
         <UnitName Value="olcb_utilities"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
         <TopLine Value="8"/>
         <CursorPos X="40" Y="25"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="18"/>
         <Loaded Value="True"/>
       </Unit66>
       <Unit67>
         <Filename Value="unitlogwindow.pas"/>
         <UnitName Value="unitlogwindow"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="8"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="18"/>
         <Loaded Value="True"/>
       </Unit67>
       <Unit68>
         <Filename Value="unitolcb_defines.pas"/>
         <UnitName Value="unitolcb_defines"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="9"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="22" Y="1"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="18"/>
         <Loaded Value="True"/>
       </Unit68>
       <Unit69>
         <Filename Value="unitsettings.pas"/>
         <UnitName Value="unitsettings"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="10"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="18"/>
         <Loaded Value="True"/>
       </Unit69>
       <Unit70>
@@ -644,33 +644,33 @@
         <Filename Value="serialport_thread.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="serialport_thread"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="22" Y="7"/>
-        <UsageCount Value="23"/>
+        <TopLine Value="67"/>
+        <CursorPos X="24" Y="69"/>
+        <UsageCount Value="27"/>
         <Loaded Value="True"/>
       </Unit74>
       <Unit75>
         <Filename Value="olcb_testmatrix.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="olcb_testmatrix"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="41"/>
-        <CursorPos X="17" Y="60"/>
-        <UsageCount Value="23"/>
+        <TopLine Value="79"/>
+        <CursorPos X="26" Y="92"/>
+        <UsageCount Value="27"/>
         <Loaded Value="True"/>
       </Unit75>
       <Unit76>
         <Filename Value="nodeexplorer_settings.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="nodeexplorer_settings"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
         <TopLine Value="44"/>
         <CursorPos X="41" Y="63"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="27"/>
         <Loaded Value="True"/>
       </Unit76>
       <Unit77>
@@ -724,127 +724,136 @@
         <CursorPos X="3" Y="187"/>
         <UsageCount Value="10"/>
       </Unit83>
+      <Unit84>
+        <Filename Value="..\..\..\..\..\..\Developer\lazarus\lcl\include\listitems.inc"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="29"/>
+        <CursorPos X="1" Y="60"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit84>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="392" Column="1" TopLine="378"/>
+        <Caret Line="397" Column="5" TopLine="378"/>
       </Position1>
       <Position2>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="393" Column="1" TopLine="378"/>
+        <Caret Line="394" Column="40" TopLine="377"/>
       </Position2>
       <Position3>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="394" Column="1" TopLine="378"/>
+        <Caret Line="411" Column="15" TopLine="383"/>
       </Position3>
       <Position4>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="391" Column="55" TopLine="378"/>
+        <Caret Line="393" Column="63" TopLine="376"/>
       </Position4>
       <Position5>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="389" Column="1" TopLine="378"/>
+        <Caret Line="388" Column="1" TopLine="376"/>
       </Position5>
       <Position6>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="390" Column="1" TopLine="378"/>
+        <Caret Line="389" Column="1" TopLine="376"/>
       </Position6>
       <Position7>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="391" Column="1" TopLine="378"/>
+        <Caret Line="391" Column="1" TopLine="376"/>
       </Position7>
       <Position8>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="392" Column="1" TopLine="378"/>
+        <Caret Line="401" Column="1" TopLine="376"/>
       </Position8>
       <Position9>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="393" Column="1" TopLine="378"/>
+        <Caret Line="403" Column="1" TopLine="385"/>
       </Position9>
       <Position10>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="394" Column="1" TopLine="378"/>
+        <Caret Line="404" Column="1" TopLine="385"/>
       </Position10>
       <Position11>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="395" Column="1" TopLine="378"/>
+        <Caret Line="405" Column="1" TopLine="385"/>
       </Position11>
       <Position12>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="397" Column="1" TopLine="378"/>
+        <Caret Line="407" Column="1" TopLine="385"/>
       </Position12>
       <Position13>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="398" Column="1" TopLine="378"/>
+        <Caret Line="409" Column="1" TopLine="385"/>
       </Position13>
       <Position14>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="402" Column="1" TopLine="378"/>
+        <Caret Line="410" Column="1" TopLine="385"/>
       </Position14>
       <Position15>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="388" Column="70" TopLine="378"/>
+        <Caret Line="411" Column="1" TopLine="385"/>
       </Position15>
       <Position16>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="397" Column="5" TopLine="378"/>
+        <Caret Line="10" Column="150" TopLine="2"/>
       </Position16>
       <Position17>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="394" Column="40" TopLine="377"/>
+        <Caret Line="149" Column="63" TopLine="145"/>
       </Position17>
       <Position18>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="411" Column="15" TopLine="383"/>
+        <Caret Line="509" Column="24" TopLine="476"/>
       </Position18>
       <Position19>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="393" Column="63" TopLine="376"/>
+        <Caret Line="507" Column="39" TopLine="475"/>
       </Position19>
       <Position20>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="388" Column="1" TopLine="376"/>
+        <Caret Line="241" Column="11" TopLine="230"/>
       </Position20>
       <Position21>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="389" Column="1" TopLine="376"/>
+        <Caret Line="242" Column="31" TopLine="219"/>
       </Position21>
       <Position22>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="391" Column="1" TopLine="376"/>
+        <Caret Line="244" Column="12" TopLine="219"/>
       </Position22>
       <Position23>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="401" Column="1" TopLine="376"/>
+        <Caret Line="246" Column="1" TopLine="219"/>
       </Position23>
       <Position24>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="403" Column="1" TopLine="385"/>
+        <Caret Line="241" Column="1" TopLine="219"/>
       </Position24>
       <Position25>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="404" Column="1" TopLine="385"/>
+        <Filename Value="..\..\..\..\..\..\Developer\lazarus\lcl\include\listitems.inc"/>
+        <Caret Line="47" Column="1" TopLine="28"/>
       </Position25>
       <Position26>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="405" Column="1" TopLine="385"/>
+        <Filename Value="..\..\..\..\..\..\Developer\lazarus\lcl\include\listitems.inc"/>
+        <Caret Line="49" Column="1" TopLine="28"/>
       </Position26>
       <Position27>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="407" Column="1" TopLine="385"/>
+        <Filename Value="..\..\..\..\..\..\Developer\lazarus\lcl\include\listitems.inc"/>
+        <Caret Line="50" Column="1" TopLine="28"/>
       </Position27>
       <Position28>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="409" Column="1" TopLine="385"/>
+        <Filename Value="..\..\..\..\..\..\Developer\lazarus\lcl\include\listitems.inc"/>
+        <Caret Line="60" Column="1" TopLine="29"/>
       </Position28>
       <Position29>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="410" Column="1" TopLine="385"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="28" Column="7" TopLine="13"/>
       </Position29>
       <Position30>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="411" Column="1" TopLine="385"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="30" Column="81" TopLine="13"/>
       </Position30>
     </JumpHistory>
   </ProjectOptions>

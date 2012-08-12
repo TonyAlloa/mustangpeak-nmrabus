@@ -146,6 +146,7 @@ type
     { public declarations }
     procedure Log(Line: String);
     procedure LoadTestMatrix;
+    function ExtractTestFromNode(ANode: TListItem): TTestBase;
     property ShownOnce: Boolean read FShownOnce write FShownOnce;
     property TestStrings: TStringList read FTestStrings write FTestStrings;
     property TestMatrix: TOpenLCBTestMatrix read FTestMatrix write FTestMatrix;
@@ -215,7 +216,7 @@ begin
       else
         TestMatrix.ComPortThread.BaudRate := StrToInt(ComboBoxBaud.Items[ComboBoxBaud.ItemIndex]);
       TestMatrix.ComPortThread.Suspended := False;
-      Sleep(1000);
+      Sleep(500);
       if TestMatrix.ComportThread.Connected then
         ActionConnect.Caption:='Disconnect'
       else begin
@@ -234,13 +235,14 @@ begin
 end;
 
 procedure TFormMain.ActionDiscoverNodeExecute(Sender: TObject);
-//var
- // Test: TTestVerifyNodeID;
+var
+  Test: TTestVerifyNodeID;
 begin
- // TestMatrix.ClearTestList;
-//  TestMatrix.Add(Test);
-//  TestMatrix.Run;
-//  TimerCAN.Enabled := True;
+  Test := TTestVerifyNodeID.Create;
+  Test.FreeOnComplete := True;
+  TestMatrix.Add(Test);
+  TestMatrix.Run;
+  TimerCAN.Enabled := True;
 end;
 
 procedure TFormMain.ActionExecuteTestsExecute(Sender: TObject);
@@ -299,14 +301,14 @@ end;
 
 procedure TFormMain.ActionSendDatagramReplyExecute(Sender: TObject);
 begin
-  Log('Sending: :X19A28AAAN0641;');
+ // Log('Sending: :X19A28AAAN0641;');
  // ser.SendString(':X19A28AAAN0641;');
 end;
 
 procedure TFormMain.ActionSendPacketExecute(Sender: TObject);
 begin
-  if FormLog.Visible then
-    FormLog.MemoLog.Lines.Add('Sending: '+EditPacket.Text);
+//  if FormLog.Visible then
+ //   FormLog.MemoLog.Lines.Add('Sending: '+EditPacket.Text);
  // ser.SendString(EditPacket.Text);
 end;
 
@@ -431,16 +433,26 @@ procedure TFormMain.TimerCANTimer(Sender: TObject);
 var
   i: Integer;
   Test: TTestBase;
+  List: TList;
 begin
-  if TestMatrix.TestList.Count > 0 then
+  if Assigned(TestMatrix.ComPortThread) then
   begin
-    Test := TTestBase( TestMatrix.TestList[0]);
-    if Test.TestState = ts_Complete then
-    begin
-      for i := 0 to Test.TestStrings.Count - 1 do
-        Log(Test.TestStrings[i]);
-      TestMatrix.TestList.Remove(Test);
-      Test.Free;
+    List := TestMatrix.ComPortThread.ThreadTestList.LockList;
+    try
+      if List.Count > 0 then
+      begin
+        Test := TTestBase( List[0]);
+        if Test.TestState = ts_Complete then
+        begin
+          for i := 0 to Test.TestStrings.Count - 1 do
+            Log(Test.TestStrings[i]);
+          List.Remove(Test);
+          if Test.FreeOnComplete then
+            Test.Free;
+        end;
+      end;
+    finally
+      TestMatrix.ComPortThread.ThreadTestList.UnLockList;
     end;
   end;
 end;
@@ -500,6 +512,11 @@ begin
   finally
     ListviewTestMatrix.Items.EndUpdate
   end;
+end;
+
+function TFormMain.ExtractTestFromNode(ANode: TListItem): TTestBase;
+begin
+    Result := TListNodeObj( ANode.Data).Test;
 end;
 
 end.

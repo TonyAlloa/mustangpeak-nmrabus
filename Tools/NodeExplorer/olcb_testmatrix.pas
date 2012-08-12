@@ -15,6 +15,7 @@ type
   TTestBase = class(TPersistent)
   private
     FCompareMasks: TStringList;
+    FFreeOnComplete: Boolean;
     FMessageHelper: TOpenLCBMessageHelper;
     FTestStrings: TStringList;
     FStateMachineIndex: Integer;
@@ -26,6 +27,7 @@ type
     property StateMachineIndex: Integer read FStateMachineIndex write FStateMachineIndex;
   public
     property Description: WideString read FWideString write FWideString;
+    property FreeOnComplete: Boolean read FFreeOnComplete write FFreeOnComplete;
     property TestStrings: TStringList read FTestStrings write FTestStrings;        // List of TOpenLCBMessageHelpers to send for test
     property CompareMasks: TStringList read FCompareMasks write FCompareMasks;        // List of expected messages Masks that the NUT should have sent (format TBD)
     property WaitTime: Integer read FWaitTime write FWaitTime;                  // Time to wait for the messages to sent (varies depending on what is being sent)
@@ -57,7 +59,7 @@ implementation
 
 function TTestAliasMapEnquiry.Process: Boolean;
 begin
-  Result := True
+  Result := False
 end;
 
 { TTestVerifyNodeID }
@@ -68,8 +70,10 @@ begin
   case StateMachineIndex of
     0 : begin
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
-          TestStrings.Add(Description);
-          TestStrings.Add(MessageHelper.Encode);
+
+          // Need to read the XML Strings here......
+
+          TestStrings.Add(MessageHelper.Encode);  // Must be by itself... how to add "Sending: "....???/
           Inc(FStateMachineIndex);
         end;
     1: begin
@@ -87,8 +91,10 @@ begin
   FTestStrings := TStringList.Create;
   FCompareMasks := TStringList.Create;
   FMessageHelper := TOpenLCBMessageHelper.Create;
-  TestState := ts_Idle;
-  WaitTime := DEFAULT_TIMEOUT;
+  FTestState := ts_Idle;
+  FWaitTime := DEFAULT_TIMEOUT;
+  FStateMachineIndex := 0;
+  FFreeOnComplete := False
 end;
 
 destructor TTestBase.Destroy;
