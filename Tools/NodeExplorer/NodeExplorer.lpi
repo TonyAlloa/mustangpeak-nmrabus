@@ -280,18 +280,16 @@
       <Unit30>
         <Filename Value="C:\lazarus\lcl\customtimer.pas"/>
         <UnitName Value="CustomTimer"/>
-        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="140"/>
         <CursorPos X="1" Y="157"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit30>
       <Unit31>
         <Filename Value="C:\lazarus\lcl\interfaces\win32\win32callback.inc"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="2717"/>
+        <TopLine Value="2716"/>
         <CursorPos X="1" Y="2742"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
@@ -515,10 +513,11 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UnitMainForm"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="428"/>
-        <CursorPos X="1" Y="455"/>
+        <TopLine Value="438"/>
+        <CursorPos X="7" Y="466"/>
         <UsageCount Value="34"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -564,7 +563,7 @@
       <Unit65>
         <Filename Value="olcb_stringconstants.pas"/>
         <UnitName Value="olcb_stringconstants"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
@@ -574,7 +573,7 @@
       <Unit66>
         <Filename Value="olcb_utilities.pas"/>
         <UnitName Value="olcb_utilities"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
         <TopLine Value="142"/>
         <CursorPos X="1" Y="152"/>
@@ -583,21 +582,22 @@
       </Unit66>
       <Unit67>
         <Filename Value="unitlogwindow.pas"/>
+        <ComponentName Value="FormLog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="unitlogwindow"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="8"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="25" Y="4"/>
+        <TopLine Value="11"/>
+        <CursorPos X="38" Y="25"/>
         <UsageCount Value="30"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit67>
       <Unit68>
         <Filename Value="unitolcb_defines.pas"/>
         <UnitName Value="unitolcb_defines"/>
-        <EditorIndex Value="10"/>
+        <EditorIndex Value="9"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="22" Y="1"/>
@@ -607,7 +607,7 @@
       <Unit69>
         <Filename Value="unitsettings.pas"/>
         <UnitName Value="unitsettings"/>
-        <EditorIndex Value="11"/>
+        <EditorIndex Value="10"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
@@ -650,7 +650,7 @@
         <Filename Value="serialport_thread.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="serialport_thread"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
         <TopLine Value="105"/>
         <CursorPos X="44" Y="108"/>
@@ -661,7 +661,7 @@
         <Filename Value="olcb_testmatrix.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="olcb_testmatrix"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
         <TopLine Value="56"/>
         <CursorPos X="21" Y="75"/>
@@ -672,7 +672,7 @@
         <Filename Value="nodeexplorer_settings.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="nodeexplorer_settings"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
         <TopLine Value="44"/>
         <CursorPos X="41" Y="63"/>
@@ -740,124 +740,124 @@
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="465" Column="1" TopLine="440"/>
+        <Filename Value="C:\lazarus\lcl\interfaces\win32\win32callback.inc"/>
+        <Caret Line="2742" Column="1" TopLine="2717"/>
       </Position1>
       <Position2>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="491" Column="1" TopLine="474"/>
+        <Caret Line="449" Column="1" TopLine="443"/>
       </Position2>
       <Position3>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="492" Column="1" TopLine="474"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="80" Column="40" TopLine="59"/>
       </Position3>
       <Position4>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="494" Column="1" TopLine="474"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="151" Column="23" TopLine="65"/>
       </Position4>
       <Position5>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="496" Column="1" TopLine="474"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="79" Column="1" TopLine="65"/>
       </Position5>
       <Position6>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="465" Column="1" TopLine="448"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="80" Column="1" TopLine="65"/>
       </Position6>
       <Position7>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="466" Column="1" TopLine="448"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="81" Column="1" TopLine="65"/>
       </Position7>
       <Position8>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="469" Column="1" TopLine="448"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="82" Column="1" TopLine="65"/>
       </Position8>
       <Position9>
-        <Filename Value="C:\lazarus\lcl\customtimer.pas"/>
-        <Caret Line="182" Column="1" TopLine="165"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="83" Column="1" TopLine="65"/>
       </Position9>
       <Position10>
-        <Filename Value="C:\lazarus\lcl\customtimer.pas"/>
-        <Caret Line="157" Column="1" TopLine="140"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="84" Column="1" TopLine="65"/>
       </Position10>
       <Position11>
-        <Filename Value="C:\lazarus\lcl\interfaces\win32\win32callback.inc"/>
-        <Caret Line="2742" Column="1" TopLine="2717"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="91" Column="1" TopLine="74"/>
       </Position11>
       <Position12>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="449" Column="1" TopLine="443"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="154" Column="1" TopLine="137"/>
       </Position12>
       <Position13>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="80" Column="40" TopLine="59"/>
+        <Caret Line="70" Column="1" TopLine="53"/>
       </Position13>
       <Position14>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="151" Column="23" TopLine="65"/>
+        <Caret Line="71" Column="1" TopLine="53"/>
       </Position14>
       <Position15>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="79" Column="1" TopLine="65"/>
+        <Caret Line="72" Column="1" TopLine="53"/>
       </Position15>
       <Position16>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="80" Column="1" TopLine="65"/>
+        <Caret Line="73" Column="1" TopLine="53"/>
       </Position16>
       <Position17>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="81" Column="1" TopLine="65"/>
+        <Caret Line="75" Column="1" TopLine="53"/>
       </Position17>
       <Position18>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="82" Column="1" TopLine="65"/>
+        <Caret Line="77" Column="1" TopLine="53"/>
       </Position18>
       <Position19>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="83" Column="1" TopLine="65"/>
+        <Caret Line="94" Column="1" TopLine="77"/>
       </Position19>
       <Position20>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="84" Column="1" TopLine="65"/>
+        <Caret Line="73" Column="16" TopLine="68"/>
       </Position20>
       <Position21>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="91" Column="1" TopLine="74"/>
+        <Filename Value="unitlogwindow.pas"/>
+        <Caret Line="4" Column="25" TopLine="1"/>
       </Position21>
       <Position22>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="154" Column="1" TopLine="137"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="465" Column="10" TopLine="441"/>
       </Position22>
       <Position23>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="70" Column="1" TopLine="53"/>
+        <Filename Value="unitlogwindow.pas"/>
+        <Caret Line="24" Column="35" TopLine="1"/>
       </Position23>
       <Position24>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="71" Column="1" TopLine="53"/>
+        <Filename Value="unitlogwindow.pas"/>
+        <Caret Line="1" Column="6" TopLine="1"/>
       </Position24>
       <Position25>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="72" Column="1" TopLine="53"/>
+        <Filename Value="unitlogwindow.pas"/>
+        <Caret Line="27" Column="77" TopLine="8"/>
       </Position25>
       <Position26>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="73" Column="1" TopLine="53"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="491" Column="8" TopLine="488"/>
       </Position26>
       <Position27>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="75" Column="1" TopLine="53"/>
+        <Filename Value="unitlogwindow.pas"/>
+        <Caret Line="33" Column="26" TopLine="11"/>
       </Position27>
       <Position28>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="77" Column="1" TopLine="53"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="479" Column="13" TopLine="447"/>
       </Position28>
       <Position29>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="94" Column="1" TopLine="77"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="177" Column="1" TopLine="160"/>
       </Position29>
       <Position30>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="73" Column="16" TopLine="68"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="471" Column="1" TopLine="448"/>
       </Position30>
     </JumpHistory>
   </ProjectOptions>

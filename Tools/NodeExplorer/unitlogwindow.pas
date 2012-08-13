@@ -22,7 +22,8 @@ unit unitlogwindow;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls;
+  Classes, SysUtils, FileUtil, SynMemo, SynHighlighterXML, Forms, Controls,
+  Graphics, Dialogs, StdCtrls;
 
 type
 
@@ -30,7 +31,8 @@ type
 
   TFormLog = class(TForm)
     ButtonClear: TButton;
-    MemoLog: TMemo;
+    SynMemo: TSynMemo;
+    SynXMLSyn: TSynXMLSyn;
     procedure FormActivate(Sender: TObject);
     procedure FormHide(Sender: TObject);
   private

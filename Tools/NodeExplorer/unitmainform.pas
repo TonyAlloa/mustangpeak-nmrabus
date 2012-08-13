@@ -174,11 +174,11 @@ implementation
 
 procedure TFormMain.ActionClearExecute(Sender: TObject);
 begin
-  FormLog.MemoLog.Lines.BeginUpdate;
+  FormLog.SynMemo.Lines.BeginUpdate;
   try
-    FormLog.MemoLog.Clear;
+    FormLog.SynMemo.Lines
   finally
-    FormLog.MemoLog.Lines.EndUpdate
+    FormLog.SynMemo.Lines.EndUpdate
   end;
 end;
 
@@ -448,8 +448,11 @@ begin
         Test := TTestBase( List[0]);
         if Test.TestState = ts_Complete then
         begin
-          LocalStrings := TStringList.Create;
-          LocalStrings.Text := Test.TestStrings.Text;  // Make a copy
+          if FormLog.Visible then
+          begin
+            LocalStrings := TStringList.Create;
+            LocalStrings.Text := Test.TestStrings.Text;  // Make a copy for the log
+          end;
           List.Remove(Test);
         end else
           Test := nil;
@@ -461,9 +464,14 @@ begin
     // Do this outside of the thread lock so the thread can keep churning
     if Assigned(LocalStrings) then
     begin
-      for i := 0 to LocalStrings.Count - 1 do
-        Log(LocalStrings[i]);
-      LocalStrings.Free;
+      FormLog.SynMemo.Lines.BeginUpdate;
+      try
+        for i := 0 to LocalStrings.Count - 1 do
+          Log(LocalStrings[i]);
+      finally
+        FormLog.SynMemo.Lines.EndUpdate;
+        FreeAndNil(LocalStrings)
+      end;
     end;
   end;
 end;
@@ -491,7 +499,7 @@ procedure TFormMain.Log(Line: String);
 begin
   if FormLog.Visible then
   begin
-    FormLog.MemoLog.Lines.Add(Line);
+    FormLog.SynMemo.Lines.Add(Line);
   end;
 end;
 
