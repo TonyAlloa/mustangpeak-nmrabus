@@ -72,7 +72,7 @@ begin
     0 : begin
           // Send Process
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
-          TestStrings.Add(MessageHelper.Encode);  // Must be by itself... how to add "Sending: "....???/
+          ProcessStrings.Add(MessageHelper.Encode);  // Must be by itself... how to add "Sending: "....???/
           Inc(FStateMachineIndex);
           Result := 0;                                                          // Process 0
         end;

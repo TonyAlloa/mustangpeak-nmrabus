@@ -77,6 +77,7 @@ begin
           case ActiveTest.TestState of
             ts_Initialize     : begin
                                   ActiveTest.TestStrings.Clear;
+                                  Objectives.Clear;
                                   ActiveTest.StateMachineIndex := 0;
                                   iCurrentObjective := 0;
                                   ExtractTestObjectivesFromTestNode(ActiveTest.XMLNode, Objectives);
@@ -93,13 +94,13 @@ begin
             ts_ObjectiveStart : begin
                                   ActiveTest.TestStrings.Add('<objective>');
                                   if iCurrentObjective < ObjectiveCount then
-                                    ActiveTest.TestStrings.Add(ObjectiveFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective])));
+                                    ActiveTest.TestStrings.Add('  ' + ObjectiveFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective])));
                                   ActiveTest.TestState := ts_Sending;
                                 end;
             ts_Sending :        begin
-                                  ActiveTest.TestStrings.Add('<send>');
-                                  Activetest.TestStrings.Add('Test: ' + TestNameFromTestNode(ActiveTest.XMLNode));
-                                  Activetest.TestStrings.Add(TestDescriptionFromTestNode(ActiveTest.XMLNode));
+                                  ActiveTest.TestStrings.Add('    <send>');
+                                  Activetest.TestStrings.Add('      Test: ' + TestNameFromTestNode(ActiveTest.XMLNode));
+                                  Activetest.TestStrings.Add('      ' + TestDescriptionFromTestNode(ActiveTest.XMLNode));
                                   iCurrentObjective := ActiveTest.Process(ProcessStrings);  // Run Next State and get State specific strings
                                   for i := 0 to ProcessStrings.Count - 1 do          // Start with the next objective information
                                   begin
@@ -107,28 +108,31 @@ begin
                                     begin
                                       if ProcessStrings[i][1] = ':' then              // Only send valid OpenLCB strings ":XnnnnnnnnNnn...."
                                         Serial.SendString(ProcessStrings[i] + LF);
+                                      ProcessStrings[i] := '      ' + ProcessStrings[i];
                                     end;
                                   end;
                                   Activetest.TestStrings.Text := ActiveTest.TestStrings.Text + ProcessStrings.Text;
                                   while Serial.SendingData > 0 do
                                     ThreadSwitch;                                    // Wait till "done" transmitting
-                                  ActiveTest.TestStrings.Add('</send>');
+                                  ActiveTest.TestStrings.Add('    </send>');
                                   ActiveTest.TestState := ts_Receiving;
-                                  ActiveTest.TestStrings.Add('<receive>');
+                                  ActiveTest.TestStrings.Add('    <receive>');
                                 end;
             ts_Receiving      : begin
                                   TempStr := Serial.Recvstring(ActiveTest.WaitTime);  // Try to get something from the CAN
                                   if TempStr <> '' then
-                                    ActiveTest.TestStrings.Add(Trim(TempStr))         // Received something, store and keep looking
+                                    ActiveTest.TestStrings.Add('      ' + Trim(TempStr))         // Received something, store and keep looking
                                   else begin
                                      iNextObjective := ActiveTest.Process(ProcessStrings); // Timed out, move on
+                                     for i := 0 to ProcessStrings.Count - 1 do
+                                       ProcessStrings[i] := '      ' + ProcessStrings[i];
                                      if iNextObjective = iCurrentObjective then          // Same objective to continue
                                        ActiveTest.TestState := ts_Sending
                                      else begin
                                        iCurrentObjective := iNextObjective;
                                        ActiveTest.TestState := ts_ObjectiveEnd;          // Start next objective
                                      end;
-                                     ActiveTest.TestStrings.Add('</receive>');
+                                     ActiveTest.TestStrings.Add('    </receive>');
                                   end;
                                 end;
             ts_ObjectiveEnd :   begin
