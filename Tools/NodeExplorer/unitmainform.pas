@@ -28,7 +28,7 @@ uses
   RTTICtrls, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList,
   Menus, ExtCtrls, synaser, lcltype, unitlogwindow, unitsettings,
   DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
-  nodeexplorer_settings, olcb_utilities;
+  nodeexplorer_settings, olcb_utilities, unitolcb_defines;
 
 
 const
@@ -39,6 +39,7 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
+    ActionLogShowGutter: TAction;
     ActionExecuteTests: TAction;
     ActionSaveTestMatrix: TAction;
     ActionLoadTestMatrix: TAction;
@@ -117,6 +118,7 @@ type
     procedure ActionExecuteTestsExecute(Sender: TObject);
     procedure ActionHideLogExecute(Sender: TObject);
     procedure ActionLoadTestMatrixExecute(Sender: TObject);
+    procedure ActionLogShowGutterExecute(Sender: TObject);
     procedure ActionReadXMLExecute(Sender: TObject);
     procedure ActionRescanPortsExecute(Sender: TObject);
     procedure ActionSaveTestMatrixExecute(Sender: TObject);
@@ -131,15 +133,15 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
-    procedure PageControlChange(Sender: TObject);
     procedure TimerCANTimer(Sender: TObject);
   private
     { private declarations }
     FShownOnce: Boolean;
     FTestMatrix: TOpenLCBTestMatrix;
     FTestStrings: TStringList;
-    FVerifyNodeIDTest: TTestVerifyNodeID;
+    FVerifyNodesIDTest: TTestVerifyNodesID;
     FXMLDoc: TXMLDocument;
     function GetConnected: Boolean;
   protected
@@ -159,7 +161,7 @@ type
     property ShownOnce: Boolean read FShownOnce write FShownOnce;
     property TestStrings: TStringList read FTestStrings write FTestStrings;
     property TestMatrix: TOpenLCBTestMatrix read FTestMatrix write FTestMatrix;
-    property VerifyNodeIDTest: TTestVerifyNodeID read FVerifyNodeIDTest write FVerifyNodeIDTest;
+    property VerifyNodesIDTest: TTestVerifyNodesID read FVerifyNodesIDTest write FVerifyNodesIDTest;
     property XMLDoc: TXMLDocument read FXMLDoc write FXMLDoc;
   end;
 
@@ -176,7 +178,7 @@ procedure TFormMain.ActionClearExecute(Sender: TObject);
 begin
   FormLog.SynMemo.Lines.BeginUpdate;
   try
-    FormLog.SynMemo.Lines
+    FormLog.SynMemo.Lines.Clear
   finally
     FormLog.SynMemo.Lines.EndUpdate
   end;
@@ -224,9 +226,38 @@ begin
 end;
 
 procedure TFormMain.ActionDiscoverNodeExecute(Sender: TObject);
+var
+  StartLine, EndLine, i: Integer;
+  Helper: TOpenLCBMessageHelper;
+  ListItem: TListItem;
 begin
-  TestMatrix.Add(VerifyNodeIDTest);
+  StartLine := 0;
+  EndLine := 0;
+  TestMatrix.Add(VerifyNodesIDTest);
   TimerCAN.Enabled := True;
+  while VerifyNodesIDTest.TestState <> ts_Complete do
+    ThreadSwitch;
+  Helper := TOpenLCBMessageHelper.Create;
+  ListViewNodeDiscovery.Items.BeginUpdate;
+  try
+    ListViewNodeDiscovery.Items.Clear;
+
+    StartLine := VerifyNodesIDTest.TestStrings.IndexOf('    <receive>');
+    EndLine := VerifyNodesIDTest.TestStrings.IndexOf('    </receive>');
+    for i := StartLine + 1 to EndLine - 1 do
+    begin
+      Helper.Decompose(VerifyNodesIDTest.TestStrings[i]);
+      if Helper.MTI = MTI_VERIFIED_NODE_ID_NUMBER then
+      begin
+         ListItem := ListViewNodeDiscovery.Items.Add;
+         ListItem.Caption := IntToHex(Helper.SourceAliasID, 3);
+         ListItem.SubItems.Add(IntToHex(Helper.DataAsNodeID, 12));
+      end;
+    end;
+  finally
+    ListViewNodeDiscovery.Items.EndUpdate;
+    Helper.Free
+  end;
 end;
 
 procedure TFormMain.ActionEventReaderExecute(Sender: TObject);
@@ -235,8 +266,18 @@ begin
 end;
 
 procedure TFormMain.ActionExecuteTestsExecute(Sender: TObject);
+var
+  i: Integer;
 begin
-  ShowMessage('Not implemented yet');
+  if ListViewNodeDiscovery.SelCount = 1 then
+  begin
+    for i := 0 to ListViewTestMatrix.Items.Count - 1 do
+    begin
+      if ListViewTestMatrix.Items[i].Checked then
+        TestMatrix.Add( TTestBase( ListViewTestMatrix.Items[i].Data));
+    end;
+  end else
+    ShowMessage('No node is selected to test. Run "Discover Nodes" in the "Discovery" tab and select the node to test');
 end;
 
 procedure TFormMain.ActionHideLogExecute(Sender: TObject);
@@ -255,6 +296,11 @@ begin
       ReadXMLFile(FXMLDoc, UTF8ToSys(OpenDialog.FileName));
     LoadTestMatrix
   end;
+end;
+
+procedure TFormMain.ActionLogShowGutterExecute(Sender: TObject);
+begin
+  FormLog.SynMemo.Gutter.Visible := FormLog.CheckBoxShowGutter.Checked;
 end;
 
 procedure TFormMain.ActionReadXMLExecute(Sender: TObject);
@@ -363,7 +409,7 @@ begin
   {$ENDIF}
 
   ShownOnce := False;
-  FVerifyNodeIDTest := nil;
+  FVerifyNodesIDTest := nil;
   FTestStrings := TStringList.Create;
   FTestMatrix := TOpenLCBTestMatrix.Create;
   ActionRescanPorts.Execute;
@@ -415,6 +461,16 @@ begin
   ShownOnce := True;
 end;
 
+procedure TFormMain.ListViewNodeDiscoverySelectItem(Sender: TObject;
+  Item: TListItem; Selected: Boolean);
+begin
+  if Selected then
+  begin
+    Settings.TargetNodeAlias := StrToInt('$' + Item.Caption);
+    Settings.TargetNodeID := StrToInt64('$' + Item.SubItems[0]);
+  end;
+end;
+
 procedure TFormMain.ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
 var
   Test: TTestBase;
@@ -423,12 +479,6 @@ begin
   Test.XMLNode := nil;                    // The XML Document owns this
   FreeAndNil( Test);
 end;
-
-procedure TFormMain.PageControlChange(Sender: TObject);
-begin
-
-end;
-
 
 procedure TFormMain.TimerCANTimer(Sender: TObject);
 var
@@ -484,7 +534,7 @@ end;
 procedure TFormMain.UpdateUI;
 begin
   {$IFNDEF DISABLE_UI_UPDATE}
-  ActionDiscoverNode.Enabled := Assigned(VerifyNodeIDTest) and Connected;
+  ActionDiscoverNode.Enabled := Assigned(VerifyNodesIDTest) and Connected;
   ActionExecuteTests.Enabled := Assigned(XMLDoc) and Connected;
   ActionSaveTestMatrix.Enabled := Assigned(XMLDoc);
   ActionReadXML.Enabled := Connected;
@@ -513,7 +563,7 @@ var
 begin
   ListviewTestMatrix.Items.BeginUpdate;
   try
-    VerifyNodeIDTest := nil;          // Need to find it again
+    VerifyNodesIDTest := nil;          // Need to find it again
     ListviewTestMatrix.Items.Clear;
     TestList := TList.Create;
     try
@@ -523,23 +573,24 @@ begin
         TestNode := TDOMNode( TestList[i]);
         Test := TTestBase.CreateInstanceFromString( TestClassnameFromTestNode(TestNode));  // Create a Test Object from the Classname in the XML
 
-        if not Assigned(VerifyNodeIDTest) then
-        begin
-          if Test is TTestVerifyNodeID then   // Local Copy of the
-          VerifyNodeIDTest := Test as TTestVerifyNodeID;
-        end;
-
         if not Assigned(Test) then
-          ShowMessage('Invalid Classname for Test ' + TestNameFromTestNode(TestNode))
+            ShowMessage('Invalid Classname for Test ' + TestNameFromTestNode(TestNode))
         else begin
-          ListItem := ListviewTestMatrix.Items.Add;
-          ListItem.Caption := TestNameFromTestNode(TestNode);
-          ListItem.SubItems.Add(TestDescriptionFromTestNode(TestNode));
-          ListItem.SubItems.Add(TestSpecDocFromTestNode(TestNode));
-          ListItem.SubItems.Add(TestClassnameFromTestNode(TestNode));
-          ListItem.Checked := CompareText(TestEnabledStateFromTestNode(TestNode), 'True') = 0;
-          ListItem.Data := Test;
-          Test.XMLNode := TestNode;
+          if Test is TTestVerifyNodesID then
+          begin
+            VerifyNodesIDTest := Test as TTestVerifyNodesID;
+            VerifyNodesIDTest.XMLNode := TestNode;
+          end else
+          begin
+            ListItem := ListviewTestMatrix.Items.Add;
+            ListItem.Caption := TestNameFromTestNode(TestNode);
+            ListItem.SubItems.Add(TestDescriptionFromTestNode(TestNode));
+            ListItem.SubItems.Add(TestSpecDocFromTestNode(TestNode));
+            ListItem.SubItems.Add(TestClassnameFromTestNode(TestNode));
+            ListItem.Checked := CompareText(TestEnabledStateFromTestNode(TestNode), 'True') = 0;
+            ListItem.Data := Test;
+            Test.XMLNode := TestNode;
+          end;
         end;
       end;
     finally

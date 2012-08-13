@@ -39,12 +39,12 @@ type
   end;
   TTestBaseClass = class of TTestBase;
 
-  { TTestVerifyNodeID }
+  { TTestVerifyNodesID }
 
-  TTestVerifyNodeID = class(TTestBase)
+  TTestVerifyNodesID = class(TTestBase)
     function Process(ProcessStrings: TStringList): Integer; override;
   end;
-  TTestVerifyNodeIDClass = class of TTestVerifyNodeID;
+  TTestVerifyNodesIDClass = class of TTestVerifyNodesID;
 
   { TTestAliasMapEnquiry }
 
@@ -53,26 +53,131 @@ type
   end;
   TTestAliasMapEnquiryClass = class of TTestAliasMapEnquiry;
 
+  { TTestVerifyNodeID }
+
+  TTestVerifyNodeID = class(TTestBase)
+    function Process(ProcessStrings: TStringList): Integer; override;
+  end;
+  TTestVerifyNodeIDClass = class of TTestVerifyNodeID;
+
 implementation
+
+{ TTestVerifyNodeID }
+
+function TTestVerifyNodeID.Process(ProcessStrings: TStringList): Integer;
+begin
+  Result := inherited Process(ProcessStrings);
+  case StateMachineIndex of
+    0 : begin
+          // Send Process
+          MessageHelper.Load(ol_CAN, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          ProcessStrings.Add(MessageHelper.Encode);
+          Inc(FStateMachineIndex);
+          Result := 0;                                                          // Objective 0
+        end;
+    1: begin
+          // Receive Process
+          Inc(FStateMachineIndex);
+          Result := 1;                                                          // Move to Objective 1
+       end;
+    2 : begin
+          // Send Process
+          MessageHelper.Load(ol_CAN, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          MessageHelper.StoreNodeIDToData(Settings.TargetNodeID, False);
+          ProcessStrings.Add(MessageHelper.Encode);
+          Inc(FStateMachineIndex);
+          Result := 1;                                                          // Objective 1
+        end;
+    3: begin
+          // Receive Process
+          Inc(FStateMachineIndex);
+          Result := 2;                                                          //
+       end;
+    4 : begin
+          // Send Process
+          MessageHelper.Load(ol_CAN, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 6, 0, 0, 0, 0, 0 ,1 ,0 ,0);  // NEED UNIQUE NODE ID HERE
+          ProcessStrings.Add(MessageHelper.Encode);
+          Inc(FStateMachineIndex);
+          Result := 2;                                                          // Objective 1
+        end;
+    5: begin
+          // Receive Process
+          Inc(FStateMachineIndex);
+          Result := 3;                                                          //
+       end;
+    6 : begin
+          // Send Process
+          MessageHelper.Load(ol_CAN, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, Settings.TargetNodeAlias, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          MessageHelper.StoreNodeIDToData(Settings.TargetNodeID, True);
+          ProcessStrings.Add(MessageHelper.Encode);
+          Inc(FStateMachineIndex);
+          Result := 3;                                                          // Objective 2
+        end;
+    7: begin
+          // Receive Process
+          Inc(FStateMachineIndex);
+          Result := 4;                                                          //
+       end;
+    8 : begin
+          // Send Process
+          MessageHelper.Load(ol_CAN, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, Settings.TargetNodeAlias, 8, 0, 0, 0, 0, 0 ,0 ,0 ,1);
+          ProcessStrings.Add(MessageHelper.Encode);
+          Inc(FStateMachineIndex);
+          Result := 4;                                                          // Objective 3
+        end;
+    9: begin
+          // Receive Process
+          Inc(FStateMachineIndex);
+          Result := 5;                                                          //
+       end;
+
+  end;
+end;
 
 { TTestAliasMapEnquiry }
 
 function TTestAliasMapEnquiry.Process(ProcessStrings: TStringList): Integer;
 begin
   Result := inherited Process(ProcessStrings);
+  case StateMachineIndex of
+    0 : begin
+          // Send Process
+          MessageHelper.Load(ol_CAN, MTI_AME, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          MessageHelper.StoreNodeIDToData(Settings.TargetNodeID, False);
+          ProcessStrings.Add(MessageHelper.Encode);
+          Inc(FStateMachineIndex);
+          Result := 0;                                                          // Objective 0
+        end;
+    1: begin
+          // Receive Process
+          Inc(FStateMachineIndex);
+          Result := 1;                                                          // Move to Objective 1
+       end;
+    2 : begin
+          // Send Process
+          MessageHelper.Load(ol_CAN, MTI_AME, Settings.ProxyNodeAlias, 0, 6, 0, 0, 0, 0, 0 ,1 ,0 ,0);   // NEED TO FIND A UNIQUE NODE ID HERE.....
+          ProcessStrings.Add(MessageHelper.Encode);
+          Inc(FStateMachineIndex);
+          Result := 1;                                                          // Objective 1
+        end;
+    3: begin
+          // Receive Process
+          Result := 2;                                                          // Move to non-existant Objective 2
+       end;
+
+  end;
 end;
 
 { TTestVerifyNodeID }
 
-function TTestVerifyNodeID.Process(ProcessStrings: TStringList): Integer;
+function TTestVerifyNodesID.Process(ProcessStrings: TStringList): Integer;
 begin
-  inherited Process(ProcessStrings);
-  Result := -1;
+  Result := inherited Process(ProcessStrings);
   case StateMachineIndex of
     0 : begin
           // Send Process
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
-          ProcessStrings.Add(MessageHelper.Encode);  // Must be by itself... how to add "Sending: "....???/
+          ProcessStrings.Add(MessageHelper.Encode);
           Inc(FStateMachineIndex);
           Result := 0;                                                          // Process 0
         end;
@@ -120,6 +225,13 @@ begin
   if Assigned(TestBaseClass) then
     Result := TestBaseClass.Create;
 end;
+
+initialization
+  RegisterClass(TTestVerifyNodesID);
+  RegisterClass(TTestAliasMapEnquiry);
+  RegisterClass(TTestVerifyNodeID);
+
+finalization
 
 end.
 

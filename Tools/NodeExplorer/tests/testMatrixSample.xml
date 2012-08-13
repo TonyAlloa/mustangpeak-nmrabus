@@ -2,10 +2,10 @@
 <?xml-stylesheet type="text/xsl" href="xslt/testmatrix.xsl"?>
 <TestMatrix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://openlcb.org/trunk/prototypes/xml/schema/testmatrix.xsd">
   <Test>
-    <Name>IdentifyNodes</Name>
+    <Name>Identify Nodes</Name>
     <Description>Identifies all nodes on the network using VerifyNodeID</Description>
     <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
-    <Classname>TTestVerifyNodeID</Classname>
+    <Classname>TTestVerifyNodesID</Classname>
     <Enabled>True</Enabled>
     <TestObjective>
       <Objective>Send global Verify Node ID Message Network Layer Message</Objective>
@@ -13,22 +13,45 @@
     </TestObjective>
   </Test>
   <Test>
-    <Name>AliasMapEnquiry</Name>
-    <Description>Test the Alias Map Enquiry Message</Description>
+    <Name>Alias Map Enquiry</Name>
+    <Description>Tests target for correct implementation of the Alias Map Enquiry (AME) Message</Description>
     <SpecDoc>"OpenLCB-CAN Frame Transfer Paragraph 6.2.3</SpecDoc>
     <Classname>TTestAliasMapEnquiry</Classname>
-    <Enabled>False</Enabled>
+    <Enabled>True</Enabled>
     <TestObjective>
-      <Objective>Send AME message with Full Node ID of Node Under Test as CAN data payload</Objective>
-      <Results>Receive Alias Map Definition (AMD) from node matching the Full Node ID sent</Results>
+      <Objective>Send AME message with Full Node ID of node under test in the data payload</Objective>
+      <Results>Receive Alias Map Definition (AMD) from node matching the Full Node ID in the data payload</Results>
     </TestObjective>
     <TestObjective>
-      <Objective>Send AME message with an empty data payload</Objective>
-      <Results>Alias Map Definitions (AMD) from all nodes on network</Results>
+      <Objective>Send AME message with Full Node ID of non existent node in the data payload</Objective>
+      <Results>No reply</Results>
+    </TestObjective>
+  </Test>
+  <Test>
+    <Name>Verify Node </Name>
+    <Description>Tests target for correct implementation of the VerifyNodeID message</Description>
+    <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
+    <Classname>TTestVerifyNodeID</Classname>
+    <Enabled>True</Enabled>
+    <TestObjective>
+      <Objective>Send Global Identify Nodes message</Objective>
+      <Results>All nodes on network reply with the target of interest included</Results>
     </TestObjective>
     <TestObjective>
-      <Objective>Send AME message with Full Node ID of no known node on the network in the CAN data payload</Objective>
-      <Results>No Response</Results>
+      <Objective>Send Identify Nodes message with Full Node ID of node under test in data payload</Objective>
+      <Results>Verified Node ID from target node on the network</Results>
+    </TestObjective>
+    <TestObjective>
+      <Objective>Send Identify Nodes message with Full Node ID of non existent node in the data payload</Objective>
+      <Results>No reply</Results>
+    </TestObjective>
+    <TestObjective>
+      <Objective>Send Addressed Identify Nodes message with Full Node ID in the data payload</Objective>
+      <Results>Verified Node ID from target node on the network</Results>
+    </TestObjective>
+    <TestObjective>
+      <Objective>Send Addressed Identify Nodes message with Full Node ID in the data payload to the incorrect alias address</Objective>
+      <Results>No reply</Results>
     </TestObjective>
   </Test>
 </TestMatrix>

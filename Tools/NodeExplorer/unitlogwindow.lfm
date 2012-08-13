@@ -1,11 +1,11 @@
 object FormLog: TFormLog
-  Left = 780
-  Height = 432
-  Top = 273
+  Left = 967
+  Height = 471
+  Top = 179
   Width = 402
   BorderStyle = bsSizeToolWin
   Caption = 'Log Window'
-  ClientHeight = 432
+  ClientHeight = 471
   ClientWidth = 402
   OnActivate = FormActivate
   OnHide = FormHide
@@ -13,7 +13,7 @@ object FormLog: TFormLog
   object ButtonClear: TButton
     Left = 253
     Height = 22
-    Top = 401
+    Top = 440
     Width = 125
     Action = FormMain.ActionClear
     Anchors = [akRight, akBottom]
@@ -22,7 +22,7 @@ object FormLog: TFormLog
   inline SynMemo: TSynMemo
     Cursor = crIBeam
     Left = 0
-    Height = 393
+    Height = 432
     Top = 0
     Width = 402
     Align = alTop
@@ -496,6 +496,17 @@ object FormLog: TFormLog
         MouseActionsCollapsed = <>
       end
     end
+  end
+  object CheckBoxShowGutter: TCheckBox
+    Left = 16
+    Height = 17
+    Top = 445
+    Width = 78
+    Action = FormMain.ActionLogShowGutter
+    Anchors = [akLeft, akBottom]
+    Checked = True
+    State = cbChecked
+    TabOrder = 2
   end
   object SynXMLSyn: TSynXMLSyn
     DefaultFilter = 'XML Document (*.xml,*.xsd,*.xsl,*.xslt,*.dtd)|*.xml;*.xsd;*.xsl;*.xslt;*.dtd'

@@ -31,6 +31,7 @@ type
 
   TFormLog = class(TForm)
     ButtonClear: TButton;
+    CheckBoxShowGutter: TCheckBox;
     SynMemo: TSynMemo;
     SynXMLSyn: TSynXMLSyn;
     procedure FormActivate(Sender: TObject);
@@ -39,7 +40,6 @@ type
     { private declarations }
   public
     { public declarations }
-    CheckBoxLogWindow: TCheckBox;
   end;
 
 var
@@ -58,9 +58,8 @@ end;
 
 procedure TFormLog.FormHide(Sender: TObject);
 begin
-  if Assigned(CheckBoxLogWindow) then
-    CheckBoxLogWindow.Checked := False
+
 end;
 
 end.
-
+

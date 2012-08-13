@@ -19,10 +19,14 @@ type
     FComPort: String;
     FProxyNodeAlias: Word;
     FProxyNodeID: Int64;
+    FTargetNodeAlias: Word;
+    FTargetNodeID: Int64;
     FXMLSettings: TXMLDocument;
   public
     property ProxyNodeAlias: Word read FProxyNodeAlias write FProxyNodeAlias;
     property ProxyNodeID: Int64 read FProxyNodeID write FProxyNodeID;
+    property TargetNodeAlias: Word read FTargetNodeAlias write FTargetNodeAlias;
+    property TargetNodeID: Int64 read FTargetNodeID write FTargetNodeID;
     property ComPort: String read FComPort write FComPort;
     property BaudRate: DWord read FBaudRate write FBaudRate;
     property XMLSettings: TXMLDocument read FXMLSettings write FXMLSettings;

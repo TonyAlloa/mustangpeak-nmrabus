@@ -82,25 +82,21 @@ begin
                                   iCurrentObjective := 0;
                                   ExtractTestObjectivesFromTestNode(ActiveTest.XMLNode, Objectives);
                                   ObjectiveCount := Objectives.Count;
-                                  if ObjectiveCount < 1 then
-                                  begin
-                                    ActiveTest.TestStrings.Add('<objective>');
-                                    ActiveTest.TestStrings.Add('None Found');
-                                    ActiveTest.TestStrings.Add('</objective>');
-                                    ActiveTest.TestState := ts_Complete;
-                                  end;
+                                  ActiveTest.TestStrings.Add('<name>');
+                                  Activetest.TestStrings.Add(' ' + TestNameFromTestNode(ActiveTest.XMLNode));
+                                  ActiveTest.TestStrings.Add('  <description>');
+                                  Activetest.TestStrings.Add('    ' + TestDescriptionFromTestNode(ActiveTest.XMLNode));
+                                  ActiveTest.TestStrings.Add('  </description>');
                                   ActiveTest.TestState := ts_ObjectiveStart;
                                 end;
             ts_ObjectiveStart : begin
-                                  ActiveTest.TestStrings.Add('<objective>');
+                                  ActiveTest.TestStrings.Add('  <objective>');
                                   if iCurrentObjective < ObjectiveCount then
-                                    ActiveTest.TestStrings.Add('  ' + ObjectiveFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective])));
+                                    ActiveTest.TestStrings.Add('    ' + ObjectiveFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective])));
                                   ActiveTest.TestState := ts_Sending;
                                 end;
             ts_Sending :        begin
                                   ActiveTest.TestStrings.Add('    <send>');
-                                  Activetest.TestStrings.Add('      Test: ' + TestNameFromTestNode(ActiveTest.XMLNode));
-                                  Activetest.TestStrings.Add('      ' + TestDescriptionFromTestNode(ActiveTest.XMLNode));
                                   iCurrentObjective := ActiveTest.Process(ProcessStrings);  // Run Next State and get State specific strings
                                   for i := 0 to ProcessStrings.Count - 1 do          // Start with the next objective information
                                   begin
@@ -116,6 +112,7 @@ begin
                                     ThreadSwitch;                                    // Wait till "done" transmitting
                                   ActiveTest.TestStrings.Add('    </send>');
                                   ActiveTest.TestState := ts_Receiving;
+                                  ActiveTest.TestStrings.Add('    ' + ObjectiveResultFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective])));
                                   ActiveTest.TestStrings.Add('    <receive>');
                                 end;
             ts_Receiving      : begin
@@ -136,11 +133,13 @@ begin
                                   end;
                                 end;
             ts_ObjectiveEnd :   begin
-                                  ActiveTest.TestStrings.Add('</objective>');
+                                  ActiveTest.TestStrings.Add('  </objective>');
                                   if iCurrentObjective < ObjectiveCount then
                                     ActiveTest.TestState := ts_ObjectiveStart
-                                  else
+                                  else begin
+                                    ActiveTest.TestStrings.Add('</name>');
                                     ActiveTest.TestState := ts_Complete;
+                                  end;
                                 end;
             ts_Complete       : begin
                                 end;
@@ -214,12 +213,6 @@ begin
     ComPortThread.ThreadTestList.UnLockList;
   end;
 end;
-
-initialization
-  RegisterClass(TTestVerifyNodeID);
-  RegisterClass(TTestAliasMapEnquiry);
-
-finalization
 
 
 end.

@@ -46,6 +46,8 @@ type
 
   { TOpenLCBMessage }
 
+  { TOpenLCBMessageHelper }
+
   TOpenLCBMessageHelper = class
   private
     FDestinationAliasID: Word;
@@ -69,6 +71,8 @@ type
     procedure Decompose(MessageStr: AnsiString);
     function Encode: AnsiString;
     procedure Load(ALayer: TOpenLCBLayer; AMTI: DWord; ASourceAlias: Word; ADestinationAlias: Word; ADataCount: Integer; AData0, AData1, AData2, AData3, AData4, AData5, AData6, AData7: Byte);
+    function DataAsNodeID: Int64;
+    procedure StoreNodeIDToData(NodeID: Int64; IsAddressed: Boolean);
   end;
 
   procedure ExtractTestsFromXML(XMLDoc: TXMLDocument; TestList: TList);
@@ -230,10 +234,12 @@ begin
 
         MTI := StrToInt('$' + Head);
         SourceAliasID := MTI and $00000FFF;
-        if MTI and $10000000 = $10000000 then
+        if MTI and $08000000 = $08000000 then
           Layer := ol_OpenLCB
         else
           Layer := ol_CAN;
+        MTI := MTI and not $10000000;    // Strip off the reserved bit
+        MTI := MTI and $FFFFF000;        // Strip off the Source Alias
 
         FDataCount := 0;
         i := n;
@@ -255,11 +261,21 @@ var
   FullMTI: DWord;
 begin
   FullMTI := MTI or SourceAliasID;
+  FullMTI := FullMTI or $10000000;
   if Layer = ol_OpenLCB then
-    FullMTI := FullMTI or $10000000;
+    FullMTI := FullMTI or $08000000;
   Result := ':X' + IntToHex(FullMTI, 8) + 'N';
   for i := 0 to DataCount - 1 do
-     Result := Result + IntToHex(Data[i], 2);
+  begin
+    if (i < 2) and (DestinationAliasID <> 0) then
+    begin
+      if i = 0 then
+        Result := Result + IntToHex((DestinationAliasID shr 8) and $00FF, 2)
+      else
+        Result := Result + IntToHex(DestinationAliasID and $00FF, 2)
+    end else
+      Result := Result + IntToHex(Data[i], 2);
+  end;
   Result := Result  + ';'
 end;
 
@@ -281,6 +297,35 @@ begin
   Data[6] := AData6;
   Data[7] := AData7;
 
+end;
+
+function TOpenLCBMessageHelper.DataAsNodeID: Int64;
+var
+  x: Int64;
+begin
+  Result := Int64( Data[0]) shl 40;
+  Result := Result or (Int64( Data[1]) shl 32);
+  Result := Result or (Int64( Data[2]) shl 24);
+  Result := Result or (Int64( Data[3]) shl 16);
+  Result := Result or (Int64( Data[4]) shl 8);
+  Result := Result or Int64( Data[5]);
+end;
+
+procedure TOpenLCBMessageHelper.StoreNodeIDToData(NodeID: Int64; IsAddressed: Boolean);
+var
+  Offset: Integer;
+begin
+  if IsAddressed then
+    Offset := 2
+  else
+    Offset := 0;
+  Data[0+Offset] := (NodeID shr 40) and $000000FF;
+  Data[1+Offset] := (NodeID shr 32) and $000000FF;
+  Data[2+Offset] := (NodeID shr 24) and $000000FF;
+  Data[3+Offset] := (NodeID shr 16) and $000000FF;
+  Data[4+Offset] := (NodeID shr 8) and $000000FF;
+  Data[5+Offset] := (NodeID) and $000000FF;
+  DataCount := 6 + Offset;
 end;
 
 
