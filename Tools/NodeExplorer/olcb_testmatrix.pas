@@ -11,7 +11,7 @@ uses
 { TTestBase }
 
 type
-  TTestState = (ts_Idle, ts_Processing, ts_Sending, ts_Receiving, ts_Complete);
+  TTestState = (ts_Idle, ts_Initialize, ts_ObjectiveStart, ts_Sending, ts_Receiving, ts_ObjectiveEnd, ts_Complete);
 
   TTestBase = class(TPersistent)
   private
@@ -34,7 +34,7 @@ type
     property XMLNode: TDOMNode  read FXMLNode write FXMLNode;
     constructor Create; virtual;
     destructor Destroy; override;
-    function Process: Boolean; virtual; abstract;
+    function Process(ProcessStrings: TStringList): Integer; virtual;
     class function CreateInstanceFromString(AClassname: String): TTestBase;
   end;
   TTestBaseClass = class of TTestBase;
@@ -42,14 +42,14 @@ type
   { TTestVerifyNodeID }
 
   TTestVerifyNodeID = class(TTestBase)
-    function Process: Boolean; override;
+    function Process(ProcessStrings: TStringList): Integer; override;
   end;
   TTestVerifyNodeIDClass = class of TTestVerifyNodeID;
 
   { TTestAliasMapEnquiry }
 
   TTestAliasMapEnquiry = class(TTestBase)
-    function Process: Boolean; override;
+    function Process(ProcessStrings: TStringList): Integer; override;
   end;
   TTestAliasMapEnquiryClass = class of TTestAliasMapEnquiry;
 
@@ -57,26 +57,28 @@ implementation
 
 { TTestAliasMapEnquiry }
 
-function TTestAliasMapEnquiry.Process: Boolean;
+function TTestAliasMapEnquiry.Process(ProcessStrings: TStringList): Integer;
 begin
-  Result := False
+  Result := inherited Process(ProcessStrings);
 end;
 
 { TTestVerifyNodeID }
 
-function TTestVerifyNodeID.Process: Boolean;
+function TTestVerifyNodeID.Process(ProcessStrings: TStringList): Integer;
 begin
-  Result := True;
+  inherited Process(ProcessStrings);
+  Result := -1;
   case StateMachineIndex of
     0 : begin
+          // Send Process
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
-          TestStrings.Add('Test: ' + TestNameFromTestNode(XMLNode));
-          TestStrings.Add(TestDescriptionFromTestNode(XMLNode));
           TestStrings.Add(MessageHelper.Encode);  // Must be by itself... how to add "Sending: "....???/
           Inc(FStateMachineIndex);
+          Result := 0;                                                          // Process 0
         end;
     1: begin
-          Result := False      // Done
+          // Receive Process
+          Result := 1;                                                          // Done with Process 0 move to Process 1 (which is not valid in this case so thread will finish with this test)
        end;
   end;
 end;
@@ -101,6 +103,12 @@ begin
   FreeAndNil(FMessageHelper);
   FStateMachineIndex := 0;
   inherited Destroy;
+end;
+
+function TTestBase.Process(ProcessStrings: TStringList): Integer;
+begin
+  Result := -1;
+  ProcessStrings.Clear;
 end;
 
 class function TTestBase.CreateInstanceFromString(AClassname: String): TTestBase;

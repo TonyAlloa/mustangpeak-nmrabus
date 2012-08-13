@@ -50,7 +50,7 @@
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <CursorPos X="13" Y="22"/>
+        <CursorPos X="3" Y="12"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -72,7 +72,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1140"/>
         <CursorPos X="30" Y="1157"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit2>
       <Unit3>
         <Filename Value="..\..\OpenLCB_NodeExplorer\unitlogwindow.pas"/>
@@ -91,21 +91,21 @@
         <WindowIndex Value="0"/>
         <TopLine Value="2119"/>
         <CursorPos X="1" Y="2136"/>
-        <UsageCount Value="26"/>
+        <UsageCount Value="24"/>
       </Unit4>
       <Unit5>
         <Filename Value="C:\lazarus\lcl\include\wincontrol.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="7940"/>
         <CursorPos X="1" Y="7968"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit5>
       <Unit6>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\win\wininc\struct.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="804"/>
         <CursorPos X="21" Y="808"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="13"/>
       </Unit6>
       <Unit7>
         <Filename Value="..\..\synapse40\source\lib\synaser.pas"/>
@@ -113,7 +113,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1851"/>
         <CursorPos X="39" Y="1868"/>
-        <UsageCount Value="90"/>
+        <UsageCount Value="88"/>
       </Unit7>
       <Unit8>
         <Filename Value="..\..\synapse40\source\lib\synautil.pas"/>
@@ -121,42 +121,42 @@
         <WindowIndex Value="0"/>
         <TopLine Value="843"/>
         <CursorPos X="41" Y="864"/>
-        <UsageCount Value="89"/>
+        <UsageCount Value="87"/>
       </Unit8>
       <Unit9>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\unix\bunxovlh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="41" Y="15"/>
-        <UsageCount Value="89"/>
+        <UsageCount Value="87"/>
       </Unit9>
       <Unit10>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\bsd\ostypes.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="201"/>
         <CursorPos X="41" Y="243"/>
-        <UsageCount Value="89"/>
+        <UsageCount Value="87"/>
       </Unit10>
       <Unit11>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\unix\bunxh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="71"/>
         <CursorPos X="15" Y="96"/>
-        <UsageCount Value="89"/>
+        <UsageCount Value="87"/>
       </Unit11>
       <Unit12>
         <Filename Value="Y:\Developer\lazarus\lcl\include\control.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="2840"/>
         <CursorPos X="1" Y="2808"/>
-        <UsageCount Value="89"/>
+        <UsageCount Value="87"/>
       </Unit12>
       <Unit13>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\darwin\termios.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="62"/>
         <CursorPos X="30" Y="372"/>
-        <UsageCount Value="89"/>
+        <UsageCount Value="87"/>
       </Unit13>
       <Unit14>
         <Filename Value="..\..\synapse40\source\lib\synafpc.pas"/>
@@ -164,7 +164,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="59"/>
         <CursorPos X="63" Y="80"/>
-        <UsageCount Value="35"/>
+        <UsageCount Value="33"/>
       </Unit14>
       <Unit15>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\darwin\termio.pp"/>
@@ -172,7 +172,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="12" Y="17"/>
-        <UsageCount Value="67"/>
+        <UsageCount Value="65"/>
       </Unit15>
       <Unit16>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\unix\baseunix.pp"/>
@@ -180,42 +180,42 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="67"/>
+        <UsageCount Value="65"/>
       </Unit16>
       <Unit17>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\unix\termiosh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="11" Y="18"/>
-        <UsageCount Value="67"/>
+        <UsageCount Value="65"/>
       </Unit17>
       <Unit18>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\inc\systemh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="232"/>
         <CursorPos X="3" Y="253"/>
-        <UsageCount Value="44"/>
+        <UsageCount Value="42"/>
       </Unit18>
       <Unit19>
         <Filename Value="Y:\Developer\lazarus\packages\libc\src\btermiosh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="151"/>
         <CursorPos X="3" Y="181"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit19>
       <Unit20>
         <Filename Value="Y:\Developer\lazarus\rtl\freebsd\termios.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="177"/>
         <CursorPos X="9" Y="198"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="4"/>
       </Unit20>
       <Unit21>
         <Filename Value="Y:\Developer\lazarus\rtl\darwin\termios.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="411"/>
         <CursorPos X="6" Y="432"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="4"/>
       </Unit21>
       <Unit22>
         <Filename Value="Y:\Developer\lazarus\rtl\unix\serial.pp"/>
@@ -223,14 +223,14 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="10" Y="83"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit22>
       <Unit23>
         <Filename Value="Y:\Developer\lazarus\rtl\linux\termios.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1434"/>
         <CursorPos X="3" Y="1455"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="19"/>
       </Unit23>
       <Unit24>
         <Filename Value="Y:\Developer\lazarus\lcl\customtimer.pas"/>
@@ -238,14 +238,14 @@
         <WindowIndex Value="0"/>
         <TopLine Value="136"/>
         <CursorPos X="1" Y="157"/>
-        <UsageCount Value="3"/>
+        <UsageCount Value="1"/>
       </Unit24>
       <Unit25>
         <Filename Value="Y:\Developer\lazarus\lcl\interfaces\carbon\carbonobject.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1272"/>
         <CursorPos X="1" Y="1293"/>
-        <UsageCount Value="3"/>
+        <UsageCount Value="1"/>
       </Unit25>
       <Unit26>
         <Filename Value="Y:\Developer\lazarus\packager\registration\fcllaz.pas"/>
@@ -253,7 +253,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="83" Y="7"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="7"/>
       </Unit26>
       <Unit27>
         <Filename Value="W:\synapse40\source\lib\synaser.pas"/>
@@ -261,36 +261,36 @@
         <WindowIndex Value="0"/>
         <TopLine Value="518"/>
         <CursorPos X="27" Y="549"/>
-        <UsageCount Value="47"/>
+        <UsageCount Value="45"/>
       </Unit27>
       <Unit28>
         <Filename Value="C:\lazarus\lcl\include\containedaction.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="83"/>
         <CursorPos X="1" Y="106"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit28>
       <Unit29>
         <Filename Value="C:\lazarus\lcl\include\customaction.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="236"/>
         <CursorPos X="1" Y="253"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit29>
       <Unit30>
         <Filename Value="C:\lazarus\lcl\customtimer.pas"/>
         <UnitName Value="CustomTimer"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="159"/>
-        <CursorPos X="47" Y="176"/>
-        <UsageCount Value="10"/>
+        <TopLine Value="140"/>
+        <CursorPos X="1" Y="157"/>
+        <UsageCount Value="8"/>
       </Unit30>
       <Unit31>
         <Filename Value="C:\lazarus\lcl\interfaces\win32\win32callback.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="2717"/>
         <CursorPos X="1" Y="2745"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit31>
       <Unit32>
         <Filename Value="W:\usr\share\lazarus\1.0RC1\packager\registration\fcllaz.pas"/>
@@ -298,7 +298,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit32>
       <Unit33>
         <Filename Value="..\..\OpenLCB_NodeExplorer\olcb_utilities.pas"/>
@@ -307,7 +307,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="433"/>
         <CursorPos X="48" Y="443"/>
-        <UsageCount Value="130"/>
+        <UsageCount Value="144"/>
       </Unit33>
       <Unit34>
         <Filename Value="..\..\OpenLCB_NodeExplorer\olcb_stringconstants.pas"/>
@@ -316,7 +316,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="26" Y="1"/>
-        <UsageCount Value="129"/>
+        <UsageCount Value="143"/>
       </Unit34>
       <Unit35>
         <Filename Value="..\..\OpenLCB_NodeExplorer\unitolcb_defines.pas"/>
@@ -325,21 +325,21 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="22" Y="1"/>
-        <UsageCount Value="127"/>
+        <UsageCount Value="141"/>
       </Unit35>
       <Unit36>
         <Filename Value="W:\Developer\lazarus\lcl\include\control.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="2118"/>
         <CursorPos X="1" Y="2136"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit36>
       <Unit37>
         <Filename Value="W:\Developer\lazarus\lcl\include\wincontrol.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="5306"/>
         <CursorPos X="1" Y="5323"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit37>
       <Unit38>
         <Filename Value="W:\Developer\lazarus\lcl\interfaces\carbon\carbonwscontrols.pp"/>
@@ -347,7 +347,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="244"/>
         <CursorPos X="1" Y="265"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit38>
       <Unit39>
         <Filename Value="W:\Developer\lazarus\lcl\interfaces\carbon\carbondef.pp"/>
@@ -355,7 +355,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="225"/>
         <CursorPos X="1" Y="242"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit39>
       <Unit40>
         <Filename Value="W:\Developer\lazarus\lcl\interfaces\carbon\carbonedits.pp"/>
@@ -363,42 +363,42 @@
         <WindowIndex Value="0"/>
         <TopLine Value="856"/>
         <CursorPos X="1" Y="884"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit40>
       <Unit41>
         <Filename Value="W:\Developer\lazarus\lcl\include\customcheckgroup.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="197"/>
         <CursorPos X="1" Y="217"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit41>
       <Unit42>
         <Filename Value="W:\Developer\lazarus\lcl\include\containedaction.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="84"/>
         <CursorPos X="1" Y="106"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit42>
       <Unit43>
         <Filename Value="W:\Developer\lazarus\lcl\include\customaction.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="236"/>
         <CursorPos X="1" Y="253"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit43>
       <Unit44>
         <Filename Value="W:\Developer\lazarus\lcl\include\buttoncontrol.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="10"/>
         <CursorPos X="1" Y="27"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit44>
       <Unit45>
         <Filename Value="W:\Developer\lazarus\lcl\include\buttons.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="327"/>
         <CursorPos X="1" Y="356"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit45>
       <Unit46>
         <Filename Value="W:\Developer\lazarus\lcl\lclmessageglue.pas"/>
@@ -406,7 +406,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="107"/>
         <CursorPos X="1" Y="128"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="0"/>
       </Unit46>
       <Unit47>
         <Filename Value="..\..\OpenLCB_NodeExplorer\unitsettings.pas"/>
@@ -418,7 +418,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="25" Y="18"/>
-        <UsageCount Value="95"/>
+        <UsageCount Value="109"/>
       </Unit47>
       <Unit48>
         <Filename Value="W:\Developer\lazarus\components\fppkg\svn\svnclasses.pas"/>
@@ -426,7 +426,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="696"/>
         <CursorPos X="23" Y="715"/>
-        <UsageCount Value="17"/>
+        <UsageCount Value="15"/>
       </Unit48>
       <Unit49>
         <Filename Value="W:\usr\local\share\fpcsrc\rtl\objpas\strutils.pp"/>
@@ -434,42 +434,42 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="14" Y="18"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="3"/>
       </Unit49>
       <Unit50>
         <Filename Value="W:\usr\local\share\fpcsrc\rtl\objpas\classes\classesh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="101"/>
         <CursorPos X="34" Y="120"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="17"/>
       </Unit50>
       <Unit51>
         <Filename Value="W:\Developer\lazarus\lcl\include\menuitem.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="89"/>
         <CursorPos X="1" Y="120"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="6"/>
       </Unit51>
       <Unit52>
         <Filename Value="W:\usr\local\share\fpcsrc\rtl\bsd\sysosh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="51" Y="20"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="5"/>
       </Unit52>
       <Unit53>
         <Filename Value="W:\usr\local\share\fpcsrc\rtl\inc\objpash.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="173"/>
         <CursorPos X="23" Y="192"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="9"/>
       </Unit53>
       <Unit54>
         <Filename Value="W:\usr\local\share\fpcsrc\rtl\unix\tthread.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="165"/>
         <CursorPos X="27" Y="181"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit54>
       <Unit55>
         <Filename Value="..\..\OpenLCB_NodeExplorer\unitmainform.lfm"/>
@@ -479,7 +479,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="472"/>
         <CursorPos X="30" Y="482"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="5"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit55>
       <Unit56>
@@ -487,7 +487,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="124"/>
         <CursorPos X="78" Y="149"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit56>
       <Unit57>
         <Filename Value="W:\Developer\lazarus\lcl\extctrls.pp"/>
@@ -495,7 +495,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="14" Y="24"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="9"/>
       </Unit57>
       <Unit58>
         <Filename Value="W:\Developer\lazarus\lcl\customtimer.pas"/>
@@ -503,7 +503,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="38"/>
         <CursorPos X="35" Y="57"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="9"/>
       </Unit58>
       <Unit59>
         <Filename Value="unitmainform.pas"/>
@@ -513,9 +513,9 @@
         <UnitName Value="UnitMainForm"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="432"/>
-        <CursorPos X="1" Y="449"/>
-        <UsageCount Value="27"/>
+        <TopLine Value="212"/>
+        <CursorPos X="1" Y="229"/>
+        <UsageCount Value="34"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit59>
@@ -525,7 +525,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="6"/>
       </Unit60>
       <Unit61>
         <Filename Value="C:\usr\local\share\fpcsrc\packages\fcl-xml\src\dom.pp"/>
@@ -533,21 +533,21 @@
         <WindowIndex Value="0"/>
         <TopLine Value="258"/>
         <CursorPos X="41" Y="277"/>
-        <UsageCount Value="13"/>
+        <UsageCount Value="11"/>
       </Unit61>
       <Unit62>
         <Filename Value="C:\lazarus\lcl\include\buttoncontrol.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="10"/>
         <CursorPos X="1" Y="22"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit62>
       <Unit63>
         <Filename Value="C:\lazarus\lcl\include\buttons.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="326"/>
         <CursorPos X="1" Y="356"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="12"/>
       </Unit63>
       <Unit64>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\packages\fcl-xml\src\dom.pp"/>
@@ -555,7 +555,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="27"/>
         <CursorPos X="94" Y="17"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="12"/>
       </Unit64>
       <Unit65>
         <Filename Value="olcb_stringconstants.pas"/>
@@ -564,7 +564,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit65>
       <Unit66>
@@ -572,9 +572,9 @@
         <UnitName Value="olcb_utilities"/>
         <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="73"/>
-        <CursorPos X="20" Y="102"/>
-        <UsageCount Value="23"/>
+        <TopLine Value="3"/>
+        <CursorPos X="64" Y="25"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit66>
       <Unit67>
@@ -583,8 +583,8 @@
         <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <CursorPos X="64" Y="2"/>
-        <UsageCount Value="23"/>
+        <CursorPos X="16" Y="10"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit67>
       <Unit68>
@@ -594,7 +594,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="22" Y="1"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit68>
       <Unit69>
@@ -604,7 +604,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit69>
       <Unit70>
@@ -613,7 +613,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="11" Y="44"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="9"/>
       </Unit70>
       <Unit71>
         <Filename Value="C:\lazarus\components\lazutils\laz2_xmlwrite.pas"/>
@@ -621,7 +621,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="149" Y="13"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="9"/>
       </Unit71>
       <Unit72>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\packages\fcl-xml\src\xmlwrite.pp"/>
@@ -629,7 +629,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="7"/>
         <CursorPos X="23" Y="27"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="9"/>
       </Unit72>
       <Unit73>
         <Filename Value="C:\lazarus\components\lazutils\laz2_dom.pas"/>
@@ -637,7 +637,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="3" Y="545"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit73>
       <Unit74>
         <Filename Value="serialport_thread.pas"/>
@@ -646,9 +646,9 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="59"/>
-        <CursorPos X="53" Y="78"/>
-        <UsageCount Value="38"/>
+        <TopLine Value="111"/>
+        <CursorPos X="72" Y="139"/>
+        <UsageCount Value="52"/>
         <Loaded Value="True"/>
       </Unit74>
       <Unit75>
@@ -657,9 +657,9 @@
         <UnitName Value="olcb_testmatrix"/>
         <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="15"/>
-        <CursorPos X="94" Y="27"/>
-        <UsageCount Value="38"/>
+        <TopLine Value="91"/>
+        <CursorPos X="65" Y="108"/>
+        <UsageCount Value="52"/>
         <Loaded Value="True"/>
       </Unit75>
       <Unit76>
@@ -670,7 +670,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="44"/>
         <CursorPos X="41" Y="63"/>
-        <UsageCount Value="38"/>
+        <UsageCount Value="52"/>
         <Loaded Value="True"/>
       </Unit76>
       <Unit77>
@@ -679,7 +679,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="2133"/>
         <CursorPos X="1" Y="2345"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit77>
       <Unit78>
         <Filename Value="C:\lazarus\components\lazutils\fileutil.pas"/>
@@ -687,171 +687,171 @@
         <WindowIndex Value="0"/>
         <TopLine Value="36"/>
         <CursorPos X="56" Y="64"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit78>
       <Unit79>
         <Filename Value="C:\lazarus\components\lazutils\fileutil.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="26"/>
         <CursorPos X="1" Y="45"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit79>
       <Unit80>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\classes\classesh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="572"/>
         <CursorPos X="14" Y="589"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit80>
       <Unit81>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\classes\stringl.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="715"/>
         <CursorPos X="17" Y="717"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit81>
       <Unit82>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\sysutils\sysstrh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="68"/>
         <CursorPos X="10" Y="85"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit82>
       <Unit83>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\sysutils\sysstr.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="217"/>
         <CursorPos X="3" Y="187"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit83>
       <Unit84>
         <Filename Value="W:\Developer\lazarus\lcl\include\listitems.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="29"/>
         <CursorPos X="1" Y="60"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="8"/>
       </Unit84>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="unitmainform.pas"/>
-        <Caret Line="468" Column="1" TopLine="440"/>
+        <Caret Line="476" Column="58" TopLine="465"/>
       </Position1>
       <Position2>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="471" Column="1" TopLine="443"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="169" Column="3" TopLine="26"/>
       </Position2>
       <Position3>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="228" Column="3" TopLine="226"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="42" Column="1" TopLine="24"/>
       </Position3>
       <Position4>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="229" Column="1" TopLine="223"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="79" Column="9" TopLine="62"/>
       </Position4>
       <Position5>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="173" Column="1" TopLine="156"/>
+        <Caret Line="91" Column="51" TopLine="74"/>
       </Position5>
       <Position6>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="174" Column="1" TopLine="156"/>
+        <Caret Line="101" Column="58" TopLine="84"/>
       </Position6>
       <Position7>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="175" Column="1" TopLine="156"/>
+        <Caret Line="160" Column="1" TopLine="143"/>
       </Position7>
       <Position8>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="177" Column="1" TopLine="156"/>
+        <Caret Line="177" Column="10" TopLine="154"/>
       </Position8>
       <Position9>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="178" Column="1" TopLine="156"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="464" Column="40" TopLine="430"/>
       </Position9>
       <Position10>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="68" Column="1" TopLine="51"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="72" Column="43" TopLine="62"/>
       </Position10>
       <Position11>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="69" Column="1" TopLine="51"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="96" Column="28" TopLine="76"/>
       </Position11>
       <Position12>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="70" Column="1" TopLine="51"/>
+        <Caret Line="37" Column="32" TopLine="20"/>
       </Position12>
       <Position13>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="79" Column="1" TopLine="51"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="96" Column="66" TopLine="77"/>
       </Position13>
       <Position14>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="82" Column="1" TopLine="54"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="81" Column="83" TopLine="64"/>
       </Position14>
       <Position15>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="454" Column="1" TopLine="436"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="97" Column="110" TopLine="80"/>
       </Position15>
       <Position16>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="449" Column="1" TopLine="436"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="84" Column="17" TopLine="74"/>
       </Position16>
       <Position17>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="450" Column="1" TopLine="436"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="119" Column="52" TopLine="73"/>
       </Position17>
       <Position18>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="452" Column="1" TopLine="436"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="87" Column="93" TopLine="60"/>
       </Position18>
       <Position19>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="453" Column="1" TopLine="436"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="7" Column="96" TopLine="1"/>
       </Position19>
       <Position20>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="454" Column="1" TopLine="436"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="81" Column="192" TopLine="56"/>
       </Position20>
       <Position21>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="459" Column="1" TopLine="436"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="70" Column="15" TopLine="53"/>
       </Position21>
       <Position22>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="463" Column="1" TopLine="436"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="132" Column="128" TopLine="88"/>
       </Position22>
       <Position23>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="465" Column="1" TopLine="437"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="57" Column="14" TopLine="46"/>
       </Position23>
       <Position24>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="466" Column="1" TopLine="438"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="81" Column="46" TopLine="53"/>
       </Position24>
       <Position25>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="492" Column="1" TopLine="475"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="95" Column="121" TopLine="67"/>
       </Position25>
       <Position26>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="493" Column="1" TopLine="475"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="102" Column="80" TopLine="76"/>
       </Position26>
       <Position27>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="495" Column="1" TopLine="475"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="123" Column="39" TopLine="106"/>
       </Position27>
       <Position28>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="497" Column="1" TopLine="475"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="124" Column="42" TopLine="107"/>
       </Position28>
       <Position29>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="108" Column="34" TopLine="82"/>
+        <Caret Line="100" Column="51" TopLine="112"/>
       </Position29>
       <Position30>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="106" Column="27" TopLine="89"/>
+        <Caret Line="128" Column="80" TopLine="110"/>
       </Position30>
     </JumpHistory>
   </ProjectOptions>
@@ -868,11 +868,12 @@
     </SearchPaths>
     <CodeGeneration>
       <Optimizations>
-        <OptimizationLevel Value="0"/>
+        <OptimizationLevel Value="3"/>
       </Optimizations>
     </CodeGeneration>
     <Linking>
       <Debugging>
+        <GenerateDebugInfo Value="False"/>
         <UseValgrind Value="True"/>
         <UseExternalDbgSyms Value="True"/>
       </Debugging>

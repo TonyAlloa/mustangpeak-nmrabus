@@ -226,7 +226,6 @@ end;
 procedure TFormMain.ActionDiscoverNodeExecute(Sender: TObject);
 begin
   TestMatrix.Add(VerifyNodeIDTest);
-  TestMatrix.Run;
   TimerCAN.Enabled := True;
 end;
 

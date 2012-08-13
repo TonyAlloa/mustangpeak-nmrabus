@@ -4,7 +4,7 @@ unit serialport_thread;
 
 interface
 uses
-  Classes, SysUtils, synaser, olcb_testmatrix, ExtCtrls;
+  Classes, SysUtils, synaser, olcb_testmatrix, ExtCtrls, olcb_utilities, DOM, XMLRead, XMLWrite;
 
 type
 
@@ -37,12 +37,9 @@ type
     FTestList: TList;
   public
     property ComPortThread: TComPortThread read FComPortThread write FComPortThread;
-    property TestList: TList read FTestList write FTestList;
     constructor Create;
     destructor Destroy; override;
-    procedure ClearTestList;
     procedure Add(Test: TTestBase);
-    procedure Run;
   end;
 
 implementation
@@ -55,11 +52,16 @@ var
   i: Integer;
   ActiveTest: TTestBase;
   TempStr: AnsiString;
+  ProcessStrings: TStringList;
+  Objectives: TList;
+  iNextObjective, iCurrentObjective, ObjectiveCount: Integer;
 begin
   Serial := TBlockSerial.Create;                           // Create the Serial object in the context of the thread
   Serial.LinuxLock:=False;
   Serial.RaiseExcept:=False;
   Serial.Connect(Port);
+  ProcessStrings := TStringList.Create;
+  Objectives := TList.Create;
   try
     Connected:=True;
     Serial.Config(BaudRate, 8, 'N', 0, False, False);      // FTDI Driver uses no stop bits for non-standard baud rates.
@@ -72,41 +74,72 @@ begin
         begin
           ActiveTest := TTestBase( List[0]);
 
-          if ActiveTest.TestState = ts_Processing then
-          begin
-            ActiveTest.TestState := ts_Sending;
-            ActiveTest.TestStrings.Add('<objective>');
-            ActiveTest.TestStrings.Add('<send>');
-            ActiveTest.Process;                                                 // Run State
-            for i := iTestStrings to ActiveTest.TestStrings.Count - 1 do  // Start with the next objective information
-            begin
-              if Length(ActiveTest.TestStrings[i]) > 0 then
-              begin
-                if ActiveTest.TestStrings[i][1] = ':' then              // Only send valid OpenLCB strings ":XnnnnnnnnNnn...."
-                  Serial.SendString(ActiveTest.TestStrings[i] + LF);
-              end;
-            end;
-            while Serial.SendingData > 0 do
-              ThreadSwitch;                                             // Wait till "done" transmitting
-            ActiveTest.TestState := ts_Receiving;
-            ActiveTest.TestStrings.Add('</send>');
-            ActiveTest.TestStrings.Add('<receive>);
-          end else
-          if ActiveTest.TestState = ts_Receiving then
-          begin
-            TempStr := Serial.Recvstring(ActiveTest.WaitTime);
-            if TempStr <> '' then
-              ActiveTest.TestStrings.Add(Trim(TempStr))
-            else begin
-              if ActiveTest.Process then
-              begin
-                ActiveTest.TestStrings.Add('</objective>);
-                ActiveTest.TestState := ts_Processing  // Next send cycle
-              end else
-              begin
-                ActiveTest.TestState := ts_Complete;
-              end
-            end;
+          case ActiveTest.TestState of
+            ts_Initialize     : begin
+                                  ActiveTest.TestStrings.Clear;
+                                  ActiveTest.StateMachineIndex := 0;
+                                  iCurrentObjective := 0;
+                                  ExtractTestObjectivesFromTestNode(ActiveTest.XMLNode, Objectives);
+                                  ObjectiveCount := Objectives.Count;
+                                  if ObjectiveCount < 1 then
+                                  begin
+                                    ActiveTest.TestStrings.Add('<objective>');
+                                    ActiveTest.TestStrings.Add('None Found');
+                                    ActiveTest.TestStrings.Add('</objective>');
+                                    ActiveTest.TestState := ts_Complete;
+                                  end;
+                                  ActiveTest.TestState := ts_ObjectiveStart;
+                                end;
+            ts_ObjectiveStart : begin
+                                  ActiveTest.TestStrings.Add('<objective>');
+                                  if iCurrentObjective < ObjectiveCount then
+                                    ActiveTest.TestStrings.Add(ObjectiveFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective])));
+                                  ActiveTest.TestState := ts_Sending;
+                                end;
+            ts_Sending :        begin
+                                  ActiveTest.TestStrings.Add('<send>');
+                                  Activetest.TestStrings.Add('Test: ' + TestNameFromTestNode(ActiveTest.XMLNode));
+                                  Activetest.TestStrings.Add(TestDescriptionFromTestNode(ActiveTest.XMLNode));
+                                  iCurrentObjective := ActiveTest.Process(ProcessStrings);  // Run Next State and get State specific strings
+                                  for i := 0 to ProcessStrings.Count - 1 do          // Start with the next objective information
+                                  begin
+                                    if Length(ProcessStrings[i]) > 0 then
+                                    begin
+                                      if ProcessStrings[i][1] = ':' then              // Only send valid OpenLCB strings ":XnnnnnnnnNnn...."
+                                        Serial.SendString(ProcessStrings[i] + LF);
+                                    end;
+                                  end;
+                                  Activetest.TestStrings.Text := ActiveTest.TestStrings.Text + ProcessStrings.Text;
+                                  while Serial.SendingData > 0 do
+                                    ThreadSwitch;                                    // Wait till "done" transmitting
+                                  ActiveTest.TestStrings.Add('</send>');
+                                  ActiveTest.TestState := ts_Receiving;
+                                  ActiveTest.TestStrings.Add('<receive>');
+                                end;
+            ts_Receiving      : begin
+                                  TempStr := Serial.Recvstring(ActiveTest.WaitTime);  // Try to get something from the CAN
+                                  if TempStr <> '' then
+                                    ActiveTest.TestStrings.Add(Trim(TempStr))         // Received something, store and keep looking
+                                  else begin
+                                     iNextObjective := ActiveTest.Process(ProcessStrings); // Timed out, move on
+                                     if iNextObjective = iCurrentObjective then          // Same objective to continue
+                                       ActiveTest.TestState := ts_Sending
+                                     else begin
+                                       iCurrentObjective := iNextObjective;
+                                       ActiveTest.TestState := ts_ObjectiveEnd;          // Start next objective
+                                     end;
+                                     ActiveTest.TestStrings.Add('</receive>');
+                                  end;
+                                end;
+            ts_ObjectiveEnd :   begin
+                                  ActiveTest.TestStrings.Add('</objective>');
+                                  if iCurrentObjective < ObjectiveCount then
+                                    ActiveTest.TestState := ts_ObjectiveStart
+                                  else
+                                    ActiveTest.TestState := ts_Complete;
+                                end;
+            ts_Complete       : begin
+                                end;
           end;
         end else
         begin
@@ -125,6 +158,8 @@ begin
     if Connected then
       Serial.CloseSocket;
     Connected := False;
+    FreeAndNil(ProcessStrings);
+    FreeandNil(Objectives);
   end;
 end;
 
@@ -159,47 +194,20 @@ begin
     ComPortThread.Terminate;
     ComPortThread := nil;
   end;
-  ClearTestList;
-  FreeAndNil(FTestList);
   inherited Destroy;
 end;
 
-procedure TOpenLCBTestMatrix.ClearTestList;
-var
-  i: Integer;
-begin
-  try
-    for i := 0 to TestList.Count - 1 do
-      TObject( TestList[i]).Free;
-  finally
-    TestList.Clear;
-  end;
-end;
-
 procedure TOpenLCBTestMatrix.Add(Test: TTestBase);
-begin
-  TestList.Add(Test);
-end;
-
-procedure TOpenLCBTestMatrix.Run;
 var
   i: Integer;
   List: TList;
-  Test: TTestBase;
 begin
+  Test.TestState := ts_Initialize;
   List := ComPortThread.ThreadTestList.LockList;
   try
-    for i := 0 to TestList.Count - 1 do
-    begin
-      Test := TTestBase( TestList[i]);
-      Test.TestStrings.Clear;
-      Test.StateMachineIndex := 0;
-      Test.TestState := ts_Processing;
-      List.Add(Test);     // Add it to the Thread List
-    end;
+    List.Add(Test);     // Add it to the Thread List
   finally
-     TestList.Clear;
-     ComPortThread.ThreadTestList.UnLockList;
+    ComPortThread.ThreadTestList.UnLockList;
   end;
 end;
 
@@ -211,4 +219,4 @@ finalization
 
 
 end.
-
+

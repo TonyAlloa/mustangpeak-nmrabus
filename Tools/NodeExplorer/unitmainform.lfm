@@ -4,7 +4,7 @@ object FormMain: TFormMain
   Top = 168
   Width = 715
   Caption = 'OpenLCB NodeExplorer'
-  ClientHeight = 496
+  ClientHeight = 497
   ClientWidth = 715
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
@@ -14,28 +14,28 @@ object FormMain: TFormMain
   LCLVersion = '0.9.31'
   object PageControl: TPageControl
     Left = 8
-    Height = 479
+    Height = 480
     Top = 8
     Width = 698
-    ActivePage = TabSheetDiscover
+    ActivePage = TabSheetHome
     Anchors = [akTop, akLeft, akRight, akBottom]
     MultiLine = True
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     OnChange = PageControlChange
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
       Caption = 'Home'
-      ClientHeight = 453
+      ClientHeight = 454
       ClientWidth = 690
       object GroupBoxComPort: TGroupBox
         Left = 13
-        Height = 236
+        Height = 237
         Top = 164
         Width = 667
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'COM Port Settings'
-        ClientHeight = 218
+        ClientHeight = 219
         ClientWidth = 663
         TabOrder = 0
         object EditBaudRate: TEdit
@@ -149,7 +149,7 @@ object FormMain: TFormMain
         end
         object Label1: TLabel
           Left = 20
-          Height = 63
+          Height = 64
           Top = 142
           Width = 632
           Anchors = [akTop, akLeft, akRight, akBottom]
@@ -162,7 +162,7 @@ object FormMain: TFormMain
       object ButtonConnect: TButton
         Left = 528
         Height = 22
-        Top = 416
+        Top = 417
         Width = 150
         Action = ActionConnect
         Anchors = [akRight, akBottom]
@@ -171,7 +171,7 @@ object FormMain: TFormMain
       object ButtonShowLog: TButton
         Left = 371
         Height = 22
-        Top = 416
+        Top = 417
         Width = 150
         Action = ActionShowLog
         Anchors = [akRight, akBottom]
@@ -476,12 +476,12 @@ object FormMain: TFormMain
     end
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
-      ClientHeight = 453
+      ClientHeight = 454
       ClientWidth = 690
       object ButtonDiscoverNodes: TButton
         Left = 524
         Height = 22
-        Top = 416
+        Top = 417
         Width = 150
         Action = ActionDiscoverNode
         Anchors = [akRight, akBottom]
@@ -489,7 +489,7 @@ object FormMain: TFormMain
       end
       object ListViewNodeDiscovery: TListView
         Left = 12
-        Height = 386
+        Height = 387
         Top = 10
         Width = 665
         Align = alCustom
@@ -515,14 +515,14 @@ object FormMain: TFormMain
       end
     end
     object TabSheetVerification: TTabSheet
-      Caption = 'Verification Tests'
-      ClientHeight = 453
-      ClientWidth = 690
+      Caption = 'VerificationTests'
+      ClientHeight = 460
+      ClientWidth = 692
       object ListViewTestMatrix: TListView
         Left = 12
-        Height = 386
+        Height = 393
         Top = 10
-        Width = 665
+        Width = 667
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
         Checkboxes = True
@@ -551,27 +551,27 @@ object FormMain: TFormMain
         OnDeletion = ListViewTestMatrixDeletion
       end
       object ButtonLoadTests: TButton
-        Left = 214
+        Left = 216
         Height = 22
-        Top = 416
+        Top = 423
         Width = 150
         Action = ActionLoadTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonSaveTests: TButton
-        Left = 371
+        Left = 373
         Height = 22
-        Top = 416
+        Top = 423
         Width = 150
         Action = ActionSaveTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 2
       end
       object ButtonExecuteTests: TButton
-        Left = 528
+        Left = 530
         Height = 22
-        Top = 416
+        Top = 423
         Width = 150
         Action = ActionExecuteTests
         Anchors = [akRight, akBottom]

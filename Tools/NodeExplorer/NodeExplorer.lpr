@@ -9,7 +9,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, runtimetypeinfocontrols, UnitMainForm, unitlogwindow, olcb_utilities,
   olcb_stringconstants, unitolcb_defines, unitsettings, serialport_thread,
-olcb_testmatrix, nodeexplorer_settings;
+  olcb_testmatrix, nodeexplorer_settings;
 
 {$R *.res}
 
@@ -20,4 +20,4 @@ begin
   Application.CreateForm(TFormSettings, FormSettings);
   Application.Run;
 end.
-
+
