@@ -148,14 +148,23 @@ object FormMain: TFormMain
         end
         object Label1: TLabel
           Left = 20
-          Height = 66
+          Height = 42
           Top = 142
           Width = 630
           Anchors = [akTop, akLeft, akRight, akBottom]
           AutoSize = False
-          Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages places on the OpenLCB bus by NodeExplorer. '#13#10#13#10'Note: NodeExplorer will not respond to arbitrary messages as it is not a real node on the network.'
+          Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages placed on the OpenLCB bus by NodeExplorer. '
           ParentColor = False
           WordWrap = True
+        end
+        object Label2: TLabel
+          Left = 25
+          Height = 31
+          Top = 183
+          Width = 620
+          AutoSize = False
+          Caption = 'Note: NodeExplorer will not respond to arbitrary messages as it is not a real node on the network.'
+          ParentColor = False
         end
       end
       object ButtonConnect: TButton

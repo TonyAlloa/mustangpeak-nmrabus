@@ -81,6 +81,7 @@ type
     GroupBoxEventReaderProducers: TGroupBox;
     ImageOpenLCB: TImage;
     Label1: TLabel;
+    Label2: TLabel;
     LabelDiscoverNodeAlias: TLabel;
     LabelDiscoverNodeID: TLabel;
     LabelTargetAlias: TLabel;
