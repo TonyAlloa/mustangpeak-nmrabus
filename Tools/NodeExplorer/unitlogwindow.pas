@@ -23,7 +23,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, SynMemo, SynHighlighterXML, Forms, Controls,
-  Graphics, Dialogs, StdCtrls;
+  Graphics, Dialogs, StdCtrls, SynEditMarkupSpecialLine;
 
 type
 
@@ -36,6 +36,8 @@ type
     SynXMLSyn: TSynXMLSyn;
     procedure FormActivate(Sender: TObject);
     procedure FormHide(Sender: TObject);
+    procedure SynMemoSpecialLineColors(Sender: TObject; Line: integer;
+      var Special: boolean; var FG, BG: TColor);
   private
     { private declarations }
   public
@@ -59,6 +61,17 @@ end;
 procedure TFormLog.FormHide(Sender: TObject);
 begin
 
+end;
+
+procedure TFormLog.SynMemoSpecialLineColors(Sender: TObject; Line: integer;
+  var Special: boolean; var FG, BG: TColor);
+begin
+  if Pos(':X', SynMemo.Lines[Line-1]) > 0 then
+  begin
+    Special := True;
+    FG := clGreen;
+  //  BG := clLtGray;
+  end;
 end;
 
 end.

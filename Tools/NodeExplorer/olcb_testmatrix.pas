@@ -8,30 +8,29 @@ uses
   Classes, SysUtils, olcb_utilities, unitolcb_defines, nodeexplorer_settings,
   DOM, XMLRead, XMLWrite;
 
-{ TTestBase }
-
 type
   TTestState = (ts_Idle, ts_Initialize, ts_ObjectiveStart, ts_Sending, ts_Receiving, ts_ObjectiveEnd, ts_Complete);
+
+  { TTestBase }
 
   TTestBase = class(TPersistent)
   private
     FCompareMasks: TStringList;
     FMessageHelper: TOpenLCBMessageHelper;
-    FTestStrings: TStringList;
     FStateMachineIndex: Integer;
     FTestState: TTestState;
     FWaitTime: Integer;
-    FWideString: WideString;
-    FXMLNode: TDOMNode;
+    FXMLResults: TXMLDocument;
+    FXMLTests: TDOMNode;
   protected
     property MessageHelper: TOpenLCBMessageHelper read FMessageHelper write FMessageHelper;
   public
-    property TestStrings: TStringList read FTestStrings write FTestStrings;     // List of TOpenLCBMessageHelpers to send for test
     property CompareMasks: TStringList read FCompareMasks write FCompareMasks;  // List of expected messages Masks that the NUT should have sent (format TBD)
     property WaitTime: Integer read FWaitTime write FWaitTime;                  // Time to wait for the messages to sent (varies depending on what is being sent)
     property StateMachineIndex: Integer read FStateMachineIndex write FStateMachineIndex;
     property TestState: TTestState read FTestState write FTestState;
-    property XMLNode: TDOMNode  read FXMLNode write FXMLNode;
+    property XMLTests: TDOMNode  read FXMLTests write FXMLTests;                   // Root node that describes the test from the Test Matrix XML file ( <test>...</test> )
+    property XMLResults: TXMLDocument read FXMLResults write FXMLResults;
     constructor Create; virtual;
     destructor Destroy; override;
     function Process(ProcessStrings: TStringList): Integer; virtual;
@@ -193,9 +192,9 @@ end;
 constructor TTestBase.Create;
 begin
   inherited Create;
-  FTestStrings := TStringList.Create;
   FCompareMasks := TStringList.Create;
   FMessageHelper := TOpenLCBMessageHelper.Create;
+  FXMLResults := TXMLDocument.Create;
   FTestState := ts_Idle;
   FWaitTime := DEFAULT_TIMEOUT;
   FStateMachineIndex := 0;
@@ -203,9 +202,9 @@ end;
 
 destructor TTestBase.Destroy;
 begin
-  FreeAndNil(FTestStrings);
   FreeAndNil(FCompareMasks);
   FreeAndNil(FMessageHelper);
+  FreeAndNil(FXMLResults);
   FStateMachineIndex := 0;
   inherited Destroy;
 end;
@@ -225,6 +224,7 @@ begin
   if Assigned(TestBaseClass) then
     Result := TestBaseClass.Create;
 end;
+
 
 initialization
   RegisterClass(TTestVerifyNodesID);

@@ -37,6 +37,10 @@ const
   XML_ELEMENT_TESTOBJECTIVE      = 'TestObjective';
   XML_ELEMENT_OBJECTIVE          = 'Objective';
   XML_ELEMENT_OBJECTIVERESULTS   = 'Results';
+  XML_ELEMENT_TEST               = 'Test';
+  XML_ELEMENT_SEND               = 'Send';
+  XML_ELEMENT_RECEIVE            = 'Receive';
+  XML_ELEMENT_TEST_RESULT_ROOT   = 'TestResult';
 
 type
   TByteArray = array[0..CAN_BYTE_COUNT-1] of Byte;
@@ -86,6 +90,8 @@ type
   function ObjectiveResultFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
   function ExtractElementValue(Node: TDOMNode; ElementName: WideString): WideString;
   function ValidateTestNode(TestNode: TDOMNode): Boolean;
+
+  procedure ExtractResultsFromXML(XMLDoc: TXMLDocument; ReceiveResults: TStringList);
 
 implementation
 
@@ -326,6 +332,34 @@ begin
   Data[4+Offset] := (NodeID shr 8) and $000000FF;
   Data[5+Offset] := (NodeID) and $000000FF;
   DataCount := 6 + Offset;
+end;
+
+procedure ExtractResultsFromXML(XMLDoc: TXMLDocument; ReceiveResults: TStringList);
+var
+  TestResult, Test, TestObjective, Results: TDOMNode;
+  i: Integer;
+begin
+  TestResult := XMLDoc.FindNode(XML_ELEMENT_TEST_RESULT_ROOT);
+  if Assigned(TestResult) then
+  begin
+    Test := TestResult.FindNode(XML_ELEMENT_TEST);
+    if Assigned(Test) then
+    begin
+      TestObjective := Test.FindNode(XML_ELEMENT_TESTOBJECTIVE);
+      if Assigned(TestObjective) then
+      begin
+        Results := TestObjective.FindNode(XML_ELEMENT_OBJECTIVERESULTS);
+        if Assigned(Results) then
+        begin
+          for i := 0 to Results.ChildNodes.Count - 1 do
+          begin
+            if Results.ChildNodes[i].NodeName = XML_ELEMENT_RECEIVE then
+              ReceiveResults.Add(Results.ChildNodes[i].FirstChild.NodeValue);
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 

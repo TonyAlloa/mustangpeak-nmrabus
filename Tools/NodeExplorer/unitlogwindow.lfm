@@ -463,6 +463,7 @@ object FormLog: TFormLog
     Lines.Strings = (
       ''
     )
+    OnSpecialLineColors = SynMemoSpecialLineColors
     inline SynLeftGutterPartList1: TSynGutterPartList
       object SynGutterMarks1: TSynGutterMarks
         Width = 24

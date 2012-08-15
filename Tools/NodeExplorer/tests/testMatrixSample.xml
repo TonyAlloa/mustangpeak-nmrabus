@@ -51,7 +51,7 @@
     </TestObjective>
     <TestObjective>
       <Objective>Send Addressed Identify Nodes message with Full Node ID in the data payload to the incorrect alias address</Objective>
-      <Results>No reply</Results>
+      <Results> No reply expected</Results>
     </TestObjective>
   </Test>
 </TestMatrix>
