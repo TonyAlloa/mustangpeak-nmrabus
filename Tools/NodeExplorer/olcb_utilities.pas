@@ -22,7 +22,13 @@ unit olcb_utilities;
 interface
 
 uses
-  Classes, SysUtils, strutils, ExtCtrls, DOM, XMLRead, XMLWrite;
+  Classes, SysUtils, strutils, ExtCtrls,
+  {$IFDEF MSWINDOWS}
+  Windows,
+  {$ELSE}
+  LclIntf,
+  {$ENDIF}
+  DOM, XMLRead, XMLWrite;
 
 const
   LF = #13+#10;
@@ -41,6 +47,9 @@ const
   XML_ELEMENT_SEND               = 'Send';
   XML_ELEMENT_RECEIVE            = 'Receive';
   XML_ELEMENT_TEST_RESULT_ROOT   = 'TestResult';
+  XML_ELEMENT_PASS_FAIL          = 'PassFail';
+  XML_NAME_PASS                  = 'Pass';
+  XML_NAME_FAIL                  = 'Fail';
 
 type
   TByteArray = array[0..CAN_BYTE_COUNT-1] of Byte;
@@ -92,8 +101,25 @@ type
   function ValidateTestNode(TestNode: TDOMNode): Boolean;
 
   procedure ExtractResultsFromXML(XMLDoc: TXMLDocument; ReceiveResults: TStringList);
+  function GetTickCount : DWORD;
 
 implementation
+
+function GetTickCount : DWORD;
+ {On Windows, this is number of milliseconds since Windows was
+   started. On non-Windows platforms, LCL returns number of
+   milliseconds since Dec. 30, 1899, wrapped by size of DWORD.
+   This value can overflow LongInt variable when checks turned on,
+   so "wrap" value here so it fits within LongInt.
+  Also, since same thing could happen with Windows that has been
+   running for at least approx. 25 days, override it too.}
+begin
+{$IFDEF MSWINDOWS}
+  Result := Windows.GetTickCount mod High(LongInt);
+{$ELSE}
+  Result := LclIntf.GetTickCount mod High(LongInt);
+{$ENDIF}
+end;
 
 procedure ExtractTestsFromXML(XMLDoc: TXMLDocument; TestList: TList);
 var
@@ -246,6 +272,9 @@ begin
           Layer := ol_CAN;
         MTI := MTI and not $10000000;    // Strip off the reserved bit
         MTI := MTI and $FFFFF000;        // Strip off the Source Alias
+
+        for i := 0 to CAN_BYTE_COUNT - 1 do
+          Data[i] := 0;
 
         FDataCount := 0;
         i := n;

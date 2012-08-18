@@ -82,8 +82,8 @@ type
     ImageListLarge: TImageList;
     ImageListSmall: TImageList;
     ImageOpenLCB: TImage;
-    Label1: TLabel;
-    Label2: TLabel;
+    LabelHomeMessage: TLabel;
+    LabelHomeMessageNote: TLabel;
     LabelDiscoverNodeAlias: TLabel;
     LabelDiscoverNodeID: TLabel;
     LabelTargetAlias: TLabel;
@@ -233,14 +233,11 @@ end;
 
 procedure TFormMain.ActionDiscoverNodeExecute(Sender: TObject);
 var
-  StartLine, EndLine: Integer;
   Helper: TOpenLCBMessageHelper;
   ResultStrings: TStringList;
   ListItem: TListItem;
   i: Integer;
 begin
-  StartLine := 0;
-  EndLine := 0;
   TestThread.Add(VerifyNodesIDTest);
   TimerCAN.Enabled := True;
 
@@ -368,7 +365,7 @@ end;
 
 procedure TFormMain.ActionShowLogExecute(Sender: TObject);
 begin
-  FormLog.Left := Left+Width;
+  FormLog.Left := Left+Width+4;
   FormLog.Top := Top;
   FormLog.Height := Height;
   FormLog.Width := 320;
@@ -387,8 +384,7 @@ end;
 
 procedure TFormMain.ComboBoxBaudChange(Sender: TObject);
 begin
-  EditCustomBaudRate.Enabled := ComboBoxBaud.ItemIndex = 0;
-  LabelCustomBaud.Enabled := ComboBoxBaud.ItemIndex = 0;
+  UpdateUI;
 end;
 
 procedure TFormMain.ComboBoxPortsChange(Sender: TObject);
@@ -457,24 +453,12 @@ begin
     LabelCustomBaud.Enabled := True;
     ComboBoxBaud.ItemIndex := 0; // Custom
     ComboBoxBaud.ItemIndex := ComboBoxBaud.Items.IndexOf(IntToStr(Settings.BaudRate));
-    if ComboBoxBaud.ItemIndex < -1 then
-    begin
-      EditCustomBaudRate.Text := '';
-      EditCustomBaudRate.Enabled := False;
-      LabelCustomBaud.Enabled := False;
-    end else
-    begin
-      EditCustomBaudRate.Text := IntToStr(Settings.BaudRate);
-      EditCustomBaudRate.Enabled := True;
-      LabelCustomBaud.Enabled := True;
-    end;
     UpdateUI;
   end;
   ShownOnce := True;
 end;
 
-procedure TFormMain.ListViewNodeDiscoverySelectItem(Sender: TObject;
-  Item: TListItem; Selected: Boolean);
+procedure TFormMain.ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
 begin
   if Selected then
   begin
@@ -497,6 +481,9 @@ var
   Test: TTestBase;
   List: TList;
   XMLTestResults: TXMLDocument;
+  MemStream: TMemoryStream;
+  Str: String;
+  x: Integer;
 begin
   Test := nil;
   XMLTestResults := nil;
@@ -512,7 +499,7 @@ begin
           if FormLog.Visible then
           begin
             XMLTestResults := Test.XMLResults;          // Take Ownership of the TestResults??? Maybe not....
-            Test.XMLResults := nil;
+  //          Test.XMLResults := nil;
           end;
           List.Remove(Test);
         end else
@@ -527,9 +514,13 @@ begin
     begin
       FormLog.SynMemo.Lines.BeginUpdate;
       try
-
-        WriteXMLFile(XMLTestREsults, 'c:\Test.xml');
-    //    FormLog.SynMemo.Text := FormLog.SynMemo.Text + XMLTestResults.;
+        MemStream := TMemoryStream.Create;
+        XMLWrite.WriteXMLFile(XMLTestResults, MemStream);
+        SetLength(Str, MemStream.Size);
+        MemStream.Seek(0, soBeginning);
+        MemStream.ReadBuffer(PChar( Str)^, MemStream.Size);
+        FormLog.SynMemo.Text := FormLog.SynMemo.Text + Str;
+        MemStream.Free;
       finally
         FormLog.SynMemo.Lines.EndUpdate;
       end;
@@ -553,6 +544,9 @@ begin
   ActionSendPacket.Enabled := Connected;
   ActionSendDatagramReply.Enabled := Connected;
   ActionConnect.Enabled :=  ComboBoxPorts.ItemIndex > -1;
+  EditCustomBaudRate.Enabled := ComboBoxBaud.ItemIndex = 0;
+  LabelCustomBaud.Enabled := ComboBoxBaud.ItemIndex = 0;
+  if ComboBoxBaud.ItemIndex > 0 then EditCustomBaudRate.Text := '';
   {$ENDIF}
 end;
 

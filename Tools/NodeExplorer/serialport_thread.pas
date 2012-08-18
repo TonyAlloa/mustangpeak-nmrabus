@@ -43,8 +43,9 @@ var
   TempStr: AnsiString;
   ProcessStrings: TStringList;
   Objectives: TList;
-  iNextObjective, iCurrentObjective, ObjectiveCount: Integer;
+  iNextObjective, iCurrentObjective: Integer;
   XMLRoot, XMLTestNode, XMLNode, XMLTestObjectiveNode, XMLObjectiveNode, XMLObjectiveResultsNode: TDOMNode;
+  PassResult: Boolean;
 begin
   Serial := TBlockSerial.Create;                           // Create the Serial object in the context of the thread
   Serial.LinuxLock:=False;
@@ -70,18 +71,19 @@ begin
                                   ActiveTest.StateMachineIndex := 0;
                                   iCurrentObjective := 0;
                                   ExtractTestObjectivesFromTestNode(ActiveTest.XMLTests, Objectives);
-                                  ObjectiveCount := Objectives.Count;
 
                                   if ActiveTest.XMLResults.DocumentElement <> nil then
                                     ActiveTest.XMLResults.RemoveChild(ActiveTest.XMLResults.DocumentElement);
                                   ActiveTest.XMLResults.AppendChild(ActiveTest.XMLResults.CreateElement(XML_ELEMENT_TEST_RESULT_ROOT));
+
                                   XMLRoot := ActiveTest.XMLResults.FindNode(XML_ELEMENT_TEST_RESULT_ROOT);
-                                  XMLTestNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_TEST);
-                                  XMLRoot.AppendChild(XMLTestNode);
 
                                   XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_NAME);
-                                  XMLTestNode.AppendChild(XMLNode);
+                                  XMLRoot.AppendChild(XMLNode);
                                   XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(TestNameFromTestNode(ActiveTest.XMLTests)));
+
+                                  XMLTestNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_TEST);
+                                  XMLRoot.AppendChild(XMLTestNode);
 
                                   XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_DESCRIPTION);
                                   XMLTestNode.AppendChild(XMLNode);
@@ -101,7 +103,7 @@ begin
                                   XMLTestObjectiveNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_TESTOBJECTIVE);
                                   XMLTestNode.AppendChild(XMLTestObjectiveNode);
 
-                                  if iCurrentObjective < ObjectiveCount then
+                                  if iCurrentObjective < Objectives.Count then
                                   begin
                                     XMLObjectiveNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_OBJECTIVE);
                                     XMLTestObjectiveNode.AppendChild(XMLObjectiveNode);
@@ -114,7 +116,9 @@ begin
                                   ActiveTest.TestState := ts_Sending;
                                 end;
             ts_Sending :        begin
-                                  iCurrentObjective := ActiveTest.Process(ProcessStrings);  // Run Next State and get State specific strings
+                                  PassResult := False;
+                                  ProcessStrings.Clear;
+                                  iCurrentObjective := ActiveTest.ProcessObjectives(ProcessStrings, PassResult);  // Run Next State and get State specific strings
                                   for i := 0 to ProcessStrings.Count - 1 do          // Start with the next objective information
                                   begin
                                     Serial.SendString(ProcessStrings[i] + LF);
@@ -122,7 +126,7 @@ begin
                                     XMLObjectiveNode.AppendChild(XMLNode);
                                     XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ProcessStrings[i]));
                                   end;
-
+                                  ProcessStrings.Clear;
                                   while Serial.SendingData > 0 do
                                     ThreadSwitch;                                    // Wait till "done" transmitting
 
@@ -139,24 +143,30 @@ begin
                                   TempStr := Serial.Recvstring(ActiveTest.WaitTime);  // Try to get something from the CAN
                                   if TempStr <> '' then
                                   begin
+                                    ProcessStrings.Add(TempStr);
                                     XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_RECEIVE);    // Received something, store and keep looking
                                     XMLObjectiveResultsNode.AppendChild(XMLNode);
                                     XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(Trim(TempStr)));
                                   end else
                                   begin
-                                     iNextObjective := ActiveTest.Process(ProcessStrings); // Timed out, move on
-                                     for i := 0 to ProcessStrings.Count - 1 do
-                                       ProcessStrings[i] := '      ' + ProcessStrings[i];
+                                     PassResult := False;
+                                     iNextObjective := ActiveTest.ProcessObjectives(ProcessStrings, PassResult); // Timed out, send in what was received
                                      if iNextObjective = iCurrentObjective then          // Same objective to continue
                                        ActiveTest.TestState := ts_Sending
                                      else begin
+                                       XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_PASS_FAIL);
+                                       XMLTestObjectiveNode.AppendChild(XMLNode);
+                                       if PassResult then
+                                         XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_NAME_PASS))
+                                       else
+                                         XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_NAME_FAIL));
                                        iCurrentObjective := iNextObjective;
                                        ActiveTest.TestState := ts_ObjectiveEnd;          // Start next objective
                                      end;
                                   end;
                                 end;
             ts_ObjectiveEnd :   begin
-                                  if iCurrentObjective < ObjectiveCount then
+                                  if iCurrentObjective < Objectives.Count then
                                     ActiveTest.TestState := ts_ObjectiveStart
                                   else
                                     ActiveTest.TestState := ts_Complete;
@@ -202,7 +212,7 @@ end;
 
 procedure TComPortThread.Add(Test: TTestBase);
 var
-  i: Integer;
+
   List: TList;
 begin
   Test.TestState := ts_Initialize;
