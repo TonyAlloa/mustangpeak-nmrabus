@@ -1,10 +1,10 @@
 object FormMain: TFormMain
-  Left = 469
+  Left = 467
   Height = 516
-  Top = 168
+  Top = 167
   Width = 715
   Caption = 'OpenLCB NodeExplorer'
-  ClientHeight = 497
+  ClientHeight = 516
   ClientWidth = 715
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
@@ -14,32 +14,32 @@ object FormMain: TFormMain
   LCLVersion = '0.9.31'
   object PageControl: TPageControl
     Left = 8
-    Height = 480
+    Height = 499
     Top = 8
     Width = 698
-    ActivePage = TabSheetDiscover
+    ActivePage = TabSheetHome
     Anchors = [akTop, akLeft, akRight, akBottom]
     MultiLine = True
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
       Caption = 'Home'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       object GroupBoxComPort: TGroupBox
         Left = 13
-        Height = 237
+        Height = 243
         Top = 164
-        Width = 667
+        Width = 669
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'COM Port Settings'
-        ClientHeight = 219
-        ClientWidth = 663
+        ClientHeight = 221
+        ClientWidth = 661
         TabOrder = 0
         object EditCustomBaudRate: TEdit
           Left = 405
-          Height = 21
+          Height = 22
           Top = 25
           Width = 109
           Enabled = False
@@ -47,19 +47,19 @@ object FormMain: TFormMain
         end
         object LabelCustomBaud: TLabel
           Left = 397
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 64
+          Width = 85
           Caption = 'Custom Baud'
           Enabled = False
           ParentColor = False
         end
         object ComboBoxBaud: TComboBox
           Left = 285
-          Height = 21
+          Height = 20
           Top = 26
           Width = 100
-          ItemHeight = 13
+          ItemHeight = 0
           ItemIndex = 10
           Items.Strings = (
             'Custom'
@@ -82,18 +82,18 @@ object FormMain: TFormMain
         end
         object LabelBaud: TLabel
           Left = 277
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 25
+          Width = 32
           Caption = 'Baud'
           ParentColor = False
         end
         object ComboBoxPorts: TComboBox
           Left = 20
-          Height = 21
+          Height = 20
           Top = 26
           Width = 248
-          ItemHeight = 13
+          ItemHeight = 0
           OnChange = ComboBoxPortsChange
           Style = csDropDownList
           TabOrder = 0
@@ -101,9 +101,9 @@ object FormMain: TFormMain
         end
         object LabelPort: TLabel
           Left = 13
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 21
+          Width = 26
           Caption = 'Port'
           ParentColor = False
         end
@@ -117,23 +117,23 @@ object FormMain: TFormMain
         end
         object LabelDiscoverNodeID: TLabel
           Left = 127
-          Height = 14
+          Height = 17
           Top = 88
-          Width = 98
+          Width = 124
           Caption = 'Proxy NodeID (Hex)'
           ParentColor = False
         end
         object LabelDiscoverNodeAlias: TLabel
           Left = 13
-          Height = 14
+          Height = 17
           Top = 86
-          Width = 84
+          Width = 108
           Caption = 'Proxy Alias (Hex)'
           ParentColor = False
         end
         object EditDiscoverNodeAlias: TEdit
           Left = 21
-          Height = 21
+          Height = 22
           Top = 110
           Width = 88
           ParentShowHint = False
@@ -141,16 +141,16 @@ object FormMain: TFormMain
         end
         object EditDiscoverNodeID: TEdit
           Left = 135
-          Height = 21
+          Height = 22
           Top = 109
           Width = 200
           TabOrder = 5
         end
         object LabelHomeMessage: TLabel
           Left = 20
-          Height = 40
+          Height = 42
           Top = 142
-          Width = 632
+          Width = 630
           Anchors = [akTop, akLeft, akRight, akBottom]
           AutoSize = False
           Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages placed on the OpenLCB bus by NodeExplorer. '
@@ -168,18 +168,18 @@ object FormMain: TFormMain
         end
       end
       object ButtonConnect: TButton
-        Left = 528
+        Left = 530
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionConnect
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonShowLog: TButton
-        Left = 371
+        Left = 373
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionShowLog
         Anchors = [akRight, akBottom]
@@ -189,17 +189,17 @@ object FormMain: TFormMain
         Left = 13
         Height = 153
         Top = 3
-        Width = 667
+        Width = 669
         Anchors = [akTop, akLeft, akRight]
         Caption = 'PanelLogo'
         ClientHeight = 153
-        ClientWidth = 667
+        ClientWidth = 669
         TabOrder = 3
         object ImageOpenLCB: TImage
           Left = 1
           Height = 151
           Top = 1
-          Width = 665
+          Width = 667
           Align = alClient
           Center = True
           Picture.Data = {
@@ -484,12 +484,12 @@ object FormMain: TFormMain
     end
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       object ButtonDiscoverNodes: TButton
-        Left = 524
+        Left = 526
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionDiscoverNode
         Anchors = [akRight, akBottom]
@@ -497,46 +497,59 @@ object FormMain: TFormMain
       end
       object ListViewNodeDiscovery: TListView
         Left = 12
-        Height = 387
-        Top = 10
-        Width = 665
+        Height = 327
+        Top = 4
+        Width = 667
         Align = alCustom
         Anchors = [akTop, akLeft, akRight, akBottom]
+        AutoWidthLastColumn = True
         Columns = <        
           item
             Alignment = taCenter
-            Caption = 'Alias ID'
+            Caption = 'Alias ID (Hex)'
             Width = 150
           end        
           item
             Alignment = taCenter
-            Caption = 'Full Node iD'
-            Width = 250
+            Caption = 'Full Node iD (Hex)'
+            Width = 511
           end>
         DragMode = dmAutomatic
         GridLines = True
+        HideSelection = False
         RowSelect = True
         TabOrder = 1
         ViewStyle = vsReport
         OnSelectItem = ListViewNodeDiscoverySelectItem
       end
+      object LabelHomeMessage1: TLabel
+        Left = 29
+        Height = 56
+        Top = 348
+        Width = 632
+        Anchors = [akLeft, akRight, akBottom]
+        AutoSize = False
+        Caption = 'Select a node to communicate with.  The Alias and Node ID will be stored and used when executing tests within NodeExplorer.  Any errors messages refering to Alias or Full Node IDs not matching are comparing received test messages with these stored values. '
+        ParentColor = False
+        WordWrap = True
+      end
     end
     object TabSheetVerification: TTabSheet
       Caption = 'VerificationTests'
-      ClientHeight = 454
-      ClientWidth = 690
+      ClientHeight = 460
+      ClientWidth = 692
       object ListViewTestMatrix: TListView
         Left = 12
-        Height = 387
+        Height = 330
         Top = 10
-        Width = 665
+        Width = 667
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
         Checkboxes = True
         Columns = <        
           item
             Caption = 'Test Name'
-            Width = 200
+            Width = 280
           end        
           item
             Caption = 'Description'
@@ -562,29 +575,40 @@ object FormMain: TFormMain
       object ButtonLoadTests: TButton
         Left = 214
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionLoadTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonSaveTests: TButton
-        Left = 371
+        Left = 373
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionSaveTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 2
       end
       object ButtonExecuteTests: TButton
-        Left = 528
+        Left = 530
         Height = 22
-        Top = 417
+        Top = 423
         Width = 150
         Action = ActionExecuteTests
         Anchors = [akRight, akBottom]
         TabOrder = 3
+      end
+      object LabelHomeMessage2: TLabel
+        Left = 29
+        Height = 58
+        Top = 348
+        Width = 634
+        Anchors = [akLeft, akRight, akBottom]
+        AutoSize = False
+        Caption = 'Select the tests to run against the node selected in the Discover tab.  A "?" icon indicates the test has not been executed.  A red "X" indicates one of the objectives of the test failed.  Open the log window from the Home tab and rerun the failed test to get detailed information on the failure.'
+        ParentColor = False
+        WordWrap = True
       end
     end
     object TabSheetCDIReader: TTabSheet
@@ -605,7 +629,7 @@ object FormMain: TFormMain
         ParentColor = False
         ParentFont = False
         TabOrder = 0
-        Gutter.Width = 51
+        Gutter.Width = 55
         Gutter.MouseActions = <>
         RightGutter.Width = 0
         RightGutter.MouseActions = <>
@@ -1054,7 +1078,7 @@ object FormMain: TFormMain
             MouseActions = <>
           end
           object SynGutterLineNumber1: TSynGutterLineNumber
-            Width = 11
+            Width = 15
             MouseActions = <>
             MarkupInfo.Background = clBtnFace
             MarkupInfo.Foreground = clNone
@@ -1103,8 +1127,8 @@ object FormMain: TFormMain
         Width = 664
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Consumers'
-        ClientHeight = 174
-        ClientWidth = 660
+        ClientHeight = 170
+        ClientWidth = 656
         TabOrder = 0
         object ListViewConsumers: TListView
           Left = 0
@@ -1150,8 +1174,8 @@ object FormMain: TFormMain
         Width = 666
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'Producers'
-        ClientHeight = 181
-        ClientWidth = 662
+        ClientHeight = 177
+        ClientWidth = 658
         TabOrder = 1
         object ListViewProducers: TListView
           Left = 0
@@ -1198,6 +1222,81 @@ object FormMain: TFormMain
         Action = ActionEventReader
         Anchors = [akRight, akBottom]
         TabOrder = 2
+      end
+    end
+    object TabSheetProtocolID: TTabSheet
+      Caption = 'Protocol ID'
+      ClientHeight = 460
+      ClientWidth = 692
+      object ButtonReadPIP: TButton
+        Left = 530
+        Height = 22
+        Top = 425
+        Width = 150
+        Action = ActionReadPip
+        Anchors = [akRight, akBottom]
+        TabOrder = 0
+      end
+      object CheckGroupPIP: TCheckGroup
+        Left = 12
+        Height = 377
+        Top = 18
+        Width = 668
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        AutoFill = True
+        Caption = 'Protocol Identification Protocol'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.TopBottomSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 2
+        ClientHeight = 355
+        ClientWidth = 660
+        Columns = 2
+        Items.Strings = (
+          'Protocol Identification Protocol'
+          'Datagram Protocol'
+          'Stream Protocol'
+          'Memory Configuration Protocol'
+          'Reservation Protocol'
+          'Event Exchange (Producer/Consumer) Protocol'
+          'Identification Protocol'
+          'Teaching/Learning Configuration Protocol'
+          'Remote Button Protocol'
+          'Abbreviated Default CDI Protocol'
+          'Display Protocol'
+          'Simple Node Information Protocol'
+          'Configuration Description Information (CDI)'
+          'Unassigned Bit Used ($000400000000 or below)'
+          'Reserved 0 (do not use)'
+          'Reserved 1 (do not use)'
+          'Reserved 2 (do not use)'
+          'Reserved 3 (do not use)'
+        )
+        TabOrder = 1
+        Data = {
+          12000000020202020202020202020202020202020202
+        }
+      end
+      object EditPipRawMessage: TEdit
+        Left = 133
+        Height = 22
+        Top = 425
+        Width = 312
+        Anchors = [akLeft, akRight, akBottom]
+        TabOrder = 2
+      end
+      object LabelPipRawMessage: TLabel
+        Left = 21
+        Height = 17
+        Top = 430
+        Width = 85
+        Anchors = [akLeft, akRight, akBottom]
+        Caption = 'Raw Message'
+        ParentColor = False
       end
     end
     object TabSheetCustom: TTabSheet
@@ -1349,6 +1448,10 @@ object FormMain: TFormMain
       Caption = 'Show Gutter'
       OnExecute = ActionLogShowGutterExecute
     end
+    object ActionReadPip: TAction
+      Caption = 'Read PIP Info'
+      OnExecute = ActionReadPipExecute
+    end
   end
   object MainMenu: TMainMenu
     left = 40
@@ -1364,7 +1467,6 @@ object FormMain: TFormMain
     end
   end
   object TimerCAN: TTimer
-    Enabled = False
     Interval = 100
     OnTimer = TimerCANTimer
     left = 40
@@ -1531,39 +1633,39 @@ object FormMain: TFormMain
       EBFFF6FFE2FFC3D3B4FFA6B79CFFB9C8ADFFEEFEDFFFF5FFE1FFF4FFE5FFF8FF
       FCFFF8FCFFFFF3FAF7FFFAFFF9FFEDFFEE00F4FFF9FFF6FCFFFFE1E7E6FFFBFF
       EDFFFDFFE9FFF1F6E1FFFFFFF5FFFFFFF5FFECF3DEFFFFFFE9FFE6F4D8FFF7FD
-      FCFFF6FFFFFFEEFCF1FFEAFCEBFFEBF0EFFFFDFFFFFFF5F1F0FFFFF7F4FFFFFF
-      F8FFC5B4A7FF887161FFB29A86FFA9947FFF8F7D6CFFE9D8CFFFFFFFFBFFFCF7
-      F9FFE9EAEEFFF8FEFFFFEEF6FDFFFAFFFFFFF5F5F5FFF4EBE8FFBAA9A6FF5B45
-      3FFFCAB4A9FFFFFFF0FFF0E0D0FFF1E1D1FFFFFEF1FF9A877FFF55423FFFFCF0
-      F0FFFFFEFFFFF2F6FBFFF4FEFFFFE8F2F2FFFFFFFEFF8A7573FFC9A9A4FFFFDD
-      D5FFEACDC4FFE2D5CDFFD2CFC7FFD4D1C9FFDAD0C9FFE3C9C3FFFFE9E4FF694B
-      4AFFD1C1C2FFEDF1F6FFE6F3FBFFFBFFFBFFB7B1AAFF977771FFE9BBB4FFE1B3
-      ABFFF0CFC6FFA59B94FFCFD1CBFFCDD1CCFFB5ACA8FFE1C3BEFFE3B9B4FFFED5
-      D2FF654948FFF6F4F4FFF6FFFFFFFFFFF1FF291908FFEDC3B7FFECB5ACFFE1AD
-      A6FFD8B3ABFFFFFFF7FFFFFFF8FFFDFFF9FFFFFFF9FFC4A19DFFEBBBB7FFCF9C
-      99FFDCB6B1FF413529FFFFFFF5FFB5A27DFF876A4BFFE2B09CFFDDA495FFD4A0
-      94FFFFFFF1FFE5D6C3FF918E79FF82816DFFFFFFF2FFFFFBF1FFD3A29AFFDEA9
-      9FFFDCB09FFF3D240AFFFFFDDDFFAE854EFF7D5221FFD7A281FFCC997FFFD6A7
-      91FFFFF8DEFFC6AD8BFFCDBC95FFAC9A75FFF5DEBEFFFFFFEBFFBC8E7CFFC492
-      7EFFE8B99AFF60360BFFD1AC7AFF945C1BFFA46E31FFD49F6CFFD5A476FFCDA2
-      77FFAD865AFFCFAF7EFFAB8E5BFFEACD9AFFFFF9CBFFDFB98FFFBB9069FFD9AB
-      82FFAE7C4EFF95612CFFCB995DFF995A1DFFB57937FFB8833AFFCA994DFFD5AB
-      60FFD9B169FFC39A5BFFEAC287FFF8D397FFEFC88AFFB68F4BFFCBA35BFFE0B4
-      6DFFAB7937FF965E23FFCD945CFFBA804FFFAA7435FFB47F28FFD5A43EFFCC9D
-      34FFD2A746FFA2782DFFFFFDBCFFF2C788FFA77E35FFD5AA4DFFD7AD48FFB487
-      26FFAE7E2CFF97612AFFDFAA7FFFBC9078FF906330FFBA8927FFDCA92BFFE3AF
-      2CFFD8A832FFD5A857FFC59C5DFFBC9354FFCA9F4EFFDEAF3CFFD9A828FFD8A6
-      2EFFC29639FF61370CFFFFDBC8FFFFF6EFFF593915FFBC9232FFDDAB29FFECB7
-      2AFFE7B435FFB68A31FFFED590FFA57E39FFF8CD76FFDAAA2CFFDDAC22FFD6A8
-      2BFF9C741BFF6D5132FFFFFBF9FFFFFBFFFF9F8C77FF876617FFC99D2AFFD7A4
-      1EFFE8B537FF9B6F10FFFFFFBAFFFFE192FFBE9434FFD8A82BFFDBAD2AFFD0A7
-      3AFF775A10FFE4D5C5FFFFFAFFFFE7E7F5FFFFFAF0FF7B652BFF9B791CFFC89C
-      29FFF5C54FFFE7BA53FFAE8223FFB38929FFE0B44FFFDFB33EFFAF8717FF6C4E
-      00FFCBB984FFFDF9F4FFECF0FFFFE1E5F0FFFFFFFCFFFFFFE1FFB39E60FF8161
-      08FF997107FFCD9F30FFD8A634FFE4B444FFB88A1EFFB18923FF7C5F0AFFFFEF
-      B4FFFCF4D7FFFBFFFFFFF1F9FFFFF6FCFF00F6F8F8FFC7C3ABFF9B8D5DFF9D80
-      35FFBC9533FF9F7000FFA36F00FF9C6900FFA37505FFA88524FFAE964EFF9184
-      58FFDAD8C6FFF8FEFFFFE0EAFBFF
+      FCFFF6FFFFFFEEFCF1FFEAFCEBFFFFFFF7FFFFFFFAFFFFFFFCFFFDFFFFFFF6FF
+      FFFFF6FFFFFFFFFDFCFFFFFFFCFFFFFCFD00FFFDFEFFFFFEFCFFFFFFFCFFFDFF
+      FFFFF6FEFDFFFBFFFCFFFAFFFAFFFFFFFEFFFFFFFEFFFDFEFCFFFEFFFAFFFBFE
+      EEFFFFFFE7FFFFFCDEFFE0D4B2FFEAD7B6FFFFEECDFFFFFFE1FFFFFFEBFFFFFF
+      FBFFF8FDFEFFFBFFFFFFFAFFFEFFFFF8FFFFFFFDFFFFF9FBFCFFFCFCEAFFFFF7
+      BEFFB7A859FF98822AFFA68D2DFFA38A24FFA58B27FFB29D42FFF8E9AAFFFFFC
+      EAFFF9F9FFFFFBFAFFFFFDFBFFFFFFFBFFFFFFFEFFFFF6F5EBFFEEE6C1FF9883
+      32FFA78A27FFA18826FFE2CB67FFE8D164FFB29B2DFFA1891FFF988331FFE1D5
+      ADFFFCF3EAFFFFFCFFFFFBF8FFFFFFFDFCFFFFFDEEFFF8F1CAFFA0904EFFA17E
+      24FFBB9940FFFFFFD4FFFFFFD5FFFFFFCBFFFFFFCAFFCFBA69FF997E2DFF9679
+      34FFFCE5B7FFFFFCEFFFFAFDFFFFFCFEFEFFF1EED9FFD1C388FF997E27FFA97E
+      17FFFFF598FFFFFFD1FF716941FF63613FFFFFFFD3FFFFFFC2FF96761DFFAA84
+      24FFD7B76EFFEFE8CFFFFDFFFFFFF8FBFFFFEDE8D9FFC0AA63FFA37E16FFBA8B
+      17FFCFA02DFFC69C37FF8C7023FF787249FFFFFFDCFFFFF9AEFF9E7512FFB386
+      13FFB28F35FFFDF1D5FFF4F3F5FFF1F3FFFFEBE3D6FFB59A50FFAD8417FFB788
+      0FFFBA890FFFAB7B0BFFC7A248FFFFFFD4FFFEEEB9FFA07B26FFB18117FFB788
+      14FFAB882EFFEDE0C6FFF6F5F9FFFBFAFFFFE5DBCAFFC4A762FFA17712FFB88B
+      18FFB48817FF977111FFFFFFB9FFFFFFB6FF8D6617FFAB7A14FFBC891BFFAD7E
+      15FFAC8D42FFE9E0CCFFEDF1F6FFFFFCFEFFDED6C5FFD4BC88FF987321FFB181
+      18FFAE7E15FF9C7725FFB59248FFA67B2CFFAB7921FFBB811AFFB67F17FF9A71
+      1CFFC2A971FFD8D3C4FFFAFEFFFFFFFFFBFFEEE8DDFFDFD4B9FF947842FFAC74
+      1BFFBE8022FF966821FFF8D193FFE7BC79FF9E6D1FFFBA7D20FFAE7520FF906D
+      35FFE3D1B4FFD5D0C7FFFCFEFFFFFFFFFCFFFFFFF7FFBEBCB1FFDDCDB0FF8F60
+      22FFA46A22FF946226FFFFF1B8FFFFDEA1FF916421FFA8732AFF895C1FFFD7BF
+      A1FFC3BAADFFFFFFFCFFFFFFFFFFFFFFFEFFFFFFFCFFEFF3EEFFBEBAAFFFE0CC
+      B3FF94734CFF855924FF8F6225FF885C1FFF8A652DFF896A3DFFD4BEA2FFC3B9
+      AFFFE2E0DFFFFFFDFDFFFFFCFEFFFFFDFCFFFFFFFFFFFAFEFFFFF0F5F3FFBCBA
+      B2FFD3C5B2FFD7BA95FFC9A577FFC4A376FFCEB490FFDACCB5FFBFB9AEFFE5E3
+      E2FFFDFEFFFFFFFEFFFFFFFEFFFFFFFEFFFFFEF9FBFFFBFEFFFFF9FFFEFFF8FF
+      F6FFDFE5D4FFC4BCABFFC8B8ABFFCBBBB4FFBFB3ADFFDCDAD0FFFFFFF9FFFFFF
+      FEFFFCFCFCFFFDFAFCFFFFFAFCFFFFFCFD00FFFEFFFFFAFAFFFFF8FFFFFFF1FF
+      F3FFF8FFF7FFFCFFFAFFFFFEFFFFFFFBFFFFFFFBFFFFF9FEFCFFF8FFF8FFFBFE
+      FCFFFFFFFEFFFFFEFFFFFFFEFFFF
     }
   end
   object ImageListLarge: TImageList
@@ -2215,4 +2317,11 @@ object FormMain: TFormMain
       FAFFFDFFFCFFECFDFAFFE3FBF9FF
     }
   end
-end
+  object TimerSafetyNet: TTimer
+    Enabled = False
+    Interval = 5000
+    OnTimer = TimerSafetyNetTimer
+    left = 88
+    top = 160
+  end
+end

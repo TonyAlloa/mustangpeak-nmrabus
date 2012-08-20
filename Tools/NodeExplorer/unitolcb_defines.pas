@@ -25,6 +25,8 @@ uses
   Classes, SysUtils;
 
 const
+  MTI_ADDRESS_PRESENT                = $00008000;                                // Address in the CAN Data present if set
+
   MTI_CAN                            = $00000000;                                // Frame Type CAN Control Message
   MTI_CID0                           = $07000000;                                // First 12 Bits of 48 bit Node ID
   MTI_CID1                           = $06000000;                                // 2rd 12 Bits of 48 bit Node ID
@@ -87,6 +89,25 @@ const
   MTI_DATAGRAM_REJECTED_REPLY        = $09A48000;                                // Databytes = Destination Alias, Error Code
 
   MASK_SOURCE_ALIAS                  = $00000FFF;                                // Masks out just the Source Alias Address
+
+  PIP_PIP                            = $800000000000;
+  PIP_DATAGRAM                       = $400000000000;
+  PIP_STREAM                         = $200000000000;
+  PIP_MEMORY_CONFIG                  = $100000000000;
+  PIP_RESERVATION                    = $080000000000;
+  PIP_EVENT_EXCHANGE                 = $040000000000;
+  PIP_IDENTIFCIATION                 = $020000000000;
+  PIP_TEACH_LEARN                    = $010000000000;
+  PIP_REMOTE_BUTTON                  = $008000000000;
+  PIP_ABBREVIATED_CDI                = $004000000000;
+  PIP_DISPLAY                        = $002000000000;
+  PIP_SIMPLE_NODE_ID                 = $001000000000;
+  PIP_CDI                            = $000800000000;
+  PIP_UNASSIGNED                     = $0007FFFFFFFF;
+  PIP_RESERVED_3                     = $000000000008;
+  PIP_RESERVED_2                     = $000000000003;
+  PIP_RESERVED_1                     = $000000000002;
+  PIP_RESERVED_0                     = $000000000001;
 
 implementation
 

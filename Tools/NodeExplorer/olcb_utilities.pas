@@ -22,7 +22,7 @@ unit olcb_utilities;
 interface
 
 uses
-  Classes, SysUtils, strutils, ExtCtrls,
+  Classes, SysUtils, strutils, ExtCtrls, unitolcb_defines,
   {$IFDEF MSWINDOWS}
   Windows,
   {$ELSE}
@@ -50,6 +50,8 @@ const
   XML_ELEMENT_PASS_FAIL          = 'PassFail';
   XML_NAME_PASS                  = 'Pass';
   XML_NAME_FAIL                  = 'Fail';
+  XML_NAME_FAILURE_CODES          = 'FailureCodes';
+  XML_NAME_FAILURE_CODE           = 'Code';
 
 type
   TByteArray = array[0..CAN_BYTE_COUNT-1] of Byte;
@@ -64,11 +66,14 @@ type
   TOpenLCBMessageHelper = class
   private
     FDestinationAliasID: Word;
+    FHasDestinationAddress: Boolean;
+    FForwardingBitNotSet: Boolean;
     FSourceAliasID: Word;
     FData: TByteArray;
     FDataCount: Integer;
     FLayer: TOpenLCBLayer;
     FMTI: DWord;
+    FUnimplementedBitsSet: Boolean;
     procedure SetData(AValue: TByteArray);
     procedure SetLayer(AValue: TOpenLCBLayer);
   public
@@ -78,14 +83,17 @@ type
     property DataCount: Integer read FDataCount write FDataCount;
     property SourceAliasID: Word read FSourceAliasID write FSourceAliasID;
     property DestinationAliasID: Word read FDestinationAliasID write FDestinationAliasID;
+    property ForwardingBitNotSet: Boolean read FForwardingBitNotSet write FForwardingBitNotSet;
+    property UnimplementedBitsSet: Boolean read FUnimplementedBitsSet write FUnimplementedBitsSet;
+    property HasDestinationAddress: Boolean read FHasDestinationAddress write FHasDestinationAddress;
 
     constructor Create;
     destructor Destroy; override;
     procedure Decompose(MessageStr: AnsiString);
     function Encode: AnsiString;
     procedure Load(ALayer: TOpenLCBLayer; AMTI: DWord; ASourceAlias: Word; ADestinationAlias: Word; ADataCount: Integer; AData0, AData1, AData2, AData3, AData4, AData5, AData6, AData7: Byte);
-    function DataAsNodeID: Int64;
     procedure StoreNodeIDToData(NodeID: Int64; IsAddressed: Boolean);
+    function ExtractDataBytesAsInt(StartByteIndex, EndByteIndex: Integer): QWord;
   end;
 
   procedure ExtractTestsFromXML(XMLDoc: TXMLDocument; TestList: TList);
@@ -100,7 +108,6 @@ type
   function ExtractElementValue(Node: TDOMNode; ElementName: WideString): WideString;
   function ValidateTestNode(TestNode: TDOMNode): Boolean;
 
-  procedure ExtractResultsFromXML(XMLDoc: TXMLDocument; ReceiveResults: TStringList);
   function GetTickCount : DWORD;
 
 implementation
@@ -237,6 +244,8 @@ begin
   FDataCount := 0;
   FSourceAliasID := 0;
   FDestinationAliasID := 0;
+  FForwardingBitNotSet := False;
+  FUnimplementedBitsSet := False;
 end;
 
 destructor TOpenLCBMessageHelper.Destroy;
@@ -270,7 +279,10 @@ begin
           Layer := ol_OpenLCB
         else
           Layer := ol_CAN;
-        MTI := MTI and not $10000000;    // Strip off the reserved bit
+        FForwardingBitNotSet := MTI and $10000000 = $00000000;
+        FUnimplementedBitsSet := MTI and $E0000000 <> $00000000;
+
+        MTI := MTI and not $10000000;    // Strip off the reserved bits
         MTI := MTI and $FFFFF000;        // Strip off the Source Alias
 
         for i := 0 to CAN_BYTE_COUNT - 1 do
@@ -285,6 +297,20 @@ begin
           Inc(i, 2);
           Inc(FDataCount);
         end;
+
+        HasDestinationAddress := False;
+        if MTI and $07000000 > $01000000 then        // See if the destination Alias is in the MTI
+        begin
+          DestinationAliasID := (MTI and $00FFF000) shr 12;
+          HasDestinationAddress := True;
+        end else
+        begin
+          if MTI and MTI_ADDRESS_PRESENT = MTI_ADDRESS_PRESENT then
+          begin
+            DestinationAliasID := Word( (Data[0] shl 8)) or (Data[1]);
+            HasDestinationAddress := True;
+          end
+        end
       end
     end;
   end;
@@ -334,18 +360,6 @@ begin
 
 end;
 
-function TOpenLCBMessageHelper.DataAsNodeID: Int64;
-var
-  x: Int64;
-begin
-  Result := Int64( Data[0]) shl 40;
-  Result := Result or (Int64( Data[1]) shl 32);
-  Result := Result or (Int64( Data[2]) shl 24);
-  Result := Result or (Int64( Data[3]) shl 16);
-  Result := Result or (Int64( Data[4]) shl 8);
-  Result := Result or Int64( Data[5]);
-end;
-
 procedure TOpenLCBMessageHelper.StoreNodeIDToData(NodeID: Int64; IsAddressed: Boolean);
 var
   Offset: Integer;
@@ -363,34 +377,22 @@ begin
   DataCount := 6 + Offset;
 end;
 
-procedure ExtractResultsFromXML(XMLDoc: TXMLDocument; ReceiveResults: TStringList);
+function TOpenLCBMessageHelper.ExtractDataBytesAsInt(StartByteIndex, EndByteIndex: Integer): QWord;
 var
-  TestResult, Test, TestObjective, Results: TDOMNode;
-  i: Integer;
+  i, Offset, Shift: Integer;
+  ByteAsQ, ShiftedByte: QWord;
 begin
-  TestResult := XMLDoc.FindNode(XML_ELEMENT_TEST_RESULT_ROOT);
-  if Assigned(TestResult) then
+  Result := 0;
+  Offset := EndByteIndex - StartByteIndex;
+  for i := StartByteIndex to EndByteIndex do
   begin
-    Test := TestResult.FindNode(XML_ELEMENT_TEST);
-    if Assigned(Test) then
-    begin
-      TestObjective := Test.FindNode(XML_ELEMENT_TESTOBJECTIVE);
-      if Assigned(TestObjective) then
-      begin
-        Results := TestObjective.FindNode(XML_ELEMENT_OBJECTIVERESULTS);
-        if Assigned(Results) then
-        begin
-          for i := 0 to Results.ChildNodes.Count - 1 do
-          begin
-            if Results.ChildNodes[i].NodeName = XML_ELEMENT_RECEIVE then
-              ReceiveResults.Add(Results.ChildNodes[i].FirstChild.NodeValue);
-          end;
-        end;
-      end;
-    end;
+    Shift := Offset * 8;
+    ByteAsQ := QWord( Data[i]);
+    ShiftedByte := ByteAsQ shl Shift;
+    Result := Result or ShiftedByte;
+    Dec(Offset)
   end;
 end;
-
 
 end.
 

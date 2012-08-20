@@ -19,6 +19,10 @@
     <Classname>TTestAliasMapEnquiry</Classname>
     <Enabled>True</Enabled>
     <TestObjective>
+      <Objective>Send AME message with no CAN data</Objective>
+      <Results>Receive Alias Map Definition (AMD) from all nodes on the network</Results>
+    </TestObjective>
+    <TestObjective>
       <Objective>Send AME message with Full Node ID of node under test in the data payload</Objective>
       <Results>Receive Alias Map Definition (AMD) from node matching the Full Node ID in the data payload</Results>
     </TestObjective>
@@ -43,7 +47,7 @@
     </TestObjective>
     <TestObjective>
       <Objective>Send Identify Nodes message with Full Node ID of non existent node in the data payload</Objective>
-      <Results>No reply</Results>
+      <Results>No reply expected</Results>
     </TestObjective>
     <TestObjective>
       <Objective>Send Addressed Identify Nodes message with Full Node ID in the data payload</Objective>
@@ -52,6 +56,17 @@
     <TestObjective>
       <Objective>Send Addressed Identify Nodes message with Full Node ID in the data payload to the incorrect alias address</Objective>
       <Results> No reply expected</Results>
+    </TestObjective>
+  </Test>
+  <Test>
+    <Name>Protocol Identification Protocol (PIP)</Name>
+    <Description>Requests what protocols a node supports, optional but recommended implementation</Description>
+    <SpecDoc>"Protocol Identification Protocol" Paragraph 6</SpecDoc>
+    <Classname>TTestProtocolSupport</Classname>
+    <Enabled>True</Enabled>
+    <TestObjective>
+      <Objective>Send addressed Protocol Identification Protocol message</Objective>
+      <Results>Receive protocols supported by the node (or no response if does not support)</Results>
     </TestObjective>
   </Test>
 </TestMatrix>

@@ -44,8 +44,7 @@ var
   ProcessStrings: TStringList;
   Objectives: TList;
   iNextObjective, iCurrentObjective: Integer;
-  XMLRoot, XMLTestNode, XMLNode, XMLTestObjectiveNode, XMLObjectiveNode, XMLObjectiveResultsNode: TDOMNode;
-  PassResult: Boolean;
+  XMLRoot, XMLTestNode, XMLNode, XMLTestObjectiveNode, XMLObjectiveNode, XMLObjectiveResultsNode, XMLFailureCodes: TDOMNode;
 begin
   Serial := TBlockSerial.Create;                           // Create the Serial object in the context of the thread
   Serial.LinuxLock:=False;
@@ -69,6 +68,7 @@ begin
             ts_Initialize     : begin
                                   Objectives.Clear;
                                   ActiveTest.StateMachineIndex := 0;
+                                  ActiveTest.ErrorCodes := [];
                                   iCurrentObjective := 0;
                                   ExtractTestObjectivesFromTestNode(ActiveTest.XMLTests, Objectives);
 
@@ -108,22 +108,28 @@ begin
                                     XMLObjectiveNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_OBJECTIVE);
                                     XMLTestObjectiveNode.AppendChild(XMLObjectiveNode);
 
-                                    XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_NAME);
+                                    XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_SEND);
                                     XMLObjectiveNode.AppendChild(XMLNode);
                                     XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ObjectiveFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective]))));
+
+                                    XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_RECEIVE);
+                                    XMLObjectiveNode.AppendChild(XMLNode);
+                                    XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ObjectiveResultFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective]))));
+
+                                    XMLObjectiveResultsNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_OBJECTIVERESULTS);
+                                    XMLTestObjectiveNode.AppendChild(XMLObjectiveResultsNode);
                                   end;
 
                                   ActiveTest.TestState := ts_Sending;
                                 end;
             ts_Sending :        begin
-                                  PassResult := False;
                                   ProcessStrings.Clear;
-                                  iCurrentObjective := ActiveTest.ProcessObjectives(ProcessStrings, PassResult);  // Run Next State and get State specific strings
+                                  iCurrentObjective := ActiveTest.ProcessObjectives(ProcessStrings);  // Run Next State and get State specific strings
                                   for i := 0 to ProcessStrings.Count - 1 do          // Start with the next objective information
                                   begin
                                     Serial.SendString(ProcessStrings[i] + LF);
                                     XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_SEND);
-                                    XMLObjectiveNode.AppendChild(XMLNode);
+                                    XMLObjectiveResultsNode.AppendChild(XMLNode);
                                     XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ProcessStrings[i]));
                                   end;
                                   ProcessStrings.Clear;
@@ -131,35 +137,82 @@ begin
                                     ThreadSwitch;                                    // Wait till "done" transmitting
 
                                   ActiveTest.TestState := ts_Receiving;
-
-                                  XMLObjectiveResultsNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_OBJECTIVERESULTS);
-                                  XMLTestObjectiveNode.AppendChild(XMLObjectiveResultsNode);
-
-                                  XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_NAME);
-                                  XMLObjectiveResultsNode.AppendChild(XMLNode);
-                                  XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ObjectiveResultFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective]))));
                                 end;
             ts_Receiving      : begin
                                   TempStr := Serial.Recvstring(ActiveTest.WaitTime);  // Try to get something from the CAN
                                   if TempStr <> '' then
                                   begin
-                                    ProcessStrings.Add(TempStr);
+                                    ProcessStrings.Add( Trim( UpperCase(TempStr)));
                                     XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_RECEIVE);    // Received something, store and keep looking
                                     XMLObjectiveResultsNode.AppendChild(XMLNode);
-                                    XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(Trim(TempStr)));
+                                    XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ProcessStrings[ProcessStrings.Count - 1]));
                                   end else
-                                  begin
-                                     PassResult := False;
-                                     iNextObjective := ActiveTest.ProcessObjectives(ProcessStrings, PassResult); // Timed out, send in what was received
+                                  begin                                                 // Timed out, send in what was received
+                                     ActiveTest.ErrorCodes := [];
+                                     iNextObjective := ActiveTest.ProcessObjectives(ProcessStrings);
                                      if iNextObjective = iCurrentObjective then          // Same objective to continue
                                        ActiveTest.TestState := ts_Sending
                                      else begin
                                        XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_PASS_FAIL);
-                                       XMLTestObjectiveNode.AppendChild(XMLNode);
-                                       if PassResult then
+                                       XMLObjectiveResultsNode.AppendChild(XMLNode);
+                                       if ActiveTest.ErrorCodes = [] then
                                          XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_NAME_PASS))
-                                       else
+                                       else begin
                                          XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_NAME_FAIL));
+
+                                         XMLFailureCodes := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODES);
+                                         XMLObjectiveResultsNode.AppendChild(XMLFailureCodes);
+
+                                         if tfcUnusedBitsSet in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_UNUSED_BITS_SET));
+                                         end;
+                                         if tfcForwardingBitNotSet in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_FORWARDING_BIT_NOT_SET));
+                                         end;
+                                         if tfcInvalidMTI in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_MTI));
+                                         end;
+                                         if tfcInvalidSourceAlias in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_SOURCE_ALIAS));
+                                         end;
+                                         if tfcInvalidDestAlias in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_DEST_ALIAS));
+                                         end;
+                                         if tfcIncorrectCount in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_COUNT));
+                                         end;
+                                         if tfcPipUsingReservedBits in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_RESERVED_BITS));
+                                         end;
+                                         if tfcFullNodeIDInvalid in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_NODE_ID));
+                                         end;
+
+                                       end;
                                        iCurrentObjective := iNextObjective;
                                        ActiveTest.TestState := ts_ObjectiveEnd;          // Start next objective
                                      end;
