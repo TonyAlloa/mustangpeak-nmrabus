@@ -2319,7 +2319,7 @@ object FormMain: TFormMain
   end
   object TimerSafetyNet: TTimer
     Enabled = False
-    Interval = 5000
+    Interval = 20000
     OnTimer = TimerSafetyNetTimer
     left = 88
     top = 160
