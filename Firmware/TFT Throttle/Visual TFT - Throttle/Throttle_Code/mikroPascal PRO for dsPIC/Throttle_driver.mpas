@@ -4,11 +4,11 @@ uses Throttle_objects, Throttle_resources;
 
 /////////////////////////
 // External Declarations
-procedure BoxRoundCmdStationsClick(); external;
 procedure BoxRoundAccyNodesClick(); external;
+procedure BoxRoundCmdStationsClick(); external;
+procedure BoxRoundConsistNodesClick(); external;
 procedure BoxRoundProgStationsClick(); external;
 procedure BoxRoundTrainNodesClick(); external;
-procedure BoxRoundConsistNodesClick(); external;
 /////////////////////////
 
 procedure DrawScreen(aScreenID : word);
@@ -41,14 +41,14 @@ var TFT_DataPort : char  at LATA;
 // End TFT module connections
 
 // Touch Panel module connections
-var DriveX_Left : sbit at LATB13_bit;
-var DriveX_Right : sbit at LATB11_bit;
-var DriveY_Up : sbit at LATB12_bit;
-var DriveY_Down : sbit at LATB10_bit;
-var DriveX_Left_Direction : sbit at TRISB13_bit;
-var DriveX_Right_Direction : sbit at TRISB11_bit;
-var DriveY_Up_Direction : sbit at TRISB12_bit;
-var DriveY_Down_Direction : sbit at TRISB10_bit;
+var DRIVEX_LEFT : sbit at LATB13_bit;
+var DRIVEX_RIGHT : sbit at LATB11_bit;
+var DRIVEY_UP : sbit at LATB12_bit;
+var DRIVEY_DOWN : sbit at LATB10_bit;
+var DRIVEX_LEFT_DIRECTION : sbit at TRISB13_bit;
+var DRIVEX_RIGHT_DIRECTION : sbit at TRISB11_bit;
+var DRIVEY_UP_DIRECTION : sbit at TRISB12_bit;
+var DRIVEY_DOWN_DIRECTION : sbit at TRISB10_bit;
 // End Touch Panel module connections
 
 // Global variables
@@ -65,22 +65,22 @@ var
     object_pressed : byte;
     local_label : ^TLabel;
     exec_label : ^TLabel;
-    label_order : short;
+    label_order : integer;
     local_clabel : ^TCLabel;
     exec_clabel : ^TCLabel;
-    clabel_order : short;
+    clabel_order : integer;
     local_image : ^TImage;
     exec_image : ^TImage;
-    image_order : short;
+    image_order : integer;
     local_box : ^TBox;
     exec_box : ^TBox;
-    box_order : short;
+    box_order : integer;
     local_cbox : ^TCBox;
     exec_cbox : ^TCBox;
-    cbox_order : short;
+    cbox_order : integer;
     local_round_box : ^TBox_Round;
     exec_round_box : ^TBox_Round;
-    box_round_order : short;
+    box_round_order : integer;
 
 
 
@@ -91,7 +91,6 @@ const Screen1_CLabels  : array[4] of ^TCLabel; code; far; forward;
 const Screen1_Images  : array[1] of ^TImage; code; far; forward;
 const Screen1_CBoxes  : array[1] of ^TCBox; code; far; forward;
 const Screen1_Boxes_Round  : array[3] of ^TBox_Round; code; far; forward;
-
 const ScreenStart           : TCScreen =
          (
          0xA514                ,//  ScreenStart.Color
@@ -108,14 +107,15 @@ const ScreenStart           : TCScreen =
          @Screen1_Boxes_Round  //  ScreenStart.Boxes_Round
          ); code; far;
 
+    const Bkgnd_Caption : string[1] = '';
     const Bkgnd : TCBox = 
          (
          32768                 , //   Bkgnd.OwnerScreenID
          0                     , //   Bkgnd.Order           
          0                     , //   Bkgnd.Left           
          0                     , //   Bkgnd.Top             
-         240                   , //   Bkgnd.Width           
-         320                   , //   Bkgnd.Height          
+         120                   , //   Bkgnd.Width           
+         160                   , //   Bkgnd.Height          
          1                     , //   Bkgnd.Pen_Width       
          0x0000                , //   Bkgnd.Pen_Color       
          1                     , //   Bkgnd.Visible         
@@ -139,11 +139,11 @@ const ScreenStart           : TCScreen =
          32768                 , //   Label2.OwnerScreenID
          1                     , //   Label2.Order          
          0                     , //   Label2.Left           
-         40                    , //   Label2.Top             
-         244                   , //   Label2.Width         
-         36                    , //   Label2.Height       
+         20                    , //   Label2.Top             
+         111                   , //   Label2.Width         
+         21                    , //   Label2.Height       
          @Label2_Caption       , //   Label2.Caption        
-         @Tahoma38x39_Bold     , //   Label2.FontName       
+         @Tahoma19x19_Bold     , //   Label2.FontName       
          0xFFFF                , //   Label2.Font_Color     
          1                     , //   Label2.Visible        
          0                     , //   Label2.Active        
@@ -158,12 +158,12 @@ const ScreenStart           : TCScreen =
          (
          32768                 , //   Label3.OwnerScreenID
          2                     , //   Label3.Order          
-         17                    , //   Label3.Left           
-         87                    , //   Label3.Top             
-         204                   , //   Label3.Width         
-         21                    , //   Label3.Height       
+         8                     , //   Label3.Left           
+         44                    , //   Label3.Top             
+         93                    , //   Label3.Width         
+         12                    , //   Label3.Height       
          @Label3_Caption       , //   Label3.Caption        
-         @Tahoma19x23_Regular  , //   Label3.FontName       
+         @TFT_defaultFont      , //   Label3.FontName       
          0xFFFF                , //   Label3.Font_Color     
          1                     , //   Label3.Visible        
          0                     , //   Label3.Active        
@@ -174,17 +174,18 @@ const ScreenStart           : TCScreen =
          ); code; far;
 
 var BoxRound1 : TBox_Round;
+    BoxRound1_Caption : string[1];
     const Label4_Caption : string[11] = 'Loading...'; code; far;
     const Label4 : TCLabel = 
          (
          32768                 , //   Label4.OwnerScreenID
          4                     , //   Label4.Order          
-         90                    , //   Label4.Left           
-         234                   , //   Label4.Top             
-         69                    , //   Label4.Width         
-         15                    , //   Label4.Height       
+         45                    , //   Label4.Left           
+         117                   , //   Label4.Top             
+         31                    , //   Label4.Width         
+         9                     , //   Label4.Height       
          @Label4_Caption       , //   Label4.Caption        
-         @Tahoma13x16_Regular  , //   Label4.FontName       
+         @Tahoma7x8_Regular    , //   Label4.FontName       
          0xFFFF                , //   Label4.Font_Color     
          1                     , //   Label4.Visible        
          1                     , //   Label4.Active        
@@ -195,17 +196,18 @@ var BoxRound1 : TBox_Round;
          ); code; far;
 
 var BoxRoundProgressBar : TBox_Round;
+    BoxRoundProgressBar_Caption : string[1];
     const Label5_Caption : string[18] = 'Version 0.1 Alpha'; code; far;
     const Label5 : TCLabel = 
          (
          32768                 , //   Label5.OwnerScreenID
          6                     , //   Label5.Order          
-         64                    , //   Label5.Left           
-         197                   , //   Label5.Top             
-         116                   , //   Label5.Width         
-         15                    , //   Label5.Height       
+         32                    , //   Label5.Left           
+         98                    , //   Label5.Top             
+         56                    , //   Label5.Width         
+         9                     , //   Label5.Height       
          @Label5_Caption       , //   Label5.Caption        
-         @Tahoma13x16_Regular  , //   Label5.FontName       
+         @Tahoma7x8_Regular    , //   Label5.FontName       
          0xFFFF                , //   Label5.Font_Color     
          1                     , //   Label5.Visible        
          1                     , //   Label5.Active        
@@ -216,7 +218,9 @@ var BoxRoundProgressBar : TBox_Round;
          ); code; far;
 
 var BoxRound3 : TBox_Round;
+    BoxRound3_Caption : string[1];
 var Image1 : TImage;
+    Image1_Caption : string[1];
       const Screen1_CLabels  : array[4] of ^TCLabel =
          (
          @Label2,              
@@ -244,20 +248,20 @@ const Screen2_Labels  : array[5] of ^TLabel; code; far; forward;
 const Screen2_CLabels  : array[5] of ^TCLabel; code; far; forward;
 const Screen2_Boxes  : array[1] of ^TBox; code; far; forward;
 const Screen2_Boxes_Round  : array[5] of ^TBox_Round; code; far; forward;
-
 var ScreenDetectingNodes           : TScreen;
 var BoxBkGnd : TBox;
+    BoxBkGnd_Caption : string[1];
     const Label7_Caption : string[34] = 'Locating Command Station Nodes...'; code; far;
     const Label7 : TCLabel = 
          (
          0                     , //   Label7.OwnerScreenID
          1                     , //   Label7.Order          
-         2                     , //   Label7.Left           
-         9                     , //   Label7.Top             
-         230                   , //   Label7.Width         
-         15                    , //   Label7.Height       
+         1                     , //   Label7.Left           
+         5                     , //   Label7.Top             
+         114                   , //   Label7.Width         
+         9                     , //   Label7.Height       
          @Label7_Caption       , //   Label7.Caption        
-         @Tahoma13x16_Regular  , //   Label7.FontName       
+         @Tahoma7x8_Regular    , //   Label7.FontName       
          0xFFFF                , //   Label7.Font_Color     
          1                     , //   Label7.Visible        
          1                     , //   Label7.Active        
@@ -272,12 +276,12 @@ var BoxBkGnd : TBox;
          (
          0                     , //   Label1.OwnerScreenID
          2                     , //   Label1.Order          
-         2                     , //   Label1.Left           
-         71                    , //   Label1.Top             
-         197                   , //   Label1.Width         
-         15                    , //   Label1.Height       
+         1                     , //   Label1.Left           
+         35                    , //   Label1.Top             
+         97                    , //   Label1.Width         
+         9                     , //   Label1.Height       
          @Label1_Caption       , //   Label1.Caption        
-         @Tahoma13x16_Regular  , //   Label1.FontName       
+         @Tahoma7x8_Regular    , //   Label1.FontName       
          0xFFFF                , //   Label1.Font_Color     
          1                     , //   Label1.Visible        
          1                     , //   Label1.Active        
@@ -292,12 +296,12 @@ var BoxBkGnd : TBox;
          (
          0                     , //   Label6.OwnerScreenID
          3                     , //   Label6.Order          
-         2                     , //   Label6.Left           
-         132                   , //   Label6.Top             
-         150                   , //   Label6.Width         
-         15                    , //   Label6.Height       
+         1                     , //   Label6.Left           
+         66                    , //   Label6.Top             
+         74                    , //   Label6.Width         
+         9                     , //   Label6.Height       
          @Label6_Caption       , //   Label6.Caption        
-         @Tahoma13x16_Regular  , //   Label6.FontName       
+         @Tahoma7x8_Regular    , //   Label6.FontName       
          0xFFFF                , //   Label6.Font_Color     
          1                     , //   Label6.Visible        
          1                     , //   Label6.Active        
@@ -312,12 +316,12 @@ var BoxBkGnd : TBox;
          (
          0                     , //   Label8.OwnerScreenID
          4                     , //   Label8.Order          
-         2                     , //   Label8.Left           
-         254                   , //   Label8.Top             
-         179                   , //   Label8.Width         
-         15                    , //   Label8.Height       
+         1                     , //   Label8.Left           
+         127                   , //   Label8.Top             
+         89                    , //   Label8.Width         
+         9                     , //   Label8.Height       
          @Label8_Caption       , //   Label8.Caption        
-         @Tahoma13x16_Regular  , //   Label8.FontName       
+         @Tahoma7x8_Regular    , //   Label8.FontName       
          0xFFFF                , //   Label8.Font_Color     
          1                     , //   Label8.Visible        
          1                     , //   Label8.Active        
@@ -328,7 +332,9 @@ var BoxBkGnd : TBox;
          ); code; far;
 
 var BoxRoundCmdStations : TBox_Round;
+    BoxRoundCmdStations_Caption : string[1];
 var BoxRoundAccyNodes : TBox_Round;
+    BoxRoundAccyNodes_Caption : string[1];
 var LabelCmdStationNodes : TLabel;
     LabelCmdStationNodes_Caption : string[33];
 
@@ -336,7 +342,9 @@ var LabelAccyNodes : TLabel;
     LabelAccyNodes_Caption : string[33];
 
 var BoxRoundProgStations : TBox_Round;
+    BoxRoundProgStations_Caption : string[1];
 var BoxRoundTrainNodes : TBox_Round;
+    BoxRoundTrainNodes_Caption : string[1];
 var LabelProgNodes : TLabel;
     LabelProgNodes_Caption : string[33];
 
@@ -348,12 +356,12 @@ var LabelTrainNodes : TLabel;
          (
          0                     , //   Label9.OwnerScreenID
          13                    , //   Label9.Order          
-         2                     , //   Label9.Left           
-         193                   , //   Label9.Top             
-         162                   , //   Label9.Width         
-         15                    , //   Label9.Height       
+         1                     , //   Label9.Left           
+         96                    , //   Label9.Top             
+         80                    , //   Label9.Width         
+         9                     , //   Label9.Height       
          @Label9_Caption       , //   Label9.Caption        
-         @Tahoma13x16_Regular  , //   Label9.FontName       
+         @Tahoma7x8_Regular    , //   Label9.FontName       
          0xFFFF                , //   Label9.Font_Color     
          1                     , //   Label9.Visible        
          1                     , //   Label9.Active        
@@ -364,6 +372,7 @@ var LabelTrainNodes : TLabel;
          ); code; far;
 
 var BoxRound2 : TBox_Round;
+    BoxRound2_Caption : string[1];
 var Label10 : TLabel;
     Label10_Caption : string[33];
 
@@ -400,11 +409,13 @@ var Label10 : TLabel;
 const Screen3_Labels  : array[6] of ^TLabel; code; far; forward;
 const Screen3_Boxes  : array[1] of ^TBox; code; far; forward;
 const Screen3_Boxes_Round  : array[6] of ^TBox_Round; code; far; forward;
-
 var ScreenNodeSelect           : TScreen;
 var Box1 : TBox;
+    Box1_Caption : string[1];
 var BoxRoundItem1 : TBox_Round;
+    BoxRoundItem1_Caption : string[1];
 var BoxRoundItem4 : TBox_Round;
+    BoxRoundItem4_Caption : string[1];
 var LabelItem1 : TLabel;
     LabelItem1_Caption : string[17];
 
@@ -412,7 +423,9 @@ var LabelItem4 : TLabel;
     LabelItem4_Caption : string[17];
 
 var BoxRoundItem2 : TBox_Round;
+    BoxRoundItem2_Caption : string[1];
 var BoxRoundItem3 : TBox_Round;
+    BoxRoundItem3_Caption : string[1];
 var LabelItem2 : TLabel;
     LabelItem2_Caption : string[17];
 
@@ -420,10 +433,12 @@ var LabelItem3 : TLabel;
     LabelItem3_Caption : string[17];
 
 var BoxRoundItem6 : TBox_Round;
+    BoxRoundItem6_Caption : string[1];
 var LabelItem6 : TLabel;
     LabelItem6_Caption : string[17];
 
 var BoxRoundItem5 : TBox_Round;
+    BoxRoundItem5_Caption : string[1];
 var LabelItem5 : TLabel;
     LabelItem5_Caption : string[17];
 
@@ -546,10 +561,10 @@ procedure InitializeObjects();    // static
 
     BoxRound1.OwnerScreenID       := 32768;
     BoxRound1.Order               := 3;
-    BoxRound1.Left                := 44;
-    BoxRound1.Top                 := 257;
-    BoxRound1.Width               := 152;
-    BoxRound1.Height              := 36;
+    BoxRound1.Left                := 22;
+    BoxRound1.Top                 := 128;
+    BoxRound1.Width               := 76;
+    BoxRound1.Height              := 18;
     BoxRound1.Pen_Width           := 5;
     BoxRound1.Pen_Color           := 0x0000;
     BoxRound1.Visible             := 1;
@@ -562,6 +577,7 @@ procedure InitializeObjects();    // static
     BoxRound1.Color               := 0xC618;
     BoxRound1.PressColEnabled := 1;
     BoxRound1.Press_Color         := 0x8410;
+    BoxRound1.Corner_Radius          := 3;
     BoxRound1.OnUpPtr             := 0;
     BoxRound1.OnDownPtr           := 0;
     BoxRound1.OnClickPtr          := 0;
@@ -569,10 +585,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundProgressBar.OwnerScreenID       := 32768;
     BoxRoundProgressBar.Order               := 5;
-    BoxRoundProgressBar.Left                := 45;
-    BoxRoundProgressBar.Top                 := 258;
-    BoxRoundProgressBar.Width               := 1;
-    BoxRoundProgressBar.Height              := 34;
+    BoxRoundProgressBar.Left                := 23;
+    BoxRoundProgressBar.Top                 := 129;
+    BoxRoundProgressBar.Width               := 8;
+    BoxRoundProgressBar.Height              := 17;
     BoxRoundProgressBar.Pen_Width           := 1;
     BoxRoundProgressBar.Pen_Color           := 0x0000;
     BoxRoundProgressBar.Visible             := 1;
@@ -585,6 +601,7 @@ procedure InitializeObjects();    // static
     BoxRoundProgressBar.Color               := 0xC618;
     BoxRoundProgressBar.PressColEnabled := 1;
     BoxRoundProgressBar.Press_Color         := 0x8410;
+    BoxRoundProgressBar.Corner_Radius          := 3;
     BoxRoundProgressBar.OnUpPtr             := 0;
     BoxRoundProgressBar.OnDownPtr           := 0;
     BoxRoundProgressBar.OnClickPtr          := 0;
@@ -592,10 +609,10 @@ procedure InitializeObjects();    // static
 
     BoxRound3.OwnerScreenID       := 32768;
     BoxRound3.Order               := 7;
-    BoxRound3.Left                := 27;
-    BoxRound3.Top                 := 110;
-    BoxRound3.Width               := 187;
-    BoxRound3.Height              := 80;
+    BoxRound3.Left                := 14;
+    BoxRound3.Top                 := 55;
+    BoxRound3.Width               := 94;
+    BoxRound3.Height              := 40;
     BoxRound3.Pen_Width           := 1;
     BoxRound3.Pen_Color           := 0x0000;
     BoxRound3.Visible             := 1;
@@ -608,6 +625,7 @@ procedure InitializeObjects();    // static
     BoxRound3.Color               := 0xC618;
     BoxRound3.PressColEnabled := 1;
     BoxRound3.Press_Color         := 0x8410;
+    BoxRound3.Corner_Radius          := 3;
     BoxRound3.OnUpPtr             := 0;
     BoxRound3.OnDownPtr           := 0;
     BoxRound3.OnClickPtr          := 0;
@@ -615,10 +633,10 @@ procedure InitializeObjects();    // static
 
     Image1.OwnerScreenID       := 32768;
     Image1.Order               := 8;
-    Image1.Left                := 44;
-    Image1.Top                 := 118;
-    Image1.Width               := 155;
-    Image1.Height              := 64;
+    Image1.Left                := 22;
+    Image1.Top                 := 59;
+    Image1.Width               := 78;
+    Image1.Height              := 32;
     Image1.Picture_Type        := 0;
     Image1.Picture_Ratio       := 1;
     Image1.Picture_Name        := @OpenLCB_bmp;
@@ -633,8 +651,8 @@ procedure InitializeObjects();    // static
     BoxBkGnd.Order               := 0;
     BoxBkGnd.Left                := 0;
     BoxBkGnd.Top                 := 0;
-    BoxBkGnd.Width               := 240;
-    BoxBkGnd.Height              := 320;
+    BoxBkGnd.Width               := 120;
+    BoxBkGnd.Height              := 160;
     BoxBkGnd.Pen_Width           := 1;
     BoxBkGnd.Pen_Color           := 0x0000;
     BoxBkGnd.Visible             := 1;
@@ -654,10 +672,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundCmdStations.OwnerScreenID       := 0;
     BoxRoundCmdStations.Order               := 5;
-    BoxRoundCmdStations.Left                := 6;
-    BoxRoundCmdStations.Top                 := 28;
-    BoxRoundCmdStations.Width               := 225;
-    BoxRoundCmdStations.Height              := 38;
+    BoxRoundCmdStations.Left                := 3;
+    BoxRoundCmdStations.Top                 := 14;
+    BoxRoundCmdStations.Width               := 112;
+    BoxRoundCmdStations.Height              := 19;
     BoxRoundCmdStations.Pen_Width           := 2;
     BoxRoundCmdStations.Pen_Color           := 0xC618;
     BoxRoundCmdStations.Visible             := 1;
@@ -670,6 +688,7 @@ procedure InitializeObjects();    // static
     BoxRoundCmdStations.Color               := 0xFFFF;
     BoxRoundCmdStations.PressColEnabled := 1;
     BoxRoundCmdStations.Press_Color         := 0x8410;
+    BoxRoundCmdStations.Corner_Radius          := 3;
     BoxRoundCmdStations.OnUpPtr             := 0;
     BoxRoundCmdStations.OnDownPtr           := 0;
     BoxRoundCmdStations.OnClickPtr          := @BoxRoundCmdStationsClick;
@@ -677,10 +696,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundAccyNodes.OwnerScreenID       := 0;
     BoxRoundAccyNodes.Order               := 6;
-    BoxRoundAccyNodes.Left                := 6;
-    BoxRoundAccyNodes.Top                 := 274;
-    BoxRoundAccyNodes.Width               := 225;
-    BoxRoundAccyNodes.Height              := 38;
+    BoxRoundAccyNodes.Left                := 3;
+    BoxRoundAccyNodes.Top                 := 137;
+    BoxRoundAccyNodes.Width               := 112;
+    BoxRoundAccyNodes.Height              := 19;
     BoxRoundAccyNodes.Pen_Width           := 2;
     BoxRoundAccyNodes.Pen_Color           := 0xC618;
     BoxRoundAccyNodes.Visible             := 1;
@@ -693,6 +712,7 @@ procedure InitializeObjects();    // static
     BoxRoundAccyNodes.Color               := 0xFFFF;
     BoxRoundAccyNodes.PressColEnabled := 1;
     BoxRoundAccyNodes.Press_Color         := 0x8410;
+    BoxRoundAccyNodes.Corner_Radius          := 3;
     BoxRoundAccyNodes.OnUpPtr             := 0;
     BoxRoundAccyNodes.OnDownPtr           := 0;
     BoxRoundAccyNodes.OnClickPtr          := @BoxRoundAccyNodesClick;
@@ -700,15 +720,15 @@ procedure InitializeObjects();    // static
 
     LabelCmdStationNodes.OwnerScreenID       := 0;
     LabelCmdStationNodes.Order               := 7;
-    LabelCmdStationNodes.Left                := 7;
-    LabelCmdStationNodes.Top                 := 38;
-    LabelCmdStationNodes.Width               := 106;
-    LabelCmdStationNodes.Height              := 18;
+    LabelCmdStationNodes.Left                := 4;
+    LabelCmdStationNodes.Top                 := 19;
+    LabelCmdStationNodes.Width               := 48;
+    LabelCmdStationNodes.Height              := 11;
     LabelCmdStationNodes.Visible             := 1;
     LabelCmdStationNodes.Active              := 0;
     LabelCmdStationNodes.Caption             := @LabelCmdStationNodes_Caption;
     LabelCmdStationNodes_Caption             := 'Ophir District';
-    LabelCmdStationNodes.FontName            := @Tahoma16x19_Regular;
+    LabelCmdStationNodes.FontName            := @Tahoma8x10_Regular;
     LabelCmdStationNodes.Font_Color          := 0x0000;
     LabelCmdStationNodes.OnUpPtr             := 0;
     LabelCmdStationNodes.OnDownPtr           := 0;
@@ -717,15 +737,15 @@ procedure InitializeObjects();    // static
 
     LabelAccyNodes.OwnerScreenID       := 0;
     LabelAccyNodes.Order               := 8;
-    LabelAccyNodes.Left                := 7;
-    LabelAccyNodes.Top                 := 283;
-    LabelAccyNodes.Width               := 150;
-    LabelAccyNodes.Height              := 18;
+    LabelAccyNodes.Left                := 4;
+    LabelAccyNodes.Top                 := 142;
+    LabelAccyNodes.Width               := 69;
+    LabelAccyNodes.Height              := 11;
     LabelAccyNodes.Visible             := 1;
     LabelAccyNodes.Active              := 0;
     LabelAccyNodes.Caption             := @LabelAccyNodes_Caption;
     LabelAccyNodes_Caption             := 'Ophir Depot Siding';
-    LabelAccyNodes.FontName            := @Tahoma16x19_Regular;
+    LabelAccyNodes.FontName            := @Tahoma8x10_Regular;
     LabelAccyNodes.Font_Color          := 0x0000;
     LabelAccyNodes.OnUpPtr             := 0;
     LabelAccyNodes.OnDownPtr           := 0;
@@ -734,10 +754,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundProgStations.OwnerScreenID       := 0;
     BoxRoundProgStations.Order               := 9;
-    BoxRoundProgStations.Left                := 6;
-    BoxRoundProgStations.Top                 := 90;
-    BoxRoundProgStations.Width               := 225;
-    BoxRoundProgStations.Height              := 38;
+    BoxRoundProgStations.Left                := 3;
+    BoxRoundProgStations.Top                 := 45;
+    BoxRoundProgStations.Width               := 112;
+    BoxRoundProgStations.Height              := 19;
     BoxRoundProgStations.Pen_Width           := 2;
     BoxRoundProgStations.Pen_Color           := 0xC618;
     BoxRoundProgStations.Visible             := 1;
@@ -750,6 +770,7 @@ procedure InitializeObjects();    // static
     BoxRoundProgStations.Color               := 0xFFFF;
     BoxRoundProgStations.PressColEnabled := 1;
     BoxRoundProgStations.Press_Color         := 0x8410;
+    BoxRoundProgStations.Corner_Radius          := 3;
     BoxRoundProgStations.OnUpPtr             := 0;
     BoxRoundProgStations.OnDownPtr           := 0;
     BoxRoundProgStations.OnClickPtr          := @BoxRoundProgStationsClick;
@@ -757,10 +778,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundTrainNodes.OwnerScreenID       := 0;
     BoxRoundTrainNodes.Order               := 10;
-    BoxRoundTrainNodes.Left                := 6;
-    BoxRoundTrainNodes.Top                 := 151;
-    BoxRoundTrainNodes.Width               := 225;
-    BoxRoundTrainNodes.Height              := 38;
+    BoxRoundTrainNodes.Left                := 3;
+    BoxRoundTrainNodes.Top                 := 76;
+    BoxRoundTrainNodes.Width               := 112;
+    BoxRoundTrainNodes.Height              := 19;
     BoxRoundTrainNodes.Pen_Width           := 2;
     BoxRoundTrainNodes.Pen_Color           := 0xC618;
     BoxRoundTrainNodes.Visible             := 1;
@@ -773,6 +794,7 @@ procedure InitializeObjects();    // static
     BoxRoundTrainNodes.Color               := 0xFFFF;
     BoxRoundTrainNodes.PressColEnabled := 1;
     BoxRoundTrainNodes.Press_Color         := 0x8410;
+    BoxRoundTrainNodes.Corner_Radius          := 3;
     BoxRoundTrainNodes.OnUpPtr             := 0;
     BoxRoundTrainNodes.OnDownPtr           := 0;
     BoxRoundTrainNodes.OnClickPtr          := @BoxRoundTrainNodesClick;
@@ -780,15 +802,15 @@ procedure InitializeObjects();    // static
 
     LabelProgNodes.OwnerScreenID       := 0;
     LabelProgNodes.Order               := 11;
-    LabelProgNodes.Left                := 7;
-    LabelProgNodes.Top                 := 99;
-    LabelProgNodes.Width               := 89;
-    LabelProgNodes.Height              := 18;
+    LabelProgNodes.Left                := 4;
+    LabelProgNodes.Top                 := 50;
+    LabelProgNodes.Width               := 40;
+    LabelProgNodes.Height              := 11;
     LabelProgNodes.Visible             := 1;
     LabelProgNodes.Active              := 0;
     LabelProgNodes.Caption             := @LabelProgNodes_Caption;
     LabelProgNodes_Caption             := 'Rico Siding';
-    LabelProgNodes.FontName            := @Tahoma16x19_Regular;
+    LabelProgNodes.FontName            := @Tahoma8x10_Regular;
     LabelProgNodes.Font_Color          := 0x0000;
     LabelProgNodes.OnUpPtr             := 0;
     LabelProgNodes.OnDownPtr           := 0;
@@ -797,15 +819,15 @@ procedure InitializeObjects();    // static
 
     LabelTrainNodes.OwnerScreenID       := 0;
     LabelTrainNodes.Order               := 12;
-    LabelTrainNodes.Left                := 7;
-    LabelTrainNodes.Top                 := 160;
-    LabelTrainNodes.Width               := 116;
-    LabelTrainNodes.Height              := 18;
+    LabelTrainNodes.Left                := 4;
+    LabelTrainNodes.Top                 := 80;
+    LabelTrainNodes.Width               := 53;
+    LabelTrainNodes.Height              := 11;
     LabelTrainNodes.Visible             := 1;
     LabelTrainNodes.Active              := 0;
     LabelTrainNodes.Caption             := @LabelTrainNodes_Caption;
     LabelTrainNodes_Caption             := 'RGS 455 - K27';
-    LabelTrainNodes.FontName            := @Tahoma16x19_Regular;
+    LabelTrainNodes.FontName            := @Tahoma8x10_Regular;
     LabelTrainNodes.Font_Color          := 0x0000;
     LabelTrainNodes.OnUpPtr             := 0;
     LabelTrainNodes.OnDownPtr           := 0;
@@ -814,10 +836,10 @@ procedure InitializeObjects();    // static
 
     BoxRound2.OwnerScreenID       := 0;
     BoxRound2.Order               := 14;
-    BoxRound2.Left                := 6;
-    BoxRound2.Top                 := 212;
-    BoxRound2.Width               := 225;
-    BoxRound2.Height              := 38;
+    BoxRound2.Left                := 3;
+    BoxRound2.Top                 := 106;
+    BoxRound2.Width               := 112;
+    BoxRound2.Height              := 19;
     BoxRound2.Pen_Width           := 2;
     BoxRound2.Pen_Color           := 0xC618;
     BoxRound2.Visible             := 1;
@@ -830,6 +852,7 @@ procedure InitializeObjects();    // static
     BoxRound2.Color               := 0xFFFF;
     BoxRound2.PressColEnabled := 1;
     BoxRound2.Press_Color         := 0x8410;
+    BoxRound2.Corner_Radius          := 3;
     BoxRound2.OnUpPtr             := 0;
     BoxRound2.OnDownPtr           := 0;
     BoxRound2.OnClickPtr          := @BoxRoundConsistNodesClick;
@@ -837,15 +860,15 @@ procedure InitializeObjects();    // static
 
     Label10.OwnerScreenID       := 0;
     Label10.Order               := 15;
-    Label10.Left                := 7;
-    Label10.Top                 := 222;
-    Label10.Width               := 169;
-    Label10.Height              := 18;
+    Label10.Left                := 4;
+    Label10.Top                 := 111;
+    Label10.Width               := 78;
+    Label10.Height              := 11;
     Label10.Visible             := 1;
     Label10.Active              := 0;
     Label10.Caption             := @Label10_Caption;
     Label10_Caption             := 'Southbound Extra #2';
-    Label10.FontName            := @Tahoma16x19_Regular;
+    Label10.FontName            := @Tahoma8x10_Regular;
     Label10.Font_Color          := 0x0000;
     Label10.OnUpPtr             := 0;
     Label10.OnDownPtr           := 0;
@@ -856,8 +879,8 @@ procedure InitializeObjects();    // static
     Box1.Order               := 0;
     Box1.Left                := 0;
     Box1.Top                 := 0;
-    Box1.Width               := 240;
-    Box1.Height              := 320;
+    Box1.Width               := 120;
+    Box1.Height              := 160;
     Box1.Pen_Width           := 1;
     Box1.Pen_Color           := 0x0000;
     Box1.Visible             := 1;
@@ -877,10 +900,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundItem1.OwnerScreenID       := 1;
     BoxRoundItem1.Order               := 1;
-    BoxRoundItem1.Left                := 6;
-    BoxRoundItem1.Top                 := 8;
-    BoxRoundItem1.Width               := 225;
-    BoxRoundItem1.Height              := 38;
+    BoxRoundItem1.Left                := 3;
+    BoxRoundItem1.Top                 := 4;
+    BoxRoundItem1.Width               := 112;
+    BoxRoundItem1.Height              := 19;
     BoxRoundItem1.Pen_Width           := 2;
     BoxRoundItem1.Pen_Color           := 0xC618;
     BoxRoundItem1.Visible             := 1;
@@ -893,6 +916,7 @@ procedure InitializeObjects();    // static
     BoxRoundItem1.Color               := 0xFFFF;
     BoxRoundItem1.PressColEnabled := 0;
     BoxRoundItem1.Press_Color         := 0x8410;
+    BoxRoundItem1.Corner_Radius          := 3;
     BoxRoundItem1.OnUpPtr             := 0;
     BoxRoundItem1.OnDownPtr           := 0;
     BoxRoundItem1.OnClickPtr          := 0;
@@ -900,10 +924,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundItem4.OwnerScreenID       := 1;
     BoxRoundItem4.Order               := 2;
-    BoxRoundItem4.Left                := 6;
-    BoxRoundItem4.Top                 := 163;
-    BoxRoundItem4.Width               := 225;
-    BoxRoundItem4.Height              := 38;
+    BoxRoundItem4.Left                := 3;
+    BoxRoundItem4.Top                 := 82;
+    BoxRoundItem4.Width               := 112;
+    BoxRoundItem4.Height              := 19;
     BoxRoundItem4.Pen_Width           := 2;
     BoxRoundItem4.Pen_Color           := 0xC618;
     BoxRoundItem4.Visible             := 1;
@@ -916,6 +940,7 @@ procedure InitializeObjects();    // static
     BoxRoundItem4.Color               := 0xFFFF;
     BoxRoundItem4.PressColEnabled := 0;
     BoxRoundItem4.Press_Color         := 0x8410;
+    BoxRoundItem4.Corner_Radius          := 3;
     BoxRoundItem4.OnUpPtr             := 0;
     BoxRoundItem4.OnDownPtr           := 0;
     BoxRoundItem4.OnClickPtr          := 0;
@@ -923,15 +948,15 @@ procedure InitializeObjects();    // static
 
     LabelItem1.OwnerScreenID       := 1;
     LabelItem1.Order               := 3;
-    LabelItem1.Left                := 9;
-    LabelItem1.Top                 := 20;
-    LabelItem1.Width               := 58;
-    LabelItem1.Height              := 18;
+    LabelItem1.Left                := 4;
+    LabelItem1.Top                 := 10;
+    LabelItem1.Width               := 24;
+    LabelItem1.Height              := 11;
     LabelItem1.Visible             := 1;
     LabelItem1.Active              := 0;
     LabelItem1.Caption             := @LabelItem1_Caption;
     LabelItem1_Caption             := 'Item 1';
-    LabelItem1.FontName            := @Tahoma16x19_Regular;
+    LabelItem1.FontName            := @Tahoma8x10_Regular;
     LabelItem1.Font_Color          := 0x0000;
     LabelItem1.OnUpPtr             := 0;
     LabelItem1.OnDownPtr           := 0;
@@ -940,15 +965,15 @@ procedure InitializeObjects();    // static
 
     LabelItem4.OwnerScreenID       := 1;
     LabelItem4.Order               := 4;
-    LabelItem4.Left                := 9;
-    LabelItem4.Top                 := 174;
-    LabelItem4.Width               := 58;
-    LabelItem4.Height              := 18;
+    LabelItem4.Left                := 4;
+    LabelItem4.Top                 := 87;
+    LabelItem4.Width               := 24;
+    LabelItem4.Height              := 11;
     LabelItem4.Visible             := 1;
     LabelItem4.Active              := 0;
     LabelItem4.Caption             := @LabelItem4_Caption;
     LabelItem4_Caption             := 'Item 4';
-    LabelItem4.FontName            := @Tahoma16x19_Regular;
+    LabelItem4.FontName            := @Tahoma8x10_Regular;
     LabelItem4.Font_Color          := 0x0000;
     LabelItem4.OnUpPtr             := 0;
     LabelItem4.OnDownPtr           := 0;
@@ -957,10 +982,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundItem2.OwnerScreenID       := 1;
     BoxRoundItem2.Order               := 5;
-    BoxRoundItem2.Left                := 6;
-    BoxRoundItem2.Top                 := 60;
-    BoxRoundItem2.Width               := 225;
-    BoxRoundItem2.Height              := 38;
+    BoxRoundItem2.Left                := 3;
+    BoxRoundItem2.Top                 := 30;
+    BoxRoundItem2.Width               := 112;
+    BoxRoundItem2.Height              := 19;
     BoxRoundItem2.Pen_Width           := 2;
     BoxRoundItem2.Pen_Color           := 0xC618;
     BoxRoundItem2.Visible             := 1;
@@ -973,6 +998,7 @@ procedure InitializeObjects();    // static
     BoxRoundItem2.Color               := 0xFFFF;
     BoxRoundItem2.PressColEnabled := 0;
     BoxRoundItem2.Press_Color         := 0x8410;
+    BoxRoundItem2.Corner_Radius          := 3;
     BoxRoundItem2.OnUpPtr             := 0;
     BoxRoundItem2.OnDownPtr           := 0;
     BoxRoundItem2.OnClickPtr          := 0;
@@ -980,10 +1006,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundItem3.OwnerScreenID       := 1;
     BoxRoundItem3.Order               := 6;
-    BoxRoundItem3.Left                := 7;
-    BoxRoundItem3.Top                 := 111;
-    BoxRoundItem3.Width               := 225;
-    BoxRoundItem3.Height              := 38;
+    BoxRoundItem3.Left                := 4;
+    BoxRoundItem3.Top                 := 56;
+    BoxRoundItem3.Width               := 112;
+    BoxRoundItem3.Height              := 19;
     BoxRoundItem3.Pen_Width           := 2;
     BoxRoundItem3.Pen_Color           := 0xC618;
     BoxRoundItem3.Visible             := 1;
@@ -996,6 +1022,7 @@ procedure InitializeObjects();    // static
     BoxRoundItem3.Color               := 0xFFFF;
     BoxRoundItem3.PressColEnabled := 0;
     BoxRoundItem3.Press_Color         := 0x8410;
+    BoxRoundItem3.Corner_Radius          := 3;
     BoxRoundItem3.OnUpPtr             := 0;
     BoxRoundItem3.OnDownPtr           := 0;
     BoxRoundItem3.OnClickPtr          := 0;
@@ -1003,15 +1030,15 @@ procedure InitializeObjects();    // static
 
     LabelItem2.OwnerScreenID       := 1;
     LabelItem2.Order               := 7;
-    LabelItem2.Left                := 9;
-    LabelItem2.Top                 := 69;
-    LabelItem2.Width               := 58;
-    LabelItem2.Height              := 18;
+    LabelItem2.Left                := 4;
+    LabelItem2.Top                 := 34;
+    LabelItem2.Width               := 24;
+    LabelItem2.Height              := 11;
     LabelItem2.Visible             := 1;
     LabelItem2.Active              := 0;
     LabelItem2.Caption             := @LabelItem2_Caption;
     LabelItem2_Caption             := 'Item 2';
-    LabelItem2.FontName            := @Tahoma16x19_Regular;
+    LabelItem2.FontName            := @Tahoma8x10_Regular;
     LabelItem2.Font_Color          := 0x0000;
     LabelItem2.OnUpPtr             := 0;
     LabelItem2.OnDownPtr           := 0;
@@ -1020,15 +1047,15 @@ procedure InitializeObjects();    // static
 
     LabelItem3.OwnerScreenID       := 1;
     LabelItem3.Order               := 8;
-    LabelItem3.Left                := 10;
-    LabelItem3.Top                 := 123;
-    LabelItem3.Width               := 58;
-    LabelItem3.Height              := 18;
+    LabelItem3.Left                := 5;
+    LabelItem3.Top                 := 62;
+    LabelItem3.Width               := 24;
+    LabelItem3.Height              := 11;
     LabelItem3.Visible             := 1;
     LabelItem3.Active              := 0;
     LabelItem3.Caption             := @LabelItem3_Caption;
     LabelItem3_Caption             := 'Item 3';
-    LabelItem3.FontName            := @Tahoma16x19_Regular;
+    LabelItem3.FontName            := @Tahoma8x10_Regular;
     LabelItem3.Font_Color          := 0x0000;
     LabelItem3.OnUpPtr             := 0;
     LabelItem3.OnDownPtr           := 0;
@@ -1037,10 +1064,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundItem6.OwnerScreenID       := 1;
     BoxRoundItem6.Order               := 9;
-    BoxRoundItem6.Left                := 7;
-    BoxRoundItem6.Top                 := 268;
-    BoxRoundItem6.Width               := 225;
-    BoxRoundItem6.Height              := 38;
+    BoxRoundItem6.Left                := 4;
+    BoxRoundItem6.Top                 := 134;
+    BoxRoundItem6.Width               := 112;
+    BoxRoundItem6.Height              := 19;
     BoxRoundItem6.Pen_Width           := 2;
     BoxRoundItem6.Pen_Color           := 0xC618;
     BoxRoundItem6.Visible             := 1;
@@ -1053,6 +1080,7 @@ procedure InitializeObjects();    // static
     BoxRoundItem6.Color               := 0xFFFF;
     BoxRoundItem6.PressColEnabled := 0;
     BoxRoundItem6.Press_Color         := 0x8410;
+    BoxRoundItem6.Corner_Radius          := 3;
     BoxRoundItem6.OnUpPtr             := 0;
     BoxRoundItem6.OnDownPtr           := 0;
     BoxRoundItem6.OnClickPtr          := 0;
@@ -1060,15 +1088,15 @@ procedure InitializeObjects();    // static
 
     LabelItem6.OwnerScreenID       := 1;
     LabelItem6.Order               := 10;
-    LabelItem6.Left                := 10;
-    LabelItem6.Top                 := 279;
-    LabelItem6.Width               := 58;
-    LabelItem6.Height              := 18;
+    LabelItem6.Left                := 5;
+    LabelItem6.Top                 := 140;
+    LabelItem6.Width               := 24;
+    LabelItem6.Height              := 11;
     LabelItem6.Visible             := 1;
     LabelItem6.Active              := 0;
     LabelItem6.Caption             := @LabelItem6_Caption;
     LabelItem6_Caption             := 'Item 6';
-    LabelItem6.FontName            := @Tahoma16x19_Regular;
+    LabelItem6.FontName            := @Tahoma8x10_Regular;
     LabelItem6.Font_Color          := 0x0000;
     LabelItem6.OnUpPtr             := 0;
     LabelItem6.OnDownPtr           := 0;
@@ -1077,10 +1105,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundItem5.OwnerScreenID       := 1;
     BoxRoundItem5.Order               := 11;
-    BoxRoundItem5.Left                := 6;
-    BoxRoundItem5.Top                 := 217;
-    BoxRoundItem5.Width               := 225;
-    BoxRoundItem5.Height              := 38;
+    BoxRoundItem5.Left                := 3;
+    BoxRoundItem5.Top                 := 108;
+    BoxRoundItem5.Width               := 112;
+    BoxRoundItem5.Height              := 19;
     BoxRoundItem5.Pen_Width           := 2;
     BoxRoundItem5.Pen_Color           := 0xC618;
     BoxRoundItem5.Visible             := 1;
@@ -1093,6 +1121,7 @@ procedure InitializeObjects();    // static
     BoxRoundItem5.Color               := 0xFFFF;
     BoxRoundItem5.PressColEnabled := 0;
     BoxRoundItem5.Press_Color         := 0x8410;
+    BoxRoundItem5.Corner_Radius          := 3;
     BoxRoundItem5.OnUpPtr             := 0;
     BoxRoundItem5.OnDownPtr           := 0;
     BoxRoundItem5.OnClickPtr          := 0;
@@ -1100,15 +1129,15 @@ procedure InitializeObjects();    // static
 
     LabelItem5.OwnerScreenID       := 1;
     LabelItem5.Order               := 12;
-    LabelItem5.Left                := 9;
-    LabelItem5.Top                 := 229;
-    LabelItem5.Width               := 58;
-    LabelItem5.Height              := 18;
+    LabelItem5.Left                := 4;
+    LabelItem5.Top                 := 114;
+    LabelItem5.Width               := 24;
+    LabelItem5.Height              := 11;
     LabelItem5.Visible             := 1;
     LabelItem5.Active              := 0;
     LabelItem5.Caption             := @LabelItem5_Caption;
     LabelItem5_Caption             := 'Item 5';
-    LabelItem5.FontName            := @Tahoma16x19_Regular;
+    LabelItem5.FontName            := @Tahoma8x10_Regular;
     LabelItem5.Font_Color          := 0x0000;
     LabelItem5.OnUpPtr             := 0;
     LabelItem5.OnDownPtr           := 0;
@@ -1164,42 +1193,40 @@ var objPtr : ^ const code far ^TBox_Round;
     Result := objPtr^;
   end;
 
+ procedure DeleteTrailingSpaces(var str : string);
+  var
+   i : byte;
+  begin
+   i := 0;
+   while TRUE do
+     begin
+      if(str[0] = ' ') then
+        begin
+          for i := 0 to strlen(str) do
+              str[i] := str[i+1];
+        end
+      else
+        break;
+  end;
+ end;
 
 procedure DrawLabel(ALabel : ^TLabel);
-var x_pos, y_pos : integer;
-  begin
-    x_pos := 0;
-    y_pos := 0;
+begin
     if (ALabel^.Visible = 1) then
       begin
         TFT_Set_Font(ALabel^.FontName, ALabel^.Font_Color, FO_HORIZONTAL);
-        TFT_Write_Text_Return_Pos(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
-        x_pos := ALabel^.Left + (integer((ALabel^.Width - caption_length)) div 2);
-        y_pos := ALabel^.Top + (integer((ALabel^.Height - caption_height)) div 2);
-        if (x_pos > ALabel^.Left) then
-          TFT_Write_Text(ALabel^.Caption, x_pos, y_pos)
-        else
           TFT_Write_Text(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
       end;
-  end;
+end;
 
 procedure DrawCLabel(ALabel : ^TCLabel);
-var x_pos, y_pos : integer;
-  begin
-    x_pos := 0;
-    y_pos := 0;
+begin
     if (ALabel^.Visible = 1) then
       begin
         TFT_Set_Font(ALabel^.FontName, ALabel^.Font_Color, FO_HORIZONTAL);
-        TFT_Write_Const_Text_Return_Pos(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
-        x_pos := ALabel^.Left + (integer((ALabel^.Width - caption_length)) div 2);
-        y_pos := ALabel^.Top + (integer((ALabel^.Height - caption_height)) div 2);
-        if (x_pos > ALabel^.Left) then
-          TFT_Write_Const_Text(ALabel^.Caption, x_pos, y_pos)
-        else
           TFT_Write_Const_Text(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
       end;
-  end;
+end;
 
 procedure DrawImage(AImage : ^TImage);
   begin
@@ -1258,11 +1285,11 @@ procedure DrawRoundBox(Around_box : ^TBox_Round);
         if (Around_box^.Height > Around_box^.Width) then
           TFT_Rectangle_Round_Edges(Around_box^.Left + 1, Around_box^.Top + 1,
                                     Around_box^.Left + Around_box^.Width - 2,
-                                    Around_box^.Top + Around_box^.Height - 2, (Around_box^.Width div 4))
+                                    Around_box^.Top + Around_box^.Height - 2, Around_box^.Corner_Radius)
         else 
           TFT_Rectangle_Round_Edges(Around_box^.Left + 1, Around_box^.Top + 1,
                                     Around_box^.Left + Around_box^.Width - 2,
-                                    Around_box^.Top + Around_box^.Height - 2, (Around_box^.Height div 4));
+                                    Around_box^.Top + Around_box^.Height - 2, Around_box^.Corner_Radius);
       end;
   end;
 
@@ -1303,7 +1330,7 @@ begin
 end;
 
 procedure DrawScreen(aScreenID : word);
-var order : byte;
+var order : integer;
 var label_idx : byte;
     local_label : ^TLabel;
 var clabel_idx : byte;

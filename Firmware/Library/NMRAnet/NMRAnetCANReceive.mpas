@@ -172,6 +172,7 @@ begin
                      // If we see a reset then we need to check if there is a partial datagram assigned to that node ID
                      for i := 0 to Nodes.Count - 1 do  // *************** Need to characterize how much time this may take with a large number of nodes
                      begin
+                       DatagramBuffer := nil;
                        if NMRAnetUtilities_FindInDatagramByState(Nodes.AllocatedList[i], SourceAlias, DatagramBuffer, CBS_PROCESSING or CBS_TRANSFER_COMPLETE, True) then
                        begin
                          NMRAnetUtilities_DatagramBufferUnLink(Nodes.AllocatedList[i], DatagramBuffer); // Alias is no longer valid for this Datagram (it was reset) so we need to throw it away
@@ -254,7 +255,7 @@ begin
                                                                                                        BaseBuffer^.Alias := SourceAlias
                                                                                                      end
                                                                                                    end;
-                                                               MTI_EVENTS_IDENTIFY               : begin
+                                                               MTI_EVENTS_IDENTIFY_DEST          : begin
                                                                                                      NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
                                                                                                    end;
                                                                MTI_DATAGRAM_OK_REPLY             : begin
@@ -356,7 +357,8 @@ begin
                                                                                             else
                                                                                               VNodeSupports := False;
                                                                                             PhysicalNodeSupports := NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes);
-
+                                                                                            
+                                                                                            DataBuffer := nil;
                                                                                             if VNodeSupports or PhysicalNodeSupports then
                                                                                             begin
                                                                                               if NMRAnetBufferPools_AllocateDataBuffer(DataBuffer) then
@@ -480,6 +482,8 @@ begin
                                                       Node := NMRAnetNode_FindByAlias( NMRAnetUtilities_ExtractDestinationCodedInMTIAlias(CANBuffer));
                                                       if Node <> nil then
                                                       begin
+                                                        DatagramBuffer := nil;
+                                                        BaseBuffer := nil;
                                                         if NMRAnetUtilities_FindInProcessDatagram(Node, SourceAlias, DatagramBuffer) then
                                                         begin
                                                           {$IFDEF TRACE_DATAGRAM_TX}   UART1_Write_Text('DG_END'+LF);  {$ENDIF}

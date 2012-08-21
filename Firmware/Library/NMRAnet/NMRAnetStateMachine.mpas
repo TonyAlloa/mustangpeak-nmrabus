@@ -940,6 +940,9 @@ begin
                                                                                                           end // case [Operation Type]
                                                                                                         end else
                                                                                                         begin    // Is a Read or Write
+                                                                                                          MemorySpace := 0;
+                                                                                                          MemorySpaceOffset := 0;
+                                                                                                          MemorySpaceCount := 0;
                                                                                                           DecodeMemoryConfigurationReadWrite(@DatagramBuffer^.DataBytes, MemorySpace, MemorySpaceOffset, MemorySpaceCount);
 
                                                                                                           {$IFDEF TRACE_CONFIG_MEM_DECODE}
@@ -1123,7 +1126,8 @@ begin
                                                                    NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer)
                                                                  end
                           else begin  // Unknown Datagram Type
-                             if NMRAnetBufferPools_AllocateBaseBuffer(AllocatedBuffer) then      // Assume we always can allocate a BaseBuffer
+                              AllocatedBuffer := nil;
+                              if NMRAnetBufferPools_AllocateBaseBuffer(AllocatedBuffer) then      // Assume we always can allocate a BaseBuffer
                               begin
                                 NMRAnetUtilities_BaseBufferLink(Node, AllocatedBuffer);
                                 AllocatedBuffer^.mCode := BMC_DATAGRAM_NOT_ACCEPTED;
@@ -1210,6 +1214,7 @@ begin
 
   // Look for outgoing Datagrams
   LockCANInterrupt;
+  DatagramBuffer := nil;
   if NMRAnetUtilities_FindOutgoingDatagram(Node, DatagramBuffer, True) then
   begin
     if NMRAnetStateMachine_TrySendDatagram(PNMRAnetNode( DatagramBuffer^.SourceNodePtr), DatagramBuffer) then

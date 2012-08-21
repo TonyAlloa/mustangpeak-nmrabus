@@ -4,6 +4,10 @@ type TOnEventPtr = procedure();
 
 type TBytePtr = ^byte;
 
+const  _taLeft   = 2;
+const  _taCenter = 3;
+const  _taRight = 4;
+
 type TLabel = record
   OwnerScreenID        : word;
   Order                : byte;
@@ -125,6 +129,7 @@ type TBox_Round = record
   Gradient_Start_Color : word;
   Gradient_End_Color   : word;
   Color                : word;
+  Corner_Radius		   	: byte;
   PressColEnabled      : byte;
   Press_Color          : word;
   OnUpPtr              : ^TOnEventPtr;

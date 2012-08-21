@@ -193,17 +193,8 @@ begin
   
   if TxBufferArrayCount > MaxTxBufferArrayCount then
     MaxTxBufferArrayCount := TxBufferArrayCount;
-    
-
-  if not UART_Transmitting then
-  begin
-    U1TXIE_bit := 0;
-    UART_Transmitting := True;
-    TxBufferCharIndex := 0;
-    U1TXIF_Bit := 1;   // Kick it off
-    U1TXIE_bit := 1;
-  end;
 end;
+
 
 procedure PrintMaxLoopTimes(var x, y: Word);
 begin
@@ -294,6 +285,16 @@ begin
   while (TRUE) do
   begin
     TMR3 := 0;
+    
+    if not UART_Transmitting then
+    begin
+      U1TXIE_bit := 0;
+      UART_Transmitting := True;
+      TxBufferCharIndex := 0;
+      U1TXIF_Bit := 1;   // Kick it off
+      U1TXIE_bit := 1;
+    end;
+      
     if not CANStorage_ListFull(@TX_NMRAnetBufferList) then
     begin
       if RxBufferArrayCount > 0 then      // This MUST run faster than a new packet can be received
