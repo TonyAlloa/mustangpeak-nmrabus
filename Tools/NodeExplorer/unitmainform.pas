@@ -39,6 +39,7 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
+    ActionMultiNodeTest: TAction;
     ActionReadPip: TAction;
     ActionLogShowGutter: TAction;
     ActionExecuteTests: TAction;
@@ -70,6 +71,7 @@ type
     ButtonReadXML: TButton;
     ButtonReadEvents: TButton;
     ButtonSendDatagramReply: TButton;
+    CheckBoxMultiNodeTest: TCheckBox;
     CheckGroupPIP: TCheckGroup;
     ComboBoxBaud: TComboBox;
     ComboBoxPorts: TComboBox;
@@ -131,6 +133,7 @@ type
     procedure ActionHideLogExecute(Sender: TObject);
     procedure ActionLoadTestMatrixExecute(Sender: TObject);
     procedure ActionLogShowGutterExecute(Sender: TObject);
+    procedure ActionMultiNodeTestExecute(Sender: TObject);
     procedure ActionReadPipExecute(Sender: TObject);
     procedure ActionReadXMLExecute(Sender: TObject);
     procedure ActionRescanPortsExecute(Sender: TObject);
@@ -349,6 +352,11 @@ begin
   FormLog.SynMemo.Gutter.Visible := FormLog.CheckBoxShowGutter.Checked;
 end;
 
+procedure TFormMain.ActionMultiNodeTestExecute(Sender: TObject);
+begin
+  Settings.MultiNodeTest := CheckBoxMultiNodeTest.Checked;
+end;
+
 procedure TFormMain.ActionReadPipExecute(Sender: TObject);
 var
   XMLDoc: TXMLDocument;
@@ -561,12 +569,17 @@ begin
 end;
 
 procedure TFormMain.ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
+var
+  i: Integer;
 begin
   if Selected then
   begin
     Settings.TargetNodeAlias := StrToInt('$' + Item.Caption);
     Settings.TargetNodeID := StrToInt64('$' + Item.SubItems[0]);
   end;
+  for i := 0 to ListViewTestMatrix.Items.Count - 1 do
+    ListViewTestMatrix.Items[i].ImageIndex := 2;
+  ListViewTestMatrix.Invalidate;
   UpdateUI;
 end;
 
@@ -714,7 +727,7 @@ begin
               ListItem.SubItems.Add(TestSpecDocFromTestNode(TestNode));
               ListItem.SubItems.Add(TestClassnameFromTestNode(TestNode));
               ListItem.Checked :=  TestEnabledStateFromTestNode(TestNode) = 'True';
-              ListItem.ImageIndex := 4;
+              ListItem.ImageIndex := 2;
               ListItem.Data := Test;
               Test.XMLTests := TestNode;
               Test.ListItem := ListItem;   // Back Link to the Item
@@ -741,4 +754,4 @@ end;
 
 
 end.
-
+

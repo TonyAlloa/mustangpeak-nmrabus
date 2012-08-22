@@ -120,6 +120,8 @@ begin
                                     XMLTestObjectiveNode.AppendChild(XMLObjectiveResultsNode);
                                   end;
 
+                                  ActiveTest.ErrorCodes := [];                  // Clear out the errors at the start of an objective so they can accumulate throught the objective
+
                                   ActiveTest.TestState := ts_Sending;
                                 end;
             ts_Sending :        begin
@@ -148,7 +150,6 @@ begin
                                     XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ProcessStrings[ProcessStrings.Count - 1]));
                                   end else
                                   begin                                                 // Timed out, send in what was received
-                                     ActiveTest.ErrorCodes := [];
                                      iNextObjective := ActiveTest.ProcessObjectives(ProcessStrings);
                                      if iNextObjective = iCurrentObjective then          // Same objective to continue
                                        ActiveTest.TestState := ts_Sending
@@ -199,12 +200,32 @@ begin
                                            XMLFailureCodes.AppendChild(XMLNode);
                                            XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_COUNT));
                                          end;
+
+                                         if tfcPipUsingUnassignedBits in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_UNASSIGNED_BITS));
+                                         end;
                                          if tfcPipUsingReservedBits in ActiveTest.ErrorCodes then
                                          begin
                                            XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
                                            XMLFailureCodes.AppendChild(XMLNode);
                                            XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_RESERVED_BITS));
                                          end;
+                                         if tfcPipStartEndBitSupport in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_START_END_BIT_SUPPORT));
+                                         end;
+                                         if tfcPipRespondedToStartBit in ActiveTest.ErrorCodes then
+                                         begin
+                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+                                           XMLFailureCodes.AppendChild(XMLNode);
+                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_UNEXPECTED_RESPONSE_TO_START_BIT));
+                                         end;
+
                                          if tfcFullNodeIDInvalid in ActiveTest.ErrorCodes then
                                          begin
                                            XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);

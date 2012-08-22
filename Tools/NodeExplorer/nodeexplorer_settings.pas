@@ -23,6 +23,7 @@ type
     FApplicationPath: String;
     FBaudRate: DWord;
     FComPort: String;
+    FMultiNodeTest: Boolean;
     FProxyNodeAlias: Word;
     FProxyNodeID: Int64;
     FTargetNodeAlias: Word;
@@ -41,6 +42,7 @@ type
     property ApplicationPath: String read FApplicationPath write FApplicationPath;
     property TestMatrixPath: string read GetTestMatrixPath;
     property TestMatrixFile: string read GetTextMatrixFile;
+    property MultiNodeTest: Boolean read FMultiNodeTest write FMultiNodeTest;
     constructor Create;
     procedure ReadSettings;
     procedure WriteSettings;
@@ -95,6 +97,7 @@ begin
   FBaudRate := 333333;
   FComPort := 'COM4';
   FXMLSettings := nil;
+  FMultiNodeTest := False;
 
   // Under OSX we get the path of the executable
 {$IFDEF DARWIN}

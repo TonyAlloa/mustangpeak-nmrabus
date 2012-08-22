@@ -9,6 +9,11 @@ uses
   DOM, XMLRead, XMLWrite, ComCtrls;
 
 const
+  PIP_UNASSIGNED_MASK = $0007FFFFFFF0;
+  PIP_RESERVED_MASK   = $00000000000F;
+  PIP_EXTENSION_BIT_START = $1000;
+  PIP_EXTENSION_BIT_END   = $2000;
+
   STR_PROTOCOL_IDENTIFICATION_PROTOCOL_CLASS = 'TTestProtocolSupport';
   STR_TEST_VERIFY_NODES_ID_CLASS             = 'TTestVerifyNodesID';
 
@@ -18,7 +23,10 @@ const
   XML_FAILURE_INVALID_SOURCE_ALIAS = 'Bits 0-11 defining the Node Alias did not match the stored Node Alias that Node Explorer was expecting for the test node';
   XML_FAILURE_INVALID_DEST_ALIAS = 'Destination Alias (either in the CAN header or first 2 data bytes) did not match Proxy Alias of Node Explorer';
   XML_FAILURE_INVALID_COUNT = 'The expected number of messages received for the objective was not met';
+  XML_FAILURE_PIP_UNASSIGNED_BITS = 'The node is using the bits in the Protocol Identification Protocol that are current unassigned';
   XML_FAILURE_PIP_RESERVED_BITS = 'The node is using the bits in the Protocol Identification Protocol defined as reserved';
+  XML_FAILURE_PIP_START_END_BIT_SUPPORT = 'The node does not support the Protocol Identification Protocol start-end bit for future expansion, it is suggested this be implemented';
+  XML_FAILURE_PIP_UNEXPECTED_RESPONSE_TO_START_BIT = 'The node should not have responded to the PIP expansion start bit, it should have waited until the stop bit is sent';
   XML_FAILURE_INVALID_NODE_ID = 'The full node ID received did not match the Full Node Alias that Node Explorer was expecting for the test node';
 
 type
@@ -29,7 +37,10 @@ type
     tfcInvalidSourceAlias,      // Source Alias of the message sent back to Node Explorer was incorrect (assumes a single node under test)
     tfcInvalidDestAlias,        // Dest Alias of the message sent back to Node Explorer was incorrect (assumes a single node under test)
     tfcIncorrectCount,          // The wrong number of messages were returned from the Node (not always possible to determine depends on message)
-    tfcPipUsingReservedBits,    // Using Reserved Bits in the PIP flags
+    tfcPipUsingReservedBits,    // Using Reserved Bits in the PIP
+    tfcPipUsingUnassignedBits,  // Using Unassigned Bits in the PIP
+    tfcPipRespondedToStartBit,  // Unexpected response to start bit of extended PIP support
+    tfcPipStartEndBitSupport,   // PIP implementation does not support the start and stop bit convention
     tfcFullNodeIDInvalid        // Full NodeID in the Data Bytes does not match what is stored in Settings for the node under test
   );
   TTestFailureCodes = set of TTestFailureCode;
@@ -190,19 +201,81 @@ begin
           Result := 0;                                                          // Objective 0
         end;
     1 : begin
-          // Receive Nodes that responded with Protocol Identification message
-          if ProcessStrings.Count = 1 then                                      // Only one node should respond
+          // Receive Node that responded with Protocol Identification message
+          if ProcessStrings.Count = 1 then                                      // Only one node should respond as this is addressed
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
             PipMask := MessageHelper.ExtractDataBytesAsInt(2, 7);
             ValidateBasicReturnMessage(MTI_PROTOCOL_SUPPORT_REPLY, MessageHelper);
-            if PipMask < $000800000000 then
+            if PipMask and PIP_RESERVED_MASK <> 0 then
               ErrorCodes := ErrorCodes + [tfcPipUsingReservedBits];
+            if PipMask and PIP_UNASSIGNED_MASK <> 0 then
+              ErrorCodes := ErrorCodes + [tfcPipUsingUnassignedBits];
           end else
             ErrorCodes := ErrorCodes + [tfcIncorrectCount];
 
           Inc(FStateMachineIndex);
           Result := 1;
+        end;
+     2: begin
+           MessageHelper.Load(ol_OpenLCB, MTI_PROTOCOL_SUPPORT_INQUIRY, Settings.ProxyNodeAlias, $001, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);  // TODO: NEED UNIQUE ALIAS NODE ID HERE
+           ProcessStrings.Add(MessageHelper.Encode);
+
+           Inc(FStateMachineIndex);
+          Result := 1;                                                          // Objective 1
+        end;
+     3 : begin
+          // Should be no response from any node
+          if ProcessStrings.Count <> 0 then
+            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+
+          Inc(FStateMachineIndex);
+          Result := 2;                                                          // Objective 2
+        end;
+      4 : begin
+          // Send the Protocol Identification message start bit for expansion
+          MessageHelper.Load(ol_OpenLCB, MTI_PROTOCOL_SUPPORT_INQUIRY, Settings.ProxyNodeAlias, (Settings.TargetNodeAlias) or PIP_EXTENSION_BIT_START, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          ProcessStrings.Add(MessageHelper.Encode);
+
+          Inc(FStateMachineIndex);
+          Result := 2;                                                          // Objective 2
+        end;
+      5 : begin
+          // Receive Nodes that responded with Protocol Identification message
+          if ProcessStrings.Count > 0 then                                      // Node should not respond to the Start bit
+            ErrorCodes := ErrorCodes + [tfcPipRespondedToStartBit];
+
+          Inc(FStateMachineIndex);
+          Result := 2;                                                          // Objective 2
+        end;
+      6 : begin
+          // Send the Protocol Identification message end bit for expansion
+          MessageHelper.Load(ol_OpenLCB, MTI_PROTOCOL_SUPPORT_INQUIRY, Settings.ProxyNodeAlias, (Settings.TargetNodeAlias) or PIP_EXTENSION_BIT_END, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          ProcessStrings.Add(MessageHelper.Encode);
+
+          Inc(FStateMachineIndex);
+          Result := 2;                                                          // Objective 2
+        end;
+      7 : begin
+          // Receive Nodes that responded with Protocol Identification message
+          if ProcessStrings.Count = 0 then
+          begin
+            ErrorCodes := ErrorCodes + [tfcPipStartEndBitSupport];
+          end else
+          if ProcessStrings.Count = 1 then                                      // Only one node should respond as this is addressed
+          begin
+            MessageHelper.Decompose(ProcessStrings[0]);
+            PipMask := MessageHelper.ExtractDataBytesAsInt(2, 7);
+            ValidateBasicReturnMessage(MTI_PROTOCOL_SUPPORT_REPLY, MessageHelper);
+            if PipMask and PIP_RESERVED_MASK <> 0 then
+              ErrorCodes := ErrorCodes + [tfcPipUsingReservedBits];
+            if PipMask and PIP_UNASSIGNED_MASK <> 0 then
+              ErrorCodes := ErrorCodes + [tfcPipUsingUnassignedBits];
+          end else
+            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+
+          Inc(FStateMachineIndex);
+          Result := 3;
         end;
   end;
 end;
@@ -223,7 +296,8 @@ begin
         end;
     1: begin
           // Receive Nodes that responded with Global Verifed Node ID
-      {   StripReceivesNotForNodeUnderTest(ProcessStrings); }
+          if Settings.MultiNodeTest then
+            StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -247,6 +321,8 @@ begin
         end;
     3: begin
           // Receive Nodes only our test node should respond with Global Verifed Node ID
+          if Settings.MultiNodeTest then
+            StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -286,7 +362,6 @@ begin
         end;
     7: begin
           // Should be one and only one response from any node
-      //    StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -338,7 +413,8 @@ begin
         end;
     1: begin
           // All nodes should respond need to find the node under test
-     {    StripReceivesNotForNodeUnderTest(ProcessStrings); }
+          if Settings.MultiNodeTest then
+            StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -399,25 +475,16 @@ begin
   Result := inherited ProcessObjectives(ProcessStrings);
   case StateMachineIndex of
     0 : begin
-          // Send ProcessObjectives
+          // Send Global Verify Nodes to collect all nodes on the bus
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
           ProcessStrings.Add(MessageHelper.Encode);
 
           Inc(FStateMachineIndex);
-          Result := 0;                                                          // ProcessObjectives 0
+          Result := 0;
         end;
     1: begin
-          // Receive ProcessObjectives
-          if ProcessStrings.Count = 1 then
-          begin
-            MessageHelper.Decompose(ProcessStrings[0]);
-            ValidateBasicReturnMessage(MTI_VERIFIED_NODE_ID_NUMBER, MessageHelper);
-            if MessageHelper.ExtractDataBytesAsInt(0, 5) <> Settings.TargetNodeID then
-              ErrorCodes := ErrorCodes + [tfcFullNodeIDInvalid];
-          end else
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
-
-          Result := 1;                                                          // Done
+          // There is no pass fail here we are just collecting the nodes
+          Result := 1;
        end;
   end;
 end;
