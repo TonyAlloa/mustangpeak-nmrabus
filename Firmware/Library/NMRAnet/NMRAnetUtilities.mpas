@@ -32,6 +32,7 @@ procedure NMRAnetUtilities_CreateCANControlFramePacket(NodeBuffer: PNMRAnetNode;
 procedure NMRAnetUtilities_CreateNMRABusMessagePacket(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
 procedure NMRAnetUtilities_CreateNMRABusMessagePacketWithDestInMTI(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
 function NMRAnetUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
+function NMRAnetUtilities_ExtractDestinationAliasFlags(Packet: PCANBuffer): Word;
 function NMRAnetUtilities_ExtractDestinationCodedInMTIAlias(Packet: PCANBuffer): Word;
 function NMRAnetUtilities_ExtractSourceAlias(Packet: PCANBuffer): Word;
 procedure NMRAnetUtilities_PacketBytesToNodeID(DataBytes: PCAN_DataBytes; var NodeID: TNodeID; iStartByte: Byte);
@@ -121,6 +122,10 @@ begin
   if MTI = MTI_CID1 then Packet^.ID := Packet^.ID or ((NodeBuffer^.Node.ID[1] shl 12) and $00FFF000) else
   if MTI = MTI_CID2 then Packet^.ID := Packet^.ID or (NodeBuffer^.Node.ID[0] and $00FFF000) else
   if MTI = MTI_CID3 then Packet^.ID := Packet^.ID or ((NodeBuffer^.Node.ID[0] shl 12) and $00FFF000);
+  if MTI = MTI_AMD then
+  begin
+    NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer, Packet);
+  end;
 end;
 
 // *****************************************************************************
@@ -197,6 +202,27 @@ begin
     Result := Result and $0FFF;
   end
 end;
+
+// *****************************************************************************
+//  function NMRAnetUtilities_ExtractDestinationAliasFlags
+//     Parameters:
+//     Returns:
+//
+//     Description: Extracts the Destination ID packed in DataBytes
+//
+// *****************************************************************************
+function NMRAnetUtilities_ExtractDestinationAliasFlags(Packet: PCANBuffer): Word;
+begin
+  Result := 0;
+  if NMRAnetUtilities_IsAddressedMessage(Packet) then
+  begin
+    Result := Packet^.DataBytes[0] shl 8;
+    Result := Result or Packet^.DataBytes[1];
+    Result := Result and $F000;
+  end
+end;
+
+
 
 // *****************************************************************************
 //  function NMRAnetUtilities_ExtractDestinationAlias

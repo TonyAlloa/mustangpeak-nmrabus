@@ -113,6 +113,9 @@ const
   MTI_DATAGRAM_REJECTED_REPLY        = $09A48000;                                // Databytes = Destination Alias, Error Code
   
   MASK_SOURCE_ALIAS                  = $00000FFF;                                // Masks out just the Source Alias Address
+  
+  PIP_EXTENSION_START_BIT            = $1000;                                    // Flags in the Destination word for future extension of PIP
+  PIP_EXTENSION_END_BIT              = $2000;                                    // Flags in the Destination word for future extension of PIP
 
 
   LEN_PIV_PROTOCOL = 6;                                                         // 6 Bytes long

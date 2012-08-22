@@ -461,7 +461,7 @@ procedure TransmitCANLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableFi
 begin
   NMRAnetUtilities_CreateCANControlFramePacket(Node, Buffer, VariableField);
   CANStorage_AddToList(@TX_CANBufferList, Buffer);
-   StartCANMessageEngine();
+  StartCANMessageEngine();
 end;
 
 // *****************************************************************************
@@ -617,7 +617,6 @@ begin
     begin
       if CANBusBufferAvailable then
       begin
-        NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, CANBuffer);
         TransmitCANLayerMsg(Node, CANBuffer, MTI_AMD);
         NMRAnetNode_ClearMsgFlag(Node, MF_ALIAS_MAP_ENQUIRY);
       end

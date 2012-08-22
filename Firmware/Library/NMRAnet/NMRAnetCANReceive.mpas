@@ -248,11 +248,14 @@ begin
                                                                MTI_OPTIONAL_INTERACTION_REJECTED : begin
                                                                                                    end;
                                                                MTI_PROTOCOL_SUPPORT_INQUIRY      : begin
-                                                                                                     if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
+                                                                                                     if NMRAnetUtilities_ExtractDestinationAliasFlags(CANBuffer) <> PIP_EXTENSION_START_BIT then
                                                                                                      begin
-                                                                                                       NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
-                                                                                                       BaseBuffer^.mCode := BMC_PROTOCOL_SUPPORT_QUERY;
-                                                                                                       BaseBuffer^.Alias := SourceAlias
+                                                                                                       if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
+                                                                                                       begin
+                                                                                                         NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                                                                         BaseBuffer^.mCode := BMC_PROTOCOL_SUPPORT_QUERY;
+                                                                                                         BaseBuffer^.Alias := SourceAlias
+                                                                                                       end
                                                                                                      end
                                                                                                    end;
                                                                MTI_EVENTS_IDENTIFY_DEST          : begin

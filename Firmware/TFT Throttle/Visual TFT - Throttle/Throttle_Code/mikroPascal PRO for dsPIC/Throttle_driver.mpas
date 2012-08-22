@@ -114,8 +114,8 @@ const ScreenStart           : TCScreen =
          0                     , //   Bkgnd.Order           
          0                     , //   Bkgnd.Left           
          0                     , //   Bkgnd.Top             
-         120                   , //   Bkgnd.Width           
-         160                   , //   Bkgnd.Height          
+         240                   , //   Bkgnd.Width           
+         320                   , //   Bkgnd.Height          
          1                     , //   Bkgnd.Pen_Width       
          0x0000                , //   Bkgnd.Pen_Color       
          1                     , //   Bkgnd.Visible         
@@ -138,12 +138,12 @@ const ScreenStart           : TCScreen =
          (
          32768                 , //   Label2.OwnerScreenID
          1                     , //   Label2.Order          
-         0                     , //   Label2.Left           
-         20                    , //   Label2.Top             
-         111                   , //   Label2.Width         
-         21                    , //   Label2.Height       
+         44                    , //   Label2.Left           
+         18                    , //   Label2.Top             
+         146                   , //   Label2.Width         
+         28                    , //   Label2.Height       
          @Label2_Caption       , //   Label2.Caption        
-         @Tahoma19x19_Bold     , //   Label2.FontName       
+         @Tahoma25x25_Bold     , //   Label2.FontName       
          0xFFFF                , //   Label2.Font_Color     
          1                     , //   Label2.Visible        
          0                     , //   Label2.Active        
@@ -158,12 +158,12 @@ const ScreenStart           : TCScreen =
          (
          32768                 , //   Label3.OwnerScreenID
          2                     , //   Label3.Order          
-         8                     , //   Label3.Left           
-         44                    , //   Label3.Top             
-         93                    , //   Label3.Width         
-         12                    , //   Label3.Height       
+         37                    , //   Label3.Left           
+         47                    , //   Label3.Top             
+         165                   , //   Label3.Width         
+         21                    , //   Label3.Height       
          @Label3_Caption       , //   Label3.Caption        
-         @TFT_defaultFont      , //   Label3.FontName       
+         @Tahoma16x19_Regular  , //   Label3.FontName       
          0xFFFF                , //   Label3.Font_Color     
          1                     , //   Label3.Visible        
          0                     , //   Label3.Active        
@@ -180,12 +180,12 @@ var BoxRound1 : TBox_Round;
          (
          32768                 , //   Label4.OwnerScreenID
          4                     , //   Label4.Order          
-         45                    , //   Label4.Left           
-         117                   , //   Label4.Top             
-         31                    , //   Label4.Width         
-         9                     , //   Label4.Height       
+         86                    , //   Label4.Left           
+         243                   , //   Label4.Top             
+         72                    , //   Label4.Width         
+         21                    , //   Label4.Height       
          @Label4_Caption       , //   Label4.Caption        
-         @Tahoma7x8_Regular    , //   Label4.FontName       
+         @Tahoma16x19_Regular  , //   Label4.FontName       
          0xFFFF                , //   Label4.Font_Color     
          1                     , //   Label4.Visible        
          1                     , //   Label4.Active        
@@ -202,12 +202,12 @@ var BoxRoundProgressBar : TBox_Round;
          (
          32768                 , //   Label5.OwnerScreenID
          6                     , //   Label5.Order          
-         32                    , //   Label5.Left           
-         98                    , //   Label5.Top             
-         56                    , //   Label5.Width         
-         9                     , //   Label5.Height       
+         54                    , //   Label5.Left           
+         189                   , //   Label5.Top             
+         128                   , //   Label5.Width         
+         21                    , //   Label5.Height       
          @Label5_Caption       , //   Label5.Caption        
-         @Tahoma7x8_Regular    , //   Label5.FontName       
+         @Tahoma16x19_Regular  , //   Label5.FontName       
          0xFFFF                , //   Label5.Font_Color     
          1                     , //   Label5.Visible        
          1                     , //   Label5.Active        
@@ -256,12 +256,12 @@ var BoxBkGnd : TBox;
          (
          0                     , //   Label7.OwnerScreenID
          1                     , //   Label7.Order          
-         1                     , //   Label7.Left           
-         5                     , //   Label7.Top             
-         114                   , //   Label7.Width         
-         9                     , //   Label7.Height       
+         7                     , //   Label7.Left           
+         4                     , //   Label7.Top             
+         212                   , //   Label7.Width         
+         17                    , //   Label7.Height       
          @Label7_Caption       , //   Label7.Caption        
-         @Tahoma7x8_Regular    , //   Label7.FontName       
+         @Tahoma13x16_Regular  , //   Label7.FontName       
          0xFFFF                , //   Label7.Font_Color     
          1                     , //   Label7.Visible        
          1                     , //   Label7.Active        
@@ -276,12 +276,12 @@ var BoxBkGnd : TBox;
          (
          0                     , //   Label1.OwnerScreenID
          2                     , //   Label1.Order          
-         1                     , //   Label1.Left           
-         35                    , //   Label1.Top             
-         97                    , //   Label1.Width         
-         9                     , //   Label1.Height       
+         7                     , //   Label1.Left           
+         69                    , //   Label1.Top             
+         180                   , //   Label1.Width         
+         17                    , //   Label1.Height       
          @Label1_Caption       , //   Label1.Caption        
-         @Tahoma7x8_Regular    , //   Label1.FontName       
+         @Tahoma13x16_Regular  , //   Label1.FontName       
          0xFFFF                , //   Label1.Font_Color     
          1                     , //   Label1.Visible        
          1                     , //   Label1.Active        
@@ -296,12 +296,12 @@ var BoxBkGnd : TBox;
          (
          0                     , //   Label6.OwnerScreenID
          3                     , //   Label6.Order          
-         1                     , //   Label6.Left           
-         66                    , //   Label6.Top             
-         74                    , //   Label6.Width         
-         9                     , //   Label6.Height       
+         7                     , //   Label6.Left           
+         134                   , //   Label6.Top             
+         137                   , //   Label6.Width         
+         17                    , //   Label6.Height       
          @Label6_Caption       , //   Label6.Caption        
-         @Tahoma7x8_Regular    , //   Label6.FontName       
+         @Tahoma13x16_Regular  , //   Label6.FontName       
          0xFFFF                , //   Label6.Font_Color     
          1                     , //   Label6.Visible        
          1                     , //   Label6.Active        
@@ -316,12 +316,12 @@ var BoxBkGnd : TBox;
          (
          0                     , //   Label8.OwnerScreenID
          4                     , //   Label8.Order          
-         1                     , //   Label8.Left           
-         127                   , //   Label8.Top             
-         89                    , //   Label8.Width         
-         9                     , //   Label8.Height       
+         7                     , //   Label8.Left           
+         264                   , //   Label8.Top             
+         165                   , //   Label8.Width         
+         17                    , //   Label8.Height       
          @Label8_Caption       , //   Label8.Caption        
-         @Tahoma7x8_Regular    , //   Label8.FontName       
+         @Tahoma13x16_Regular  , //   Label8.FontName       
          0xFFFF                , //   Label8.Font_Color     
          1                     , //   Label8.Visible        
          1                     , //   Label8.Active        
@@ -356,12 +356,12 @@ var LabelTrainNodes : TLabel;
          (
          0                     , //   Label9.OwnerScreenID
          13                    , //   Label9.Order          
-         1                     , //   Label9.Left           
-         96                    , //   Label9.Top             
-         80                    , //   Label9.Width         
-         9                     , //   Label9.Height       
+         7                     , //   Label9.Left           
+         199                   , //   Label9.Top             
+         149                   , //   Label9.Width         
+         17                    , //   Label9.Height       
          @Label9_Caption       , //   Label9.Caption        
-         @Tahoma7x8_Regular    , //   Label9.FontName       
+         @Tahoma13x16_Regular  , //   Label9.FontName       
          0xFFFF                , //   Label9.Font_Color     
          1                     , //   Label9.Visible        
          1                     , //   Label9.Active        
@@ -561,9 +561,9 @@ procedure InitializeObjects();    // static
 
     BoxRound1.OwnerScreenID       := 32768;
     BoxRound1.Order               := 3;
-    BoxRound1.Left                := 22;
-    BoxRound1.Top                 := 128;
-    BoxRound1.Width               := 76;
+    BoxRound1.Left                := 30;
+    BoxRound1.Top                 := 270;
+    BoxRound1.Width               := 178;
     BoxRound1.Height              := 18;
     BoxRound1.Pen_Width           := 5;
     BoxRound1.Pen_Color           := 0x0000;
@@ -585,8 +585,8 @@ procedure InitializeObjects();    // static
 
     BoxRoundProgressBar.OwnerScreenID       := 32768;
     BoxRoundProgressBar.Order               := 5;
-    BoxRoundProgressBar.Left                := 23;
-    BoxRoundProgressBar.Top                 := 129;
+    BoxRoundProgressBar.Left                := 30;
+    BoxRoundProgressBar.Top                 := 270;
     BoxRoundProgressBar.Width               := 8;
     BoxRoundProgressBar.Height              := 17;
     BoxRoundProgressBar.Pen_Width           := 1;
@@ -609,10 +609,10 @@ procedure InitializeObjects();    // static
 
     BoxRound3.OwnerScreenID       := 32768;
     BoxRound3.Order               := 7;
-    BoxRound3.Left                := 14;
-    BoxRound3.Top                 := 55;
-    BoxRound3.Width               := 94;
-    BoxRound3.Height              := 40;
+    BoxRound3.Left                := 18;
+    BoxRound3.Top                 := 69;
+    BoxRound3.Width               := 202;
+    BoxRound3.Height              := 114;
     BoxRound3.Pen_Width           := 1;
     BoxRound3.Pen_Color           := 0x0000;
     BoxRound3.Visible             := 1;
@@ -633,15 +633,15 @@ procedure InitializeObjects();    // static
 
     Image1.OwnerScreenID       := 32768;
     Image1.Order               := 8;
-    Image1.Left                := 22;
-    Image1.Top                 := 59;
+    Image1.Left                := 33;
+    Image1.Top                 := 85;
     Image1.Width               := 78;
     Image1.Height              := 32;
     Image1.Picture_Type        := 0;
     Image1.Picture_Ratio       := 1;
     Image1.Picture_Name        := @OpenLCB_bmp;
     Image1.Visible             := 1;
-    Image1.Active              := 0;
+    Image1.Active              := 1;
     Image1.OnUpPtr             := 0;
     Image1.OnDownPtr           := 0;
     Image1.OnClickPtr          := 0;
@@ -651,8 +651,8 @@ procedure InitializeObjects();    // static
     BoxBkGnd.Order               := 0;
     BoxBkGnd.Left                := 0;
     BoxBkGnd.Top                 := 0;
-    BoxBkGnd.Width               := 120;
-    BoxBkGnd.Height              := 160;
+    BoxBkGnd.Width               := 240;
+    BoxBkGnd.Height              := 320;
     BoxBkGnd.Pen_Width           := 1;
     BoxBkGnd.Pen_Color           := 0x0000;
     BoxBkGnd.Visible             := 1;
@@ -672,10 +672,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundCmdStations.OwnerScreenID       := 0;
     BoxRoundCmdStations.Order               := 5;
-    BoxRoundCmdStations.Left                := 3;
-    BoxRoundCmdStations.Top                 := 14;
-    BoxRoundCmdStations.Width               := 112;
-    BoxRoundCmdStations.Height              := 19;
+    BoxRoundCmdStations.Left                := 7;
+    BoxRoundCmdStations.Top                 := 21;
+    BoxRoundCmdStations.Width               := 220;
+    BoxRoundCmdStations.Height              := 28;
     BoxRoundCmdStations.Pen_Width           := 2;
     BoxRoundCmdStations.Pen_Color           := 0xC618;
     BoxRoundCmdStations.Visible             := 1;
@@ -696,10 +696,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundAccyNodes.OwnerScreenID       := 0;
     BoxRoundAccyNodes.Order               := 6;
-    BoxRoundAccyNodes.Left                := 3;
-    BoxRoundAccyNodes.Top                 := 137;
-    BoxRoundAccyNodes.Width               := 112;
-    BoxRoundAccyNodes.Height              := 19;
+    BoxRoundAccyNodes.Left                := 10;
+    BoxRoundAccyNodes.Top                 := 284;
+    BoxRoundAccyNodes.Width               := 220;
+    BoxRoundAccyNodes.Height              := 28;
     BoxRoundAccyNodes.Pen_Width           := 2;
     BoxRoundAccyNodes.Pen_Color           := 0xC618;
     BoxRoundAccyNodes.Visible             := 1;
@@ -720,15 +720,15 @@ procedure InitializeObjects();    // static
 
     LabelCmdStationNodes.OwnerScreenID       := 0;
     LabelCmdStationNodes.Order               := 7;
-    LabelCmdStationNodes.Left                := 4;
-    LabelCmdStationNodes.Top                 := 19;
-    LabelCmdStationNodes.Width               := 48;
-    LabelCmdStationNodes.Height              := 11;
+    LabelCmdStationNodes.Left                := 20;
+    LabelCmdStationNodes.Top                 := 24;
+    LabelCmdStationNodes.Width               := 113;
+    LabelCmdStationNodes.Height              := 25;
     LabelCmdStationNodes.Visible             := 1;
     LabelCmdStationNodes.Active              := 0;
     LabelCmdStationNodes.Caption             := @LabelCmdStationNodes_Caption;
     LabelCmdStationNodes_Caption             := 'Ophir District';
-    LabelCmdStationNodes.FontName            := @Tahoma8x10_Regular;
+    LabelCmdStationNodes.FontName            := @Tahoma19x23_Regular;
     LabelCmdStationNodes.Font_Color          := 0x0000;
     LabelCmdStationNodes.OnUpPtr             := 0;
     LabelCmdStationNodes.OnDownPtr           := 0;
@@ -737,15 +737,15 @@ procedure InitializeObjects();    // static
 
     LabelAccyNodes.OwnerScreenID       := 0;
     LabelAccyNodes.Order               := 8;
-    LabelAccyNodes.Left                := 4;
-    LabelAccyNodes.Top                 := 142;
-    LabelAccyNodes.Width               := 69;
-    LabelAccyNodes.Height              := 11;
+    LabelAccyNodes.Left                := 20;
+    LabelAccyNodes.Top                 := 286;
+    LabelAccyNodes.Width               := 163;
+    LabelAccyNodes.Height              := 25;
     LabelAccyNodes.Visible             := 1;
     LabelAccyNodes.Active              := 0;
     LabelAccyNodes.Caption             := @LabelAccyNodes_Caption;
     LabelAccyNodes_Caption             := 'Ophir Depot Siding';
-    LabelAccyNodes.FontName            := @Tahoma8x10_Regular;
+    LabelAccyNodes.FontName            := @Tahoma19x23_Regular;
     LabelAccyNodes.Font_Color          := 0x0000;
     LabelAccyNodes.OnUpPtr             := 0;
     LabelAccyNodes.OnDownPtr           := 0;
@@ -754,10 +754,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundProgStations.OwnerScreenID       := 0;
     BoxRoundProgStations.Order               := 9;
-    BoxRoundProgStations.Left                := 3;
-    BoxRoundProgStations.Top                 := 45;
-    BoxRoundProgStations.Width               := 112;
-    BoxRoundProgStations.Height              := 19;
+    BoxRoundProgStations.Left                := 10;
+    BoxRoundProgStations.Top                 := 87;
+    BoxRoundProgStations.Width               := 220;
+    BoxRoundProgStations.Height              := 28;
     BoxRoundProgStations.Pen_Width           := 2;
     BoxRoundProgStations.Pen_Color           := 0xC618;
     BoxRoundProgStations.Visible             := 1;
@@ -778,10 +778,10 @@ procedure InitializeObjects();    // static
 
     BoxRoundTrainNodes.OwnerScreenID       := 0;
     BoxRoundTrainNodes.Order               := 10;
-    BoxRoundTrainNodes.Left                := 3;
-    BoxRoundTrainNodes.Top                 := 76;
-    BoxRoundTrainNodes.Width               := 112;
-    BoxRoundTrainNodes.Height              := 19;
+    BoxRoundTrainNodes.Left                := 9;
+    BoxRoundTrainNodes.Top                 := 152;
+    BoxRoundTrainNodes.Width               := 220;
+    BoxRoundTrainNodes.Height              := 28;
     BoxRoundTrainNodes.Pen_Width           := 2;
     BoxRoundTrainNodes.Pen_Color           := 0xC618;
     BoxRoundTrainNodes.Visible             := 1;
@@ -802,15 +802,15 @@ procedure InitializeObjects();    // static
 
     LabelProgNodes.OwnerScreenID       := 0;
     LabelProgNodes.Order               := 11;
-    LabelProgNodes.Left                := 4;
-    LabelProgNodes.Top                 := 50;
-    LabelProgNodes.Width               := 40;
-    LabelProgNodes.Height              := 11;
+    LabelProgNodes.Left                := 20;
+    LabelProgNodes.Top                 := 90;
+    LabelProgNodes.Width               := 95;
+    LabelProgNodes.Height              := 25;
     LabelProgNodes.Visible             := 1;
     LabelProgNodes.Active              := 0;
     LabelProgNodes.Caption             := @LabelProgNodes_Caption;
     LabelProgNodes_Caption             := 'Rico Siding';
-    LabelProgNodes.FontName            := @Tahoma8x10_Regular;
+    LabelProgNodes.FontName            := @Tahoma19x23_Regular;
     LabelProgNodes.Font_Color          := 0x0000;
     LabelProgNodes.OnUpPtr             := 0;
     LabelProgNodes.OnDownPtr           := 0;
@@ -819,15 +819,15 @@ procedure InitializeObjects();    // static
 
     LabelTrainNodes.OwnerScreenID       := 0;
     LabelTrainNodes.Order               := 12;
-    LabelTrainNodes.Left                := 4;
-    LabelTrainNodes.Top                 := 80;
-    LabelTrainNodes.Width               := 53;
-    LabelTrainNodes.Height              := 11;
+    LabelTrainNodes.Left                := 20;
+    LabelTrainNodes.Top                 := 155;
+    LabelTrainNodes.Width               := 126;
+    LabelTrainNodes.Height              := 25;
     LabelTrainNodes.Visible             := 1;
     LabelTrainNodes.Active              := 0;
     LabelTrainNodes.Caption             := @LabelTrainNodes_Caption;
     LabelTrainNodes_Caption             := 'RGS 455 - K27';
-    LabelTrainNodes.FontName            := @Tahoma8x10_Regular;
+    LabelTrainNodes.FontName            := @Tahoma19x23_Regular;
     LabelTrainNodes.Font_Color          := 0x0000;
     LabelTrainNodes.OnUpPtr             := 0;
     LabelTrainNodes.OnDownPtr           := 0;
@@ -836,10 +836,10 @@ procedure InitializeObjects();    // static
 
     BoxRound2.OwnerScreenID       := 0;
     BoxRound2.Order               := 14;
-    BoxRound2.Left                := 3;
-    BoxRound2.Top                 := 106;
-    BoxRound2.Width               := 112;
-    BoxRound2.Height              := 19;
+    BoxRound2.Left                := 9;
+    BoxRound2.Top                 := 218;
+    BoxRound2.Width               := 220;
+    BoxRound2.Height              := 28;
     BoxRound2.Pen_Width           := 2;
     BoxRound2.Pen_Color           := 0xC618;
     BoxRound2.Visible             := 1;
@@ -860,15 +860,15 @@ procedure InitializeObjects();    // static
 
     Label10.OwnerScreenID       := 0;
     Label10.Order               := 15;
-    Label10.Left                := 4;
-    Label10.Top                 := 111;
-    Label10.Width               := 78;
-    Label10.Height              := 11;
+    Label10.Left                := 20;
+    Label10.Top                 := 220;
+    Label10.Width               := 186;
+    Label10.Height              := 25;
     Label10.Visible             := 1;
     Label10.Active              := 0;
     Label10.Caption             := @Label10_Caption;
     Label10_Caption             := 'Southbound Extra #2';
-    Label10.FontName            := @Tahoma8x10_Regular;
+    Label10.FontName            := @Tahoma19x23_Regular;
     Label10.Font_Color          := 0x0000;
     Label10.OnUpPtr             := 0;
     Label10.OnDownPtr           := 0;
