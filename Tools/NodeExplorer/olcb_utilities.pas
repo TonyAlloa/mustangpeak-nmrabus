@@ -52,6 +52,7 @@ const
   XML_NAME_FAIL                  = 'Fail';
   XML_NAME_FAILURE_CODES          = 'FailureCodes';
   XML_NAME_FAILURE_CODE           = 'Code';
+  XML_ELECMENT_TEST_MATRIX        = 'TestMatrix';
 
 type
   TByteArray = array[0..CAN_BYTE_COUNT-1] of Byte;
@@ -105,8 +106,8 @@ type
   function TestEnabledStateFromTestNode(TestNode: TDOMNode): WideString;
   function ObjectiveFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
   function ObjectiveResultFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
+  function SpecDocFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
   function ExtractElementValue(Node: TDOMNode; ElementName: WideString): WideString;
-  function ValidateTestNode(TestNode: TDOMNode): Boolean;
 
   function GetTickCount : DWORD;
 
@@ -132,17 +133,14 @@ procedure ExtractTestsFromXML(XMLDoc: TXMLDocument; TestList: TList);
 var
   TestMatrixNode, Child: TDOMNode;
 begin
-  TestMatrixNode := XMLDoc.FindNode('TestMatrix');
+  TestMatrixNode := XMLDoc.FindNode(XML_ELECMENT_TEST_MATRIX);
   Child := TestMatrixNode.FirstChild;
   while Assigned(Child) do
   begin
     if Child.HasChildNodes then
     begin
-      if Child.NodeName = 'Test' then
-      begin
-        if ValidateTestNode(Child) then
-          TestList.Add(Child);
-      end;
+      if Child.NodeName = XML_ELEMENT_TEST then
+        TestList.Add(Child);
     end;
     Child := Child.NextSibling;
   end;
@@ -157,7 +155,7 @@ begin
   begin
     if Child.HasChildNodes then
     begin
-      if Child.NodeName = 'TestObjective' then
+      if Child.NodeName = XML_ELEMENT_TESTOBJECTIVE then
         TestList.Add(Child);
     end;
     Child := Child.NextSibling;
@@ -199,6 +197,11 @@ begin
   Result := ExtractElementValue(ObjectiveNode, XML_ELEMENT_OBJECTIVERESULTS)
 end;
 
+function SpecDocFromObjectiveNode(ObjectiveNode: TDOMNode): WideString;
+begin
+  Result := ExtractElementValue(ObjectiveNode, XML_ELEMENT_SPECDOC)
+end;
+
 function ExtractElementValue(Node: TDOMNode; ElementName: WideString): WideString;
 var
   Child: TDOMNode;
@@ -210,13 +213,6 @@ begin
     if Child.HasChildNodes then
       Result := Child.FirstChild.NodeValue;
   end;
-end;
-
-function ValidateTestNode(TestNode: TDOMNode): Boolean;
-begin
-  Result := Assigned( TestNode.FindNode(XML_ELEMENT_NAME)) and Assigned( TestNode.FindNode(XML_ELEMENT_DESCRIPTION)) and
-            Assigned( TestNode.FindNode(XML_ELEMENT_SPECDOC)) and Assigned( TestNode.FindNode(XML_ELEMENT_CLASSNAME)) and
-            Assigned( TestNode.FindNode(XML_ELEMENT_ENABLED)) and Assigned( TestNode.FindNode(XML_ELEMENT_TESTOBJECTIVE));
 end;
 
 { TOpenLCBMessageHelper }

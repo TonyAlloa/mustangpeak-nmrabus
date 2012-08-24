@@ -1,7 +1,7 @@
 object FormMain: TFormMain
-  Left = 467
+  Left = 466
   Height = 516
-  Top = 167
+  Top = 165
   Width = 715
   Caption = 'OpenLCB NodeExplorer'
   ClientHeight = 496
@@ -481,21 +481,13 @@ object FormMain: TFormMain
           }
         end
       end
-      object CheckBoxMultiNodeTest: TCheckBox
-        Left = 21
-        Height = 17
-        Top = 423
-        Width = 118
-        Action = ActionMultiNodeTest
-        TabOrder = 4
-      end
     end
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
       ClientHeight = 453
       ClientWidth = 690
       object ButtonDiscoverNodes: TButton
-        Left = 524
+        Left = 528
         Height = 22
         Top = 416
         Width = 150
@@ -538,6 +530,17 @@ object FormMain: TFormMain
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
         Caption = 'Select a node to communicate with.  The Alias and Node ID will be stored and used when executing tests within NodeExplorer.  Any errors messages refering to Alias or Full Node IDs not matching are comparing received test messages with these stored values. '
+        ParentColor = False
+        WordWrap = True
+      end
+      object LabelDiscoverMultiNode: TLabel
+        Left = 29
+        Height = 17
+        Top = 421
+        Width = 264
+        Anchors = [akLeft, akBottom]
+        AutoSize = False
+        Caption = 'Mode:'
         ParentColor = False
         WordWrap = True
       end
@@ -1247,7 +1250,7 @@ object FormMain: TFormMain
       end
       object CheckGroupPIP: TCheckGroup
         Left = 12
-        Height = 377
+        Height = 346
         Top = 18
         Width = 668
         Anchors = [akTop, akLeft, akRight, akBottom]
@@ -1261,7 +1264,7 @@ object FormMain: TFormMain
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 2
-        ClientHeight = 359
+        ClientHeight = 328
         ClientWidth = 664
         Columns = 2
         Items.Strings = (
@@ -1278,21 +1281,18 @@ object FormMain: TFormMain
           'Display Protocol'
           'Simple Node Information Protocol'
           'Configuration Description Information (CDI)'
-          'Unassigned Bit Used ($000400000000 or below)'
-          'Reserved 0 (do not use)'
-          'Reserved 1 (do not use)'
-          'Reserved 2 (do not use)'
-          'Reserved 3 (do not use)'
+          'Unassigned Bit Used'
+          'Reserved Bits (do not use)'
         )
         TabOrder = 1
         Data = {
-          12000000020202020202020202020202020202020202
+          0F000000020202020202020202020202020202
         }
       end
       object EditPipRawMessage: TEdit
         Left = 133
         Height = 22
-        Top = 425
+        Top = 380
         Width = 312
         Anchors = [akLeft, akRight, akBottom]
         TabOrder = 2
@@ -1300,10 +1300,18 @@ object FormMain: TFormMain
       object LabelPipRawMessage: TLabel
         Left = 21
         Height = 17
-        Top = 430
+        Top = 385
         Width = 85
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'Raw Message'
+        ParentColor = False
+      end
+      object LabelPipPassFail: TLabel
+        Left = 468
+        Height = 22
+        Top = 380
+        Width = 169
+        AutoSize = False
         ParentColor = False
       end
     end
@@ -1459,10 +1467,6 @@ object FormMain: TFormMain
     object ActionReadPip: TAction
       Caption = 'Read PIP Info'
       OnExecute = ActionReadPipExecute
-    end
-    object ActionMultiNodeTest: TAction
-      Caption = 'MultiNode Test Mode'
-      OnExecute = ActionMultiNodeTestExecute
     end
   end
   object MainMenu: TMainMenu

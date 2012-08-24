@@ -20,6 +20,7 @@ unit UnitMainForm;
 {$mode objfpc}{$H+}
 
 {.$DEFINE DISABLE_UI_UPDATE}
+{.$DEFINE USE_DEBUG_LOGGER}
 
 interface
 
@@ -28,7 +29,10 @@ uses
   RTTICtrls, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList,
   Menus, ExtCtrls, synaser, lcltype, unitlogwindow, unitsettings,
   DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
-  nodeexplorer_settings, olcb_utilities, unitolcb_defines;
+  {$IFDEF UNIX}
+  unitLinuxFTDI,
+  {$ENDIF}
+  nodeexplorer_settings, olcb_utilities, unitolcb_defines, unitDebugLogger;
 
 
 const
@@ -39,7 +43,6 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
-    ActionMultiNodeTest: TAction;
     ActionReadPip: TAction;
     ActionLogShowGutter: TAction;
     ActionExecuteTests: TAction;
@@ -71,7 +74,6 @@ type
     ButtonReadXML: TButton;
     ButtonReadEvents: TButton;
     ButtonSendDatagramReply: TButton;
-    CheckBoxMultiNodeTest: TCheckBox;
     CheckGroupPIP: TCheckGroup;
     ComboBoxBaud: TComboBox;
     ComboBoxPorts: TComboBox;
@@ -88,6 +90,8 @@ type
     ImageListLarge: TImageList;
     ImageListSmall: TImageList;
     ImageOpenLCB: TImage;
+    LabelDiscoverMultiNode: TLabel;
+    LabelPipPassFail: TLabel;
     LabelHomeMessage1: TLabel;
     LabelHomeMessage2: TLabel;
     LabelPipRawMessage: TLabel;
@@ -133,7 +137,6 @@ type
     procedure ActionHideLogExecute(Sender: TObject);
     procedure ActionLoadTestMatrixExecute(Sender: TObject);
     procedure ActionLogShowGutterExecute(Sender: TObject);
-    procedure ActionMultiNodeTestExecute(Sender: TObject);
     procedure ActionReadPipExecute(Sender: TObject);
     procedure ActionReadXMLExecute(Sender: TObject);
     procedure ActionRescanPortsExecute(Sender: TObject);
@@ -296,7 +299,18 @@ begin
         begin
           ListViewNodeDiscovery.Items[0].Focused := True;
           ListViewNodeDiscovery.Items[0].Selected  := True;
-        end;
+          if ListViewNodeDiscovery.Items.Count = 1 then
+          begin
+            Settings.MultiNodeTest := False;
+            LabelDiscoverMultiNode.Caption := 'Mode: SingleNode test'
+          end else
+          begin
+            Settings.MultiNodeTest := True;
+            LabelDiscoverMultiNode.Caption := 'Mode: MultiNode test';
+          end;
+        end else
+          LabelDiscoverMultiNode.Caption := 'Mode:';
+
         ResultStrings.Free
       end;
     finally
@@ -352,11 +366,6 @@ begin
   FormLog.SynMemo.Gutter.Visible := FormLog.CheckBoxShowGutter.Checked;
 end;
 
-procedure TFormMain.ActionMultiNodeTestExecute(Sender: TObject);
-begin
-  Settings.MultiNodeTest := CheckBoxMultiNodeTest.Checked;
-end;
-
 procedure TFormMain.ActionReadPipExecute(Sender: TObject);
 var
   XMLDoc: TXMLDocument;
@@ -364,6 +373,7 @@ var
   ReceiveResults: TStringList;
   Helper: TOpenLCBMessageHelper;
   Mask: QWord;
+  i: Integer;
 begin
   if FileExistsUTF8(Settings.TestMatrixFile) then
   begin
@@ -373,6 +383,11 @@ begin
       Test := FindTestFromXML(XMLDoc, STR_PROTOCOL_IDENTIFICATION_PROTOCOL_CLASS) as TTestProtocolSupport;
       if Assigned(Test) then
       begin
+        for i := 0 to CheckGroupPIP.Items.Count - 1 do
+          CheckGroupPIP.Checked[i] := False;
+        CheckGroupPIP.Invalidate;
+        CheckGroupPIP.Update;
+
         Test.FreeOnLog := True;
         TestThread.Add(Test);
 
@@ -406,18 +421,18 @@ begin
               CheckGroupPIP.Checked[11] := Mask and PIP_SIMPLE_NODE_ID = PIP_SIMPLE_NODE_ID;
               CheckGroupPIP.Checked[12] := Mask and PIP_CDI = PIP_CDI;
               CheckGroupPIP.Checked[13] := Mask and PIP_UNASSIGNED <> 0;
-              CheckGroupPIP.Checked[14] := Mask and PIP_RESERVED_0 = PIP_RESERVED_0;
-              CheckGroupPIP.Checked[15] := Mask and PIP_RESERVED_1 = PIP_RESERVED_1;
-              CheckGroupPIP.Checked[16] := Mask and PIP_RESERVED_2 = PIP_RESERVED_2;
-              CheckGroupPIP.Checked[17] := Mask and PIP_RESERVED_3 = PIP_RESERVED_3;
+              CheckGroupPIP.Checked[14] := Mask and PIP_RESERVED <> 0;
               EditPipRawMessage.Text := ReceiveResults[0]
             end;
+            LabelPipPassFail.Caption := 'Test Passed'
           finally
             ReceiveResults.Free;
             Helper.Free
           end;
         end else
-          ShowMessage('Test Failed');
+        begin
+          LabelPipPassFail.Caption := 'Test Failed'
+        end;
       end;
     finally
       XMLDoc.Free;
@@ -470,6 +485,7 @@ end;
 procedure TFormMain.ActionSendPacketExecute(Sender: TObject);
 begin
   ShowMessage('Not implemented yet');
+
 end;
 
 procedure TFormMain.ActionShowLogExecute(Sender: TObject);
@@ -564,6 +580,9 @@ begin
     ReadXMLFile(FXMLDocTestMatrix, Settings.TestMatrixFile);
     LoadTestMatrixListview;
     UpdateUI;
+    {$IFDEF USE_DEBUG_LOGGER}
+    FormDebugLogger.Show;
+    {$ENDIF}
   end;
   ShownOnce := True;
 end;
@@ -754,4 +773,4 @@ end;
 
 
 end.
-
+

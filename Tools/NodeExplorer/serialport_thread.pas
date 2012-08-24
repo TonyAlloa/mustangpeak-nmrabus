@@ -4,7 +4,7 @@ unit serialport_thread;
 
 interface
 uses
-  Classes, SysUtils, synaser, olcb_testmatrix, ExtCtrls, olcb_utilities, DOM, XMLRead, XMLWrite;
+  Classes, SysUtils, synaser, olcb_testmatrix, ExtCtrls, olcb_utilities, DOM, XMLRead, XMLWrite, unitDebugLogger;
 
 type
 
@@ -89,10 +89,6 @@ begin
                                   XMLTestNode.AppendChild(XMLNode);
                                   XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(TestDescriptionFromTestNode(ActiveTest.XMLTests)));
 
-                                  XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_SPECDOC);
-                                  XMLTestNode.AppendChild(XMLNode);
-                                  XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(TestSpecDocFromTestNode(ActiveTest.XMLTests)));
-
                                   XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_CLASSNAME);
                                   XMLTestNode.AppendChild(XMLNode);
                                   XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(TestClassnameFromTestNode(ActiveTest.XMLTests)));
@@ -107,6 +103,10 @@ begin
                                   begin
                                     XMLObjectiveNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_OBJECTIVE);
                                     XMLTestObjectiveNode.AppendChild(XMLObjectiveNode);
+
+                                    XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_SPECDOC);
+                                    XMLObjectiveNode.AppendChild(XMLNode);
+                                    XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(SpecDocFromObjectiveNode(TDOMNode( Objectives[iCurrentObjective]))));
 
                                     XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_SEND);
                                     XMLObjectiveNode.AppendChild(XMLNode);

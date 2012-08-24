@@ -103,11 +103,9 @@ const
   PIP_DISPLAY                        = $002000000000;
   PIP_SIMPLE_NODE_ID                 = $001000000000;
   PIP_CDI                            = $000800000000;
-  PIP_UNASSIGNED                     = $0007FFFFFFFF;
-  PIP_RESERVED_3                     = $000000000008;
-  PIP_RESERVED_2                     = $000000000003;
-  PIP_RESERVED_1                     = $000000000002;
-  PIP_RESERVED_0                     = $000000000001;
+  PIP_UNASSIGNED                     = $0007FFFFFFF0;
+  PIP_RESERVED                       = $00000000000F;
+
 
 implementation
 

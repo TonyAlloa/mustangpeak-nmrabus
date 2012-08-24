@@ -6,13 +6,13 @@ interface
 
 uses
   Classes, SysUtils, olcb_utilities, unitolcb_defines, nodeexplorer_settings,
-  DOM, XMLRead, XMLWrite, ComCtrls;
+  DOM, XMLRead, XMLWrite, ComCtrls, unitDebugLogger;
 
 const
-  PIP_UNASSIGNED_MASK = $0007FFFFFFF0;
-  PIP_RESERVED_MASK   = $00000000000F;
-  PIP_EXTENSION_BIT_START = $1000;
-  PIP_EXTENSION_BIT_END   = $2000;
+  PIP_UNASSIGNED_MASK       = $0007FFFFFFF0;
+  PIP_RESERVED_MASK         = $00000000000F;
+  PIP_EXTENSION_BIT_START   = $1000;                 // Active 0 so "xx01" were the 0 is the set bit and MSB it on the left... a network thing I guess
+  PIP_EXTENSION_BIT_END     = $2000;                 // Active 0 so "xx10" were the 0 is the set bit and MSB is on the left... a network thing I guess
 
   STR_PROTOCOL_IDENTIFICATION_PROTOCOL_CLASS = 'TTestProtocolSupport';
   STR_TEST_VERIFY_NODES_ID_CLASS             = 'TTestVerifyNodesID';
@@ -597,4 +597,4 @@ initialization
 finalization
 
 end.
-
+

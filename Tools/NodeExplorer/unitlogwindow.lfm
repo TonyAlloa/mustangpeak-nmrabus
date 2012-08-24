@@ -500,9 +500,9 @@ object FormLog: TFormLog
   end
   object CheckBoxShowGutter: TCheckBox
     Left = 16
-    Height = 17
-    Top = 445
-    Width = 78
+    Height = 18
+    Top = 444
+    Width = 97
     Action = FormMain.ActionLogShowGutter
     Anchors = [akLeft, akBottom]
     Checked = True
@@ -529,4 +529,4 @@ object FormLog: TFormLog
     left = 176
     top = 200
   end
-end
+end
