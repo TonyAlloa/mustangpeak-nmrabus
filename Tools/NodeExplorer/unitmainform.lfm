@@ -17,10 +17,10 @@ object FormMain: TFormMain
     Height = 480
     Top = 8
     Width = 698
-    ActivePage = TabSheetHome
+    ActivePage = TabSheetVerification
     Anchors = [akTop, akLeft, akRight, akBottom]
     MultiLine = True
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 0
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
@@ -547,11 +547,11 @@ object FormMain: TFormMain
     end
     object TabSheetVerification: TTabSheet
       Caption = 'VerificationTests'
-      ClientHeight = 422
+      ClientHeight = 454
       ClientWidth = 690
       object ListViewTestMatrix: TListView
         Left = 12
-        Height = 292
+        Height = 324
         Top = 10
         Width = 665
         Anchors = [akTop, akLeft, akRight, akBottom]
@@ -586,7 +586,7 @@ object FormMain: TFormMain
       object ButtonLoadTests: TButton
         Left = 212
         Height = 22
-        Top = 385
+        Top = 417
         Width = 150
         Action = ActionLoadTestMatrix
         Anchors = [akRight, akBottom]
@@ -595,7 +595,7 @@ object FormMain: TFormMain
       object ButtonSaveTests: TButton
         Left = 371
         Height = 22
-        Top = 385
+        Top = 417
         Width = 150
         Action = ActionSaveTestMatrix
         Anchors = [akRight, akBottom]
@@ -604,7 +604,7 @@ object FormMain: TFormMain
       object ButtonExecuteTests: TButton
         Left = 528
         Height = 22
-        Top = 385
+        Top = 417
         Width = 150
         Action = ActionExecuteTests
         Anchors = [akRight, akBottom]
@@ -613,7 +613,7 @@ object FormMain: TFormMain
       object LabelHomeMessage2: TLabel
         Left = 29
         Height = 58
-        Top = 310
+        Top = 342
         Width = 632
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False

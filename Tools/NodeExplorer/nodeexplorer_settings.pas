@@ -14,7 +14,7 @@ const
   FILENAME_STANDARD_TEST_PATH_WIN = '\tests';
   FILENAME_OSX_RESOURCES_SUB_PATH = '/Contents/Resources';
   FILENAME_SETTINGS = 'Settings.xml';
-  FILENAME_KNOWN_MTI_UNIX = 'Contents/Resources/tests/knownMTI.txt';
+  FILENAME_KNOWN_MTI_UNIX = '/Contents/Resources/tests/knownMTI.txt';
   FILENAME_KNOWN_MTI_WIN  = 'tests\knownMTI.txt';
 
   DEFAULT_COM_READ_TIMEOUT = 30; // ms
@@ -167,4 +167,4 @@ finalization
   FreeAndNil(Settings);
 
 end.
-
+

@@ -61,11 +61,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UnitMainForm"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="567"/>
-        <CursorPos X="3" Y="569"/>
+        <TopLine Value="552"/>
+        <CursorPos X="80" Y="579"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -77,7 +76,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="unitlogwindow"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
         <TopLine Value="40"/>
         <CursorPos X="132" Y="48"/>
@@ -187,7 +186,7 @@
         <UnitName Value="olcb_utilities"/>
         <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="302"/>
+        <TopLine Value="32"/>
         <CursorPos X="1" Y="325"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
@@ -219,7 +218,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="unitsettings"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="32" Y="34"/>
@@ -250,7 +249,7 @@
         <Filename Value="olcb_testmatrix.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="olcb_testmatrix"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
         <TopLine Value="325"/>
         <CursorPos X="1" Y="347"/>
@@ -261,10 +260,11 @@
         <Filename Value="nodeexplorer_settings.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="nodeexplorer_settings"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="10"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <CursorPos X="5" Y="6"/>
+        <CursorPos X="31" Y="17"/>
         <UsageCount Value="209"/>
         <Loaded Value="True"/>
       </Unit23>
@@ -330,7 +330,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="unitDebugLogger"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="38" Y="14"/>
@@ -342,7 +342,7 @@
         <Filename Value="unitlinuxftdi.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="unitLinuxFTDI"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="85"/>
         <CursorPos X="82" Y="98"/>

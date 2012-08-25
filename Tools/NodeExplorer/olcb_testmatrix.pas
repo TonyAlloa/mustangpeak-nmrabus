@@ -344,7 +344,7 @@ begin
         end;
     2 : begin
           //
-          if MTIManager.MTI <= MAX_MTI_VALUE then
+          if MTIManager.MTI < MAX_MTI_VALUE then
           begin
             FStateMachineIndex := 1;
             Result := 0;
@@ -821,4 +821,4 @@ initialization
 finalization
 
 end.
-
+
