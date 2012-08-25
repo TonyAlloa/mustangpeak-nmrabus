@@ -25,10 +25,10 @@ unit UnitMainForm;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, SynHighlighterXML, SynEdit,
-  RTTICtrls, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList,
-  Menus, ExtCtrls, synaser, lcltype, unitlogwindow, unitsettings,
-  DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
+  Classes, SysUtils, FileUtil, SynHighlighterXML, SynEdit, RTTICtrls, Forms,
+  Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList, Menus, ExtCtrls,
+  synaser, lcltype, ButtonPanel, ShellCtrls, unitlogwindow, unitsettings, DOM,
+  XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
   {$IFDEF UNIX}
   unitLinuxFTDI,
   {$ENDIF}
@@ -262,9 +262,9 @@ var
   ResultStrings: TStringList;
   ListItem: TListItem;
   i: Integer;
-  Test: TTestVerifyNodesID;
+  Test: TTestGetNodesUnderTest;
 begin
-  Test := FindTestFromXML(XMLDocTestMatrix, STR_TEST_VERIFY_NODES_ID_CLASS) as TTestVerifyNodesID;
+  Test := FindTestFromXML(XMLDocTestMatrix, STR_TEST_GET_NODES_UNDER_TEST_CLASS) as TTestGetNodesUnderTest;
   if Assigned(Test) then
   begin
     Test.FreeOnLog := True;
@@ -738,7 +738,7 @@ begin
           if not Assigned(Test) then
               ShowMessage('Invalid Classname for Test ' + TestNameFromTestNode(TestNode))
           else begin
-            if not (Test is TTestVerifyNodesID) then
+            if not (Test is TTestGetNodesUnderTest) then
             begin
               ListItem := ListviewTestMatrix.Items.Add;
               ListItem.Caption := TestNameFromTestNode(TestNode);

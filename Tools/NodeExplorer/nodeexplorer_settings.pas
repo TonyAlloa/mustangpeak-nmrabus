@@ -14,6 +14,10 @@ const
   FILENAME_STANDARD_TEST_PATH_WIN = '\tests';
   FILENAME_OSX_RESOURCES_SUB_PATH = '/Contents/Resources';
   FILENAME_SETTINGS = 'Settings.xml';
+  FILENAME_KNOWN_MTI_UNIX = 'Contents/Resources/tests/knownMTI.txt';
+  FILENAME_KNOWN_MTI_WIN  = 'tests\knownMTI.txt';
+
+  DEFAULT_COM_READ_TIMEOUT = 30; // ms
 
 type
 { TSettings }
@@ -28,6 +32,7 @@ type
     FProxyNodeID: Int64;
     FTargetNodeAlias: Word;
     FTargetNodeID: Int64;
+    FTimeoutComRead: Integer;
     FXMLSettings: TXMLDocument;
     function GetTestMatrixPath: string;
     function GetTextMatrixFile: string;
@@ -43,6 +48,7 @@ type
     property TestMatrixPath: string read GetTestMatrixPath;
     property TestMatrixFile: string read GetTextMatrixFile;
     property MultiNodeTest: Boolean read FMultiNodeTest write FMultiNodeTest;
+    property TimeoutComRead: Integer read FTimeoutComRead write FTimeoutComRead;
     constructor Create;
     procedure ReadSettings;
     procedure WriteSettings;
@@ -98,6 +104,7 @@ begin
   FComPort := 'COM4';
   FXMLSettings := nil;
   FMultiNodeTest := False;
+  FTimeoutComRead := DEFAULT_COM_READ_TIMEOUT;
 
   // Under OSX we get the path of the executable
 {$IFDEF DARWIN}
@@ -160,4 +167,4 @@ finalization
   FreeAndNil(Settings);
 
 end.
-
+

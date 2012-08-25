@@ -33,7 +33,6 @@ uses
 const
   LF = #13+#10;
   CAN_BYTE_COUNT = 8;
-  DEFAULT_TIMEOUT = 200;                  // 200ms of no activity on the UART signals the receoption is complete
 
   XML_ELEMENT_NAME               = 'Name';
   XML_ELEMENT_DESCRIPTION        = 'Description';
@@ -252,31 +251,30 @@ end;
 procedure TOpenLCBMessageHelper.Decompose(MessageStr: AnsiString);
 var
   x, n, SemiColon, i: Integer;
-  Head: PAnsiChar;
   ByteStr: AnsiString;
 begin
   MessageStr := UpperCase(MessageStr);
-  x := Pos('X', MessageStr);
+
+  x := Pos('X', MessageStr);         // Find were the "X" is in the string
   if x > 0 then
   begin
-    n := PosEx('N', MessageStr, x);
+    n := PosEx('N', MessageStr, x);  // Find where the "N" is in the string
     if n > 0 then
     begin
-      MessageStr[n] := #0;
-      Inc(n);
-      SemiColon := PosEx(';', MessageStr, n);
+      MessageStr[n] := #0;           // Set the "N" to a null to create a null string of the MTI
+      Inc(n);                        // Move just pass where the "N" was
+      SemiColon := PosEx(';', MessageStr, n);  // Look for the terminating ";"
       if SemiColon > 0 then
       begin
-        Head := @MessageStr[x+1];
-
-        MTI := StrToInt('$' + Head);
-        SourceAliasID := MTI and $00000FFF;
-        if MTI and $08000000 = $08000000 then
+        MTI := StrToInt('$' + PAnsiChar( @MessageStr[x+1])); // Convert the string MTI into a number
+        SourceAliasID := MTI and $00000FFF;                  // Strip off the Source Alias
+        if MTI and $08000000 = $08000000 then                // Was this an OpenLCB or CAN message?
           Layer := ol_OpenLCB
         else
           Layer := ol_CAN;
-        FForwardingBitNotSet := MTI and $10000000 = $00000000;
-        FUnimplementedBitsSet := MTI and $E0000000 <> $00000000;
+
+        FForwardingBitNotSet := MTI and $10000000 = $00000000;    // Check if the Forwarding Bit was set
+        FUnimplementedBitsSet := MTI and $E0000000 <> $00000000;  // Check to see the state of the unimplemented bits
 
         MTI := MTI and not $10000000;    // Strip off the reserved bits
         MTI := MTI and $FFFFF000;        // Strip off the Source Alias
@@ -284,6 +282,7 @@ begin
         for i := 0 to CAN_BYTE_COUNT - 1 do
           Data[i] := 0;
 
+        // Convert the CAN payload bytes into numbers
         FDataCount := 0;
         i := n;
         while i < SemiColon do
@@ -294,6 +293,7 @@ begin
           Inc(FDataCount);
         end;
 
+        // Determine if the message has a destination address and if so store it
         HasDestinationAddress := False;
         if MTI and $07000000 > $01000000 then        // See if the destination Alias is in the MTI
         begin

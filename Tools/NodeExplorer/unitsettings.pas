@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Spin,
-  StdCtrls;
+  StdCtrls, nodeexplorer_settings;
 
 type
 
@@ -14,9 +14,9 @@ type
 
   TFormSettings = class(TForm)
     Label1: TLabel;
-    Label2: TLabel;
     SpinEditDelayTimeout: TSpinEdit;
-    SpinEditPortTimeout: TSpinEdit;
+    procedure FormShow(Sender: TObject);
+    procedure SpinEditDelayTimeoutChange(Sender: TObject);
   private
     { private declarations }
   public
@@ -29,6 +29,18 @@ var
 implementation
 
 {$R *.lfm}
+
+{ TFormSettings }
+
+procedure TFormSettings.SpinEditDelayTimeoutChange(Sender: TObject);
+begin
+  Settings.TimeoutComRead := SpinEditDelayTimeout.Value;
+end;
+
+procedure TFormSettings.FormShow(Sender: TObject);
+begin
+  SpinEditDelayTimeout.Value := Settings.TimeoutComRead
+end;
 
 end.
 

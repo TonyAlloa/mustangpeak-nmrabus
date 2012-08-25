@@ -2,12 +2,12 @@
 <?xml-stylesheet type="text/xsl" href="xslt/testmatrix.xsl"?>
 <TestMatrix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://openlcb.org/trunk/prototypes/xml/schema/testmatrix.xsd">
   <Test>
-    <Name>Identify Nodes</Name>
+    <Name>Get Node(s) under Test</Name>
     <Description>Identifies all nodes on the network using VerifyNodeID</Description>
-    <Classname>TTestVerifyNodesID</Classname>
+    <Classname>TTestGetNodesUnderTest</Classname>
     <Enabled>True</Enabled>
     <TestObjective>
-      <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
+      <SpecDoc></SpecDoc>
       <Objective>Send global Verify Node ID Message Network Layer Message</Objective>
       <Results>Verified Node ID from all nodes on the network</Results>
     </TestObjective>
@@ -83,5 +83,27 @@
       <Objective>Test that NUT understands start and end bits in PIP message</Objective>
       <Results>One response</Results>
     </TestObjective>
+  </Test>
+    <Test>
+    <Name>Standard Frame Test</Name>
+    <Description>Sends standard frames that a node should ignore</Description>    
+    <Classname>TTestStandardFrame</Classname>
+    <Enabled>True</Enabled>
+    <TestObjective>
+      <SpecDoc>"TODO:"</SpecDoc>
+      <Objective>Test that NUT does not reply to stardard CAN frames</Objective>
+      <Results>No response</Results>
+    </TestObjective>    
+  </Test>
+    <Test>
+    <Name>Unknown MTI Addressed</Name>
+    <Description>Sends undefined MTI values through an addressed message</Description>    
+    <Classname>TTestUnknownMTIAddressed</Classname>
+    <Enabled>True</Enabled>
+    <TestObjective>
+      <SpecDoc>"TODO:"</SpecDoc>
+      <Objective>Test that NUT does not reply to unknown MTI values</Objective>
+      <Results>No response</Results>
+    </TestObjective>    
   </Test>
 </TestMatrix>

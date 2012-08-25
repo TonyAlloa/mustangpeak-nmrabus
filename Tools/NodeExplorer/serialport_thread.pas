@@ -4,7 +4,8 @@ unit serialport_thread;
 
 interface
 uses
-  Classes, SysUtils, synaser, olcb_testmatrix, ExtCtrls, olcb_utilities, DOM, XMLRead, XMLWrite, unitDebugLogger;
+  Classes, SysUtils, synaser, olcb_testmatrix, ExtCtrls, olcb_utilities, DOM, XMLRead, XMLWrite, unitDebugLogger,
+  nodeexplorer_settings;
 
 type
 
@@ -19,6 +20,9 @@ type
     FThreadTestList: TThreadList;
     protected
       procedure Execute; override;
+      procedure ErrorCodesToXML(ActiveTest: TtestBase; RootXMLElement: TDOMNode);
+      procedure ErrorCodesFormatToXML(ActiveTest: TtestBase; RootXMLElement: TDOMNode);
+      procedure ErrorCodesPipToXML(ActiveTest: TtestBase; RootXMLElement: TDOMNode);
     public
       property Connected: Boolean read FConnected write FConnected;
       property Serial: TBlockSerial read FSerial write FSerial;
@@ -67,8 +71,7 @@ begin
           case ActiveTest.TestState of
             ts_Initialize     : begin
                                   Objectives.Clear;
-                                  ActiveTest.StateMachineIndex := 0;
-                                  ActiveTest.ErrorCodes := [];
+                                  ActiveTest.InitTest;
                                   iCurrentObjective := 0;
                                   ExtractTestObjectivesFromTestNode(ActiveTest.XMLTests, Objectives);
 
@@ -141,7 +144,7 @@ begin
                                   ActiveTest.TestState := ts_Receiving;
                                 end;
             ts_Receiving      : begin
-                                  TempStr := Serial.Recvstring(ActiveTest.WaitTime);  // Try to get something from the CAN
+                                  TempStr := Serial.Recvstring(Settings.TimeoutComRead);  // Try to get something from the CAN
                                   if TempStr <> '' then
                                   begin
                                     ProcessStrings.Add( Trim( UpperCase(TempStr)));
@@ -164,75 +167,9 @@ begin
                                          XMLFailureCodes := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODES);
                                          XMLObjectiveResultsNode.AppendChild(XMLFailureCodes);
 
-                                         if tfcUnusedBitsSet in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_UNUSED_BITS_SET));
-                                         end;
-                                         if tfcForwardingBitNotSet in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_FORWARDING_BIT_NOT_SET));
-                                         end;
-                                         if tfcInvalidMTI in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_MTI));
-                                         end;
-                                         if tfcInvalidSourceAlias in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_SOURCE_ALIAS));
-                                         end;
-                                         if tfcInvalidDestAlias in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_DEST_ALIAS));
-                                         end;
-                                         if tfcIncorrectCount in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_COUNT));
-                                         end;
-
-                                         if tfcPipUsingUnassignedBits in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_UNASSIGNED_BITS));
-                                         end;
-                                         if tfcPipUsingReservedBits in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_RESERVED_BITS));
-                                         end;
-                                         if tfcPipStartEndBitSupport in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_START_END_BIT_SUPPORT));
-                                         end;
-                                         if tfcPipRespondedToStartBit in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_PIP_UNEXPECTED_RESPONSE_TO_START_BIT));
-                                         end;
-
-                                         if tfcFullNodeIDInvalid in ActiveTest.ErrorCodes then
-                                         begin
-                                           XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
-                                           XMLFailureCodes.AppendChild(XMLNode);
-                                           XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_NODE_ID));
-                                         end;
-
+                                         ErrorCodesToXML(ActiveTest, XMLFailureCodes);
+                                         ErrorCodesFormatToXML(ActiveTest, XMLFailureCodes);
+                                         ErrorCodesPipToXML(ActiveTest, XMLFailureCodes);
                                        end;
                                        iCurrentObjective := iNextObjective;
                                        ActiveTest.TestState := ts_ObjectiveEnd;          // Start next objective
@@ -267,6 +204,107 @@ begin
     Connected := False;
     FreeAndNil(ProcessStrings);
     FreeandNil(Objectives);
+  end;
+end;
+
+procedure TComPortThread.ErrorCodesToXML(ActiveTest: TtestBase; RootXMLElement: TDOMNode);
+var
+  XMLNode: TDOMNode;
+begin
+  if ActiveTest.ErrorCodes <> [] then
+  begin
+    if teIncorrectCount in ActiveTest.ErrorCodes then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_COUNT));
+    end;
+    if teFullNodeIDInvalid in ActiveTest.ErrorCodes then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_INVALID_NODE_ID));
+    end;
+    if teStandardFrameResponse in ActiveTest.ErrorCodes then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_STANDARD_FRAME));
+    end;
+
+
+  end;
+end;
+
+procedure TComPortThread.ErrorCodesFormatToXML(ActiveTest: TtestBase; RootXMLElement: TDOMNode);
+var
+  XMLNode: TDOMNode;
+begin
+  if ActiveTest.ErrorCodesFormat <> [] then
+  begin
+    if tefUnusedBitsSet in ActiveTest.ErrorCodesFormat then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_FORMAT_UNUSED_BITS_SET));
+     end;
+    if tefForwardingBitNotSet in ActiveTest.ErrorCodesFormat then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+       RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_FORMAT_FORWARDING_BIT_NOT_SET));
+    end;
+    if tefInvalidMTI in ActiveTest.ErrorCodesFormat then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+       XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_FORMAT_INVALID_MTI));
+    end;
+    if tefInvalidSourceAlias in ActiveTest.ErrorCodesFormat then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_FORMAT_INVALID_SOURCE_ALIAS));
+    end;
+    if tefInvalidDestAlias in ActiveTest.ErrorCodesFormat then
+     begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_FORMAT_INVALID_DEST_ALIAS));
+    end;
+  end;
+end;
+
+procedure TComPortThread.ErrorCodesPipToXML(ActiveTest: TtestBase; RootXMLElement: TDOMNode);
+var
+  XMLNode: TDOMNode;
+begin
+  if ActiveTest.ErrorCodesPip <> [] then
+  begin
+    if tepPipUsingUnassignedBits in ActiveTest.ErrorCodesPip then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_PIP_UNASSIGNED_BITS));
+    end;
+    if tepPipUsingReservedBits in ActiveTest.ErrorCodesPip then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+       RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_PIP_RESERVED_BITS));
+    end;
+    if tepPipStartEndBitSupport in ActiveTest.ErrorCodesPip then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_PIP_START_END_BIT_SUPPORT));
+     end;
+    if tepPipRespondedToStartBit in ActiveTest.ErrorCodesPip then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_PIP_UNEXPECTED_RESPONSE_TO_START_BIT));
+    end;
   end;
 end;
 

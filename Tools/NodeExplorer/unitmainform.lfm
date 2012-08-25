@@ -14,7 +14,7 @@ object FormMain: TFormMain
   LCLVersion = '0.9.31'
   object PageControl: TPageControl
     Left = 8
-    Height = 479
+    Height = 480
     Top = 8
     Width = 698
     ActivePage = TabSheetHome
@@ -25,16 +25,16 @@ object FormMain: TFormMain
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
       Caption = 'Home'
-      ClientHeight = 453
+      ClientHeight = 454
       ClientWidth = 690
       object GroupBoxComPort: TGroupBox
         Left = 13
-        Height = 236
+        Height = 237
         Top = 164
         Width = 667
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'COM Port Settings'
-        ClientHeight = 218
+        ClientHeight = 219
         ClientWidth = 663
         TabOrder = 0
         object EditCustomBaudRate: TEdit
@@ -148,7 +148,7 @@ object FormMain: TFormMain
         end
         object LabelHomeMessage: TLabel
           Left = 20
-          Height = 39
+          Height = 40
           Top = 142
           Width = 632
           Anchors = [akTop, akLeft, akRight, akBottom]
@@ -170,7 +170,7 @@ object FormMain: TFormMain
       object ButtonConnect: TButton
         Left = 528
         Height = 22
-        Top = 416
+        Top = 417
         Width = 150
         Action = ActionConnect
         Anchors = [akRight, akBottom]
@@ -179,7 +179,7 @@ object FormMain: TFormMain
       object ButtonShowLog: TButton
         Left = 371
         Height = 22
-        Top = 416
+        Top = 417
         Width = 150
         Action = ActionShowLog
         Anchors = [akRight, akBottom]
@@ -484,12 +484,12 @@ object FormMain: TFormMain
     end
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
-      ClientHeight = 453
+      ClientHeight = 422
       ClientWidth = 690
       object ButtonDiscoverNodes: TButton
         Left = 528
         Height = 22
-        Top = 416
+        Top = 385
         Width = 150
         Action = ActionDiscoverNode
         Anchors = [akRight, akBottom]
@@ -497,7 +497,7 @@ object FormMain: TFormMain
       end
       object ListViewNodeDiscovery: TListView
         Left = 12
-        Height = 320
+        Height = 289
         Top = 4
         Width = 665
         Align = alCustom
@@ -525,7 +525,7 @@ object FormMain: TFormMain
       object LabelHomeMessage1: TLabel
         Left = 29
         Height = 56
-        Top = 341
+        Top = 310
         Width = 630
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
@@ -536,7 +536,7 @@ object FormMain: TFormMain
       object LabelDiscoverMultiNode: TLabel
         Left = 29
         Height = 17
-        Top = 421
+        Top = 390
         Width = 264
         Anchors = [akLeft, akBottom]
         AutoSize = False
@@ -547,11 +547,11 @@ object FormMain: TFormMain
     end
     object TabSheetVerification: TTabSheet
       Caption = 'VerificationTests'
-      ClientHeight = 453
+      ClientHeight = 422
       ClientWidth = 690
       object ListViewTestMatrix: TListView
         Left = 12
-        Height = 323
+        Height = 292
         Top = 10
         Width = 665
         Anchors = [akTop, akLeft, akRight, akBottom]
@@ -586,7 +586,7 @@ object FormMain: TFormMain
       object ButtonLoadTests: TButton
         Left = 212
         Height = 22
-        Top = 416
+        Top = 385
         Width = 150
         Action = ActionLoadTestMatrix
         Anchors = [akRight, akBottom]
@@ -595,7 +595,7 @@ object FormMain: TFormMain
       object ButtonSaveTests: TButton
         Left = 371
         Height = 22
-        Top = 416
+        Top = 385
         Width = 150
         Action = ActionSaveTestMatrix
         Anchors = [akRight, akBottom]
@@ -604,7 +604,7 @@ object FormMain: TFormMain
       object ButtonExecuteTests: TButton
         Left = 528
         Height = 22
-        Top = 416
+        Top = 385
         Width = 150
         Action = ActionExecuteTests
         Anchors = [akRight, akBottom]
@@ -613,7 +613,7 @@ object FormMain: TFormMain
       object LabelHomeMessage2: TLabel
         Left = 29
         Height = 58
-        Top = 341
+        Top = 310
         Width = 632
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
@@ -624,13 +624,13 @@ object FormMain: TFormMain
     end
     object TabSheetCDIReader: TTabSheet
       Caption = 'CDI Reader'
-      ClientHeight = 460
-      ClientWidth = 692
+      ClientHeight = 422
+      ClientWidth = 690
       inline SynEditCDI: TSynEdit
         Left = 0
-        Height = 409
+        Height = 371
         Top = 0
-        Width = 692
+        Width = 690
         Align = alTop
         Anchors = [akTop, akLeft, akRight, akBottom]
         Font.Height = 12
@@ -1118,9 +1118,9 @@ object FormMain: TFormMain
         end
       end
       object ButtonReadXML: TButton
-        Left = 530
+        Left = 528
         Height = 22
-        Top = 423
+        Top = 385
         Width = 150
         Action = ActionReadXML
         Anchors = [akRight, akBottom]
@@ -1129,68 +1129,21 @@ object FormMain: TFormMain
     end
     object TabSheetEventReader: TTabSheet
       Caption = 'Event Reader'
-      ClientHeight = 460
-      ClientWidth = 692
+      ClientHeight = 422
+      ClientWidth = 690
       object GroupBoxEventReaderConsumers: TGroupBox
         Left = 13
         Height = 192
         Top = 4
-        Width = 666
+        Width = 664
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Consumers'
         ClientHeight = 174
-        ClientWidth = 662
+        ClientWidth = 660
         TabOrder = 0
         object ListViewConsumers: TListView
           Left = 0
-          Height = 170
-          Top = 0
-          Width = 658
-          Align = alClient
-          AutoWidthLastColumn = True
-          Checkboxes = True
-          Columns = <          
-            item
-              Alignment = taCenter
-              Caption = 'MTI'
-              Width = 90
-            end          
-            item
-              Alignment = taCenter
-              Caption = ' Alias'
-              Width = 90
-            end          
-            item
-              Alignment = taCenter
-              Caption = 'State'
-              Width = 90
-            end          
-            item
-              Alignment = taCenter
-              Caption = 'EventID'
-              Width = 382
-            end>
-          DragMode = dmAutomatic
-          GridLines = True
-          MultiSelect = True
-          RowSelect = True
-          TabOrder = 0
-          ViewStyle = vsReport
-        end
-      end
-      object GroupBoxEventReaderProducers: TGroupBox
-        Left = 13
-        Height = 206
-        Top = 212
-        Width = 668
-        Anchors = [akTop, akLeft, akRight, akBottom]
-        Caption = 'Producers'
-        ClientHeight = 188
-        ClientWidth = 664
-        TabOrder = 1
-        object ListViewProducers: TListView
-          Left = 0
-          Height = 184
+          Height = 174
           Top = 0
           Width = 660
           Align = alClient
@@ -1215,7 +1168,54 @@ object FormMain: TFormMain
             item
               Alignment = taCenter
               Caption = 'EventID'
-              Width = 384
+              Width = 386
+            end>
+          DragMode = dmAutomatic
+          GridLines = True
+          MultiSelect = True
+          RowSelect = True
+          TabOrder = 0
+          ViewStyle = vsReport
+        end
+      end
+      object GroupBoxEventReaderProducers: TGroupBox
+        Left = 13
+        Height = 168
+        Top = 212
+        Width = 666
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        Caption = 'Producers'
+        ClientHeight = 150
+        ClientWidth = 662
+        TabOrder = 1
+        object ListViewProducers: TListView
+          Left = 0
+          Height = 150
+          Top = 0
+          Width = 662
+          Align = alClient
+          AutoWidthLastColumn = True
+          Checkboxes = True
+          Columns = <          
+            item
+              Alignment = taCenter
+              Caption = 'MTI'
+              Width = 90
+            end          
+            item
+              Alignment = taCenter
+              Caption = ' Alias'
+              Width = 90
+            end          
+            item
+              Alignment = taCenter
+              Caption = 'State'
+              Width = 90
+            end          
+            item
+              Alignment = taCenter
+              Caption = 'EventID'
+              Width = 388
             end>
           DragMode = dmAutomatic
           GridLines = True
@@ -1226,9 +1226,9 @@ object FormMain: TFormMain
         end
       end
       object ButtonReadEvents: TButton
-        Left = 530
+        Left = 528
         Height = 22
-        Top = 423
+        Top = 385
         Width = 150
         Action = ActionEventReader
         Anchors = [akRight, akBottom]
@@ -1237,12 +1237,12 @@ object FormMain: TFormMain
     end
     object TabSheetProtocolID: TTabSheet
       Caption = 'Protocol ID'
-      ClientHeight = 460
-      ClientWidth = 692
+      ClientHeight = 422
+      ClientWidth = 690
       object ButtonReadPIP: TButton
-        Left = 530
+        Left = 528
         Height = 22
-        Top = 425
+        Top = 387
         Width = 150
         Action = ActionReadPip
         Anchors = [akRight, akBottom]
@@ -1250,9 +1250,9 @@ object FormMain: TFormMain
       end
       object CheckGroupPIP: TCheckGroup
         Left = 12
-        Height = 346
+        Height = 308
         Top = 18
-        Width = 668
+        Width = 666
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoFill = True
         Caption = 'Protocol Identification Protocol'
@@ -1264,8 +1264,8 @@ object FormMain: TFormMain
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 2
-        ClientHeight = 328
-        ClientWidth = 664
+        ClientHeight = 290
+        ClientWidth = 662
         Columns = 2
         Items.Strings = (
           'Protocol Identification Protocol'
@@ -1291,17 +1291,17 @@ object FormMain: TFormMain
       end
       object EditPipRawMessage: TEdit
         Left = 133
-        Height = 22
-        Top = 380
-        Width = 312
+        Height = 21
+        Top = 343
+        Width = 310
         Anchors = [akLeft, akRight, akBottom]
         TabOrder = 2
       end
       object LabelPipRawMessage: TLabel
         Left = 21
-        Height = 17
-        Top = 385
-        Width = 85
+        Height = 14
+        Top = 350
+        Width = 83
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'Raw Message'
         ParentColor = False
@@ -1317,11 +1317,11 @@ object FormMain: TFormMain
     end
     object TabSheetCustom: TTabSheet
       Caption = 'Custom'
-      ClientHeight = 460
-      ClientWidth = 692
+      ClientHeight = 422
+      ClientWidth = 690
       object EditTargetNodeAlias: TEdit
         Left = 36
-        Height = 22
+        Height = 21
         Top = 32
         Width = 80
         TabOrder = 0
@@ -1329,15 +1329,15 @@ object FormMain: TFormMain
       end
       object LabelTargetAlias: TLabel
         Left = 21
-        Height = 17
+        Height = 14
         Top = 12
-        Width = 113
+        Width = 86
         Caption = 'Target Node Alias'
         ParentColor = False
       end
       object EditSourceNodeAlias: TEdit
         Left = 164
-        Height = 22
+        Height = 21
         Top = 32
         Width = 80
         TabOrder = 1
@@ -1345,15 +1345,15 @@ object FormMain: TFormMain
       end
       object LabelSourceAlias: TLabel
         Left = 151
-        Height = 17
+        Height = 14
         Top = 12
-        Width = 115
+        Width = 87
         Caption = 'Source Node Alias'
         ParentColor = False
       end
       object EditPacket: TEdit
         Left = 36
-        Height = 22
+        Height = 21
         Top = 84
         Width = 456
         TabOrder = 2
@@ -1361,9 +1361,9 @@ object FormMain: TFormMain
       end
       object LabelPacket: TLabel
         Left = 21
-        Height = 17
+        Height = 14
         Top = 62
-        Width = 46
+        Width = 37
         Caption = 'Packet:'
         ParentColor = False
       end
@@ -1377,9 +1377,9 @@ object FormMain: TFormMain
         TabOrder = 3
       end
       object ButtonSendPacket: TButton
-        Left = 513
+        Left = 524
         Height = 22
-        Top = 393
+        Top = 386
         Width = 150
         Action = ActionSendPacket
         ParentShowHint = False

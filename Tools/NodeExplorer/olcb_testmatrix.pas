@@ -9,65 +9,104 @@ uses
   DOM, XMLRead, XMLWrite, ComCtrls, unitDebugLogger;
 
 const
+  MAX_MTI_VALUE             = $09FFF000;
+  MIN_MTI_VALUE             = $09000000;
+  MTI_INC_STEP              = $00001000;
+
   PIP_UNASSIGNED_MASK       = $0007FFFFFFF0;
   PIP_RESERVED_MASK         = $00000000000F;
   PIP_EXTENSION_BIT_START   = $1000;                 // Active 0 so "xx01" were the 0 is the set bit and MSB it on the left... a network thing I guess
   PIP_EXTENSION_BIT_END     = $2000;                 // Active 0 so "xx10" were the 0 is the set bit and MSB is on the left... a network thing I guess
 
   STR_PROTOCOL_IDENTIFICATION_PROTOCOL_CLASS = 'TTestProtocolSupport';
-  STR_TEST_VERIFY_NODES_ID_CLASS             = 'TTestVerifyNodesID';
+  STR_TEST_GET_NODES_UNDER_TEST_CLASS        = 'TTestGetNodesUnderTest';
 
-  XML_FAILURE_UNUSED_BITS_SET = 'The top 2 bits in the extended CAN header are not set to "0"';
-  XML_FAILURE_FORWARDING_BIT_NOT_SET = 'Bit 28 in the CAN header should be set if the node is not used to forward across network segments';
-  XML_FAILURE_INVALID_MTI = 'Bits 12-23 (MTI) in the CAN header were not correct in the reply';
-  XML_FAILURE_INVALID_SOURCE_ALIAS = 'Bits 0-11 defining the Node Alias did not match the stored Node Alias that Node Explorer was expecting for the test node';
-  XML_FAILURE_INVALID_DEST_ALIAS = 'Destination Alias (either in the CAN header or first 2 data bytes) did not match Proxy Alias of Node Explorer';
   XML_FAILURE_INVALID_COUNT = 'The expected number of messages received for the objective was not met';
-  XML_FAILURE_PIP_UNASSIGNED_BITS = 'The node is using the bits in the Protocol Identification Protocol that are current unassigned';
-  XML_FAILURE_PIP_RESERVED_BITS = 'The node is using the bits in the Protocol Identification Protocol defined as reserved';
-  XML_FAILURE_PIP_START_END_BIT_SUPPORT = 'The node does not support the Protocol Identification Protocol start-end bit for future expansion, it is suggested this be implemented';
-  XML_FAILURE_PIP_UNEXPECTED_RESPONSE_TO_START_BIT = 'The node should not have responded to the PIP expansion start bit, it should have waited until the stop bit is sent';
-  XML_FAILURE_INVALID_NODE_ID = 'The full node ID received did not match the Full Node Alias that Node Explorer was expecting for the test node';
+  XML_ERROR_INVALID_NODE_ID = 'The full node ID received did not match the Full Node Alias that Node Explorer was expecting for the test node';
+  XML_ERROR_STANDARD_FRAME = 'The node should not respond to CAN standard frame (11 bit) messages';
+  XML_ERROR_FORMAT_UNUSED_BITS_SET = 'The top 2 bits in the extended CAN header are not set to "0"';
+  XML_ERROR_FORMAT_FORWARDING_BIT_NOT_SET = 'Bit 28 in the CAN header should be set if the node is not used to forward across network segments';
+  XML_ERROR_FORMAT_INVALID_MTI = 'Bits 12-23 (MTI) in the CAN header were not correct in the reply';
+  XML_ERROR_FORMAT_INVALID_SOURCE_ALIAS = 'Bits 0-11 defining the Node Alias did not match the stored Node Alias that Node Explorer was expecting for the test node';
+  XML_ERROR_FORMAT_INVALID_DEST_ALIAS = 'Destination Alias (either in the CAN header or first 2 data bytes) did not match Proxy Alias of Node Explorer';
+  XML_ERROR_PIP_UNASSIGNED_BITS = 'The node is using the bits in the Protocol Identification Protocol that are current unassigned';
+  XML_ERROR_PIP_RESERVED_BITS = 'The node is using the bits in the Protocol Identification Protocol defined as reserved';
+  XML_ERROR_PIP_START_END_BIT_SUPPORT = 'The node does not support the Protocol Identification Protocol start-end bit for future expansion, it is suggested this be implemented';
+  XML_ERROR_PIP_UNEXPECTED_RESPONSE_TO_START_BIT = 'The node should not have responded to the PIP expansion start bit, it should have waited until the stop bit is sent';
+
 
 type
-  TTestFailureCode = (
-    tfcUnusedBitsSet,           // The node set one of the 3 unused upper bits (not accessible in CAN?)
-    tfcForwardingBitNotSet,     // Reserved bit was not a 1
-    tfcInvalidMTI,              // MTI was incorrect (includes the Frame Type set for OpenLCB messages)
-    tfcInvalidSourceAlias,      // Source Alias of the message sent back to Node Explorer was incorrect (assumes a single node under test)
-    tfcInvalidDestAlias,        // Dest Alias of the message sent back to Node Explorer was incorrect (assumes a single node under test)
-    tfcIncorrectCount,          // The wrong number of messages were returned from the Node (not always possible to determine depends on message)
-    tfcPipUsingReservedBits,    // Using Reserved Bits in the PIP
-    tfcPipUsingUnassignedBits,  // Using Unassigned Bits in the PIP
-    tfcPipRespondedToStartBit,  // Unexpected response to start bit of extended PIP support
-    tfcPipStartEndBitSupport,   // PIP implementation does not support the start and stop bit convention
-    tfcFullNodeIDInvalid        // Full NodeID in the Data Bytes does not match what is stored in Settings for the node under test
+  TTestErrorCode = (
+    teIncorrectCount,          // The wrong number of messages were returned from the Node (not always possible to determine depends on message)
+    teFullNodeIDInvalid,       // Full NodeID in the Data Bytes does not match what is stored in Settings for the node under test
+    teStandardFrameResponse    // Node replied to a Standard Frame Message, it should igore them all
   );
-  TTestFailureCodes = set of TTestFailureCode;
+  TTestErrorCodes = set of TTestErrorCode;
+
+  TTestErrorFormatCode = (
+    tefUnusedBitsSet,           // The node set one of the 3 unused upper bits (not accessible in CAN?)
+    tefForwardingBitNotSet,     // Reserved bit was not a 1
+    tefInvalidMTI,              // MTI was incorrect (includes the Frame Type set for OpenLCB messages)
+    tefInvalidSourceAlias,      // Source Alias of the message sent back to Node Explorer was incorrect (assumes a single node under test)
+    tefInvalidDestAlias        // Dest Alias of the message sent back to Node Explorer was incorrect (assumes a single node under test)
+  );
+  TTestErrorFormatCodes = set of TTestErrorFormatCode;
+
+  TTestErrorPipCode = (
+    tepPipUsingReservedBits,    // Using Reserved Bits in the PIP
+    tepPipUsingUnassignedBits,  // Using Unassigned Bits in the PIP
+    tepPipRespondedToStartBit,  // Unexpected response to start bit of extended PIP support
+    tepPipStartEndBitSupport    // PIP implementation does not support the start and stop bit convention
+  );
+  TTestErrorPipCodes = set of TTestErrorPipCode;
 
 type
   TTestState = (ts_Idle, ts_Initialize, ts_ObjectiveStart, ts_Sending, ts_Receiving, ts_ObjectiveEnd, ts_Complete);
+
+  TMTIArray = array of DWord;
+
+  { TKnownMTI }
+
+  TKnownMTI = class
+  private
+    FMTI: DWord;
+    FMTIArray: TMTIArray;
+    FMTIList: TStringList;
+  protected
+    function DuplicateMTI(TestMTI: DWord): Boolean;
+  public
+    constructor Create;
+    destructor Destroy;
+    function FirstUnknownMTI: DWord;
+    function NextUnknownMTI: DWord;
+    procedure ResetMTI;
+    property MTIList: TStringList read FMTIList write FMTIList;
+    property MTI: DWord read FMTI write FMTI;
+    property MTIArray: TMTIArray read FMTIArray write FMTIArray;
+  end;
 
   { TTestBase }
 
   TTestBase = class(TPersistent)
   private
-    FErrorCodes: TTestFailureCodes;
+    FErrorCodes: TTestErrorCodes;
+    FErrorCodesFormat: TTestErrorFormatCodes;
+    FErrorCodesPip: TTestErrorPipCodes;
     FFreeOnLog: Boolean;
     FListItem: TListItem;
     FMessageHelper: TOpenLCBMessageHelper;
     FStateMachineIndex: Integer;
     FTestState: TTestState;
-    FWaitTime: Integer;
     FXMLResults: TXMLDocument;
     FXMLTests: TDOMNode;
     function GetPassed: Boolean;
   protected
     property MessageHelper: TOpenLCBMessageHelper read FMessageHelper write FMessageHelper;
   public
-    property ErrorCodes: TTestFailureCodes read FErrorCodes write FErrorCodes;
+    property ErrorCodes: TTestErrorCodes read FErrorCodes write FErrorCodes;
+    property ErrorCodesFormat: TTestErrorFormatCodes read FErrorCodesFormat write FErrorCodesFormat;
+    property ErrorCodesPip: TTestErrorPipCodes read FErrorCodesPip write FErrorCodesPip;
     property FreeOnLog: Boolean read FFreeOnLog write FFreeOnLog;
-    property WaitTime: Integer read FWaitTime write FWaitTime;                  // Time to wait for the messages to sent (varies depending on what is being sent)
     property ListItem: TListItem read FListItem write FListItem;
     property Passed: Boolean read GetPassed;
     property StateMachineIndex: Integer read FStateMachineIndex write FStateMachineIndex;
@@ -79,19 +118,21 @@ type
     destructor Destroy; override;
     class function CreateInstanceFromString(AClassname: String): TTestBase;
     function ProcessObjectives(ProcessStrings: TStringList): Integer; virtual;
+    procedure InitTest; virtual;
     procedure StripReceivesNotForNodeUnderTest(ReceiveStrings: TStringList);
     procedure ValidateBasicReturnMessage(ExpectedMTI: DWord; Helper: TOpenLCBMessageHelper); virtual;
+    procedure ClearErrorCodes;
 
   end;
   TTestBaseClass = class of TTestBase;
 
-  { TTestVerifyNodesID }
+  { TTestGetNodesUnderTest }
 
-  TTestVerifyNodesID = class(TTestBase)
+  TTestGetNodesUnderTest = class(TTestBase)
   public
     function ProcessObjectives(ProcessStrings: TStringList): Integer; override;
   end;
-  TTestVerifyNodesIDClass = class of TTestVerifyNodesID;
+  TTestVerifyNodesIDClass = class of TTestGetNodesUnderTest;
 
   { TTestAliasMapEnquiry }
 
@@ -116,6 +157,28 @@ type
     function ProcessObjectives(ProcessStrings: TStringList): Integer; override;
   end;
   TTestProtocolSupportClass = class of TTestProtocolSupport;
+
+  { TTestStandardFrame }
+
+  TTestStandardFrame = class(TTestBase)
+  public
+    function ProcessObjectives(ProcessStrings: TStringList): Integer; override;
+  end;
+  TTestStandardFrameClass = class of TTestStandardFrame;
+
+  { TTestUnknownMTIAddressed }
+
+  TTestUnknownMTIAddressed = class(TTestBase)
+  private
+    FMTIManager: TKnownMTI;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    function ProcessObjectives(ProcessStrings: TStringList): Integer; override;
+    procedure InitTest; override;
+    property MTIManager: TKnownMTI read FMTIManager write FMTIManager;
+  end;
+  TTestUnknownMTIAddressedClass = class of TTestUnknownMTIAddressed;
 
 
   function FindTestFromXML(XMLDocTests: TXMLDocument; TestClassName: String): TTestBase;
@@ -183,6 +246,150 @@ begin
   end;
 end;
 
+{ TKnownMTI }
+
+function TKnownMTI.DuplicateMTI(TestMTI: DWord): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  i := 0;
+  while (i < Length(FMTIArray)) and not Result do
+  begin
+    Result := TestMTI = MTIArray[i];
+    Inc(i);
+  end;
+end;
+
+constructor TKnownMTI.Create;
+begin
+  inherited Create;
+  FMTIList := TStringList.Create;
+  ResetMTI;
+end;
+
+destructor TKnownMTI.Destroy;
+begin
+  FreeAndNil(FMTIList);
+end;
+
+function TKnownMTI.FirstUnknownMTI: DWord;
+begin
+  FMTI := MIN_MTI_VALUE;
+  while (MTI <= MAX_MTI_VALUE) and DuplicateMTI( MTI) do
+    FMTI := FMTI + MTI_INC_STEP;
+  Result := FMTI;
+end;
+
+function TKnownMTI.NextUnknownMTI: DWord;
+begin
+  FMTI := FMTI + MTI_INC_STEP;
+  while (MTI <= MAX_MTI_VALUE) and DuplicateMTI( MTI) do
+    FMTI := FMTI + MTI_INC_STEP;
+  Result := FMTI;
+end;
+
+procedure TKnownMTI.ResetMTI;
+var
+  i: Integer;
+begin
+  FMTI := MIN_MTI_VALUE;
+  {$IFDEF Windows}
+  MTIList.LoadFromFile(Settings.ApplicationPath + FILENAME_KNOWN_MTI_WIN);
+  {$ENDIF}
+  {$IFDEF darwin}
+  MTIList.LoadFromFile(Settings.ApplicationPath + FILENAME_KNOWN_MTI_UNIX);
+  {$ENDIF}
+  SetLength(FMTIArray, MTIList.Count);
+  for i := 0 to MTIList.Count - 1 do
+    MTIArray[i] := StrToInt( MTIList[i]);
+end;
+
+
+{ TTestUnknownMTIAddressed }
+
+constructor TTestUnknownMTIAddressed.Create;
+begin
+  inherited Create;
+  FMTIManager := TKnownMTI.Create;
+end;
+
+destructor TTestUnknownMTIAddressed.Destroy;
+begin
+  FreeAndNil(FMTIManager);
+  inherited Destroy;
+end;
+
+function TTestUnknownMTIAddressed.ProcessObjectives(ProcessStrings: TStringList): Integer;
+var
+  UnknownMTI: DWord;
+begin
+  Result := inherited ProcessObjectives(ProcessStrings);
+  case StateMachineIndex of
+    0 : begin
+          // Send Unknown MTI Messages:
+          UnknownMTI := MTIManager.FirstUnknownMTI;
+          MessageHelper.Load(ol_OpenLCB, UnknownMTI, Settings.ProxyNodeAlias, Settings.TargetNodeAlias, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          ProcessStrings.Add(MessageHelper.Encode);
+          StateMachineIndex := 2;
+          Result := 0;
+        end;
+    1 : begin
+          // Send Unknown MTI Messages:
+          UnknownMTI := MTIManager.NextUnknownMTI;
+          MessageHelper.Load(ol_OpenLCB, UnknownMTI, Settings.ProxyNodeAlias, Settings.TargetNodeAlias, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          ProcessStrings.Add(MessageHelper.Encode);
+          Inc(FStateMachineIndex);
+          Result := 0;                                                          // Objective 0
+        end;
+    2 : begin
+          //
+          if MTIManager.MTI <= MAX_MTI_VALUE then
+          begin
+            FStateMachineIndex := 1;
+            Result := 0;
+          end else
+          begin
+            Inc(FStateMachineIndex);
+            Result := 1;                                                          // Objective 1
+          end;
+        end;
+  end;
+end;
+
+procedure TTestUnknownMTIAddressed.InitTest;
+begin
+  inherited InitTest;
+  MTIManager.ResetMTI;
+end;
+
+{ TTestStandardFrame }
+
+function TTestStandardFrame.ProcessObjectives(ProcessStrings: TStringList): Integer;
+var
+  i: Integer;
+begin
+  Result := inherited ProcessObjectives(ProcessStrings);
+  case StateMachineIndex of
+    0 : begin
+          // Send Standard Messages:
+         for i := 0 to 2047 do
+           ProcessStrings.Add(':S' + IntToHex(i, 3) + 'N;');
+
+          Inc(FStateMachineIndex);
+          Result := 0;                                                          // Objective 0
+        end;
+    1 : begin
+          // Send Standard Messages:
+         if ProcessStrings.Count > 0 then                                      // Only one node should respond as this is addressed
+           Include(FErrorCodes, teStandardFrameResponse);
+
+          Inc(FStateMachineIndex);
+          Result := 1;                                                          // Objective 1
+        end;
+  end;
+end;
+
 
 { TTestProtocolSupport }
 
@@ -208,11 +415,11 @@ begin
             PipMask := MessageHelper.ExtractDataBytesAsInt(2, 7);
             ValidateBasicReturnMessage(MTI_PROTOCOL_SUPPORT_REPLY, MessageHelper);
             if PipMask and PIP_RESERVED_MASK <> 0 then
-              ErrorCodes := ErrorCodes + [tfcPipUsingReservedBits];
+              Include(FErrorCodesPip, tepPipUsingReservedBits);
             if PipMask and PIP_UNASSIGNED_MASK <> 0 then
-              ErrorCodes := ErrorCodes + [tfcPipUsingUnassignedBits];
+              Include(FErrorCodesPip, tepPipUsingUnassignedBits);
           end else
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 1;
@@ -227,7 +434,7 @@ begin
      3 : begin
           // Should be no response from any node
           if ProcessStrings.Count <> 0 then
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 2;                                                          // Objective 2
@@ -243,7 +450,7 @@ begin
       5 : begin
           // Receive Nodes that responded with Protocol Identification message
           if ProcessStrings.Count > 0 then                                      // Node should not respond to the Start bit
-            ErrorCodes := ErrorCodes + [tfcPipRespondedToStartBit];
+            Include(FErrorCodesPip, tepPipRespondedToStartBit);
 
           Inc(FStateMachineIndex);
           Result := 2;                                                          // Objective 2
@@ -260,7 +467,7 @@ begin
           // Receive Nodes that responded with Protocol Identification message
           if ProcessStrings.Count = 0 then
           begin
-            ErrorCodes := ErrorCodes + [tfcPipStartEndBitSupport];
+            Include(FErrorCodesPip, tepPipStartEndBitSupport);
           end else
           if ProcessStrings.Count = 1 then                                      // Only one node should respond as this is addressed
           begin
@@ -268,12 +475,11 @@ begin
             PipMask := MessageHelper.ExtractDataBytesAsInt(2, 7);
             ValidateBasicReturnMessage(MTI_PROTOCOL_SUPPORT_REPLY, MessageHelper);
             if PipMask and PIP_RESERVED_MASK <> 0 then
-              ErrorCodes := ErrorCodes + [tfcPipUsingReservedBits];
+              Include(FErrorCodesPip, tepPipUsingReservedBits);
             if PipMask and PIP_UNASSIGNED_MASK <> 0 then
-              ErrorCodes := ErrorCodes + [tfcPipUsingUnassignedBits];
+              Include(FErrorCodesPip, tepPipUsingUnassignedBits);
           end else
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
-
+            Include(FErrorCodes, teIncorrectCount);
           Inc(FStateMachineIndex);
           Result := 3;
         end;
@@ -303,9 +509,9 @@ begin
             MessageHelper.Decompose(ProcessStrings[0]);
             ValidateBasicReturnMessage(MTI_VERIFIED_NODE_ID_NUMBER, MessageHelper);
             if MessageHelper.ExtractDataBytesAsInt(0, 5) <> Settings.TargetNodeID then
-              ErrorCodes := ErrorCodes + [tfcFullNodeIDInvalid];
+              Include(FErrorCodes, teFullNodeIDInvalid);
           end else
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 1;
@@ -328,9 +534,9 @@ begin
             MessageHelper.Decompose(ProcessStrings[0]);
             ValidateBasicReturnMessage(MTI_VERIFIED_NODE_ID_NUMBER, MessageHelper);
             if MessageHelper.ExtractDataBytesAsInt(0, 5) <> Settings.TargetNodeID then
-              ErrorCodes := ErrorCodes + [tfcFullNodeIDInvalid];
+              Include(FErrorCodes, teFullNodeIDInvalid);
           end else
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 2;
@@ -346,7 +552,7 @@ begin
     5: begin
           // Should be no response from any node
           if ProcessStrings.Count <> 0 then
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 3;
@@ -367,9 +573,9 @@ begin
             MessageHelper.Decompose(ProcessStrings[0]);
             ValidateBasicReturnMessage(MTI_VERIFIED_NODE_ID_NUMBER, MessageHelper);
             if MessageHelper.ExtractDataBytesAsInt(0, 5) <> Settings.TargetNodeID then
-              ErrorCodes := ErrorCodes + [tfcFullNodeIDInvalid];
+              Include(FErrorCodes, teFullNodeIDInvalid);
           end else
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 4;                                                          //
@@ -385,7 +591,7 @@ begin
     9: begin
           // Should be no response from any node
           if ProcessStrings.Count <> 0 then
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 5;                                                          //
@@ -420,9 +626,9 @@ begin
             MessageHelper.Decompose(ProcessStrings[0]);
             ValidateBasicReturnMessage(MTI_AMD, MessageHelper);
             if MessageHelper.ExtractDataBytesAsInt(0, 5) <> Settings.TargetNodeID then
-              ErrorCodes := ErrorCodes + [tfcFullNodeIDInvalid];
+              Include(FErrorCodes, teFullNodeIDInvalid);
           end else
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 1;
@@ -443,9 +649,9 @@ begin
             MessageHelper.Decompose(ProcessStrings[0]);
             ValidateBasicReturnMessage(MTI_AMD, MessageHelper);
             if MessageHelper.ExtractDataBytesAsInt(0, 5) <> Settings.TargetNodeID then
-              ErrorCodes := ErrorCodes + [tfcFullNodeIDInvalid];
+              Include(FErrorCodes, teFullNodeIDInvalid);
           end else
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
           Result := 2;
@@ -460,7 +666,7 @@ begin
     5: begin
           // Should be no response from any node
           if ProcessStrings.Count <> 0 then
-            ErrorCodes := ErrorCodes + [tfcIncorrectCount];
+            Include(FErrorCodes, teIncorrectCount);
 
           Result := 3;
        end;
@@ -470,7 +676,7 @@ end;
 
 { TTestVerifyNodeID }
 
-function TTestVerifyNodesID.ProcessObjectives(ProcessStrings: TStringList): Integer;
+function TTestGetNodesUnderTest.ProcessObjectives(ProcessStrings: TStringList): Integer;
 begin
   Result := inherited ProcessObjectives(ProcessStrings);
   case StateMachineIndex of
@@ -543,7 +749,6 @@ begin
   FMessageHelper := TOpenLCBMessageHelper.Create;
   FXMLResults := TXMLDocument.Create;
   FTestState := ts_Idle;
-  FWaitTime := DEFAULT_TIMEOUT;
   FStateMachineIndex := 0;
   FListItem := nil;
   FErrorCodes := [];
@@ -562,6 +767,12 @@ begin
   Result := -1;
 end;
 
+procedure TTestBase.InitTest;
+begin
+  ClearErrorCodes;
+  FStateMachineIndex := 0;
+end;
+
 class function TTestBase.CreateInstanceFromString(AClassname: String): TTestBase;
 var
   TestBaseClass: TTestBaseClass;
@@ -575,26 +786,39 @@ end;
 procedure TTestBase.ValidateBasicReturnMessage(ExpectedMTI: DWord; Helper: TOpenLCBMessageHelper);
 begin
   if Helper.UnimplementedBitsSet then
-    FErrorCodes := FErrorCodes + [tfcUnusedBitsSet];
+    Include(FErrorCodesFormat, tefUnusedBitsSet);
+
   if Helper.ForwardingBitNotSet then
-    FErrorCodes := FErrorCodes + [tfcForwardingBitNotSet];
+    Include(FErrorCodesFormat, tefForwardingBitNotSet);
+
   if Helper.MTI <> ExpectedMTI then
-    FErrorCodes := FErrorCodes + [tfcInvalidMTI];
+    Include(FErrorCodesFormat, tefInvalidMTI);
+
   if Helper.SourceAliasID <> Settings.TargetNodeAlias then
-    FErrorCodes := FErrorCodes + [tfcInvalidSourceAlias];
+    Include(FErrorCodesFormat, tefInvalidSourceAlias);
+
   if Helper.HasDestinationAddress then
     if Helper.DestinationAliasID <> Settings.ProxyNodeAlias then
-      FErrorCodes := FErrorCodes + [tfcInvalidDestAlias]
+      Include(FErrorCodesFormat, tefInvalidDestAlias);
+end;
+
+procedure TTestBase.ClearErrorCodes;
+begin
+  ErrorCodes := [];
+  ErrorCodesFormat := [];
+  ErrorCodesPip := [];
 end;
 
 
 initialization
-  RegisterClass(TTestVerifyNodesID);
+  RegisterClass(TTestGetNodesUnderTest);
   RegisterClass(TTestAliasMapEnquiry);
   RegisterClass(TTestVerifyNodeID);
   RegisterClass(TTestProtocolSupport);
+  RegisterClass(TTestStandardFrame);
+  RegisterClass(TTestUnknownMTIAddressed);
 
 finalization
 
 end.
-
+
