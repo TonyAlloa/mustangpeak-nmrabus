@@ -12,6 +12,7 @@ const
   MAX_MTI_VALUE             = $09FFF000;
   MIN_MTI_VALUE             = $09000000;
   MTI_INC_STEP              = $00001000;
+  MTI_ADDRESSED_BIT         = $00008000;
 
   PIP_UNASSIGNED_MASK       = $0007FFFFFFF0;
   PIP_RESERVED_MASK         = $00000000000F;
@@ -276,7 +277,8 @@ end;
 function TKnownMTI.FirstUnknownMTI: DWord;
 begin
   FMTI := MIN_MTI_VALUE;
-  while (MTI <= MAX_MTI_VALUE) and DuplicateMTI( MTI) do
+  // Stop when the max value is but keep going if it is a Known MTI or it does not have the Addressed Bit set
+  while (MTI <= MAX_MTI_VALUE) and (DuplicateMTI( MTI) or (MTI and MTI_ADDRESSED_BIT = 0)) do
     FMTI := FMTI + MTI_INC_STEP;
   Result := FMTI;
 end;
@@ -284,7 +286,8 @@ end;
 function TKnownMTI.NextUnknownMTI: DWord;
 begin
   FMTI := FMTI + MTI_INC_STEP;
-  while (MTI <= MAX_MTI_VALUE) and DuplicateMTI( MTI) do
+  // Stop when the max value is but keep going if it is a Known MTI or it does not have the Addressed Bit set
+  while (MTI <= MAX_MTI_VALUE) and (DuplicateMTI( MTI) or (MTI and MTI_ADDRESSED_BIT = 0)) do
     FMTI := FMTI + MTI_INC_STEP;
   Result := FMTI;
 end;
