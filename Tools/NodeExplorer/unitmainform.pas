@@ -27,23 +27,29 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynHighlighterXML, SynEdit, RTTICtrls, Forms,
   Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList, Menus, ExtCtrls,
-  synaser, lcltype, ButtonPanel, ShellCtrls, Spin, unitlogwindow, unitsettings,
-  DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
+  synaser, lcltype, ButtonPanel, ShellCtrls, Spin, Buttons, unitlogwindow,
+  unitsettings, DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
   {$IFDEF UNIX}
   unitLinuxFTDI,
   {$ENDIF}
   nodeexplorer_settings, olcb_utilities, unitolcb_defines, unitDebugLogger,
-  RackCtls, types;
+  RackCtls, types, SynEditKeyCmds, unitAbout;
 
 
 const
   BUNDLENAME = 'NodeExplorer';
+  GROUPINDEX_CONNECTION_PORTS = 100;          // Way to identify Menu items with a Tag value set to i + OFFSET_CONNECTION_PORTS
 
 type
 
   { TFormMain }
 
   TFormMain = class(TForm)
+    ActionShowAbout: TAction;
+    ActionLogMemoSelectAll: TAction;
+    ActionLogMemoPaste: TAction;
+    ActionLogMemoCopy: TAction;
+    ActionLogMemoCut: TAction;
     ActionMemConfig: TAction;
     ActionReadPip: TAction;
     ActionLogShowGutter: TAction;
@@ -61,7 +67,7 @@ type
     ActionSendDatagramReply: TAction;
     ActionConnect: TAction;
     ActionSendPacket: TAction;
-    ActionClear: TAction;
+    ActionLogClear: TAction;
     ActionListMain: TActionList;
     ApplicationProperties1: TApplicationProperties;
     ButtonConnect: TButton;
@@ -124,8 +130,15 @@ type
     ListViewDiscovery: TListView;
     ListViewProducers: TListView;
     MainMenu: TMainMenu;
+    MenuItemOptionsWin: TMenuItem;
+    MenuItemTools: TMenuItem;
+    MenuItemHelp: TMenuItem;
+    MenuItemConnectionSeparator2: TMenuItem;
+    MenuItemConnectionRescan: TMenuItem;
+    MenuItemConnectionSeparator1: TMenuItem;
+    MenuItemConnect: TMenuItem;
+    MenuItemConnection: TMenuItem;
     MenuItemLoadTestMatrix: TMenuItem;
-    MenuItem2: TMenuItem;
     MenuItemShowLog: TMenuItem;
     MenuItemWindow: TMenuItem;
     MenuItemFile: TMenuItem;
@@ -144,13 +157,17 @@ type
     TabSheetCustom: TTabSheet;
     TabSheetCDIReader: TTabSheet;
     TimerCAN: TTimer;
-    procedure ActionClearExecute(Sender: TObject);
+    procedure ActionLogClearExecute(Sender: TObject);
     procedure ActionConnectExecute(Sender: TObject);
     procedure ActionDiscoverNodeExecute(Sender: TObject);
     procedure ActionEventReaderExecute(Sender: TObject);
     procedure ActionExecuteTestsExecute(Sender: TObject);
     procedure ActionHideLogExecute(Sender: TObject);
     procedure ActionLoadTestMatrixExecute(Sender: TObject);
+    procedure ActionLogMemoCopyExecute(Sender: TObject);
+    procedure ActionLogMemoCutExecute(Sender: TObject);
+    procedure ActionLogMemoPasteExecute(Sender: TObject);
+    procedure ActionLogMemoSelectAllExecute(Sender: TObject);
     procedure ActionLogShowGutterExecute(Sender: TObject);
     procedure ActionMemConfigExecute(Sender: TObject);
     procedure ActionReadPipExecute(Sender: TObject);
@@ -159,6 +176,7 @@ type
     procedure ActionSaveTestMatrixExecute(Sender: TObject);
     procedure ActionSendDatagramReplyExecute(Sender: TObject);
     procedure ActionSendPacketExecute(Sender: TObject);
+    procedure ActionShowAboutExecute(Sender: TObject);
     procedure ActionShowLogExecute(Sender: TObject);
     procedure ActionShowOptionsWinExecute(Sender: TObject);
     procedure ActionShowPreferencesMacExecute(Sender: TObject);
@@ -170,7 +188,9 @@ type
     procedure FormShow(Sender: TObject);
     procedure ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
+    procedure MenuItemConnectionClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
+    procedure SynEditCDIKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure TimerCANTimer(Sender: TObject);
   private
     { private declarations }
@@ -184,15 +204,16 @@ type
     { protected declarations }
     {$IFDEF DARWIN}
       AppMenu     : TMenuItem;
-      AppAboutCmd : TMenuItem;
       AppSep1Cmd  : TMenuItem;
       AppPrefCmd  : TMenuItem;
     {$ENDIF}
+    AppAboutCmd : TMenuItem;
     procedure UpdateUI;
     procedure ClearTestResultsXML;
     property Connected: Boolean read GetConnected;
     procedure LoadTestMatrixListview;
     procedure ThreadCallback(Sending: Boolean; Receiving: Boolean);
+    procedure MenuItemSelectPortClick(Sender: TObject);
   public
     { public declarations }
     procedure Log(Line: String);
@@ -220,7 +241,7 @@ uses
 
 { TFormMain }
 
-procedure TFormMain.ActionClearExecute(Sender: TObject);
+procedure TFormMain.ActionLogClearExecute(Sender: TObject);
 begin
   FormLog.SynMemo.Lines.BeginUpdate;
   try
@@ -374,6 +395,26 @@ begin
   end;
 end;
 
+procedure TFormMain.ActionLogMemoCopyExecute(Sender: TObject);
+begin
+  FormLog.SynMemo.CommandProcessor(TSynEditorCommand(ecCopy), ' ', nil);
+end;
+
+procedure TFormMain.ActionLogMemoCutExecute(Sender: TObject);
+begin
+  FormLog.SynMemo.CommandProcessor(TSynEditorCommand(ecCut), ' ', nil);
+end;
+
+procedure TFormMain.ActionLogMemoPasteExecute(Sender: TObject);
+begin
+  FormLog.SynMemo.CommandProcessor(TSynEditorCommand(ecPaste), ' ', nil);
+end;
+
+procedure TFormMain.ActionLogMemoSelectAllExecute(Sender: TObject);
+begin
+  FormLog.SynMemo.SelectAll;
+end;
+
 procedure TFormMain.ActionLogShowGutterExecute(Sender: TObject);
 begin
   FormLog.SynMemo.Gutter.Visible := FormLog.CheckBoxShowGutter.Checked;
@@ -504,6 +545,11 @@ begin
 
 end;
 
+procedure TFormMain.ActionShowAboutExecute(Sender: TObject);
+begin
+  FormAbout.ShowModal;
+end;
+
 procedure TFormMain.ActionShowLogExecute(Sender: TObject);
 begin
   FormLog.Left := Left+Width+4;
@@ -530,6 +576,8 @@ end;
 
 procedure TFormMain.ComboBoxPortsChange(Sender: TObject);
 begin
+  if ActionConnect.Checked then
+    ActionConnect.Execute;
   UpdateUI;
 end;
 
@@ -551,8 +599,8 @@ begin
   MainMenu.Items.Insert(0, AppMenu);
 
   AppAboutCmd := TMenuItem.Create(Self);
+  AppAboutCmd.Action := ActionShowAbout;
   AppAboutCmd.Caption := 'About ' + BUNDLENAME;
- // AppAboutCmd.OnClick := AboutCmdClick;
   AppMenu.Add(AppAboutCmd);  {Add About as item in application menu}
 
   AppSep1Cmd := TMenuItem.Create(Self);
@@ -564,7 +612,12 @@ begin
   AppPrefCmd.Action := ActionShowPreferencesMac;
   AppMenu.Add(AppPrefCmd);
   ActionShowOptionsWin.Visible := False;
+  {$ELSE}
+  AppAboutCmd := TMenuItem.Create(Self);
+  AppAboutCmd.Action := ActionShowAbout;
+  MenuItemHelp.Add(AppAboutCmd);
   {$ENDIF}
+
 
   ShownOnce := False;
   FTestStrings := TStringList.Create;
@@ -626,9 +679,46 @@ begin
   FreeAndNil( Test);
 end;
 
+procedure TFormMain.MenuItemConnectionClick(Sender: TObject);
+var
+  i: Integer;
+  MenuItem: TMenuItem;
+begin
+  for i :=  MenuItemConnection.Count - 1  downto 0 do
+  begin
+    if MenuItemConnection.Items[i].GroupIndex = GROUPINDEX_CONNECTION_PORTS then
+      MenuItemConnection.Delete(i);
+  end;
+
+  for i := 0 to ComboBoxPorts.Items.Count - 1 do
+  begin
+    MenuItem := TMenuItem.Create(Self);
+    MenuItem.Caption := ComboBoxPorts.Items[i];
+    MenuItem.Tag := i;
+    if ComboBoxPorts.ItemIndex = i then
+      MenuItem.Checked := True;
+    MenuItem.OnClick := @MenuItemSelectPortClick;
+    MenuItem.GroupIndex := GROUPINDEX_CONNECTION_PORTS;
+    MenuItemConnection.Add(MenuItem);
+  end;
+end;
+
 procedure TFormMain.PageControlChange(Sender: TObject);
 begin
 
+end;
+
+procedure TFormMain.SynEditCDIKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  // Windows/Linux/OSX already handled by SynEdit using the Windows Shortcuts
+  {$IFDEF darwin}
+  if (Shift = [ssMeta]) then
+  case Key of
+    VK_C: SynEditCDI.CommandProcessor(TSynEditorCommand(ecCopy), ' ', nil);
+    VK_V: SynEditCDI.CommandProcessor(TSynEditorCommand(ecPaste), ' ', nil);
+    VK_X: SynEditCDI.CommandProcessor(TSynEditorCommand(ecCut), ' ', nil);
+    end;
+  {$ENDIF}
 end;
 
 procedure TFormMain.TimerCANTimer(Sender: TObject);
@@ -785,6 +875,12 @@ begin
     FormLog.LEDButtonReceiving.StateOn := Receiving;
   end;
 end;
+
+procedure TFormMain.MenuItemSelectPortClick(Sender: TObject);
+begin
+  ComboBoxPorts.ItemIndex := (Sender as TMenuItem).Tag;  // Tag set when Menu List is created
+end;
+
 
 procedure TFormMain.Log(Line: String);
 begin

@@ -8,14 +8,13 @@ object FormLog: TFormLog
   ClientHeight = 469
   ClientWidth = 420
   OnActivate = FormActivate
-  OnHide = FormHide
   LCLVersion = '0.9.31'
   object ButtonClear: TButton
     Left = 271
     Height = 22
     Top = 438
     Width = 125
-    Action = FormMain.ActionClear
+    Action = FormMain.ActionLogClear
     Anchors = [akRight, akBottom]
     TabOrder = 0
   end
@@ -33,7 +32,9 @@ object FormLog: TFormLog
     Font.Quality = fqNonAntialiased
     ParentColor = False
     ParentFont = False
+    PopupMenu = PopupMenuSynMemo
     TabOrder = 1
+    OnKeyDown = SynMemoKeyDown
     Gutter.Width = 57
     Gutter.MouseActions = <>
     Highlighter = SynXMLSyn
@@ -582,7 +583,32 @@ object FormLog: TFormLog
     SpaceAttri.FrameEdges = sfeAround
     SymbolAttri.FrameEdges = sfeAround
     WantBracesParsed = False
-    left = 176
-    top = 200
+    left = 95
+    top = 168
+  end
+  object PopupMenuSynMemo: TPopupMenu
+    left = 95
+    top = 112
+    object MenuItemSynEditCut: TMenuItem
+      Action = FormMain.ActionLogMemoCut
+    end
+    object MenuItemSynEditCopy: TMenuItem
+      Action = FormMain.ActionLogMemoCopy
+    end
+    object MenuItemSynEditPaste: TMenuItem
+      Action = FormMain.ActionLogMemoPaste
+    end
+    object MenuItemSynEditSeparator1: TMenuItem
+      Caption = '-'
+    end
+    object MenuItemSynEditSelectAll: TMenuItem
+      Action = FormMain.ActionLogMemoSelectAll
+    end
+    object MenuItemSynEditSeparator2: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem2: TMenuItem
+      Action = FormMain.ActionLogClear
+    end
   end
 end
