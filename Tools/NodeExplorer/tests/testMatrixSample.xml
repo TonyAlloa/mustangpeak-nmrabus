@@ -40,17 +40,22 @@
     <Enabled>True</Enabled>
     <TestObjective>
       <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
-      <Objective>Send Global Identify Nodes message</Objective>
+      <Objective>Send Global Identify Nodes message with empty payload</Objective>
       <Results>All nodes on network reply with the target of interest included</Results>
     </TestObjective>
     <TestObjective>
       <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
-      <Objective>Send Identify Nodes message with Full Node ID of node under test in data payload</Objective>
+      <Objective>Send Global Identify Nodes message with Full Node ID of node under test in data payload</Objective>
       <Results>Verified Node ID from target node on the network</Results>
     </TestObjective>
     <TestObjective>
-      <Objective>Send Identify Nodes message with Full Node ID of non existent node in the data payload</Objective>
+      <Objective>Send Global Identify Nodes message with Full Node ID of non existent node in the data payload</Objective>
       <Results>No reply expected</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
+      <Objective>Send Addressed Identify Nodes message with empty payload</Objective>
+      <Results>Verified Node ID from target node on the network</Results>
     </TestObjective>
     <TestObjective>
       <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
@@ -60,7 +65,22 @@
     <TestObjective>
       <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
       <Objective>Send Addressed Identify Nodes message with Full Node ID in the data payload to the incorrect alias address</Objective>
-      <Results> No reply expected</Results>
+      <Results>Verified Node ID from target node on the network</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
+      <Objective>Send incorrectly Addressed Identify Nodes message with empty payload</Objective>
+      <Results>No response</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
+      <Objective>Send incorrectly Addressed Identify Nodes message with Full Node ID in the data payload</Objective>
+      <Results>No response</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>"OpenLCB Message Network" Paragraph 2.6.2</SpecDoc>
+      <Objective>Send incorrectly Addressed Identify Nodes message with Full Node ID in the data payload to the incorrect alias address</Objective>
+      <Results>No response</Results>
     </TestObjective>
   </Test>
   <Test>

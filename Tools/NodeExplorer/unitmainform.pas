@@ -124,8 +124,10 @@ type
     ListViewDiscovery: TListView;
     ListViewProducers: TListView;
     MainMenu: TMainMenu;
-    MenuItem1: TMenuItem;
+    MenuItemLoadTestMatrix: TMenuItem;
     MenuItem2: TMenuItem;
+    MenuItemShowLog: TMenuItem;
+    MenuItemWindow: TMenuItem;
     MenuItemFile: TMenuItem;
     OpenDialog: TOpenDialog;
     PageControl: TPageControl;

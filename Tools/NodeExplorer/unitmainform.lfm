@@ -1638,8 +1638,14 @@ object FormMain: TFormMain
     top = 152
     object MenuItemFile: TMenuItem
       Caption = 'File'
-      object MenuItem1: TMenuItem
-        Caption = 'New Item2'
+      object MenuItemLoadTestMatrix: TMenuItem
+        Action = ActionLoadTestMatrix
+      end
+    end
+    object MenuItemWindow: TMenuItem
+      Caption = 'Window'
+      object MenuItemShowLog: TMenuItem
+        Action = ActionShowLog
       end
     end
     object MenuItem2: TMenuItem

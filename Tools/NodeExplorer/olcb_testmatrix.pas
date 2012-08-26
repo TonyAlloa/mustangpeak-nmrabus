@@ -596,9 +596,8 @@ begin
           Result := 3;
        end;
     6 : begin
-          // Send a Addressed Verify Node ID with target Full Node ID in the Data
+          // Send a Addressed Verify Node ID with no data
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, Settings.TargetNodeAlias, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);
-          MessageHelper.StoreNodeIDToData(Settings.TargetNodeID, True);
           ProcessStrings.Add(MessageHelper.Encode);
 
           Inc(FStateMachineIndex);
@@ -616,23 +615,103 @@ begin
             Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
-          Result := 4;                                                          //
+          Result := 4;
        end;
     8 : begin
+          // Send a Addressed Verify Node ID with target Full Node ID in the Data
+          MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, Settings.TargetNodeAlias, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          MessageHelper.StoreNodeIDToData(Settings.TargetNodeID, True);
+          ProcessStrings.Add(MessageHelper.Encode);
+
+          Inc(FStateMachineIndex);
+          Result := 4;
+        end;
+    9: begin
+          // Should be one and only one response from any node
+          if ProcessStrings.Count = 1 then
+          begin
+            MessageHelper.Decompose(ProcessStrings[0]);
+            ValidateBasicReturnMessage(MTI_VERIFIED_NODE_ID_NUMBER, MessageHelper);
+            if MessageHelper.ExtractDataBytesAsInt(0, 5) <> Settings.TargetNodeID then
+              Include(FErrorCodes, teFullNodeIDInvalid);
+          end else
+            Include(FErrorCodes, teIncorrectCount);
+
+          Inc(FStateMachineIndex);
+          Result := 5;
+        end;
+   10 : begin
           // Send a Addressed Verify Node ID with non-existent Full Node ID in the Data
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, Settings.TargetNodeAlias, 8, 0, 0, 0, 0, 0 ,0 ,0 ,1);  // TODO: NEED UNIQUE NODE ID HERE
           ProcessStrings.Add(MessageHelper.Encode);
 
           Inc(FStateMachineIndex);
-          Result := 4;                                                          // Objective 4
+          Result := 5;
         end;
-    9: begin
+    11: begin
+          // Should be one and only one response from any node
+          if ProcessStrings.Count = 1 then
+          begin
+            MessageHelper.Decompose(ProcessStrings[0]);
+            ValidateBasicReturnMessage(MTI_VERIFIED_NODE_ID_NUMBER, MessageHelper);
+            if MessageHelper.ExtractDataBytesAsInt(0, 5) <> Settings.TargetNodeID then
+              Include(FErrorCodes, teFullNodeIDInvalid);
+          end else
+            Include(FErrorCodes, teIncorrectCount);
+
+          Inc(FStateMachineIndex);
+          Result := 6;                                                          //
+       end;
+
+
+    12 : begin
+          // Send an incorrectly Addressed Verify Node ID with no data
+          MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, $001, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);   // TODO: NEED UNIQUE ALIAS NODE ID HERE
+          ProcessStrings.Add(MessageHelper.Encode);
+
+          Inc(FStateMachineIndex);
+          Result := 6;
+        end;
+    13: begin
           // Should be no response from any node
           if ProcessStrings.Count <> 0 then
             Include(FErrorCodes, teIncorrectCount);
 
           Inc(FStateMachineIndex);
-          Result := 5;                                                          //
+          Result := 7;
+       end;
+    14 : begin
+          // Send an incorrectly Addressed Verify Node ID with target Full Node ID in the Data
+          MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, $001, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);   // TODO: NEED UNIQUE ALIAS NODE ID HERE
+          MessageHelper.StoreNodeIDToData(Settings.TargetNodeID, True);
+          ProcessStrings.Add(MessageHelper.Encode);
+
+          Inc(FStateMachineIndex);
+          Result := 7;
+        end;
+    15: begin
+          // Should be no response from any node
+          if ProcessStrings.Count <> 0 then
+            Include(FErrorCodes, teIncorrectCount);
+
+          Inc(FStateMachineIndex);
+          Result := 8;
+        end;
+   16 : begin
+          // Send an incorrectly Addressed Verify Node ID with non-existent Full Node ID in the Data
+          MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, $001, 8, 0, 0, 0, 0, 0 ,0 ,0 ,1);  // TODO: NEED UNIQUE ALIAS NODE ID HERE
+          ProcessStrings.Add(MessageHelper.Encode);                                                                                  // TODO: NEED ALIAS NODE ID HERE
+
+          Inc(FStateMachineIndex);
+          Result := 8;
+        end;
+    17: begin
+          // Should be no response from any node
+          if ProcessStrings.Count <> 0 then
+            Include(FErrorCodes, teIncorrectCount);
+
+          Inc(FStateMachineIndex);
+          Result := 9;                                                          //
        end;
 
   end;
@@ -712,7 +791,7 @@ begin
   end;
 end;
 
-{ TTestVerifyNodeID }
+{ TTestGetNodesUnderTest }
 
 function TTestGetNodesUnderTest.ProcessObjectives(ProcessStrings: TStringList): Integer;
 begin
