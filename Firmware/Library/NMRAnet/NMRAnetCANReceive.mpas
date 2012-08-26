@@ -236,19 +236,15 @@ begin
                                                            begin
                                                              case CANBuffer^.ID and MTI_MASK of                                      // If we get here then the message is for our Node or VNode
                                                                MTI_VERIFY_NODE_ID_NUMBER_DEST  :   begin
-                                                                                                     if (CANBuffer^.DataCount = 2) then                                      // THIS IS NOT CLEAR IN THE SPEC
-                                                                                                       NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID)
-                                                                                                     else begin
-                                                                                                       NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 2);
-                                                                                                       Node := NMRAnetNode_FindByNodeID(NodeID);
-                                                                                                       if Node <> nil then
-                                                                                                         NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID)
-                                                                                                     end
+                                                                                                     // All messages addressed to node get replies even if the payload is wrong!
+                                                                                                     NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID);
                                                                                                    end;
                                                                MTI_OPTIONAL_INTERACTION_REJECTED : begin
                                                                                                    end;
                                                                MTI_PROTOCOL_SUPPORT_INQUIRY      : begin
-                                                                                                     if NMRAnetUtilities_ExtractDestinationAliasFlags(CANBuffer) <> PIP_EXTENSION_START_BIT then
+                                                                                                     // BITS ARE NEGATIVE LOGIC    
+                                                                                                     // Since we don't implement extended protocols yet just reply when we see the start bit set (active 0)
+                                                                                                     if NMRAnetUtilities_ExtractDestinationAliasFlags(CANBuffer) and PIP_EXTENSION_START_BIT_MASK = 0 then
                                                                                                      begin
                                                                                                        if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                                                        begin
