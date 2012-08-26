@@ -106,6 +106,9 @@ const
   PIP_UNASSIGNED                     = $0007FFFFFFF0;
   PIP_RESERVED                       = $00000000000F;
 
+  OIR_TEMPORARY_ERROR                 = $1000;
+  OIR_PERMANENT_ERROR                 = $2000;
+
 
 implementation
 

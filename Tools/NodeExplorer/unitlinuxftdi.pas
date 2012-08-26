@@ -110,7 +110,7 @@ begin
 end;
 }
 
-
+       {
 Type FT_Result = Integer;
      FT_ProgramData = Record
        VID : Word;
@@ -217,7 +217,7 @@ Const
     function FT_SetBitMode(ftHandle:Dword;ucMask,ucEnable:Byte) : FT_Result ; cdecl ; External FT_DLL_Name name 'FT_SetBitMode';
     function FT_SetUSBParameters(ftHandle:Dword;dwInSize,dwOutSize:DWord) : FT_Result ; cdecl ; External FT_DLL_Name name 'FT_SetUSBParameters';
     function FT_W32_CreateFile(pDeviceName:PChar;dwAccess,dwShareMode,lpSecAttributes,dwCreate,dwAttrsAndFlags,htemplate:DWord) : DWord ; cdecl ; External FT_DLL_Name name 'FT_W32_CreateFile';
-
+          }
 
 implementation
 

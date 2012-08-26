@@ -1,19 +1,19 @@
 object FormLog: TFormLog
   Left = 967
-  Height = 471
-  Top = 179
-  Width = 402
+  Height = 469
+  Top = 177
+  Width = 420
   BorderStyle = bsSizeToolWin
   Caption = 'Log Window'
-  ClientHeight = 471
-  ClientWidth = 402
+  ClientHeight = 469
+  ClientWidth = 420
   OnActivate = FormActivate
   OnHide = FormHide
   LCLVersion = '0.9.31'
   object ButtonClear: TButton
-    Left = 253
+    Left = 271
     Height = 22
-    Top = 440
+    Top = 438
     Width = 125
     Action = FormMain.ActionClear
     Anchors = [akRight, akBottom]
@@ -22,9 +22,9 @@ object FormLog: TFormLog
   inline SynMemo: TSynMemo
     Cursor = crIBeam
     Left = 0
-    Height = 432
+    Height = 382
     Top = 0
-    Width = 402
+    Width = 420
     Align = alTop
     Anchors = [akTop, akLeft, akRight, akBottom]
     Font.Height = -13
@@ -501,13 +501,69 @@ object FormLog: TFormLog
   object CheckBoxShowGutter: TCheckBox
     Left = 16
     Height = 18
-    Top = 444
+    Top = 442
     Width = 97
     Action = FormMain.ActionLogShowGutter
     Anchors = [akLeft, akBottom]
     Checked = True
     State = cbChecked
     TabOrder = 2
+  end
+  object LEDButtonSending: TLEDButton
+    Left = 16
+    Height = 16
+    Top = 391
+    Width = 30
+    Anchors = [akLeft, akBottom]
+    Beveled = False
+    BorderStyle = bsSingle
+    ButtonDirection = bdTopUp
+    Caption = 'LEDButtonSending'
+    Color = clBtnFace
+    ColorLED = clLime
+    Depth = 3
+    LEDContrast = 6
+    NumGlyphs = 0
+    ShowLED = True
+    StateOn = False
+    Switching = False
+  end
+  object LEDButtonReceiving: TLEDButton
+    Left = 16
+    Height = 16
+    Top = 415
+    Width = 30
+    Anchors = [akLeft, akBottom]
+    Beveled = False
+    BorderStyle = bsSingle
+    ButtonDirection = bdTopUp
+    Caption = 'LEDButtonReceiving'
+    Color = clBtnFace
+    ColorLED = clLime
+    Depth = 3
+    LEDContrast = 6
+    NumGlyphs = 0
+    ShowLED = True
+    StateOn = False
+    Switching = False
+  end
+  object LabelSending: TLabel
+    Left = 68
+    Height = 17
+    Top = 393
+    Width = 51
+    Anchors = [akLeft, akBottom]
+    Caption = 'Sending'
+    ParentColor = False
+  end
+  object LabelReceiving: TLabel
+    Left = 68
+    Height = 17
+    Top = 414
+    Width = 61
+    Anchors = [akLeft, akBottom]
+    Caption = 'Receiving'
+    ParentColor = False
   end
   object SynXMLSyn: TSynXMLSyn
     DefaultFilter = 'XML Document (*.xml,*.xsd,*.xsl,*.xslt,*.dtd)|*.xml;*.xsd;*.xsl;*.xslt;*.dtd'

@@ -27,12 +27,13 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynHighlighterXML, SynEdit, RTTICtrls, Forms,
   Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList, Menus, ExtCtrls,
-  synaser, lcltype, ButtonPanel, ShellCtrls, unitlogwindow, unitsettings, DOM,
-  XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
+  synaser, lcltype, ButtonPanel, ShellCtrls, Spin, unitlogwindow, unitsettings,
+  DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
   {$IFDEF UNIX}
   unitLinuxFTDI,
   {$ENDIF}
-  nodeexplorer_settings, olcb_utilities, unitolcb_defines, unitDebugLogger;
+  nodeexplorer_settings, olcb_utilities, unitolcb_defines, unitDebugLogger,
+  RackCtls, types;
 
 
 const
@@ -43,6 +44,7 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
+    ActionMemConfig: TAction;
     ActionReadPip: TAction;
     ActionLogShowGutter: TAction;
     ActionExecuteTests: TAction;
@@ -65,6 +67,7 @@ type
     ButtonConnect: TButton;
     ButtonDiscoverNodes: TButton;
     ButtonExecuteTests: TButton;
+    ButtonExecuteTests1: TButton;
     ButtonReadPIP: TButton;
     ButtonSaveTests: TButton;
     ButtonShowLog: TButton;
@@ -74,9 +77,16 @@ type
     ButtonReadXML: TButton;
     ButtonReadEvents: TButton;
     ButtonSendDatagramReply: TButton;
+    CheckBoxMemConfigReadOnly: TCheckBox;
+    CheckBoxMemConfigImplied: TCheckBox;
+    CheckBoxMemConfigPresent: TCheckBox;
+    CheckGroupConfigMem: TCheckGroup;
+    CheckGroupConfigMemWriteLen: TCheckGroup;
     CheckGroupPIP: TCheckGroup;
     ComboBoxBaud: TComboBox;
     ComboBoxPorts: TComboBox;
+    EditMemConfgLowAddress: TEdit;
+    EditMemConfigHiAddress: TEdit;
     EditPipRawMessage: TEdit;
     EditCustomBaudRate: TEdit;
     EditDiscoverNodeAlias: TEdit;
@@ -84,12 +94,14 @@ type
     EditPacket: TEdit;
     EditSourceNodeAlias: TEdit;
     EditTargetNodeAlias: TEdit;
+    GroupBoxConfigMemOptions: TGroupBox;
     GroupBoxComPort: TGroupBox;
     GroupBoxEventReaderConsumers: TGroupBox;
     GroupBoxEventReaderProducers: TGroupBox;
-    ImageListLarge: TImageList;
     ImageListSmall: TImageList;
     ImageOpenLCB: TImage;
+    LabelMemConfigHiAddress: TLabel;
+    LabelMemConfigLowAddress: TLabel;
     LabelDiscoverMultiNode: TLabel;
     LabelPipPassFail: TLabel;
     LabelHomeMessage1: TLabel;
@@ -105,6 +117,7 @@ type
     LabelBaud: TLabel;
     LabelCustomBaud: TLabel;
     LabelPort: TLabel;
+    ListViewConfigMem: TListView;
     ListViewNodeDiscovery: TListView;
     ListViewTestMatrix: TListView;
     ListViewConsumers: TListView;
@@ -120,6 +133,7 @@ type
     SaveDialog: TSaveDialog;
     SynEditCDI: TSynEdit;
     SynXMLSyn: TSynXMLSyn;
+    TabSheetMemConfiguration: TTabSheet;
     TabSheetProtocolID: TTabSheet;
     TabSheetVerification: TTabSheet;
     TabSheetDiscover: TTabSheet;
@@ -127,7 +141,6 @@ type
     TabSheetHome: TTabSheet;
     TabSheetCustom: TTabSheet;
     TabSheetCDIReader: TTabSheet;
-    TimerSafetyNet: TTimer;
     TimerCAN: TTimer;
     procedure ActionClearExecute(Sender: TObject);
     procedure ActionConnectExecute(Sender: TObject);
@@ -137,6 +150,7 @@ type
     procedure ActionHideLogExecute(Sender: TObject);
     procedure ActionLoadTestMatrixExecute(Sender: TObject);
     procedure ActionLogShowGutterExecute(Sender: TObject);
+    procedure ActionMemConfigExecute(Sender: TObject);
     procedure ActionReadPipExecute(Sender: TObject);
     procedure ActionReadXMLExecute(Sender: TObject);
     procedure ActionRescanPortsExecute(Sender: TObject);
@@ -154,10 +168,9 @@ type
     procedure FormShow(Sender: TObject);
     procedure ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
+    procedure PageControlChange(Sender: TObject);
     procedure TimerCANTimer(Sender: TObject);
-    procedure TimerSafetyNetTimer(Sender: TObject);
   private
-    FSafetyRelease: Boolean;
     { private declarations }
     FShownOnce: Boolean;
     FTestThread: TComPortThread;
@@ -177,10 +190,10 @@ type
     procedure ClearTestResultsXML;
     property Connected: Boolean read GetConnected;
     procedure LoadTestMatrixListview;
+    procedure ThreadCallback(Sending: Boolean; Receiving: Boolean);
   public
     { public declarations }
     procedure Log(Line: String);
-    property SafetyRelease: Boolean read FSafetyRelease write FSafetyRelease;
     property ShownOnce: Boolean read FShownOnce write FShownOnce;
     property TestStrings: TStringList read FTestStrings write FTestStrings;
     property TestThread: TComPortThread read FTestThread write FTestThread;
@@ -270,9 +283,7 @@ begin
     Test.FreeOnLog := True;
     TestThread.Add(Test);
 
-    SafetyRelease := False;
-    TimerSafetyNet.Enabled := True;
-    while (Test.TestState <> ts_Complete) and not SafetyRelease do      // Wait for the test to end.....
+    while (Test.TestState <> ts_Complete)  do      // Wait for the test to end.....
       ThreadSwitch;
 
     Helper := TOpenLCBMessageHelper.Create;
@@ -366,6 +377,11 @@ begin
   FormLog.SynMemo.Gutter.Visible := FormLog.CheckBoxShowGutter.Checked;
 end;
 
+procedure TFormMain.ActionMemConfigExecute(Sender: TObject);
+begin
+
+end;
+
 procedure TFormMain.ActionReadPipExecute(Sender: TObject);
 var
   XMLDoc: TXMLDocument;
@@ -391,9 +407,7 @@ begin
         Test.FreeOnLog := True;
         TestThread.Add(Test);
 
-        SafetyRelease := False;
-        TimerSafetyNet.Enabled := True;
-        while (Test.TestState <> ts_Complete) and not SafetyRelease do      // Wait for the test to end.....
+        while (Test.TestState <> ts_Complete)  do      // Wait for the test to end.....
           ThreadSwitch;
 
         if Test.Passed then
@@ -553,7 +567,6 @@ begin
   ShownOnce := False;
   FTestStrings := TStringList.Create;
   FXMLDocTestResults := TXMLDocument.Create;
-  FSafetyRelease := False;
   ActionRescanPorts.Execute;
 end;
 
@@ -609,6 +622,11 @@ begin
   Test := TTestBase( Item.Data);
   Test.XMLTests := nil;                    // The XML Document owns this
   FreeAndNil( Test);
+end;
+
+procedure TFormMain.PageControlChange(Sender: TObject);
+begin
+
 end;
 
 procedure TFormMain.TimerCANTimer(Sender: TObject);
@@ -673,12 +691,6 @@ begin
         Test.Free;
     end;
   end;
-end;
-
-procedure TFormMain.TimerSafetyNetTimer(Sender: TObject);
-begin
-  SafetyRelease := True;
-  TimerSafetyNet.Enabled := False;
 end;
 
 function TFormMain.GetConnected: Boolean;
@@ -760,6 +772,15 @@ begin
     finally
       ListviewTestMatrix.Items.EndUpdate
     end;
+  end;
+end;
+
+procedure TFormMain.ThreadCallback(Sending: Boolean; Receiving: Boolean);
+begin
+  if FormLog.Visible then
+  begin
+    FormLog.LEDButtonSending.StateOn := Sending;
+    FormLog.LEDButtonReceiving.StateOn := Receiving;
   end;
 end;
 

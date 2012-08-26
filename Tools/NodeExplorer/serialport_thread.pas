@@ -5,7 +5,7 @@ unit serialport_thread;
 interface
 uses
   Classes, SysUtils, synaser, olcb_testmatrix, ExtCtrls, olcb_utilities, DOM, XMLRead, XMLWrite, unitDebugLogger,
-  nodeexplorer_settings;
+  nodeexplorer_settings, unitlogwindow;
 
 type
 
@@ -132,7 +132,9 @@ begin
                                   iCurrentObjective := ActiveTest.ProcessObjectives(ProcessStrings);  // Run Next State and get State specific strings
                                   for i := 0 to ProcessStrings.Count - 1 do          // Start with the next objective information
                                   begin
+                                    FormLog.LEDButtonSending.StateOn := True;
                                     Serial.SendString(ProcessStrings[i] + LF);
+                                    FormLog.LEDButtonSending.StateOn := False;
                                     XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_SEND);
                                     XMLObjectiveResultsNode.AppendChild(XMLNode);
                                     XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ProcessStrings[i]));
@@ -144,7 +146,9 @@ begin
                                   ActiveTest.TestState := ts_Receiving;
                                 end;
             ts_Receiving      : begin
+                                  FormLog.LEDButtonReceiving.StateOn := True;
                                   TempStr := Serial.Recvstring(Settings.TimeoutComRead);  // Try to get something from the CAN
+                                  FormLog.LEDButtonReceiving.StateOn := False;
                                   if TempStr <> '' then
                                   begin
                                     ProcessStrings.Add( Trim( UpperCase(TempStr)));
@@ -338,4 +342,4 @@ end;
 
 
 end.
-
+

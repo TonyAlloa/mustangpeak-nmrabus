@@ -61,6 +61,14 @@ type
   );
   TTestErrorPipCodes = set of TTestErrorPipCode;
 
+  TTestUnknownMTICode = (
+    tuExpectedOIR,              // Node did not send an Optional Interaction Rejected message
+    tuInvalidDestAlias,         // Invalid destination alias sent by node
+    tuOptionalCode,             // OIR Code was incorrect
+    tuMTIMismatch               // The MTI did not match
+  );
+  TTestUnknownMTICodes = set of TTestUnknownMTICode;
+
 type
   TTestState = (ts_Idle, ts_Initialize, ts_ObjectiveStart, ts_Sending, ts_Receiving, ts_ObjectiveEnd, ts_Complete);
 
@@ -93,6 +101,8 @@ type
     FErrorCodes: TTestErrorCodes;
     FErrorCodesFormat: TTestErrorFormatCodes;
     FErrorCodesPip: TTestErrorPipCodes;
+    FErrorCodesUnknownMTI: TTestUnknownMTICodes;
+    FErrorCodesUnknownMTIStrings: TStringList;
     FFreeOnLog: Boolean;
     FListItem: TListItem;
     FMessageHelper: TOpenLCBMessageHelper;
@@ -107,6 +117,8 @@ type
     property ErrorCodes: TTestErrorCodes read FErrorCodes write FErrorCodes;
     property ErrorCodesFormat: TTestErrorFormatCodes read FErrorCodesFormat write FErrorCodesFormat;
     property ErrorCodesPip: TTestErrorPipCodes read FErrorCodesPip write FErrorCodesPip;
+    property ErrorCodesUnknownMTIStrings: TStringList read FErrorCodesUnknownMTIStrings write FErrorCodesUnknownMTIStrings;
+    property ErrorCodesUnknownMTI: TTestUnknownMTICodes read FErrorCodesUnknownMTI write FErrorCodesUnknownMTI;
     property FreeOnLog: Boolean read FFreeOnLog write FFreeOnLog;
     property ListItem: TListItem read FListItem write FListItem;
     property Passed: Boolean read GetPassed;
@@ -326,6 +338,7 @@ end;
 function TTestUnknownMTIAddressed.ProcessObjectives(ProcessStrings: TStringList): Integer;
 var
   UnknownMTI: DWord;
+  i: Integer;
 begin
   Result := inherited ProcessObjectives(ProcessStrings);
   case StateMachineIndex of
@@ -353,6 +366,28 @@ begin
             Result := 0;
           end else
           begin
+            ErrorCodesUnknownMTIStrings.Clear;
+            MTIManager.ResetMTI;
+            for i := 0 to ProcessStrings.Count - 1 do
+            begin
+              MessageHelper.Decompose(ProcessStrings[i]);
+              if MessageHelper.MTI and MTI_OPTIONAL_INTERACTION_REJECTED = MTI_OPTIONAL_INTERACTION_REJECTED then
+              begin
+                if MessageHelper.ExtractDataBytesAsInt(0, 1) = Settings.TargetNodeAlias then
+                begin
+                   if MessageHelper.ExtractDataBytesAsInt(2, 3) = OIR_PERMANENT_ERROR then
+                   begin
+                      if MessageHelper.ExtractDataBytesAsInt(4, 5) = MTIManager.MTI then
+                      begin
+                      end else
+                      begin
+
+                      end;
+                   end;
+                end;
+              end;
+            end;
+
             Inc(FStateMachineIndex);
             Result := 1;                                                          // Objective 1
           end;
@@ -375,7 +410,7 @@ begin
   Result := inherited ProcessObjectives(ProcessStrings);
   case StateMachineIndex of
     0 : begin
-          // Send Standard Messages:
+          // Send all Standard Messages in one shot and see what comes back
          for i := 0 to 2047 do
            ProcessStrings.Add(':S' + IntToHex(i, 3) + 'N;');
 
@@ -751,6 +786,7 @@ begin
   FFreeOnLog := False;
   FMessageHelper := TOpenLCBMessageHelper.Create;
   FXMLResults := TXMLDocument.Create;
+  ErrorCodesUnknownMTIStrings := TStringList.Create;
   FTestState := ts_Idle;
   FStateMachineIndex := 0;
   FListItem := nil;
@@ -761,6 +797,7 @@ destructor TTestBase.Destroy;
 begin
   FreeAndNil(FMessageHelper);
   FreeAndNil(FXMLResults);
+  FreeAndNil(FErrorCodesUnknownMTIStrings);
   FStateMachineIndex := 0;
   inherited Destroy;
 end;
@@ -810,6 +847,8 @@ begin
   ErrorCodes := [];
   ErrorCodesFormat := [];
   ErrorCodesPip := [];
+  ErrorCodesUnknownMTI := [];
+  ErrorCodesUnknownMTIStrings.Clear;
 end;
 
 

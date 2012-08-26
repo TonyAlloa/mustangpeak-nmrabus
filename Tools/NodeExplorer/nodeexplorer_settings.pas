@@ -7,6 +7,17 @@ interface
 uses
   Classes, SysUtils, DOM, XMLRead, XMLWrite, FileUtil, Forms, Dialogs;
 
+
+const
+  XML_SETTINGS      = 'Settings';
+  XML_SETTINGS_NODE = 'Node';
+  XML_SETTINGS_ID   = 'ID';
+  XML_SETTINGS_ALIAS = 'Alias';
+  XML_SETTINGS_COM   = 'COM';
+  XML_SETTINGS_PORT  = 'Port';
+  XML_SETTINGS_BAUD  = 'Baud';
+
+
 const
   FILENAME_STANDARD_TEST_FILE_UNIX = '/tests/testMatrixSample.xml';
   FILENAME_STANDARD_TEST_PATH_UNIX = '/tests';
@@ -16,6 +27,8 @@ const
   FILENAME_SETTINGS = 'Settings.xml';
   FILENAME_KNOWN_MTI_UNIX = '/Contents/Resources/tests/knownMTI.txt';
   FILENAME_KNOWN_MTI_WIN  = 'tests\knownMTI.txt';
+
+  PATH_UNIX_APPLICATION_PATH = '/usr/share/nodeexplorer';
 
   DEFAULT_COM_READ_TIMEOUT = 30; // ms
 
@@ -77,6 +90,9 @@ begin
   {$IFDEF darwin}
     Result := ApplicationPath + FILENAME_OSX_RESOURCES_SUB_PATH + FILENAME_STANDARD_TEST_PATH_UNIX;
   {$ENDIF}
+  {$IFDEF Linux}
+    Result := ApplicationPath + FILENAME_STANDARD_TEST_PATH_UNIX;
+  {$ENDIF}
 end;
 
 function TSettings.GetTextMatrixFile: string;
@@ -86,6 +102,9 @@ begin
   {$ENDIF}
   {$IFDEF darwin}
     Result := ApplicationPath + FILENAME_OSX_RESOURCES_SUB_PATH + FILENAME_STANDARD_TEST_FILE_UNIX;
+  {$ENDIF}
+  {$IFDEF Linux}
+    Result := ApplicationPath + FILENAME_STANDARD_TEST_FILE_UNIX;
   {$ENDIF}
 end;
 
@@ -119,6 +138,9 @@ begin
 {$IFDEF Windows}
   FApplicationPath := ExtractFilePath(Application.ExeName);
 {$ENDIF}
+{$IFDEF Linux}
+  FApplicationPath := PATH_UNIX_APPLICATION_PATH;
+{$ENDIF}
 end;
 
 procedure TSettings.ReadSettings;
@@ -128,26 +150,26 @@ begin
   if FileExistsUTF8(GetAppConfigDir(True)+FILENAME_SETTINGS) then
   begin
     ReadXMLFile(FXMLSettings, UTF8ToSys(GetAppConfigDir(True)+FILENAME_SETTINGS));
-    NodeSettings := XMLSettings.FindNode('Settings');
+    NodeSettings := XMLSettings.FindNode(XML_SETTINGS);
     if Assigned(NodeSettings) then
     begin
-      NodeIDs := NodeSettings.FindNode('Node');
+      NodeIDs := NodeSettings.FindNode(XML_SETTINGS_NODE);
       if Assigned(NodeIDs) then
       begin
-        NodeID := NodeIDs.FindNode('ID');
+        NodeID := NodeIDs.FindNode(XML_SETTINGS_ID);
         if Assigned(NodeID) then
           FProxyNodeID := StrToInt64(NodeID.FirstChild.NodeValue);
-        NodeAlias := NodeIDs.FindNode('Alias');
+        NodeAlias := NodeIDs.FindNode(XML_SETTINGS_ALIAS);
         if Assigned(NodeAlias) then
           FProxyNodeAlias := StrToInt(NodeAlias.FirstChild.NodeValue);
       end;
-      NodeCOM := NodeSettings.FindNode('COM');
+      NodeCOM := NodeSettings.FindNode(XML_SETTINGS_COM);
       if Assigned(NodeCOM) then
       begin
-        NodeCOMPort := NodeCOM.FindNode('Port');
+        NodeCOMPort := NodeCOM.FindNode(XML_SETTINGS_PORT);
         if Assigned(NodeCOMPort) then
           FComPort := NodeCOMPort.FirstChild.NodeValue;
-        NodeBaudRate := NodeCOM.FindNode('Baud');
+        NodeBaudRate := NodeCOM.FindNode(XML_SETTINGS_BAUD);
         if Assigned(NodeBaudRate) then
           FBaudRate := StrToInt(NodeBaudRate.FirstChild.NodeValue);
       end;

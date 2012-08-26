@@ -23,7 +23,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, SynMemo, SynHighlighterXML, Forms, Controls,
-  Graphics, Dialogs, StdCtrls, SynEditMarkupSpecialLine;
+  Graphics, Dialogs, StdCtrls, RackCtls, SynEditMarkupSpecialLine;
 
 type
 
@@ -32,6 +32,10 @@ type
   TFormLog = class(TForm)
     ButtonClear: TButton;
     CheckBoxShowGutter: TCheckBox;
+    LabelReceiving: TLabel;
+    LabelSending: TLabel;
+    LEDButtonSending: TLEDButton;
+    LEDButtonReceiving: TLEDButton;
     SynMemo: TSynMemo;
     SynXMLSyn: TSynXMLSyn;
     procedure FormActivate(Sender: TObject);

@@ -9,7 +9,8 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, runtimetypeinfocontrols, UnitMainForm, unitlogwindow, olcb_utilities,
   olcb_stringconstants, unitolcb_defines, unitsettings, serialport_thread,
-  olcb_testmatrix, nodeexplorer_settings, unitDebugLogger, unitLinuxFTDI;
+  olcb_testmatrix, nodeexplorer_settings, unitDebugLogger, unitLinuxFTDI,
+  RackCtlsPkg;
 
 {$R *.res}
 
