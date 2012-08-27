@@ -297,9 +297,9 @@ object FormAbout: TFormAbout
   end
   object LabelNodeExplorer: TLabel
     Left = 128
-    Height = 29
+    Height = 30
     Top = 152
-    Width = 271
+    Width = 249
     Caption = 'Node Explorer Ver 0.1'
     Font.Height = -24
     Font.Name = 'Lucida Grande'
@@ -311,7 +311,7 @@ object FormAbout: TFormAbout
     Left = 208
     Height = 18
     Top = 184
-    Width = 99
+    Width = 90
     Caption = 'Jim Kueneman'
     Font.Height = -14
     ParentColor = False
@@ -319,84 +319,29 @@ object FormAbout: TFormAbout
   end
   object LabelWrittenIn: TLabel
     Left = 24
-    Height = 16
+    Height = 15
     Top = 280
-    Width = 200
+    Width = 187
     Caption = 'Written in Free Pascal and Lazarus'
     Font.Height = -12
     ParentColor = False
     ParentFont = False
   end
-  object StaticTextURLFreePascal: TStaticText
-    Cursor = crHandPoint
-    Left = 264
-    Height = 17
-    Top = 280
-    Width = 144
-    Caption = 'www.freepascal.org'
-    Color = clDefault
-    Font.Color = clBlue
-    Font.Height = -12
-    Font.Name = 'Lucida Grande'
-    OnClick = StaticTextURLFreePascalClick
-    OnMouseEnter = StaticTextURLFreePascalMouseEnter
-    OnMouseLeave = StaticTextURLFreePascalMouseLeave
-    ParentFont = False
-    ParentColor = False
-    TabOrder = 0
-  end
-  object StaticTextURLLazarus: TStaticText
-    Cursor = crHandPoint
-    Left = 264
-    Height = 17
-    Top = 296
-    Width = 188
-    Caption = 'www.lazarus.freepascal.org'
-    Color = clDefault
-    Font.Color = clBlue
-    Font.Height = -12
-    Font.Name = 'Lucida Grande'
-    OnClick = StaticTextURLLazarusClick
-    OnMouseEnter = StaticTextURLLazarusMouseEnter
-    OnMouseLeave = StaticTextURLLazarusMouseLeave
-    ParentFont = False
-    ParentColor = False
-    TabOrder = 1
-  end
   object LabelIcon: TLabel
     Left = 24
-    Height = 16
+    Height = 15
     Top = 320
-    Width = 171
+    Width = 162
     Caption = 'Icons courtesy of Mark James'
     Font.Height = -12
     ParentColor = False
     ParentFont = False
-    OnClick = LabelIconClick
-  end
-  object StaticTextURLIcons: TStaticText
-    Cursor = crHandPoint
-    Left = 264
-    Height = 17
-    Top = 320
-    Width = 244
-    Caption = 'http://www.famfamfam.com/lab/icons/silk/'
-    Color = clDefault
-    Font.Color = clBlue
-    Font.Height = -12
-    Font.Name = 'Lucida Grande'
-    OnClick = StaticTextURLIconsClick
-    OnMouseEnter = StaticTextURLIconsMouseEnter
-    OnMouseLeave = StaticTextURLIconsMouseLeave
-    ParentFont = False
-    ParentColor = False
-    TabOrder = 2
   end
   object LabelBuild: TLabel
     Left = 96
     Height = 18
     Top = 208
-    Width = 44
+    Width = 38
     Caption = 'Build: '
     Font.Height = -14
     ParentColor = False
@@ -406,7 +351,7 @@ object FormAbout: TFormAbout
     Left = 192
     Height = 18
     Top = 208
-    Width = 102
+    Width = 89
     Caption = 'LabelBuildDate'
     Font.Height = -14
     ParentColor = False
@@ -414,9 +359,9 @@ object FormAbout: TFormAbout
   end
   object LabelCPU: TLabel
     Left = 96
-    Height = 16
+    Height = 15
     Top = 232
-    Width = 73
+    Width = 72
     Caption = 'Target CPU: '
     Font.Height = -12
     ParentColor = False
@@ -424,7 +369,7 @@ object FormAbout: TFormAbout
   end
   object LabelTargetOperatingSystem: TLabel
     Left = 96
-    Height = 16
+    Height = 15
     Top = 248
     Width = 66
     Caption = 'Target OS: '
@@ -434,9 +379,9 @@ object FormAbout: TFormAbout
   end
   object LabelTargetCPU: TLabel
     Left = 192
-    Height = 16
+    Height = 15
     Top = 232
-    Width = 93
+    Width = 88
     Caption = 'LabelTargetCPU'
     Font.Height = -12
     ParentColor = False
@@ -444,12 +389,57 @@ object FormAbout: TFormAbout
   end
   object LabelTargetOS: TLabel
     Left = 192
-    Height = 16
+    Height = 15
     Top = 248
-    Width = 85
+    Width = 82
     Caption = 'LabelTargetOS'
     Font.Height = -12
     ParentColor = False
     ParentFont = False
+  end
+  object LabelURLFreePascal: TLabel
+    Cursor = crHandPoint
+    Left = 264
+    Height = 15
+    Top = 280
+    Width = 111
+    Caption = 'www.freepascal.org'
+    Font.Color = clBlue
+    Font.Height = -12
+    ParentColor = False
+    ParentFont = False
+    OnClick = LabelURLFreePascalClick
+    OnMouseEnter = LabelURLFreePascalMouseEnter
+    OnMouseLeave = LabelURLFreePascalMouseLeave
+  end
+  object LabelURLLazarus: TLabel
+    Cursor = crHandPoint
+    Left = 264
+    Height = 15
+    Top = 296
+    Width = 150
+    Caption = 'www.lazarus.freepascal.org'
+    Font.Color = clBlue
+    Font.Height = -12
+    ParentColor = False
+    ParentFont = False
+    OnClick = LabelURLLazarusClick
+    OnMouseEnter = LabelURLLazarusMouseEnter
+    OnMouseLeave = LabelURLLazarusMouseLeave
+  end
+  object LabelURLIcons: TLabel
+    Cursor = crHandPoint
+    Left = 264
+    Height = 15
+    Top = 320
+    Width = 179
+    Caption = 'www.famfamfam.com/lab/icons/'
+    Font.Color = clBlue
+    Font.Height = -12
+    ParentColor = False
+    ParentFont = False
+    OnClick = LabelURLIconsClick
+    OnMouseEnter = LabelURLIconsMouseEnter
+    OnMouseLeave = LabelURLIconsMouseLeave
   end
 end

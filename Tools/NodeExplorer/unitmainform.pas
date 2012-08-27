@@ -27,13 +27,13 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynHighlighterXML, SynEdit, RTTICtrls, Forms,
   Controls, Graphics, Dialogs, ComCtrls, StdCtrls, ActnList, Menus, ExtCtrls,
-  synaser, lcltype, ButtonPanel, ShellCtrls, Spin, Buttons, unitlogwindow,
+  synaser, lcltype, Buttons, unitlogwindow,
   unitsettings, DOM, XMLRead, XMLWrite, serialport_thread, olcb_testmatrix,
   {$IFDEF UNIX}
   unitLinuxFTDI,
   {$ENDIF}
-  nodeexplorer_settings, olcb_utilities, unitolcb_defines, unitDebugLogger,
-  RackCtls, types, SynEditKeyCmds, unitAbout;
+  nodeexplorer_settings, olcb_utilities, unitolcb_defines,
+  types, SynEditKeyCmds, unitAbout;
 
 
 const
@@ -45,6 +45,9 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
+    ActionExecuteTests: TAction;
+    ActionCancelTests: TAction;
+    ActionTerminateCurrentTest: TAction;
     ActionShowAbout: TAction;
     ActionLogMemoSelectAll: TAction;
     ActionLogMemoPaste: TAction;
@@ -53,7 +56,6 @@ type
     ActionMemConfig: TAction;
     ActionReadPip: TAction;
     ActionLogShowGutter: TAction;
-    ActionExecuteTests: TAction;
     ActionSaveTestMatrix: TAction;
     ActionLoadTestMatrix: TAction;
     ActionRescanPorts: TAction;
@@ -74,6 +76,8 @@ type
     ButtonDiscoverNodes: TButton;
     ButtonExecuteTests: TButton;
     ButtonExecuteTests1: TButton;
+    ButtonExecuteTests2: TButton;
+    ButtonStopCurrenteTest: TButton;
     ButtonReadPIP: TButton;
     ButtonSaveTests: TButton;
     ButtonShowLog: TButton;
@@ -130,6 +134,13 @@ type
     ListViewDiscovery: TListView;
     ListViewProducers: TListView;
     MainMenu: TMainMenu;
+    MenuItem1: TMenuItem;
+    MenuItemToolsSeparator1: TMenuItem;
+    MenuItemToolsDiscoverNodes: TMenuItem;
+    MenuItemToolStopCurrentTest: TMenuItem;
+    MenuItemToolsTerminateAllTests: TMenuItem;
+    MenuItemToolsTerminateCurrentTest: TMenuItem;
+    MenuItemToolsSeparatorWin: TMenuItem;
     MenuItemOptionsWin: TMenuItem;
     MenuItemTools: TMenuItem;
     MenuItemHelp: TMenuItem;
@@ -156,7 +167,6 @@ type
     TabSheetHome: TTabSheet;
     TabSheetCustom: TTabSheet;
     TabSheetCDIReader: TTabSheet;
-    TimerCAN: TTimer;
     procedure ActionLogClearExecute(Sender: TObject);
     procedure ActionConnectExecute(Sender: TObject);
     procedure ActionDiscoverNodeExecute(Sender: TObject);
@@ -180,6 +190,8 @@ type
     procedure ActionShowLogExecute(Sender: TObject);
     procedure ActionShowOptionsWinExecute(Sender: TObject);
     procedure ActionShowPreferencesMacExecute(Sender: TObject);
+    procedure ActionStopAllTestsExecute(Sender: TObject);
+    procedure ActionCancelTestsExecute(Sender: TObject);
     procedure ComboBoxBaudChange(Sender: TObject);
     procedure ComboBoxPortsChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
@@ -191,7 +203,6 @@ type
     procedure MenuItemConnectionClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
     procedure SynEditCDIKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure TimerCANTimer(Sender: TObject);
   private
     { private declarations }
     FShownOnce: Boolean;
@@ -212,11 +223,14 @@ type
     procedure ClearTestResultsXML;
     property Connected: Boolean read GetConnected;
     procedure LoadTestMatrixListview;
-    procedure ThreadCallback(Sending: Boolean; Receiving: Boolean);
     procedure MenuItemSelectPortClick(Sender: TObject);
+    procedure ResetTestVerificationIcons;
+    procedure CallbackDiscoverNodes(Test: TTestBase);
+    procedure CallbackReadPIP(Test: TTestBase);
+    procedure CallbackVerificationTests(Test: TTestBase);
   public
     { public declarations }
-    procedure Log(Line: String);
+    procedure Log(XML: TXMLDocument);
     property ShownOnce: Boolean read FShownOnce write FShownOnce;
     property TestStrings: TStringList read FTestStrings write FTestStrings;
     property TestThread: TComPortThread read FTestThread write FTestThread;
@@ -294,63 +308,15 @@ end;
 
 procedure TFormMain.ActionDiscoverNodeExecute(Sender: TObject);
 var
-  Helper: TOpenLCBMessageHelper;
-  ResultStrings: TStringList;
-  ListItem: TListItem;
-  i: Integer;
   Test: TTestGetNodesUnderTest;
 begin
+  // WARNING THIS DEPENDS ON XMLDocTestMatrix STAYING VALID UNTIL THE TEST IS COMPLETE
   Test := FindTestFromXML(XMLDocTestMatrix, STR_TEST_GET_NODES_UNDER_TEST_CLASS) as TTestGetNodesUnderTest;
   if Assigned(Test) then
   begin
     Test.FreeOnLog := True;
+    Test.TestCompleteCallback := @CallbackDiscoverNodes;
     TestThread.Add(Test);
-
-    while (Test.TestState <> ts_Complete)  do      // Wait for the test to end.....
-      ThreadSwitch;
-
-    Helper := TOpenLCBMessageHelper.Create;
-    ListViewNodeDiscovery.Items.BeginUpdate;
-    try
-      ResultStrings := TStringList.Create;
-      try
-        ListViewNodeDiscovery.Items.Clear;
-
-        ExtractResultsFromXML(Test.XMLResults, ResultStrings);
-
-        for i := 0 to ResultStrings.Count - 1 do
-        begin;
-          Helper.Decompose(ResultStrings[i]);
-          if Helper.MTI = MTI_VERIFIED_NODE_ID_NUMBER then
-          begin
-             ListItem := ListViewNodeDiscovery.Items.Add;
-             ListItem.Caption := IntToHex(Helper.SourceAliasID, 3);
-             ListItem.SubItems.Add(IntToHex(Helper.ExtractDataBytesAsInt(0, 5), 12));
-          end;
-        end;
-      finally
-        if ListViewNodeDiscovery.Items.Count > 0 then
-        begin
-          ListViewNodeDiscovery.Items[0].Focused := True;
-          ListViewNodeDiscovery.Items[0].Selected  := True;
-          if ListViewNodeDiscovery.Items.Count = 1 then
-          begin
-            Settings.MultiNodeTest := False;
-            LabelDiscoverMultiNode.Caption := 'Mode: SingleNode test'
-          end else
-          begin
-            Settings.MultiNodeTest := True;
-            LabelDiscoverMultiNode.Caption := 'Mode: MultiNode test';
-          end;
-        end else
-          LabelDiscoverMultiNode.Caption := 'Mode:';
-
-        ResultStrings.Free
-      end;
-    finally
-      ListViewNodeDiscovery.Items.EndUpdate;
-      Helper.Free
-    end;
   end;
 end;
 
@@ -364,15 +330,19 @@ var
   i: Integer;
 begin
   ClearTestResultsXML;
+  ResetTestVerificationIcons;
+  {$IFNDEF DISABLE_UI_UPDATE}
   if ListViewNodeDiscovery.SelCount = 1 then
+  {$ENDIF}
   begin
-    for i := 0 to ListViewTestMatrix.Items.Count - 1 do
+     for i := 0 to ListViewTestMatrix.Items.Count - 1 do
     begin
       if ListViewTestMatrix.Items[i].Checked then
         TestThread.Add( TTestBase( ListViewTestMatrix.Items[i].Data));
     end;
-  end else
+  end {$IFNDEF DISABLE_UI_UPDATE} else
     ShowMessage('No node is selected to test. Run "Discover Nodes" in the "Discovery" tab and select the node to test');
+  UpdateUI;   {$ENDIF}
 end;
 
 procedure TFormMain.ActionHideLogExecute(Sender: TObject);
@@ -427,73 +397,15 @@ end;
 
 procedure TFormMain.ActionReadPipExecute(Sender: TObject);
 var
-  XMLDoc: TXMLDocument;
   Test: TTestProtocolSupport;
-  ReceiveResults: TStringList;
-  Helper: TOpenLCBMessageHelper;
-  Mask: QWord;
-  i: Integer;
 begin
-  if FileExistsUTF8(Settings.TestMatrixFile) then
+  // WARNING THIS DEPENDS ON XMLDocTestMatrix STAYING VALID UNTIL THE TEST IS COMPLETE
+  Test := FindTestFromXML(XMLDocTestMatrix, STR_PROTOCOL_IDENTIFICATION_PROTOCOL_CLASS) as TTestProtocolSupport;
+  if Assigned(Test) then
   begin
-    XMLDoc := TXMLDocument.Create;
-    try
-      ReadXMLFile(XMLDoc, Settings.TestMatrixFile);
-      Test := FindTestFromXML(XMLDoc, STR_PROTOCOL_IDENTIFICATION_PROTOCOL_CLASS) as TTestProtocolSupport;
-      if Assigned(Test) then
-      begin
-        for i := 0 to CheckGroupPIP.Items.Count - 1 do
-          CheckGroupPIP.Checked[i] := False;
-        CheckGroupPIP.Invalidate;
-        CheckGroupPIP.Update;
-
-        Test.FreeOnLog := True;
-        TestThread.Add(Test);
-
-        while (Test.TestState <> ts_Complete)  do      // Wait for the test to end.....
-          ThreadSwitch;
-
-        if Test.Passed then
-        begin
-          ReceiveResults := TStringList.Create;
-          Helper := TOpenLCBMessageHelper.Create;
-          try
-            ExtractResultsFromXML(Test.XMLResults, ReceiveResults);
-            Test.StripReceivesNotForNodeUnderTest(ReceiveResults);
-            if ReceiveResults.Count = 1 then
-            begin
-              Helper.Decompose(ReceiveResults[0]);
-              Mask := Helper.ExtractDataBytesAsInt(2, 7);
-              CheckGroupPIP.Checked[0] := Mask and PIP_PIP = PIP_PIP;
-              CheckGroupPIP.Checked[1] := Mask and PIP_DATAGRAM = PIP_DATAGRAM;
-              CheckGroupPIP.Checked[2] := Mask and PIP_STREAM = PIP_STREAM;
-              CheckGroupPIP.Checked[3] := Mask and PIP_MEMORY_CONFIG = PIP_MEMORY_CONFIG;
-              CheckGroupPIP.Checked[4] := Mask and PIP_RESERVATION = PIP_RESERVATION;
-              CheckGroupPIP.Checked[5] := Mask and PIP_EVENT_EXCHANGE = PIP_EVENT_EXCHANGE;
-              CheckGroupPIP.Checked[6] := Mask and PIP_IDENTIFCIATION = PIP_IDENTIFCIATION;
-              CheckGroupPIP.Checked[7] := Mask and PIP_TEACH_LEARN = PIP_TEACH_LEARN;
-              CheckGroupPIP.Checked[8] := Mask and PIP_REMOTE_BUTTON = PIP_REMOTE_BUTTON;
-              CheckGroupPIP.Checked[9] := Mask and PIP_ABBREVIATED_CDI = PIP_ABBREVIATED_CDI;
-              CheckGroupPIP.Checked[10] := Mask and PIP_DISPLAY = PIP_DISPLAY;
-              CheckGroupPIP.Checked[11] := Mask and PIP_SIMPLE_NODE_ID = PIP_SIMPLE_NODE_ID;
-              CheckGroupPIP.Checked[12] := Mask and PIP_CDI = PIP_CDI;
-              CheckGroupPIP.Checked[13] := Mask and PIP_UNASSIGNED <> 0;
-              CheckGroupPIP.Checked[14] := Mask and PIP_RESERVED <> 0;
-              EditPipRawMessage.Text := ReceiveResults[0]
-            end;
-            LabelPipPassFail.Caption := 'Test Passed'
-          finally
-            ReceiveResults.Free;
-            Helper.Free
-          end;
-        end else
-        begin
-          LabelPipPassFail.Caption := 'Test Failed'
-        end;
-      end;
-    finally
-      XMLDoc.Free;
-    end;
+    Test.FreeOnLog := True;
+    Test.TestCompleteCallback := @CallbackReadPIP;
+    TestThread.Add(Test);
   end;
 end;
 
@@ -569,6 +481,17 @@ begin
   FormSettings.Show;
 end;
 
+procedure TFormMain.ActionStopAllTestsExecute(Sender: TObject);
+begin
+
+end;
+
+procedure TFormMain.ActionCancelTestsExecute(Sender: TObject);
+begin
+  TestThread.TerminateTest := True;
+end;
+
+
 procedure TFormMain.ComboBoxBaudChange(Sender: TObject);
 begin
   UpdateUI;
@@ -583,7 +506,6 @@ end;
 
 procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
-  TimerCAN.Enabled := False;
   if Assigned(FTestThread) then
   begin
     TestThread.Terminate;
@@ -612,6 +534,7 @@ begin
   AppPrefCmd.Action := ActionShowPreferencesMac;
   AppMenu.Add(AppPrefCmd);
   ActionShowOptionsWin.Visible := False;
+  MenuItemToolsSeparatorWin.Visible := False;
   {$ELSE}
   AppAboutCmd := TMenuItem.Create(Self);
   AppAboutCmd.Action := ActionShowAbout;
@@ -656,17 +579,13 @@ begin
 end;
 
 procedure TFormMain.ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
-var
-  i: Integer;
 begin
   if Selected then
   begin
     Settings.TargetNodeAlias := StrToInt('$' + Item.Caption);
     Settings.TargetNodeID := StrToInt64('$' + Item.SubItems[0]);
   end;
-  for i := 0 to ListViewTestMatrix.Items.Count - 1 do
-    ListViewTestMatrix.Items[i].ImageIndex := 2;
-  ListViewTestMatrix.Invalidate;
+  ResetTestVerificationIcons;
   UpdateUI;
 end;
 
@@ -721,70 +640,6 @@ begin
   {$ENDIF}
 end;
 
-procedure TFormMain.TimerCANTimer(Sender: TObject);
-var
-  Test: TTestBase;
-  List: TList;
-  XMLTestResults: TXMLDocument;
-  MemStream: TMemoryStream;
-  Str: String;
-  ListItem: TListItem;
-begin
-  Test := nil;
-  ListItem := nil;
-  XMLTestResults := nil;
-  if Assigned(TestThread) then
-  begin
-    List := TestThread.ThreadTestList.LockList;
-    try
-      if List.Count > 0 then
-      begin
-        Test := TTestBase( List[0]);
-        if Test.TestState = ts_Complete then
-        begin
-          if FormLog.Visible then
-            XMLTestResults := Test.XMLResults;
-          ListItem := Test.ListItem;
-          List.Remove(Test);
-        end else
-          Test := nil;
-      end;
-    finally
-      TestThread.ThreadTestList.UnLockList;
-    end;
-
-    // Do this outside of the thread lock so the thread can keep churning
-    if Assigned(ListItem) and Assigned(Test) then
-    begin
-      if Test.Passed then
-        ListItem.ImageIndex := 0
-      else
-        ListItem.ImageIndex := 1;
-    end;
-    if Assigned(XMLTestResults) then
-    begin
-      FormLog.SynMemo.Lines.BeginUpdate;
-      try
-        MemStream := TMemoryStream.Create;
-        XMLWrite.WriteXMLFile(XMLTestResults, MemStream);
-        SetLength(Str, MemStream.Size);
-        MemStream.Seek(0, soBeginning);
-        MemStream.ReadBuffer(PChar( Str)^, MemStream.Size);
-        FormLog.SynMemo.Text := FormLog.SynMemo.Text + Str;
-        MemStream.Free;
-      finally
-        FormLog.SynMemo.Lines.EndUpdate;
-      end;
-    end;
-
-    if Assigned(Test) then
-    begin
-      if Test.FreeOnLog then
-        Test.Free;
-    end;
-  end;
-end;
-
 function TFormMain.GetConnected: Boolean;
 begin
   Result := Assigned(TestThread)
@@ -793,9 +648,17 @@ end;
 procedure TFormMain.UpdateUI;
 begin
   {$IFNDEF DISABLE_UI_UPDATE}
+  if Assigned(TestThread) and Connected then
+  begin
+  ActionCancelTests.Enabled := TestThread.TestCount > 0;
+  ActionExecuteTests.Enabled := (ListViewNodeDiscovery.SelCount = 1) and (TestThread.TestCount = 0);
+  end else
+  begin
+    ActionCancelTests.Enabled := False;
+    ActionExecuteTests.Enabled := False;
+  end;
   ActionDiscoverNode.Enabled := Connected;
   ActionReadPip.Enabled := (ListViewNodeDiscovery.SelCount = 1) and Connected;
-  ActionExecuteTests.Enabled := (ListViewNodeDiscovery.SelCount = 1) and Connected;
   ActionSaveTestMatrix.Enabled := Connected;
   ActionReadXML.Enabled := (ListViewNodeDiscovery.SelCount = 1) and Connected;
   ActionEventReader.Enabled := (ListViewNodeDiscovery.SelCount = 1) and Connected;
@@ -844,6 +707,7 @@ begin
           else begin
             if not (Test is TTestGetNodesUnderTest) then
             begin
+              Test.TestCompleteCallback := @CallbackVerificationTests;
               ListItem := ListviewTestMatrix.Items.Add;
               ListItem.Caption := TestNameFromTestNode(TestNode);
               ListItem.SubItems.Add(TestDescriptionFromTestNode(TestNode));
@@ -867,26 +731,160 @@ begin
   end;
 end;
 
-procedure TFormMain.ThreadCallback(Sending: Boolean; Receiving: Boolean);
-begin
-  if FormLog.Visible then
-  begin
-    FormLog.LEDButtonSending.StateOn := Sending;
-    FormLog.LEDButtonReceiving.StateOn := Receiving;
-  end;
-end;
-
 procedure TFormMain.MenuItemSelectPortClick(Sender: TObject);
 begin
   ComboBoxPorts.ItemIndex := (Sender as TMenuItem).Tag;  // Tag set when Menu List is created
 end;
 
+procedure TFormMain.ResetTestVerificationIcons;
+var
+  i: Integer;
+begin
+  for i := 0 to ListViewTestMatrix.Items.Count - 1 do
+    ListViewTestMatrix.Items[i].ImageIndex := 2;
+end;
 
-procedure TFormMain.Log(Line: String);
+procedure TFormMain.CallbackDiscoverNodes(Test: TTestBase);
+var
+  Helper: TOpenLCBMessageHelper;
+  ResultStrings: TStringList;
+  ListItem: TListItem;
+  i: Integer;
+begin
+ Helper := TOpenLCBMessageHelper.Create;
+  ListViewNodeDiscovery.Items.BeginUpdate;
+  try
+    ResultStrings := TStringList.Create;
+    try
+      ListViewNodeDiscovery.Items.Clear;
+
+      ExtractResultsFromXML(Test.XMLResults, ResultStrings);
+
+      for i := 0 to ResultStrings.Count - 1 do
+      begin;
+        Helper.Decompose(ResultStrings[i]);
+        if Helper.MTI = MTI_VERIFIED_NODE_ID_NUMBER then
+        begin
+           ListItem := ListViewNodeDiscovery.Items.Add;
+           ListItem.Caption := IntToHex(Helper.SourceAliasID, 3);
+           ListItem.SubItems.Add(IntToHex(Helper.ExtractDataBytesAsInt(0, 5), 12));
+        end;
+      end;
+    finally
+      if ListViewNodeDiscovery.Items.Count > 0 then
+      begin
+        ListViewNodeDiscovery.Items[0].Focused := True;
+        ListViewNodeDiscovery.Items[0].Selected  := True;
+        if ListViewNodeDiscovery.Items.Count = 1 then
+        begin
+          Settings.MultiNodeTest := False;
+          LabelDiscoverMultiNode.Caption := 'Mode: SingleNode test'
+        end else
+        begin
+          Settings.MultiNodeTest := True;
+          LabelDiscoverMultiNode.Caption := 'Mode: MultiNode test';
+        end;
+      end else
+        LabelDiscoverMultiNode.Caption := 'Mode:';
+
+      ResultStrings.Free
+    end;
+  finally
+    ListViewNodeDiscovery.Items.EndUpdate;
+    Helper.Free;
+    Log(Test.XMLResults);
+    if Test.FreeOnLog then
+      Test.Free;
+    if TestThread.TestCount = 0 then
+      UpdateUI;
+  end;
+end;
+
+procedure TFormMain.CallbackReadPIP(Test: TTestBase);
+var
+  ReceiveResults: TStringList;
+  Helper: TOpenLCBMessageHelper;
+  Mask: QWord;
+begin
+  if Test.Passed then
+  begin
+    ReceiveResults := TStringList.Create;
+    Helper := TOpenLCBMessageHelper.Create;
+    try
+      ExtractResultsFromXML(Test.XMLResults, ReceiveResults);
+      Test.StripReceivesNotForNodeUnderTest(ReceiveResults);
+      if ReceiveResults.Count = 1 then
+      begin
+        Helper.Decompose(ReceiveResults[0]);
+        Mask := Helper.ExtractDataBytesAsInt(2, 7);
+        CheckGroupPIP.Checked[0] := Mask and PIP_PIP = PIP_PIP;
+        CheckGroupPIP.Checked[1] := Mask and PIP_DATAGRAM = PIP_DATAGRAM;
+        CheckGroupPIP.Checked[2] := Mask and PIP_STREAM = PIP_STREAM;
+        CheckGroupPIP.Checked[3] := Mask and PIP_MEMORY_CONFIG = PIP_MEMORY_CONFIG;
+        CheckGroupPIP.Checked[4] := Mask and PIP_RESERVATION = PIP_RESERVATION;
+        CheckGroupPIP.Checked[5] := Mask and PIP_EVENT_EXCHANGE = PIP_EVENT_EXCHANGE;
+        CheckGroupPIP.Checked[6] := Mask and PIP_IDENTIFCIATION = PIP_IDENTIFCIATION;
+        CheckGroupPIP.Checked[7] := Mask and PIP_TEACH_LEARN = PIP_TEACH_LEARN;
+        CheckGroupPIP.Checked[8] := Mask and PIP_REMOTE_BUTTON = PIP_REMOTE_BUTTON;
+        CheckGroupPIP.Checked[9] := Mask and PIP_ABBREVIATED_CDI = PIP_ABBREVIATED_CDI;
+        CheckGroupPIP.Checked[10] := Mask and PIP_DISPLAY = PIP_DISPLAY;
+        CheckGroupPIP.Checked[11] := Mask and PIP_SIMPLE_NODE_ID = PIP_SIMPLE_NODE_ID;
+        CheckGroupPIP.Checked[12] := Mask and PIP_CDI = PIP_CDI;
+        CheckGroupPIP.Checked[13] := Mask and PIP_UNASSIGNED <> 0;
+        CheckGroupPIP.Checked[14] := Mask and PIP_RESERVED <> 0;
+        EditPipRawMessage.Text := ReceiveResults[0]
+      end;
+      LabelPipPassFail.Caption := 'PIP Test Passed'
+    finally
+      ReceiveResults.Free;
+      Helper.Free
+    end;
+  end else
+    LabelPipPassFail.Caption := 'PIP Test Failed';
+
+  Log(Test.XMLResults);
+  if Test.FreeOnLog then
+    Test.Free;
+
+  if TestThread.TestCount = 0 then
+    UpdateUI;
+end;
+
+procedure TFormMain.CallbackVerificationTests(Test: TTestBase);
+ begin
+  if Test.Passed then
+    Test.ListItem.ImageIndex := 0
+  else
+    Test.ListItem.ImageIndex := 1;
+
+  Log(Test.XMLResults);
+
+  if Test.FreeOnLog then
+    Test.Free;
+
+  if TestThread.TestCount = 0 then
+    UpdateUI;
+end;
+
+procedure TFormMain.Log(XML: TXMLDocument);
+var
+  MemStream: TMemoryStream;
+  Str: String;
 begin
   if FormLog.Visible then
   begin
-    FormLog.SynMemo.Lines.Add(Line);
+    FormLog.SynMemo.Lines.BeginUpdate;
+    try
+      MemStream := TMemoryStream.Create;
+      XMLWrite.WriteXMLFile(XML, MemStream);
+      SetLength(Str, MemStream.Size);
+      MemStream.Seek(0, soBeginning);
+      MemStream.ReadBuffer(PChar( Str)^, MemStream.Size);
+      FormLog.SynMemo.Text := FormLog.SynMemo.Text + Str;
+      MemStream.Free;
+    finally
+      FormLog.SynMemo.Lines.EndUpdate;
+    end;
   end;
 end;
 

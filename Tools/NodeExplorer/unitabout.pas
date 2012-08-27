@@ -23,23 +23,21 @@ type
     LabelIcon: TLabel;
     LabelNodeExplorer: TLabel;
     LabelMyName: TLabel;
+    LabelURLLazarus: TLabel;
+    LabelURLIcons: TLabel;
     LabelWrittenIn: TLabel;
-    StaticTextURLFreePascal: TStaticText;
-    StaticTextURLIcons: TStaticText;
-    StaticTextURLLazarus: TStaticText;
+    LabelURLFreePascal: TLabel;
     procedure FormShow(Sender: TObject);
     procedure ImageOpenLCBClick(Sender: TObject);
-    procedure ImageAboutMouseEnter(Sender: TObject);
-    procedure LabelIconClick(Sender: TObject);
-    procedure StaticTextURLFreePascalClick(Sender: TObject);
-    procedure StaticTextURLFreePascalMouseEnter(Sender: TObject);
-    procedure StaticTextURLFreePascalMouseLeave(Sender: TObject);
-    procedure StaticTextURLIconsClick(Sender: TObject);
-    procedure StaticTextURLIconsMouseEnter(Sender: TObject);
-    procedure StaticTextURLIconsMouseLeave(Sender: TObject);
-    procedure StaticTextURLLazarusClick(Sender: TObject);
-    procedure StaticTextURLLazarusMouseEnter(Sender: TObject);
-    procedure StaticTextURLLazarusMouseLeave(Sender: TObject);
+    procedure LabelURLFreePascalClick(Sender: TObject);
+    procedure LabelURLFreePascalMouseEnter(Sender: TObject);
+    procedure LabelURLFreePascalMouseLeave(Sender: TObject);
+    procedure LabelURLIconsClick(Sender: TObject);
+    procedure LabelURLIconsMouseEnter(Sender: TObject);
+    procedure LabelURLIconsMouseLeave(Sender: TObject);
+    procedure LabelURLLazarusClick(Sender: TObject);
+    procedure LabelURLLazarusMouseEnter(Sender: TObject);
+    procedure LabelURLLazarusMouseLeave(Sender: TObject);
   private
     { private declarations }
   public
@@ -55,15 +53,51 @@ implementation
 
 { TFormAbout }
 
-procedure TFormAbout.LabelIconClick(Sender: TObject);
+procedure TFormAbout.LabelURLFreePascalClick(Sender: TObject);
 begin
-
+  OpenURL('http://' + LabelURLFreePascal.Caption);
 end;
 
-procedure TFormAbout.ImageAboutMouseEnter(Sender: TObject);
+procedure TFormAbout.LabelURLFreePascalMouseEnter(Sender: TObject);
 begin
-
+  LabelURLFreePascal.Font.Style := [fsUnderline];
 end;
+
+procedure TFormAbout.LabelURLFreePascalMouseLeave(Sender: TObject);
+begin
+  LabelURLFreePascal.Font.Style := [];
+end;
+
+procedure TFormAbout.LabelURLIconsClick(Sender: TObject);
+begin
+  OpenURL('http://' + LabelURLIcons.Caption);
+end;
+
+procedure TFormAbout.LabelURLIconsMouseEnter(Sender: TObject);
+begin
+  LabelURLIcons.Font.Style := [fsUnderline];
+end;
+
+procedure TFormAbout.LabelURLIconsMouseLeave(Sender: TObject);
+begin
+  LabelURLIcons.Font.Style := [];
+end;
+
+procedure TFormAbout.LabelURLLazarusClick(Sender: TObject);
+begin
+  OpenURL('http://' + LabelURLLazarus.Caption);
+end;
+
+procedure TFormAbout.LabelURLLazarusMouseEnter(Sender: TObject);
+begin
+  LabelURLLazarus.Font.Style := [fsUnderline];
+end;
+
+procedure TFormAbout.LabelURLLazarusMouseLeave(Sender: TObject);
+begin
+  LabelURLLazarus.Font.Style := [];
+end;
+
 
 procedure TFormAbout.ImageOpenLCBClick(Sender: TObject);
 begin
@@ -77,51 +111,6 @@ begin
   LabelTargetCPU.Caption := {$I %FPCTARGETCPU%};
 end;
 
-procedure TFormAbout.StaticTextURLFreePascalClick(Sender: TObject);
-begin
-  OpenURL('http://' + StaticTextURLFreePascal.Caption);
-end;
-
-procedure TFormAbout.StaticTextURLFreePascalMouseEnter(Sender: TObject);
-begin
-  StaticTextURLFreePascal.Font.Style := [fsUnderline];
-end;
-
-procedure TFormAbout.StaticTextURLFreePascalMouseLeave(Sender: TObject);
-begin
-  StaticTextURLFreePascal.Font.Style := [];
-end;
-
-procedure TFormAbout.StaticTextURLIconsClick(Sender: TObject);
-begin
-  OpenURL('http://' + StaticTextURLIcons.Caption);
-end;
-
-procedure TFormAbout.StaticTextURLIconsMouseEnter(Sender: TObject);
-begin
-  StaticTextURLIcons.Font.Style := [fsUnderline];
-end;
-
-procedure TFormAbout.StaticTextURLIconsMouseLeave(Sender: TObject);
-begin
-  StaticTextURLIcons.Font.Style := [];
-end;
-
-
-procedure TFormAbout.StaticTextURLLazarusClick(Sender: TObject);
-begin
-  OpenURL('http://' + StaticTextURLLazarus.Caption);
-end;
-
-procedure TFormAbout.StaticTextURLLazarusMouseEnter(Sender: TObject);
-begin
-  StaticTextURLLazarus.Font.Style := [fsUnderline];
-end;
-
-procedure TFormAbout.StaticTextURLLazarusMouseLeave(Sender: TObject);
-begin
-  StaticTextURLLazarus.Font.Style := [];
-end;
 
 end.
 

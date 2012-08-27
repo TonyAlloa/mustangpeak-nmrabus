@@ -21,7 +21,7 @@ object FormLog: TFormLog
   inline SynMemo: TSynMemo
     Cursor = crIBeam
     Left = 0
-    Height = 382
+    Height = 424
     Top = 0
     Width = 420
     Align = alTop
@@ -501,70 +501,14 @@ object FormLog: TFormLog
   end
   object CheckBoxShowGutter: TCheckBox
     Left = 16
-    Height = 18
-    Top = 442
-    Width = 97
+    Height = 17
+    Top = 443
+    Width = 80
     Action = FormMain.ActionLogShowGutter
     Anchors = [akLeft, akBottom]
     Checked = True
     State = cbChecked
     TabOrder = 2
-  end
-  object LEDButtonSending: TLEDButton
-    Left = 16
-    Height = 16
-    Top = 391
-    Width = 30
-    Anchors = [akLeft, akBottom]
-    Beveled = False
-    BorderStyle = bsSingle
-    ButtonDirection = bdTopUp
-    Caption = 'LEDButtonSending'
-    Color = clBtnFace
-    ColorLED = clLime
-    Depth = 3
-    LEDContrast = 6
-    NumGlyphs = 0
-    ShowLED = True
-    StateOn = False
-    Switching = False
-  end
-  object LEDButtonReceiving: TLEDButton
-    Left = 16
-    Height = 16
-    Top = 415
-    Width = 30
-    Anchors = [akLeft, akBottom]
-    Beveled = False
-    BorderStyle = bsSingle
-    ButtonDirection = bdTopUp
-    Caption = 'LEDButtonReceiving'
-    Color = clBtnFace
-    ColorLED = clLime
-    Depth = 3
-    LEDContrast = 6
-    NumGlyphs = 0
-    ShowLED = True
-    StateOn = False
-    Switching = False
-  end
-  object LabelSending: TLabel
-    Left = 68
-    Height = 17
-    Top = 393
-    Width = 51
-    Anchors = [akLeft, akBottom]
-    Caption = 'Sending'
-    ParentColor = False
-  end
-  object LabelReceiving: TLabel
-    Left = 68
-    Height = 17
-    Top = 414
-    Width = 61
-    Anchors = [akLeft, akBottom]
-    Caption = 'Receiving'
-    ParentColor = False
   end
   object SynXMLSyn: TSynXMLSyn
     DefaultFilter = 'XML Document (*.xml,*.xsd,*.xsl,*.xslt,*.dtd)|*.xml;*.xsd;*.xsl;*.xslt;*.dtd'
@@ -611,4 +555,4 @@ object FormLog: TFormLog
       Action = FormMain.ActionLogClear
     end
   end
-end
+end

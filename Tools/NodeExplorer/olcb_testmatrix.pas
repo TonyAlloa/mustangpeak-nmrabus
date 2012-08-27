@@ -40,7 +40,8 @@ type
   TTestErrorCode = (
     teIncorrectCount,          // The wrong number of messages were returned from the Node (not always possible to determine depends on message)
     teFullNodeIDInvalid,       // Full NodeID in the Data Bytes does not match what is stored in Settings for the node under test
-    teStandardFrameResponse    // Node replied to a Standard Frame Message, it should igore them all
+    teStandardFrameResponse,   // Node replied to a Standard Frame Message, it should igore them all
+    teCancelled                // The test was cancled
   );
   TTestErrorCodes = set of TTestErrorCode;
 
@@ -94,6 +95,9 @@ type
     property MTIArray: TMTIArray read FMTIArray write FMTIArray;
   end;
 
+  TTestBase = class;
+  TTestCompleteCallback = procedure(Test: TTestBase) of object;
+
   { TTestBase }
 
   TTestBase = class(TPersistent)
@@ -107,6 +111,7 @@ type
     FListItem: TListItem;
     FMessageHelper: TOpenLCBMessageHelper;
     FStateMachineIndex: Integer;
+    FTestCompleteCallback: TTestCompleteCallback;
     FTestState: TTestState;
     FXMLResults: TXMLDocument;
     FXMLTests: TDOMNode;
@@ -123,6 +128,7 @@ type
     property ListItem: TListItem read FListItem write FListItem;
     property Passed: Boolean read GetPassed;
     property StateMachineIndex: Integer read FStateMachineIndex write FStateMachineIndex;
+    property TestCompleteCallback: TTestCompleteCallback read FTestCompleteCallback write FTestCompleteCallback;
     property TestState: TTestState read FTestState write FTestState;
     property XMLTests: TDOMNode  read FXMLTests write FXMLTests;                // Node that describes the test from the Test Matrix XML file ( <test>...</test> )
     property XMLResults: TXMLDocument read FXMLResults write FXMLResults;
@@ -135,6 +141,7 @@ type
     procedure StripReceivesNotForNodeUnderTest(ReceiveStrings: TStringList);
     procedure ValidateBasicReturnMessage(ExpectedMTI: DWord; Helper: TOpenLCBMessageHelper); virtual;
     procedure ClearErrorCodes;
+    procedure CallbackTestComplete;
 
   end;
   TTestBaseClass = class of TTestBase;
@@ -833,27 +840,31 @@ function TTestBase.GetPassed: Boolean;
 var
   TestResult, Test, TestObjective, Results, PassFail: TDOMNode;
 begin
-  Result := True;
-  TestResult := XMLResults.FindNode(XML_ELEMENT_TEST_RESULT_ROOT);
-  if Assigned(TestResult) then
-  begin
-    Test := TestResult.FindNode(XML_ELEMENT_TEST);
-    if Assigned(Test) then
+  if  teCancelled in ErrorCodes then
+    Result := False
+  else begin
+    Result := True;
+    TestResult := XMLResults.FindNode(XML_ELEMENT_TEST_RESULT_ROOT);
+    if Assigned(TestResult) then
     begin
-      TestObjective := Test.FirstChild;
-      while Assigned(TestObjective) and Result do
+      Test := TestResult.FindNode(XML_ELEMENT_TEST);
+      if Assigned(Test) then
       begin
-        if TestObjective.NodeName = XML_ELEMENT_TESTOBJECTIVE then
+        TestObjective := Test.FirstChild;
+        while Assigned(TestObjective) and Result do
         begin
-          Results := TestObjective.FindNode(XML_ELEMENT_OBJECTIVERESULTS);
-          if Assigned(Results) then
+          if TestObjective.NodeName = XML_ELEMENT_TESTOBJECTIVE then
           begin
-            PassFail := Results.FindNode(XML_ELEMENT_PASS_FAIL);
-            if Assigned(PassFail) then
-              Result := PassFail.FirstChild.NodeValue = XML_NAME_PASS;
+            Results := TestObjective.FindNode(XML_ELEMENT_OBJECTIVERESULTS);
+            if Assigned(Results) then
+            begin
+              PassFail := Results.FindNode(XML_ELEMENT_PASS_FAIL);
+              if Assigned(PassFail) then
+                Result := PassFail.FirstChild.NodeValue = XML_NAME_PASS;
+            end;
           end;
+          TestObjective := TestObjective.NextSibling;
         end;
-        TestObjective := TestObjective.NextSibling;
       end;
     end;
   end;
@@ -870,6 +881,7 @@ begin
   FStateMachineIndex := 0;
   FListItem := nil;
   FErrorCodes := [];
+  FTestCompleteCallback := nil;
 end;
 
 destructor TTestBase.Destroy;
@@ -930,6 +942,12 @@ begin
   ErrorCodesUnknownMTIStrings.Clear;
 end;
 
+procedure TTestBase.CallbackTestComplete;
+begin
+  if Assigned(TestCompleteCallback) then
+    TestCompleteCallback(Self);
+end;
+
 
 initialization
   RegisterClass(TTestGetNodesUnderTest);
@@ -942,4 +960,4 @@ initialization
 finalization
 
 end.
-
+

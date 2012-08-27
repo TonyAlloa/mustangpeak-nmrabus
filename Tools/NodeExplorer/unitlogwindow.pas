@@ -23,7 +23,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, SynMemo, SynHighlighterXML, Forms, Controls,
-  Graphics, Dialogs, StdCtrls, RackCtls, SynEditMarkupSpecialLine, LCLType,
+  Graphics, Dialogs, StdCtrls, SynEditMarkupSpecialLine, LCLType,
   Menus, SynEditKeyCmds;
 
 type
@@ -33,10 +33,6 @@ type
   TFormLog = class(TForm)
     ButtonClear: TButton;
     CheckBoxShowGutter: TCheckBox;
-    LabelReceiving: TLabel;
-    LabelSending: TLabel;
-    LEDButtonSending: TLEDButton;
-    LEDButtonReceiving: TLEDButton;
     MenuItemSynEditSeparator2: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItemSynEditSelectAll: TMenuItem;
@@ -57,7 +53,7 @@ type
   end;
 
 var
-  FormLog: TFormLog;
+FormLog: TFormLog;
 
 implementation
 
@@ -96,4 +92,4 @@ begin
 end;
 
 end.
-
+
