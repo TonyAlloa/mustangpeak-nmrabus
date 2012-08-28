@@ -13,8 +13,10 @@ type
   { TFormSettings }
 
   TFormSettings = class(TForm)
+    CheckBoxPingPongStandardFrame: TCheckBox;
     Label1: TLabel;
     SpinEditDelayTimeout: TSpinEdit;
+    procedure CheckBoxPingPongStandardFrameChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure SpinEditDelayTimeoutChange(Sender: TObject);
   private
@@ -40,6 +42,11 @@ end;
 procedure TFormSettings.FormShow(Sender: TObject);
 begin
   SpinEditDelayTimeout.Value := Settings.TimeoutComRead
+end;
+
+procedure TFormSettings.CheckBoxPingPongStandardFrameChange(Sender: TObject);
+begin
+  Settings.PingPongStandardFrameTest := CheckBoxPingPongStandardFrame.Checked;
 end;
 
 end.

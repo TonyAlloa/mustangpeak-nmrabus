@@ -41,6 +41,7 @@ type
     FBaudRate: DWord;
     FComPort: String;
     FMultiNodeTest: Boolean;
+    FPingPongStandardFrameTest: Boolean;
     FProxyNodeAlias: Word;
     FProxyNodeID: Int64;
     FTargetNodeAlias: Word;
@@ -62,6 +63,7 @@ type
     property TestMatrixFile: string read GetTextMatrixFile;
     property MultiNodeTest: Boolean read FMultiNodeTest write FMultiNodeTest;
     property TimeoutComRead: Integer read FTimeoutComRead write FTimeoutComRead;
+    property PingPongStandardFrameTest: Boolean read FPingPongStandardFrameTest write FPingPongStandardFrameTest;
     constructor Create;
     procedure ReadSettings;
     procedure WriteSettings;

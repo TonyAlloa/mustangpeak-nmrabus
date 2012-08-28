@@ -181,8 +181,12 @@ type
   { TTestStandardFrame }
 
   TTestStandardFrame = class(TTestBase)
+  private
+    FiFrame: Integer;
   public
+    procedure InitTest; override;
     function ProcessObjectives(ProcessStrings: TStringList): Integer; override;
+    property iFrame: Integer read FiFrame write FiFrame;
   end;
   TTestStandardFrameClass = class of TTestStandardFrame;
 
@@ -410,6 +414,12 @@ end;
 
 { TTestStandardFrame }
 
+procedure TTestStandardFrame.InitTest;
+begin
+  inherited InitTest;
+  FiFrame := 0;
+end;
+
 function TTestStandardFrame.ProcessObjectives(ProcessStrings: TStringList): Integer;
 var
   i: Integer;
@@ -418,19 +428,40 @@ begin
   case StateMachineIndex of
     0 : begin
           // Send all Standard Messages in one shot and see what comes back
-         for i := 0 to 2047 do
-           ProcessStrings.Add(':S' + IntToHex(i, 3) + 'N;');
+          if Settings.PingPongStandardFrameTest then
+          begin
+            ProcessStrings.Add(':S' + IntToHex(iFrame, 3) + 'N;');
+          end else
+          begin
+            for i := 0 to 2047 do
+              ProcessStrings.Add(':S' + IntToHex(i, 3) + 'N;');
+          end;
 
           Inc(FStateMachineIndex);
           Result := 0;                                                          // Objective 0
         end;
     1 : begin
           // Send Standard Messages:
-         if ProcessStrings.Count > 0 then                                      // Only one node should respond as this is addressed
-           Include(FErrorCodes, teStandardFrameResponse);
+          if ProcessStrings.Count > 0 then                                      // Only one node should respond as this is addressed
+            Include(FErrorCodes, teStandardFrameResponse);
 
-          Inc(FStateMachineIndex);
-          Result := 1;                                                          // Objective 1
+          if Settings.PingPongStandardFrameTest then
+          begin
+            if iFrame >= 2047 then
+            begin
+              Inc(FStateMachineIndex);
+              Result := 1;                                                          // Objective 1
+            end else
+            begin
+              Inc(FiFrame);
+              FStateMachineIndex := 0;
+              Result := 0;                                                          // Objective 1
+            end;
+          end else
+          begin
+            Inc(FStateMachineIndex);
+            Result := 1;
+          end;
         end;
   end;
 end;
@@ -960,4 +991,4 @@ initialization
 finalization
 
 end.
-
+
