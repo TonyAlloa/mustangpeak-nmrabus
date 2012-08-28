@@ -72,7 +72,7 @@ begin
   Objectives := TList.Create;
   try
     Connected:=True;
-    Serial.Config(BaudRate, 8, 'N', 0, False, False);      // FTDI Driver uses no stop bits for non-standard baud rates.
+    Serial.Config(BaudRate, 8, 'N', 0, Settings.SoftwareFlowControl, False);      // FTDI Driver uses no stop bits for non-standard baud rates.
     while not Terminated do
     begin
 
@@ -460,4 +460,4 @@ end;
 
 
 end.
-
+

@@ -35,4 +35,13 @@ object FormSettings: TFormSettings
     OnChange = CheckBoxPingPongStandardFrameChange
     TabOrder = 1
   end
+  object CheckBoxSoftwareFlowControl: TCheckBox
+    Left = 24
+    Height = 18
+    Top = 106
+    Width = 206
+    Caption = 'Software Flow Control (UART)'
+    OnChange = CheckBoxSoftwareFlowControlChange
+    TabOrder = 2
+  end
 end

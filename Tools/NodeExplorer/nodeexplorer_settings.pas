@@ -44,6 +44,7 @@ type
     FPingPongStandardFrameTest: Boolean;
     FProxyNodeAlias: Word;
     FProxyNodeID: Int64;
+    FSoftwareFlowControl: Boolean;
     FTargetNodeAlias: Word;
     FTargetNodeID: Int64;
     FTimeoutComRead: Integer;
@@ -64,6 +65,7 @@ type
     property MultiNodeTest: Boolean read FMultiNodeTest write FMultiNodeTest;
     property TimeoutComRead: Integer read FTimeoutComRead write FTimeoutComRead;
     property PingPongStandardFrameTest: Boolean read FPingPongStandardFrameTest write FPingPongStandardFrameTest;
+    property SoftwareFlowControl: Boolean read FSoftwareFlowControl write FSoftwareFlowControl;
     constructor Create;
     procedure ReadSettings;
     procedure WriteSettings;
@@ -126,6 +128,8 @@ begin
   FXMLSettings := nil;
   FMultiNodeTest := False;
   FTimeoutComRead := DEFAULT_COM_READ_TIMEOUT;
+  FSoftwareFlowControl := False;
+  FPingPongStandardFrameTest:= False;
 
   // Under OSX we get the path of the executable
 {$IFDEF DARWIN}
