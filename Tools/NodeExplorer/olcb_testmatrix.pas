@@ -22,18 +22,34 @@ const
   STR_PROTOCOL_IDENTIFICATION_PROTOCOL_CLASS = 'TTestProtocolSupport';
   STR_TEST_GET_NODES_UNDER_TEST_CLASS        = 'TTestGetNodesUnderTest';
 
-  XML_FAILURE_INVALID_COUNT = 'The expected number of messages received for the objective was not met';
+  XML_ERROR_INVALID_COUNT = 'The expected number of messages received for the objective was not met';
   XML_ERROR_INVALID_NODE_ID = 'The full node ID received did not match the Full Node Alias that Node Explorer was expecting for the test node';
   XML_ERROR_STANDARD_FRAME = 'The node should not respond to CAN standard frame (11 bit) messages';
+
   XML_ERROR_FORMAT_UNUSED_BITS_SET = 'The top 2 bits in the extended CAN header are not set to "0"';
   XML_ERROR_FORMAT_FORWARDING_BIT_NOT_SET = 'Bit 28 in the CAN header should be set if the node is not used to forward across network segments';
   XML_ERROR_FORMAT_INVALID_MTI = 'Bits 12-23 (MTI) in the CAN header were not correct in the reply';
   XML_ERROR_FORMAT_INVALID_SOURCE_ALIAS = 'Bits 0-11 defining the Node Alias did not match the stored Node Alias that Node Explorer was expecting for the test node';
   XML_ERROR_FORMAT_INVALID_DEST_ALIAS = 'Destination Alias (either in the CAN header or first 2 data bytes) did not match Proxy Alias of Node Explorer';
+
   XML_ERROR_PIP_UNASSIGNED_BITS = 'The node is using the bits in the Protocol Identification Protocol that are current unassigned';
   XML_ERROR_PIP_RESERVED_BITS = 'The node is using the bits in the Protocol Identification Protocol defined as reserved';
   XML_ERROR_PIP_START_END_BIT_SUPPORT = 'The node does not support the Protocol Identification Protocol start-end bit for future expansion, it is suggested this be implemented';
   XML_ERROR_PIP_UNEXPECTED_RESPONSE_TO_START_BIT = 'The node should not have responded to the PIP expansion start bit, it should have waited until the stop bit is sent';
+
+  XML_ERROR_UNKOWN_MTI_EXPECTED_OIR = 'No Optional Interaction Recevied message recevied from the node';
+  XML_ERROR_UNKOWN_MTI_INVALID_DEST_ALIAS =  'The destination Alias sent by the node was incorrect';
+  XML_ERROR_UNKOWN_MTI_OPTIONAL_CODE = 'The optional code sent by the node should have been Permenemt Error ($2000) in the result';
+  XML_ERROR_UNKOWN_MTI_NO_MATCH = 'The unknown MTI value should have been sent as extra data in the result';
+
+  XML_ERROR_NO_STARTUP_NO_AMR = 'No Alias Mapping Reset (AMR) was detected';
+  XML_ERROR_NO_STARTUP_NO_CID0 = 'The first Check ID (CID0) message was not detected';
+  XML_ERROR_NO_STARTUP_NO_CID1 = 'The second Check ID (CID1) message was not detected';
+  XML_ERROR_NO_STARTUP_NO_CID2 = 'The third Check ID (CID2) message was not detected';
+  XML_ERROR_NO_STARTUP_NO_CID3 = 'The fourth Check ID (CID3) message was not detected';
+  XML_ERROR_NO_STARTUP_NO_RID = 'The Reserve ID message was not detected';
+  XML_ERROR_NO_STARTUP_NO_AMD = 'The Alias Mapping Definition (AMD) was not detected';
+  XML_ERROR_NO_STARTUP_NO_INITIALZIED = 'The Node Initialized message was not detected';
 
 
 type
@@ -70,6 +86,18 @@ type
   );
   TTestUnknownMTICodes = set of TTestUnknownMTICode;
 
+  TTestNodeStartupCode = (
+    tsNoAMR,                     // No AMR detected
+    tsNoCID0,                    // No Check ID 0
+    tsNoCID1,                    // No Check ID 1
+    tsNoCID2,                    // No Check ID 2
+    tsNoCID3,                    // No Check ID 3
+    tsNoRID,                      // No Reserve ID
+    tsNoAMD,                     // No Alias Map Definition
+    tsNoInitialized              // No Node Initalized
+  );
+  TTestNodeStartupCodes = set of TTestNodeStartupCode;
+
 type
   TTestState = (ts_Idle, ts_Initialize, ts_ObjectiveStart, ts_Sending, ts_Receiving, ts_ObjectiveEnd, ts_Complete);
 
@@ -105,6 +133,7 @@ type
     FErrorCodes: TTestErrorCodes;
     FErrorCodesFormat: TTestErrorFormatCodes;
     FErrorCodesPip: TTestErrorPipCodes;
+    FErrorCodesStartup: TTestNodeStartupCodes;
     FErrorCodesUnknownMTI: TTestUnknownMTICodes;
     FErrorCodesUnknownMTIStrings: TStringList;
     FFreeOnLog: Boolean;
@@ -118,12 +147,14 @@ type
     function GetPassed: Boolean;
   protected
     property MessageHelper: TOpenLCBMessageHelper read FMessageHelper write FMessageHelper;
+    function TestForStartupReturn(Messages: TStringList; ExpectedMessageIndex: Integer; ExpectedMTI: DWord; ErrorCode: TTestNodeStartupCode): Boolean;
   public
     property ErrorCodes: TTestErrorCodes read FErrorCodes write FErrorCodes;
     property ErrorCodesFormat: TTestErrorFormatCodes read FErrorCodesFormat write FErrorCodesFormat;
     property ErrorCodesPip: TTestErrorPipCodes read FErrorCodesPip write FErrorCodesPip;
     property ErrorCodesUnknownMTIStrings: TStringList read FErrorCodesUnknownMTIStrings write FErrorCodesUnknownMTIStrings;
     property ErrorCodesUnknownMTI: TTestUnknownMTICodes read FErrorCodesUnknownMTI write FErrorCodesUnknownMTI;
+    property ErrorCodesStartup: TTestNodeStartupCodes read FErrorCodesStartup write FErrorCodesStartup;
     property FreeOnLog: Boolean read FFreeOnLog write FFreeOnLog;
     property ListItem: TListItem read FListItem write FListItem;
     property Passed: Boolean read GetPassed;
@@ -204,6 +235,34 @@ type
   end;
   TTestUnknownMTIAddressedClass = class of TTestUnknownMTIAddressed;
 
+  { TTestAliasConflict }
+
+  TTestAliasConflict = class(TTestBase)
+  public
+    function ProcessObjectives(ProcessStrings: TStringList): Integer; override;
+  end;
+  TTestAliasConflictClass = class of TTestAliasConflict;
+
+  { TTestZeroOrRepeatedAllocation }
+
+  TTestZeroOrRepeatedAllocation = class(TTestBase)
+  private
+    FReAllocationCount: Integer;
+  public
+    procedure InitTest; override;
+    function ProcessObjectives(ProcessStrings: TStringList): Integer; override;
+    property ReAllocationCount: Integer read FReAllocationCount write FReAllocationCount;
+  end;
+  TTestZeroOrRepeatedAllocationClass = class of TTestZeroOrRepeatedAllocation;
+
+  { TTestStartup }
+
+  TTestStartup = class(TTestBase)
+  public
+    function ProcessObjectives(ProcessStrings: TStringList): Integer; override;
+  end;
+  TTestStartupClass = class of TTestStartup;
+
 
   function FindTestFromXML(XMLDocTests: TXMLDocument; TestClassName: String): TTestBase;
   procedure ExtractResultsFromXML(XMLDoc: TXMLDocument; ReceiveResults: TStringList);
@@ -269,6 +328,7 @@ begin
     end;
   end;
 end;
+
 
 { TKnownMTI }
 
@@ -377,6 +437,7 @@ begin
             Result := 0;
           end else
           begin
+            StripReceivesNotForNodeUnderTest(ProcessStrings);
             ErrorCodesUnknownMTIStrings.Clear;
             MTIManager.ResetMTI;
             for i := 0 to ProcessStrings.Count - 1 do
@@ -442,6 +503,7 @@ begin
         end;
     1 : begin
           // Send Standard Messages:
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count > 0 then                                      // Only one node should respond as this is addressed
             Include(FErrorCodes, teStandardFrameResponse);
 
@@ -485,6 +547,7 @@ begin
         end;
     1 : begin
           // Receive Node that responded with Protocol Identification message
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then                                      // Only one node should respond as this is addressed
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -509,6 +572,7 @@ begin
         end;
      3 : begin
           // Should be no response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count <> 0 then
             Include(FErrorCodes, teIncorrectCount);
 
@@ -525,6 +589,7 @@ begin
         end;
       5 : begin
           // Receive Nodes that responded with Protocol Identification message
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count > 0 then                                      // Node should not respond to the Start bit
             Include(FErrorCodesPip, tepPipRespondedToStartBit);
 
@@ -541,6 +606,7 @@ begin
         end;
       7 : begin
           // Receive Nodes that responded with Protocol Identification message
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 0 then
           begin
             Include(FErrorCodesPip, tepPipStartEndBitSupport);
@@ -578,8 +644,7 @@ begin
         end;
     1: begin
           // Receive Nodes that responded with Global Verifed Node ID
-          if Settings.MultiNodeTest then
-            StripReceivesNotForNodeUnderTest(ProcessStrings);
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -603,8 +668,7 @@ begin
         end;
     3: begin
           // Receive Nodes only our test node should respond with Global Verifed Node ID
-          if Settings.MultiNodeTest then
-            StripReceivesNotForNodeUnderTest(ProcessStrings);
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -627,6 +691,7 @@ begin
         end;
     5: begin
           // Should be no response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count <> 0 then
             Include(FErrorCodes, teIncorrectCount);
 
@@ -643,6 +708,7 @@ begin
         end;
     7: begin
           // Should be one and only one response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -666,6 +732,7 @@ begin
         end;
     9: begin
           // Should be one and only one response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -688,6 +755,7 @@ begin
         end;
     11: begin
           // Should be one and only one response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -700,8 +768,6 @@ begin
           Inc(FStateMachineIndex);
           Result := 6;                                                          //
        end;
-
-
     12 : begin
           // Send an incorrectly Addressed Verify Node ID with no data
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER_DEST, Settings.ProxyNodeAlias, $001, 2, 0, 0, 0, 0, 0 ,0 ,0 ,0);   // TODO: NEED UNIQUE ALIAS NODE ID HERE
@@ -712,6 +778,7 @@ begin
         end;
     13: begin
           // Should be no response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count <> 0 then
             Include(FErrorCodes, teIncorrectCount);
 
@@ -729,6 +796,7 @@ begin
         end;
     15: begin
           // Should be no response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count <> 0 then
             Include(FErrorCodes, teIncorrectCount);
 
@@ -745,6 +813,7 @@ begin
         end;
     17: begin
           // Should be no response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count <> 0 then
             Include(FErrorCodes, teIncorrectCount);
 
@@ -774,8 +843,7 @@ begin
         end;
     1: begin
           // All nodes should respond need to find the node under test
-          if Settings.MultiNodeTest then
-            StripReceivesNotForNodeUnderTest(ProcessStrings);
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -799,6 +867,7 @@ begin
         end;
     3: begin
           // Should be one and only one response from node node under test
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count = 1 then
           begin
             MessageHelper.Decompose(ProcessStrings[0]);
@@ -820,6 +889,7 @@ begin
         end;
     5: begin
           // Should be no response from any node
+          StripReceivesNotForNodeUnderTest(ProcessStrings);
           if ProcessStrings.Count <> 0 then
             Include(FErrorCodes, teIncorrectCount);
 
@@ -850,6 +920,106 @@ begin
   end;
 end;
 
+{ TTestStartup }
+
+function TTestStartup.ProcessObjectives(ProcessStrings: TStringList): Integer;
+var
+  i: Integer;
+begin
+  Result := inherited ProcessObjectives(ProcessStrings);
+  case StateMachineIndex of
+    0 : begin
+          // Send Global Verify Nodes but use the NUT Alias as the source from NodeExplorer to force the NUT to reallocate its Alias
+
+      ///  NEED THE USER TO REBOOT HERE>>>>>>>>>>>
+
+          Inc(FStateMachineIndex);
+          Result := 0;
+        end;
+    1: begin
+         StripReceivesNotForNodeUnderTest(ProcessStrings);
+         if TestForStartupReturn(ProcessStrings, 0, MTI_AMR, tsNoAMR) then
+           if TestForStartupReturn(ProcessStrings, 1, MTI_CID0, tsNoCID0) then
+             if TestForStartupReturn(ProcessStrings, 2, MTI_CID1, tsNoCID1) then
+               if TestForStartupReturn(ProcessStrings, 3, MTI_CID2, tsNoCID2) then
+                 if TestForStartupReturn(ProcessStrings, 4, MTI_CID3, tsNoCID3) then
+                   if TestForStartupReturn(ProcessStrings, 5, MTI_AMD, tsNoAMD) then
+                     if TestForStartupReturn(ProcessStrings, 5, MTI_INITIALIZATION_COMPLETE, tsNoInitialized) then
+                     begin
+
+                     end;
+         Result := 1;  // Done
+
+       end;
+  end;
+end;
+
+{ TTestZeroOrRepeatedAllocation }
+
+procedure TTestZeroOrRepeatedAllocation.InitTest;
+begin
+  inherited InitTest;
+  FReAllocationCount := 0;
+end;
+
+function TTestZeroOrRepeatedAllocation.ProcessObjectives(ProcessStrings: TStringList): Integer;
+var
+  i: Integer;
+begin
+  Result := inherited ProcessObjectives(ProcessStrings);
+  case StateMachineIndex of
+    0 : begin
+          // Send Global Verify Nodes but use the NUT Alias as the source from NodeExplorer to force the NUT to reallocate its Alias
+          MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.TargetNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          ProcessStrings.Add(MessageHelper.Encode);
+
+          Inc(FStateMachineIndex);
+          Result := 0;
+        end;
+    1: begin
+         StripReceivesNotForNodeUnderTest(ProcessStrings);
+
+         Result := 1;  // Assume we are done
+
+         if TestForStartupReturn(ProcessStrings, 0, MTI_AMR, tsNoAMR) then
+           if TestForStartupReturn(ProcessStrings, 1, MTI_CID0, tsNoCID0) then
+             if TestForStartupReturn(ProcessStrings, 2, MTI_CID1, tsNoCID1) then
+               if TestForStartupReturn(ProcessStrings, 3, MTI_CID2, tsNoCID2) then
+                 if TestForStartupReturn(ProcessStrings, 4, MTI_CID3, tsNoCID3) then
+                   if TestForStartupReturn(ProcessStrings, 5, MTI_AMD, tsNoAMD) then
+                   begin
+                     Inc(FReAllocationCount);
+                     if ReAllocationCount <= 4095 then
+                     begin
+                        Result := 0;
+                       FStateMachineIndex := 0;
+                     end
+                   end;
+       end;
+  end;
+end;
+
+{ TTestAliasConflict }
+
+function TTestAliasConflict.ProcessObjectives(ProcessStrings: TStringList): Integer;
+begin
+  Result := inherited ProcessObjectives(ProcessStrings);
+  case StateMachineIndex of
+    0 : begin
+          // Send Global Verify Nodes to collect all nodes on the bus
+   //       MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+   //       ProcessStrings.Add(MessageHelper.Encode);
+
+          Inc(FStateMachineIndex);
+          Result := 0;
+        end;
+    1: begin
+          // There is no pass fail here we are just collecting the nodes
+          Result := 1;
+       end;
+  end;
+end;
+
 { TTestBase }
 
 procedure TTestBase.StripReceivesNotForNodeUnderTest(ReceiveStrings: TStringList);
@@ -857,13 +1027,16 @@ var
   i: Integer;
   TargetNodeAlias: String;
 begin
-  TargetNodeAlias := IntToHex(Settings.TargetNodeAlias, 3);
-  for i := ReceiveStrings.Count - 1 downto 0 do
+  if Settings.MultiNodeTest then
   begin
-    // example - :X19170aaaN
-    // Make sure the sender of the message is the node under test, if not then remove it from the list
-    if (ReceiveStrings[i][8] <> TargetNodeAlias[1]) or (ReceiveStrings[i][9] <> TargetNodeAlias[2]) or (ReceiveStrings[i][10] <> TargetNodeAlias[3]) then
-      ReceiveStrings.Delete(i);
+    TargetNodeAlias := IntToHex(Settings.TargetNodeAlias, 3);
+    for i := ReceiveStrings.Count - 1 downto 0 do
+    begin
+      // example - :X19170aaaN
+      // Make sure the sender of the message is the node under test, if not then remove it from the list
+      if (ReceiveStrings[i][8] <> TargetNodeAlias[1]) or (ReceiveStrings[i][9] <> TargetNodeAlias[2]) or (ReceiveStrings[i][10] <> TargetNodeAlias[3]) then
+        ReceiveStrings.Delete(i);
+    end;
   end;
 end;
 
@@ -899,6 +1072,20 @@ begin
       end;
     end;
   end;
+end;
+
+function TTestBase.TestForStartupReturn(Messages: TStringList; ExpectedMessageIndex: Integer; ExpectedMTI: DWord; ErrorCode: TTestNodeStartupCode): Boolean;
+begin
+  Result := False;
+  if Messages.Count > ExpectedMessageIndex then
+  begin
+    MessageHelper.Decompose(Messages[ExpectedMessageIndex]);
+    if MessageHelper.MTI = ExpectedMTI then
+      Result := True
+    else
+      Include(FErrorCodesStartup, ErrorCode);
+  end else
+    Include(FErrorCodesStartup, ErrorCode);
 end;
 
 constructor TTestBase.Create;
@@ -987,8 +1174,11 @@ initialization
   RegisterClass(TTestProtocolSupport);
   RegisterClass(TTestStandardFrame);
   RegisterClass(TTestUnknownMTIAddressed);
+  RegisterClass(TTestAliasConflict);
+  RegisterClass(TTestZeroOrRepeatedAllocation);
+  RegisterClass(TTestStartup);
 
 finalization
 
 end.
-
+

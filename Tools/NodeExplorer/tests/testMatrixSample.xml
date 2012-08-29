@@ -14,7 +14,7 @@
   </Test>
   <Test>
     <Name>Alias Map Enquiry</Name>
-    <Description>Tests target for correct implementation of the Alias Map Enquiry (AME) Message</Description>    
+    <Description>Tests target for correct implementation of the Alias Map Enquiry (AME) Message</Description>
     <Classname>TTestAliasMapEnquiry</Classname>
     <Enabled>True</Enabled>
     <TestObjective>
@@ -35,7 +35,7 @@
   </Test>
   <Test>
     <Name>Verify Node </Name>
-    <Description>Tests target for correct implementation of the VerifyNodeID message</Description>    
+    <Description>Tests target for correct implementation of the VerifyNodeID message</Description>
     <Classname>TTestVerifyNodeID</Classname>
     <Enabled>True</Enabled>
     <TestObjective>
@@ -85,7 +85,7 @@
   </Test>
   <Test>
     <Name>Protocol Identification Protocol (PIP)</Name>
-    <Description>Requests what protocols a node supports, optional but recommended implementation</Description>    
+    <Description>Requests what protocols a node supports, optional but recommended implementation</Description>
     <Classname>TTestProtocolSupport</Classname>
     <Enabled>True</Enabled>
     <TestObjective>
@@ -104,26 +104,69 @@
       <Results>One response</Results>
     </TestObjective>
   </Test>
-    <Test>
+  <Test>
     <Name>Standard Frame Test</Name>
-    <Description>Sends standard frames that a node should ignore</Description>    
+    <Description>Sends standard frames that a node should ignore</Description>
     <Classname>TTestStandardFrame</Classname>
     <Enabled>True</Enabled>
     <TestObjective>
       <SpecDoc>"TODO:"</SpecDoc>
       <Objective>Test that NUT does not reply to stardard CAN frames</Objective>
       <Results>No response</Results>
-    </TestObjective>    
+    </TestObjective>
   </Test>
-    <Test>
+  <Test>
     <Name>Unknown MTI Addressed</Name>
-    <Description>Sends undefined MTI values through an addressed message</Description>    
+    <Description>Sends undefined MTI values through an addressed message</Description>
     <Classname>TTestUnknownMTIAddressed</Classname>
     <Enabled>True</Enabled>
     <TestObjective>
       <SpecDoc>"TODO:"</SpecDoc>
       <Objective>Test that NUT does not reply to unknown MTI values</Objective>
       <Results>No response</Results>
-    </TestObjective>    
+    </TestObjective>
+  </Test>
+  <Test>
+    <Name>Alias Conflict</Name>
+    <Description>Sends frames that conflict with the NUT Alias ID</Description>
+    <Classname>TTestAliasConflict</Classname>
+    <Enabled>True</Enabled>
+    <TestObjective>
+      <SpecDoc>TODO</SpecDoc>
+      <Objective>Test that the NUT detects a message from another node using he NUT Alias ID</Objective>
+      <Results>AMR, then a complete sequence of Check ID Messages to register a new Alias ID, a RID within 200ms, AMD, Verified Node ID???)</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>TODO</SpecDoc>
+      <Objective>Test that the NUT detects a node sending Check ID (CID) for its currently held Alias and and responds accordingly</Objective>
+      <Results>Reserve ID</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>TODO</SpecDoc>
+      <Objective>Test that the NUT detects a node sending a Reserve ID (RID) to reserve its current Alias ID</Objective>
+      <Results>AMR, then a complete sequence of Check ID Messages to register a new Alias ID, a RID within 200ms, AMD, Verified Node ID???</Results>
+    </TestObjective>
+  </Test>
+  <Test>
+    <Name>Zero or Repeated Alias</Name>
+    <Description>Forces repeated reallocation of the NUT Alias</Description>
+    <Classname>TTestZeroOrRepeatedAllocation</Classname>
+    <Enabled>False</Enabled>
+    <TestObjective>
+      <SpecDoc>"TODO:"</SpecDoc>
+      <Objective>Test that NUT does not allocate a 0 Alias or Repeat an Alias (Run 4095 reallocates)</Objective>
+      <Results>Reallocated Alias (with associated CID, RID, AMD, etc messages) that is not 0 nor repeated from any point in the test</Results>
+    </TestObjective>
+  </Test>
+  <Test>
+    <Name>Start up sequence</Name>
+    <Description>Ensures correct message sequence on NUT start up (Requires manual turn on node)</Description>
+    <Classname>TTestStartup</Classname>
+    <Enabled>False</Enabled>
+    <TestObjective>
+      <SpecDoc>"TODO:"</SpecDoc>
+      <Objective>Tracks the message stream as the NUT boots and aquires a unique Alias ID on the bus</Objective>
+      <Results>Four CID messages, one RID message, one AMD message, one Node Initialized message, and list of consumed and produced events</Results>
+    </TestObjective>
   </Test>
 </TestMatrix>

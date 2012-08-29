@@ -4,7 +4,7 @@ object FormMain: TFormMain
   Top = 223
   Width = 855
   Caption = 'OpenLCB NodeExplorer'
-  ClientHeight = 549
+  ClientHeight = 530
   ClientWidth = 855
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
@@ -14,7 +14,7 @@ object FormMain: TFormMain
   LCLVersion = '0.9.31'
   object PageControl: TPageControl
     Left = 8
-    Height = 518
+    Height = 499
     Top = 16
     Width = 838
     ActivePage = TabSheetHome
@@ -26,21 +26,21 @@ object FormMain: TFormMain
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
       Caption = 'Home'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 473
+      ClientWidth = 830
       object GroupBoxComPort: TGroupBox
         Left = 13
-        Height = 272
+        Height = 266
         Top = 164
-        Width = 809
+        Width = 807
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'COM Port Settings'
-        ClientHeight = 250
-        ClientWidth = 801
+        ClientHeight = 248
+        ClientWidth = 803
         TabOrder = 0
         object EditCustomBaudRate: TEdit
           Left = 405
-          Height = 22
+          Height = 21
           Top = 25
           Width = 109
           Enabled = False
@@ -48,19 +48,19 @@ object FormMain: TFormMain
         end
         object LabelCustomBaud: TLabel
           Left = 397
-          Height = 17
+          Height = 14
           Top = 6
-          Width = 85
+          Width = 64
           Caption = 'Custom Baud'
           Enabled = False
           ParentColor = False
         end
         object ComboBoxBaud: TComboBox
           Left = 285
-          Height = 20
+          Height = 21
           Top = 26
           Width = 100
-          ItemHeight = 0
+          ItemHeight = 13
           ItemIndex = 10
           Items.Strings = (
             'Custom'
@@ -83,18 +83,18 @@ object FormMain: TFormMain
         end
         object LabelBaud: TLabel
           Left = 277
-          Height = 17
+          Height = 14
           Top = 6
-          Width = 32
+          Width = 25
           Caption = 'Baud'
           ParentColor = False
         end
         object ComboBoxPorts: TComboBox
           Left = 20
-          Height = 20
+          Height = 21
           Top = 26
           Width = 248
-          ItemHeight = 0
+          ItemHeight = 13
           OnChange = ComboBoxPortsChange
           Style = csDropDownList
           TabOrder = 0
@@ -102,9 +102,9 @@ object FormMain: TFormMain
         end
         object LabelPort: TLabel
           Left = 13
-          Height = 17
+          Height = 14
           Top = 6
-          Width = 26
+          Width = 21
           Caption = 'Port'
           ParentColor = False
         end
@@ -118,23 +118,23 @@ object FormMain: TFormMain
         end
         object LabelDiscoverNodeID: TLabel
           Left = 127
-          Height = 17
+          Height = 14
           Top = 96
-          Width = 124
+          Width = 98
           Caption = 'Proxy NodeID (Hex)'
           ParentColor = False
         end
         object LabelDiscoverNodeAlias: TLabel
           Left = 13
-          Height = 17
+          Height = 14
           Top = 94
-          Width = 108
+          Width = 84
           Caption = 'Proxy Alias (Hex)'
           ParentColor = False
         end
         object EditDiscoverNodeAlias: TEdit
           Left = 21
-          Height = 22
+          Height = 21
           Top = 118
           Width = 88
           ParentShowHint = False
@@ -142,16 +142,16 @@ object FormMain: TFormMain
         end
         object EditDiscoverNodeID: TEdit
           Left = 135
-          Height = 22
+          Height = 21
           Top = 117
           Width = 200
           TabOrder = 5
         end
         object LabelHomeMessage: TLabel
           Left = 20
-          Height = 91
+          Height = 89
           Top = 150
-          Width = 766
+          Width = 768
           Anchors = [akTop, akLeft, akRight, akBottom]
           AutoSize = False
           Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages placed on the OpenLCB bus by NodeExplorer. '
@@ -169,18 +169,18 @@ object FormMain: TFormMain
         end
       end
       object ButtonConnect: TButton
-        Left = 670
+        Left = 668
         Height = 22
-        Top = 445
+        Top = 439
         Width = 150
         Action = ActionConnect
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonShowLog: TButton
-        Left = 513
+        Left = 511
         Height = 22
-        Top = 445
+        Top = 439
         Width = 150
         Action = ActionShowLog
         Anchors = [akRight, akBottom]
@@ -190,17 +190,17 @@ object FormMain: TFormMain
         Left = 13
         Height = 153
         Top = 3
-        Width = 809
+        Width = 807
         Anchors = [akTop, akLeft, akRight]
         Caption = 'PanelLogo'
         ClientHeight = 153
-        ClientWidth = 809
+        ClientWidth = 807
         TabOrder = 3
         object ImageOpenLCB: TImage
           Left = 1
           Height = 151
           Top = 1
-          Width = 807
+          Width = 805
           Align = alClient
           Center = True
           Picture.Data = {
@@ -485,12 +485,12 @@ object FormMain: TFormMain
     end
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 473
+      ClientWidth = 830
       object ButtonDiscoverNodes: TButton
-        Left = 670
+        Left = 668
         Height = 22
-        Top = 445
+        Top = 439
         Width = 150
         Action = ActionDiscoverNode
         Anchors = [akRight, akBottom]
@@ -498,9 +498,9 @@ object FormMain: TFormMain
       end
       object ListViewNodeDiscovery: TListView
         Left = 12
-        Height = 291
+        Height = 285
         Top = 4
-        Width = 803
+        Width = 801
         Align = alCustom
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
@@ -526,8 +526,8 @@ object FormMain: TFormMain
       object LabelHomeMessage1: TLabel
         Left = 29
         Height = 56
-        Top = 312
-        Width = 768
+        Top = 306
+        Width = 766
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
         Caption = 'Select a node to communicate with.  The Alias and Node ID will be stored and used when executing tests within NodeExplorer.  Any errors messages refering to Alias or Full Node IDs not matching are comparing received test messages with these stored values. '
@@ -537,7 +537,7 @@ object FormMain: TFormMain
       object LabelDiscoverMultiNode: TLabel
         Left = 29
         Height = 17
-        Top = 392
+        Top = 386
         Width = 264
         Anchors = [akLeft, akBottom]
         AutoSize = False
@@ -548,13 +548,13 @@ object FormMain: TFormMain
     end
     object TabSheetVerification: TTabSheet
       Caption = 'VerificationTests'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 473
+      ClientWidth = 830
       object ListViewTestMatrix: TListView
         Left = 13
-        Height = 333
+        Height = 326
         Top = 4
-        Width = 805
+        Width = 803
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
         Checkboxes = True
@@ -584,37 +584,37 @@ object FormMain: TFormMain
         OnDeletion = ListViewTestMatrixDeletion
       end
       object ButtonLoadTests: TButton
-        Left = 190
+        Left = 188
         Height = 22
-        Top = 445
+        Top = 439
         Width = 150
         Action = ActionLoadTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonSaveTests: TButton
-        Left = 350
+        Left = 348
         Height = 22
-        Top = 445
+        Top = 439
         Width = 150
         Action = ActionSaveTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 2
       end
       object ButtonExecuteTests: TButton
-        Left = 670
+        Left = 668
         Height = 22
-        Top = 445
+        Top = 439
         Width = 150
         Action = ActionExecuteTests
         Anchors = [akRight, akBottom]
         TabOrder = 3
       end
       object LabelHomeMessage2: TLabel
-        Left = 29
+        Left = 28
         Height = 58
-        Top = 351
-        Width = 772
+        Top = 354
+        Width = 770
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
         Caption = 'Select the tests to run against the node selected in the Discover tab.  A "?" icon indicates the test has not been executed.  A red "X" indicates one of the objectives of the test failed.  Open the log window from the Home tab and rerun the failed test to get detailed information on the failure.'
@@ -622,9 +622,9 @@ object FormMain: TFormMain
         WordWrap = True
       end
       object ButtonStopCurrenteTest: TButton
-        Left = 509
+        Left = 507
         Height = 22
-        Top = 445
+        Top = 439
         Width = 150
         Action = ActionCancelTests
         Anchors = [akRight, akBottom]
@@ -670,8 +670,8 @@ object FormMain: TFormMain
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 202
-        ClientWidth = 272
+        ClientHeight = 206
+        ClientWidth = 276
         Items.Strings = (
           'Write under mask'
           'Unaligned reads'
@@ -700,8 +700,8 @@ object FormMain: TFormMain
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 162
-        ClientWidth = 272
+        ClientHeight = 166
+        ClientWidth = 276
         Items.Strings = (
           '1 byte'
           '2 byte'
@@ -730,8 +730,8 @@ object FormMain: TFormMain
         Top = 4
         Width = 248
         Caption = 'Memory Space Options'
-        ClientHeight = 202
-        ClientWidth = 240
+        ClientHeight = 206
+        ClientWidth = 244
         TabOrder = 4
         object CheckBoxMemConfigPresent: TCheckBox
           Left = 4
@@ -808,7 +808,7 @@ object FormMain: TFormMain
         ParentFont = False
         TabOrder = 0
         OnKeyDown = SynEditCDIKeyDown
-        Gutter.Width = 55
+        Gutter.Width = 51
         Gutter.MouseActions = <>
         RightGutter.Width = 0
         RightGutter.MouseActions = <>
@@ -1257,7 +1257,7 @@ object FormMain: TFormMain
             MouseActions = <>
           end
           object SynGutterLineNumber1: TSynGutterLineNumber
-            Width = 15
+            Width = 11
             MouseActions = <>
             MarkupInfo.Background = clBtnFace
             MarkupInfo.Foreground = clNone
@@ -1306,8 +1306,8 @@ object FormMain: TFormMain
         Width = 802
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Consumers'
-        ClientHeight = 162
-        ClientWidth = 794
+        ClientHeight = 166
+        ClientWidth = 798
         TabOrder = 0
         object ListViewConsumers: TListView
           Left = 0
@@ -1353,8 +1353,8 @@ object FormMain: TFormMain
         Width = 804
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'Producers'
-        ClientHeight = 207
-        ClientWidth = 796
+        ClientHeight = 211
+        ClientWidth = 800
         TabOrder = 1
         object ListViewProducers: TListView
           Left = 0
@@ -1432,8 +1432,8 @@ object FormMain: TFormMain
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 2
-        ClientHeight = 288
-        ClientWidth = 796
+        ClientHeight = 292
+        ClientWidth = 800
         Columns = 2
         Items.Strings = (
           'Protocol Identification Protocol'
@@ -2765,4 +2765,4 @@ object FormMain: TFormMain
       BEF62579BDF62377BDF62276BCC3
     }
   end
-end
+end

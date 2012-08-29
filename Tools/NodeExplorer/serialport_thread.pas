@@ -14,6 +14,8 @@ type
 
 { TComPortThread }
 
+  TSyncronizedMessageFunc = procedure(MessageStr: String);
+
   TComPortThread = class(TThread)
   private
     FActiveTest: TTestBase;
@@ -21,6 +23,7 @@ type
     FConnected: Boolean;
     FPort: String;
     FSerial: TBlockSerial;
+    FSyncronizedMessageStr: String;
     FTerminatedTest: Boolean;
     FTerminateTest: Boolean;
     FTestCount: Integer;
@@ -30,11 +33,15 @@ type
     protected
       property ActiveTest: TTestBase read FActiveTest write FActiveTest;
       property TimerUIUpdate: Word read FTimerUIUpdate write FTimerUIUpdate;
+      property SyncronizedMessageStr: String read FSyncronizedMessageStr write FSyncronizedMessageStr;
       procedure Execute; override;
       procedure ErrorCodesToXML(RootXMLElement: TDOMNode);
       procedure ErrorCodesFormatToXML(RootXMLElement: TDOMNode);
       procedure ErrorCodesPipToXML(RootXMLElement: TDOMNode);
+      procedure ErrorCodesUnknownMTI(RootXMLElement: TDOMNode);
+      procedure ErrorCodesStartupToXML(RootXMLElement: TDOMNode);
       procedure SyncronizeUpdateUI;
+      procedure SyncronizeMessageBox;
     public
       property Connected: Boolean read FConnected write FConnected;
       property Serial: TBlockSerial read FSerial write FSerial;
@@ -229,6 +236,8 @@ begin
                                        ErrorCodesToXML(XMLFailureCodes);
                                        ErrorCodesFormatToXML(XMLFailureCodes);
                                        ErrorCodesPipToXML(XMLFailureCodes);
+                                       ErrorCodesStartupToXML(XMLFailureCodes);
+                                       ErrorCodesUnknownMTI(XMLFailureCodes);
                                      end;
                                      iCurrentObjective := iNextObjective;
 
@@ -308,7 +317,7 @@ begin
     begin
       XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
       RootXMLElement.AppendChild(XMLNode);
-      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_FAILURE_INVALID_COUNT));
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_INVALID_COUNT));
     end;
     if teFullNodeIDInvalid in ActiveTest.ErrorCodes then
     begin
@@ -399,6 +408,97 @@ begin
   end;
 end;
 
+procedure TComPortThread.ErrorCodesUnknownMTI(RootXMLElement: TDOMNode);
+var
+  XMLNode: TDOMNode;
+begin
+  if ActiveTest.ErrorCodesUnknownMTI <> [] then
+  begin
+    if tuExpectedOIR in ActiveTest.ErrorCodesUnknownMTI then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_UNKOWN_MTI_EXPECTED_OIR));
+    end;
+    if tuInvalidDestAlias in ActiveTest.ErrorCodesUnknownMTI then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_UNKOWN_MTI_INVALID_DEST_ALIAS));
+    end;
+    if tuOptionalCode in ActiveTest.ErrorCodesUnknownMTI then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_UNKOWN_MTI_OPTIONAL_CODE));
+    end;
+    if tuMTIMismatch in ActiveTest.ErrorCodesUnknownMTI then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_UNKOWN_MTI_NO_MATCH));
+    end;
+  end;
+
+end;
+
+procedure TComPortThread.ErrorCodesStartupToXML(RootXMLElement: TDOMNode);
+var
+  XMLNode: TDOMNode;
+begin
+  if ActiveTest.ErrorCodesStartup <> [] then
+  begin
+    if tsNoAMR in ActiveTest.ErrorCodesStartup then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_NO_STARTUP_NO_AMR));
+    end;
+    if tsNoCID0 in ActiveTest.ErrorCodesStartup then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_NO_STARTUP_NO_CID0));
+    end;
+    if tsNoCID1 in ActiveTest.ErrorCodesStartup then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_NO_STARTUP_NO_CID1));
+    end;
+    if tsNoCID2 in ActiveTest.ErrorCodesStartup then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_NO_STARTUP_NO_CID2));
+    end;
+    if tsNoCID3 in ActiveTest.ErrorCodesStartup then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_NO_STARTUP_NO_CID3));
+    end;
+    if tsNoRID in ActiveTest.ErrorCodesStartup then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_NO_STARTUP_NO_RID));
+    end;
+    if tsNoAMD in ActiveTest.ErrorCodesStartup then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_NO_STARTUP_NO_AMD));
+    end;
+    if tsNoInitialized in ActiveTest.ErrorCodesStartup then
+    begin
+      XMLNode := ActiveTest.XMLResults.CreateElement(XML_NAME_FAILURE_CODE);
+      RootXMLElement.AppendChild(XMLNode);
+      XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(XML_ERROR_NO_STARTUP_NO_INITIALZIED));
+    end;
+  end
+end;
+
 procedure TComPortThread.SyncronizeUpdateUI;
 begin
   if Assigned(ActiveTest) then
@@ -412,6 +512,11 @@ begin
     end;
   end;
   TimerUIUpdate := 0;
+end;
+
+procedure TComPortThread.SyncronizeMessageBox;
+begin
+  ShowMessage(SyncronizedMessageStr);
 end;
 
 procedure TComPortThread.ShowStatus;
@@ -460,4 +565,4 @@ end;
 
 
 end.
-
+
