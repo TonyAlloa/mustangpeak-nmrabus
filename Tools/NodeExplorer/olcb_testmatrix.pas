@@ -443,6 +443,11 @@ begin
             for i := 0 to ProcessStrings.Count - 1 do
             begin
               MessageHelper.Decompose(ProcessStrings[i]);
+
+      ///        ValidateBasicReturnMessage(MTI_PROTOCOL_SUPPORT_REPLY, MessageHelper);
+
+      // TODO >>>>>>>
+
               if MessageHelper.MTI and MTI_OPTIONAL_INTERACTION_REJECTED = MTI_OPTIONAL_INTERACTION_REJECTED then
               begin
                 if MessageHelper.ExtractDataBytesAsInt(0, 1) = Settings.TargetNodeAlias then
@@ -1006,9 +1011,9 @@ begin
   Result := inherited ProcessObjectives(ProcessStrings);
   case StateMachineIndex of
     0 : begin
-          // Send Global Verify Nodes to collect all nodes on the bus
-   //       MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
-   //       ProcessStrings.Add(MessageHelper.Encode);
+      // Send Global Verify Nodes but use the NUT Alias as the source from NodeExplorer to force the NUT to reallocate its Alias
+          MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.TargetNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+          ProcessStrings.Add(MessageHelper.Encode);
 
           Inc(FStateMachineIndex);
           Result := 0;
@@ -1016,6 +1021,20 @@ begin
     1: begin
           // There is no pass fail here we are just collecting the nodes
           Result := 1;
+       end;
+    2 : begin
+          Inc(FStateMachineIndex);
+          Result := 1;
+        end;
+    3: begin
+          Result := 2;
+       end;
+    4 : begin
+          Inc(FStateMachineIndex);
+          Result := 2;
+        end;
+    5: begin
+          Result := 31;
        end;
   end;
 end;
@@ -1077,6 +1096,7 @@ end;
 function TTestBase.TestForStartupReturn(Messages: TStringList; ExpectedMessageIndex: Integer; ExpectedMTI: DWord; ErrorCode: TTestNodeStartupCode): Boolean;
 begin
   Result := False;
+  ValidateBasicReturnMessage(ExpectedMTI, MessageHelper);
   if Messages.Count > ExpectedMessageIndex then
   begin
     MessageHelper.Decompose(Messages[ExpectedMessageIndex]);
@@ -1181,4 +1201,4 @@ initialization
 finalization
 
 end.
-
+

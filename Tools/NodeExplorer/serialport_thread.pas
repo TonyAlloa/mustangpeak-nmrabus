@@ -66,16 +66,18 @@ var
   List: TList;
   i: Integer;
   TempStr: AnsiString;
-  ProcessStrings: TStringList;
+  SendStrings, ReceiveStrings: TStringList;
   Objectives: TList;
   iNextObjective, iCurrentObjective: Integer;
   XMLRoot, XMLTestNode, XMLNode, XMLTestObjectiveNode, XMLObjectiveNode, XMLObjectiveResultsNode, XMLFailureCodes: TDOMNode;
+  TimeSent, TimeReceived: DWORD;
 begin
   Serial := TBlockSerial.Create;                           // Create the Serial object in the context of the thread
   Serial.LinuxLock:=False;
   Serial.RaiseExcept:=False;
   Serial.Connect(Port);
-  ProcessStrings := TStringList.Create;
+  SendStrings := TStringList.Create;
+  ReceiveStrings := TStringList.Create;
   Objectives := TList.Create;
   try
     Connected:=True;
@@ -165,7 +167,7 @@ begin
                                   XMLTestObjectiveNode.AppendChild(XMLObjectiveResultsNode);
                                 end;
 
-                                ActiveTest.ErrorCodes := [];                  // Clear out the errors at the start of an objective so they can accumulate throught the objective
+                                ActiveTest.ClearErrorCodes;                     // Clear out the errors at the start of an objective so they can accumulate throught the objective
 
                                 if TerminateTest then
                                   ActiveTest.TestState := ts_Complete
@@ -180,20 +182,21 @@ begin
                                     Synchronize(@SyncronizeUpdateUI);
                                 end;
 
-                                ProcessStrings.Clear;
-                                iCurrentObjective := ActiveTest.ProcessObjectives(ProcessStrings);  // Run Next State and get State specific strings
-                                for i := 0 to ProcessStrings.Count - 1 do          // Start with the next objective information
+                                SendStrings.Clear;
+                                iCurrentObjective := ActiveTest.ProcessObjectives(SendStrings);  // Run Next State and get State specific strings
+                                for i := 0 to SendStrings.Count - 1 do          // Start with the next objective information
                                 begin
                                   if TerminateTest then
                                     Break;
-                                  Serial.SendString(ProcessStrings[i] + LF);
+                                  Serial.SendString(SendStrings[i] + LF);
                                   XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_SEND);
                                   XMLObjectiveResultsNode.AppendChild(XMLNode);
-                                  XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ProcessStrings[i]));
+                                  XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(SendStrings[i]));
                                 end;
-                                ProcessStrings.Clear;
+                                SendStrings.Clear;
                                 while Serial.SendingData > 0 do
                                   ThreadSwitch;                                    // Wait till "done" transmitting
+                                TimeSent := GetTickCount;
 
                                 ActiveTest.TestState := ts_Receiving;            // Receive what we asked for before terminating
                               end;
@@ -208,13 +211,14 @@ begin
                                 TempStr := Serial.Recvstring(Settings.TimeoutComRead);  // Try to get something from the CAN
                                 if TempStr <> '' then
                                 begin
-                                  ProcessStrings.Add( Trim( UpperCase(TempStr)));
+                                  TimeReceived := GetTickCount;
+                                  ReceiveStrings.Add( Trim( UpperCase(TempStr)));      THIS SORT OF ASSUMES ONE PACKET AT AT TIME RECEIVED>>>>>>>> RETHINK.......
                                   XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_RECEIVE);    // Received something, store and keep looking
                                   XMLObjectiveResultsNode.AppendChild(XMLNode);
-                                  XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ProcessStrings[ProcessStrings.Count - 1]));
+                                  XMLNode.AppendChild(ActiveTest.XMLResults.CreateTextNode(ReceiveStrings[ReceiveStrings.Count - 1]));
                                 end else
                                 begin                                                 // Timed out, send in what was received
-                                   iNextObjective := ActiveTest.ProcessObjectives(ProcessStrings);
+                                   iNextObjective := ActiveTest.ProcessObjectives(ReceiveStrings);
                                    if iNextObjective = iCurrentObjective then          // Same objective to continue
                                    begin
                                      if TerminateTest then
@@ -302,7 +306,8 @@ begin
     if Connected then
       Serial.CloseSocket;
     Connected := False;
-    FreeAndNil(ProcessStrings);
+    FreeAndNil(SendStrings);
+    FreeAndNil(ReceiveStrings);
     FreeandNil(Objectives);
   end;
 end;
@@ -565,4 +570,4 @@ end;
 
 
 end.
-
+
