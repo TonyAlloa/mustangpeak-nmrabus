@@ -48,6 +48,7 @@ type
     FTargetNodeAlias: Word;
     FTargetNodeID: Int64;
     FTimeoutComRead: Integer;
+    FTimeoutStartupRID: Integer;
     FXMLSettings: TXMLDocument;
     function GetTestMatrixPath: string;
     function GetTextMatrixFile: string;
@@ -64,6 +65,7 @@ type
     property TestMatrixFile: string read GetTextMatrixFile;
     property MultiNodeTest: Boolean read FMultiNodeTest write FMultiNodeTest;
     property TimeoutComRead: Integer read FTimeoutComRead write FTimeoutComRead;
+    property TimeoutStartupRID: Integer read FTimeoutStartupRID write FTimeoutStartupRID;
     property PingPongStandardFrameTest: Boolean read FPingPongStandardFrameTest write FPingPongStandardFrameTest;
     property SoftwareFlowControl: Boolean read FSoftwareFlowControl write FSoftwareFlowControl;
     constructor Create;
@@ -130,6 +132,7 @@ begin
   FTimeoutComRead := DEFAULT_COM_READ_TIMEOUT;
   FSoftwareFlowControl := False;
   FPingPongStandardFrameTest:= False;
+  FTimeoutStartupRID := 2000; // 2 sec
 
   // Under OSX we get the path of the executable
 {$IFDEF DARWIN}
@@ -195,4 +198,4 @@ finalization
   FreeAndNil(Settings);
 
 end.
-
+

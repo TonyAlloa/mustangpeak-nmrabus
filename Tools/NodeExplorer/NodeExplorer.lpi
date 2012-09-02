@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="23">
+    <Units Count="32">
       <Unit0>
         <Filename Value="NodeExplorer.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -50,7 +50,7 @@
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <CursorPos X="73" Y="12"/>
+        <CursorPos X="50" Y="13"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -63,8 +63,8 @@
         <UnitName Value="UnitMainForm"/>
         <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="273"/>
-        <CursorPos X="13" Y="284"/>
+        <TopLine Value="746"/>
+        <CursorPos X="1" Y="768"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -78,8 +78,8 @@
         <UnitName Value="unitlogwindow"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="32" Y="26"/>
+        <TopLine Value="49"/>
+        <CursorPos X="56" Y="86"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -88,9 +88,9 @@
         <Filename Value="Z:\synapse40\source\lib\synaser.pas"/>
         <UnitName Value="synaser"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="761"/>
-        <CursorPos X="10" Y="778"/>
-        <UsageCount Value="34"/>
+        <TopLine Value="1333"/>
+        <CursorPos X="31" Y="1391"/>
+        <UsageCount Value="32"/>
       </Unit3>
       <Unit4>
         <Filename Value="Z:\synapse40\source\lib\synautil.pas"/>
@@ -98,42 +98,42 @@
         <WindowIndex Value="0"/>
         <TopLine Value="843"/>
         <CursorPos X="41" Y="864"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="30"/>
       </Unit4>
       <Unit5>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\unix\bunxovlh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="41" Y="15"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="30"/>
       </Unit5>
       <Unit6>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\bsd\ostypes.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="201"/>
         <CursorPos X="41" Y="243"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="30"/>
       </Unit6>
       <Unit7>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\unix\bunxh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="71"/>
         <CursorPos X="15" Y="96"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="30"/>
       </Unit7>
       <Unit8>
         <Filename Value="Y:\Developer\lazarus\lcl\include\control.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="2840"/>
         <CursorPos X="1" Y="2808"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="30"/>
       </Unit8>
       <Unit9>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\darwin\termios.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="62"/>
         <CursorPos X="30" Y="372"/>
-        <UsageCount Value="33"/>
+        <UsageCount Value="30"/>
       </Unit9>
       <Unit10>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\darwin\termio.pp"/>
@@ -141,7 +141,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="12" Y="17"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="8"/>
       </Unit10>
       <Unit11>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\unix\baseunix.pp"/>
@@ -149,14 +149,14 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="8"/>
       </Unit11>
       <Unit12>
         <Filename Value="Y:\usr\local\share\fpcsrc\rtl\unix\termiosh.inc"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="11" Y="18"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="8"/>
       </Unit12>
       <Unit13>
         <Filename Value="olcb_utilities.pas"/>
@@ -164,8 +164,8 @@
         <UnitName Value="olcb_utilities"/>
         <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="89"/>
-        <CursorPos X="1" Y="124"/>
+        <TopLine Value="307"/>
+        <CursorPos X="1" Y="329"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit13>
@@ -184,8 +184,8 @@
         <UnitName Value="unitolcb_defines"/>
         <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="27"/>
-        <CursorPos X="104" Y="105"/>
+        <TopLine Value="19"/>
+        <CursorPos X="49" Y="40"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit15>
@@ -198,7 +198,7 @@
         <UnitName Value="unitsettings"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="23"/>
+        <TopLine Value="1"/>
         <CursorPos X="56" Y="45"/>
         <UsageCount Value="245"/>
         <Loaded Value="True"/>
@@ -211,8 +211,8 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="202"/>
-        <CursorPos X="162" Y="215"/>
+        <TopLine Value="20"/>
+        <CursorPos X="5" Y="41"/>
         <UsageCount Value="209"/>
         <Loaded Value="True"/>
       </Unit17>
@@ -222,8 +222,8 @@
         <UnitName Value="olcb_testmatrix"/>
         <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="169"/>
-        <CursorPos X="104" Y="427"/>
+        <TopLine Value="290"/>
+        <CursorPos X="15" Y="311"/>
         <UsageCount Value="209"/>
         <Loaded Value="True"/>
       </Unit18>
@@ -231,10 +231,10 @@
         <Filename Value="nodeexplorer_settings.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="nodeexplorer_settings"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="8"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="113"/>
-        <CursorPos X="32" Y="132"/>
+        <TopLine Value="117"/>
+        <CursorPos X="3" Y="125"/>
         <UsageCount Value="209"/>
         <Loaded Value="True"/>
       </Unit19>
@@ -260,136 +260,204 @@
         <UsageCount Value="202"/>
       </Unit21>
       <Unit22>
-        <Filename Value="..\..\synapse40\source\lib\synaser.pas"/>
-        <UnitName Value="synaser"/>
-        <EditorIndex Value="8"/>
+        <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\classes\classesh.inc"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="388"/>
-        <CursorPos X="3" Y="317"/>
-        <UsageCount Value="81"/>
-        <Loaded Value="True"/>
+        <TopLine Value="1558"/>
+        <CursorPos X="14" Y="1581"/>
+        <UsageCount Value="11"/>
       </Unit22>
+      <Unit23>
+        <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\classes\lists.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="294"/>
+        <CursorPos X="3" Y="305"/>
+        <UsageCount Value="10"/>
+      </Unit23>
+      <Unit24>
+        <Filename Value="unitrestartnodeform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormRestartNode"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="unitrestartnodeform"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="18" Y="25"/>
+        <UsageCount Value="31"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\classes\classes.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="141"/>
+        <CursorPos X="5" Y="145"/>
+        <UsageCount Value="11"/>
+      </Unit25>
+      <Unit26>
+        <Filename Value="C:\lazarus\lcl\comctrls.pp"/>
+        <UnitName Value="ComCtrls"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1031"/>
+        <CursorPos X="14" Y="1051"/>
+        <UsageCount Value="11"/>
+      </Unit26>
+      <Unit27>
+        <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\classes\compon.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="25"/>
+        <CursorPos X="3" Y="27"/>
+        <UsageCount Value="10"/>
+      </Unit27>
+      <Unit28>
+        <Filename Value="C:\lazarus\lcl\interfaces\win32\win32callback.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1076"/>
+        <CursorPos X="1" Y="1099"/>
+        <UsageCount Value="10"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="unitintegerlist.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="unitintegerlist"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="74"/>
+        <CursorPos X="22" Y="93"/>
+        <UsageCount Value="28"/>
+      </Unit29>
+      <Unit30>
+        <Filename Value="C:\lazarus\lcl\include\progressbar.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="139"/>
+        <CursorPos X="1" Y="167"/>
+        <UsageCount Value="10"/>
+      </Unit30>
+      <Unit31>
+        <Filename Value="W:\usr\local\share\fpcsrc\rtl\objpas\sysutils\sysstrh.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="10" Y="85"/>
+        <UsageCount Value="10"/>
+      </Unit31>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="457" Column="43" TopLine="441"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="1146" Column="1" TopLine="1116"/>
       </Position1>
       <Position2>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="504" Column="1" TopLine="487"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="1147" Column="1" TopLine="1116"/>
       </Position2>
       <Position3>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="455" Column="8" TopLine="446"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="1148" Column="1" TopLine="1116"/>
       </Position3>
       <Position4>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="507" Column="1" TopLine="497"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="1152" Column="1" TopLine="1117"/>
       </Position4>
       <Position5>
-        <Filename Value="serialport_thread.pas"/>
-        <Caret Line="527" Column="26" TopLine="510"/>
+        <Filename Value="olcb_testmatrix.pas"/>
+        <Caret Line="1158" Column="1" TopLine="1123"/>
       </Position5>
       <Position6>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="25" Column="5" TopLine="18"/>
+        <Caret Line="1136" Column="21" TopLine="1124"/>
       </Position6>
       <Position7>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="150" Column="153" TopLine="137"/>
+        <Caret Line="2270" Column="3" TopLine="2268"/>
       </Position7>
       <Position8>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="961" Column="18" TopLine="950"/>
+        <Caret Line="1137" Column="1" TopLine="1116"/>
       </Position8>
       <Position9>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="1076" Column="46" TopLine="1065"/>
+        <Caret Line="2270" Column="1" TopLine="2249"/>
       </Position9>
       <Position10>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="946" Column="28" TopLine="927"/>
+        <Caret Line="2271" Column="1" TopLine="2249"/>
       </Position10>
       <Position11>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="989" Column="21" TopLine="970"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="767" Column="1" TopLine="746"/>
       </Position11>
       <Position12>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="1085" Column="18" TopLine="1082"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="768" Column="1" TopLine="746"/>
       </Position12>
       <Position13>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="1142" Column="1" TopLine="1141"/>
+        <Caret Line="1143" Column="1" TopLine="1122"/>
       </Position13>
       <Position14>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="173" Column="41" TopLine="154"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="768" Column="1" TopLine="746"/>
       </Position14>
       <Position15>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="447" Column="44" TopLine="416"/>
+        <Filename Value="unitmainform.pas"/>
+        <Caret Line="767" Column="1" TopLine="746"/>
       </Position15>
       <Position16>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="560" Column="39" TopLine="529"/>
+        <Caret Line="1215" Column="54" TopLine="1189"/>
       </Position16>
       <Position17>
         <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="623" Column="39" TopLine="592"/>
+        <Caret Line="301" Column="15" TopLine="280"/>
       </Position17>
       <Position18>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="656" Column="39" TopLine="625"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="26" Column="80" TopLine="16"/>
       </Position18>
       <Position19>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="680" Column="39" TopLine="649"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="44" Column="35" TopLine="16"/>
       </Position19>
       <Position20>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="720" Column="39" TopLine="689"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="115" Column="68" TopLine="86"/>
       </Position20>
       <Position21>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="744" Column="39" TopLine="713"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="187" Column="29" TopLine="151"/>
       </Position21>
       <Position22>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="767" Column="39" TopLine="736"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="257" Column="30" TopLine="221"/>
       </Position22>
       <Position23>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="855" Column="39" TopLine="824"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="539" Column="11" TopLine="520"/>
       </Position23>
       <Position24>
-        <Filename Value="olcb_testmatrix.pas"/>
-        <Caret Line="879" Column="39" TopLine="848"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="36" Column="16" TopLine="15"/>
       </Position24>
       <Position25>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="114" Column="37" TopLine="99"/>
+        <Caret Line="35" Column="1" TopLine="5"/>
       </Position25>
       <Position26>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="196" Column="37" TopLine="167"/>
+        <Caret Line="42" Column="35" TopLine="7"/>
       </Position26>
       <Position27>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="187" Column="51" TopLine="168"/>
+        <Caret Line="113" Column="68" TopLine="78"/>
       </Position27>
       <Position28>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="191" Column="57" TopLine="172"/>
+        <Caret Line="184" Column="107" TopLine="149"/>
       </Position28>
       <Position29>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="194" Column="96" TopLine="175"/>
+        <Caret Line="254" Column="109" TopLine="219"/>
       </Position29>
       <Position30>
         <Filename Value="serialport_thread.pas"/>
-        <Caret Line="218" Column="121" TopLine="201"/>
+        <Caret Line="51" Column="19" TopLine="30"/>
       </Position30>
     </JumpHistory>
   </ProjectOptions>
@@ -406,11 +474,12 @@
     </SearchPaths>
     <CodeGeneration>
       <Optimizations>
-        <OptimizationLevel Value="0"/>
+        <OptimizationLevel Value="3"/>
       </Optimizations>
     </CodeGeneration>
     <Linking>
       <Debugging>
+        <GenerateDebugInfo Value="False"/>
         <UseValgrind Value="True"/>
         <UseExternalDbgSyms Value="True"/>
       </Debugging>
@@ -440,10 +509,13 @@
         <Line Value="1463"/>
       </Item1>
     </BreakPoints>
-    <Watches Count="1">
+    <Watches Count="2">
       <Item1>
         <Expression Value="FileName"/>
       </Item1>
+      <Item2>
+        <Expression Value="FMTIManager"/>
+      </Item2>
     </Watches>
     <Exceptions Count="3">
       <Item1>

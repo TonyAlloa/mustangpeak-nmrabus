@@ -1,10 +1,10 @@
 object FormMain: TFormMain
-  Left = 513
+  Left = 537
   Height = 549
-  Top = 223
+  Top = 321
   Width = 855
   Caption = 'OpenLCB NodeExplorer'
-  ClientHeight = 530
+  ClientHeight = 529
   ClientWidth = 855
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
@@ -14,7 +14,7 @@ object FormMain: TFormMain
   LCLVersion = '0.9.31'
   object PageControl: TPageControl
     Left = 8
-    Height = 499
+    Height = 498
     Top = 16
     Width = 838
     ActivePage = TabSheetHome
@@ -26,16 +26,16 @@ object FormMain: TFormMain
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
       Caption = 'Home'
-      ClientHeight = 473
+      ClientHeight = 472
       ClientWidth = 830
       object GroupBoxComPort: TGroupBox
         Left = 13
-        Height = 266
+        Height = 265
         Top = 164
         Width = 807
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'COM Port Settings'
-        ClientHeight = 248
+        ClientHeight = 247
         ClientWidth = 803
         TabOrder = 0
         object EditCustomBaudRate: TEdit
@@ -149,7 +149,7 @@ object FormMain: TFormMain
         end
         object LabelHomeMessage: TLabel
           Left = 20
-          Height = 89
+          Height = 88
           Top = 150
           Width = 768
           Anchors = [akTop, akLeft, akRight, akBottom]
@@ -171,7 +171,7 @@ object FormMain: TFormMain
       object ButtonConnect: TButton
         Left = 668
         Height = 22
-        Top = 439
+        Top = 438
         Width = 150
         Action = ActionConnect
         Anchors = [akRight, akBottom]
@@ -180,7 +180,7 @@ object FormMain: TFormMain
       object ButtonShowLog: TButton
         Left = 511
         Height = 22
-        Top = 439
+        Top = 438
         Width = 150
         Action = ActionShowLog
         Anchors = [akRight, akBottom]
@@ -548,13 +548,13 @@ object FormMain: TFormMain
     end
     object TabSheetVerification: TTabSheet
       Caption = 'VerificationTests'
-      ClientHeight = 473
-      ClientWidth = 830
+      ClientHeight = 479
+      ClientWidth = 832
       object ListViewTestMatrix: TListView
         Left = 13
-        Height = 326
+        Height = 308
         Top = 4
-        Width = 803
+        Width = 805
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
         Checkboxes = True
@@ -584,27 +584,27 @@ object FormMain: TFormMain
         OnDeletion = ListViewTestMatrixDeletion
       end
       object ButtonLoadTests: TButton
-        Left = 188
+        Left = 190
         Height = 22
-        Top = 439
+        Top = 445
         Width = 150
         Action = ActionLoadTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonSaveTests: TButton
-        Left = 348
+        Left = 350
         Height = 22
-        Top = 439
+        Top = 445
         Width = 150
         Action = ActionSaveTestMatrix
         Anchors = [akRight, akBottom]
         TabOrder = 2
       end
       object ButtonExecuteTests: TButton
-        Left = 668
+        Left = 670
         Height = 22
-        Top = 439
+        Top = 445
         Width = 150
         Action = ActionExecuteTests
         Anchors = [akRight, akBottom]
@@ -613,8 +613,8 @@ object FormMain: TFormMain
       object LabelHomeMessage2: TLabel
         Left = 28
         Height = 58
-        Top = 354
-        Width = 770
+        Top = 360
+        Width = 772
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
         Caption = 'Select the tests to run against the node selected in the Discover tab.  A "?" icon indicates the test has not been executed.  A red "X" indicates one of the objectives of the test failed.  Open the log window from the Home tab and rerun the failed test to get detailed information on the failure.'
@@ -622,13 +622,28 @@ object FormMain: TFormMain
         WordWrap = True
       end
       object ButtonStopCurrenteTest: TButton
-        Left = 507
+        Left = 509
         Height = 22
-        Top = 439
+        Top = 445
         Width = 150
         Action = ActionCancelTests
         Anchors = [akRight, akBottom]
         TabOrder = 4
+      end
+      object LabeTestlProgress: TLabel
+        Left = 52
+        Height = 17
+        Top = 322
+        Width = 86
+        Caption = 'Test Progress'
+        ParentColor = False
+      end
+      object ProgressBarTest: TProgressBar
+        Left = 157
+        Height = 20
+        Top = 322
+        Width = 248
+        TabOrder = 5
       end
     end
     object TabSheetMemConfiguration: TTabSheet

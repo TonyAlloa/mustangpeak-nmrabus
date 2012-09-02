@@ -133,18 +133,28 @@
     <Enabled>True</Enabled>
     <TestObjective>
       <SpecDoc>TODO</SpecDoc>
-      <Objective>Test that the NUT detects a message from another node using he NUT Alias ID</Objective>
-      <Results>AMR, then a complete sequence of Check ID Messages to register a new Alias ID, a RID within 200ms, AMD, Verified Node ID???)</Results>
+      <Objective>Test that the NUT detects a global message with its Alias but not its full Node in the data payload</Objective>
+      <Results>Reallocation of the NUT Alias</Results>
     </TestObjective>
     <TestObjective>
       <SpecDoc>TODO</SpecDoc>
-      <Objective>Test that the NUT detects a node sending Check ID (CID) for its currently held Alias and and responds accordingly</Objective>
-      <Results>Reserve ID</Results>
+      <Objective>Test that the NUT detects a global message with its Alias and an empty data payload</Objective>
+      <Results>Reallocation of the NUT Alias</Results>
     </TestObjective>
     <TestObjective>
       <SpecDoc>TODO</SpecDoc>
-      <Objective>Test that the NUT detects a node sending a Reserve ID (RID) to reserve its current Alias ID</Objective>
-      <Results>AMR, then a complete sequence of Check ID Messages to register a new Alias ID, a RID within 200ms, AMD, Verified Node ID???</Results>
+      <Objective>Test that the NUT detects an addressed message with its Alias</Objective>
+      <Results>Reallocation of the NUT Alias</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>TODO</SpecDoc>
+      <Objective>Test that the NUT detects Check ID (CID) with its Alias</Objective>
+      <Results>Sends a Reserve ID</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>TODO</SpecDoc>
+      <Objective>Test that the NUT detects Reserve ID (RID) with its Alias</Objective>
+      <Results>Reallocation of the NUT Alias</Results>
     </TestObjective>
   </Test>
   <Test>

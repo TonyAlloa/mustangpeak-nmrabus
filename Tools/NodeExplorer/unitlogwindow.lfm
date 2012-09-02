@@ -503,7 +503,7 @@ object FormLog: TFormLog
     Left = 16
     Height = 17
     Top = 443
-    Width = 80
+    Width = 78
     Action = FormMain.ActionLogShowGutter
     Anchors = [akLeft, akBottom]
     Checked = True

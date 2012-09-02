@@ -33,7 +33,7 @@ uses
   unitLinuxFTDI,
   {$ENDIF}
   nodeexplorer_settings, olcb_utilities, unitolcb_defines,
-  types, SynEditKeyCmds, unitAbout;
+  types, SynEditKeyCmds, unitAbout, unitrestartnodeform;
 
 
 const
@@ -110,6 +110,7 @@ type
     GroupBoxEventReaderProducers: TGroupBox;
     ImageListSmall: TImageList;
     ImageOpenLCB: TImage;
+    LabeTestlProgress: TLabel;
     LabelMemConfigHiAddress: TLabel;
     LabelMemConfigLowAddress: TLabel;
     LabelDiscoverMultiNode: TLabel;
@@ -131,7 +132,6 @@ type
     ListViewNodeDiscovery: TListView;
     ListViewTestMatrix: TListView;
     ListViewConsumers: TListView;
-    ListViewDiscovery: TListView;
     ListViewProducers: TListView;
     MainMenu: TMainMenu;
     MenuItem1: TMenuItem;
@@ -156,6 +156,7 @@ type
     OpenDialog: TOpenDialog;
     PageControl: TPageControl;
     PanelLogo: TPanel;
+    ProgressBarTest: TProgressBar;
     SaveDialog: TSaveDialog;
     SynEditCDI: TSynEdit;
     SynXMLSyn: TSynXMLSyn;
@@ -206,6 +207,7 @@ type
   private
     { private declarations }
     FShownOnce: Boolean;
+    FTargetAliasInPeril: Word;
     FTestThread: TComPortThread;
     FTestStrings: TStringList;
     FXMLDocTestMatrix: TXMLDocument;
@@ -225,9 +227,15 @@ type
     procedure LoadTestMatrixListview;
     procedure MenuItemSelectPortClick(Sender: TObject);
     procedure ResetTestVerificationIcons;
-    procedure CallbackDiscoverNodes(Test: TTestBase);
-    procedure CallbackReadPIP(Test: TTestBase);
-    procedure CallbackVerificationTests(Test: TTestBase);
+    procedure SyncHideNodeResetMessage(Test: TTestBase);
+    procedure SyncShowNodeResetMessage(Test: TTestBase);
+    procedure SyncDiscoverNodes(Test: TTestBase);
+    procedure SyncReadPIP(Test: TTestBase);
+    procedure SyncVerificationTests(Test: TTestBase);
+    procedure SyncTargetAliasChanged(Test: TTestBase);
+    procedure SyncTargetAliasChanging(Test: TTestBase);
+    procedure SyncUpdateProgressBar(Test: TTestBase);
+    property TargetAliasInPeril: Word read FTargetAliasInPeril write FTargetAliasInPeril;
   public
     { public declarations }
     procedure Log(XML: TXMLDocument);
@@ -315,7 +323,7 @@ begin
   if Assigned(Test) then
   begin
     Test.FreeOnLog := True;
-    Test.TestCompleteCallback := @CallbackDiscoverNodes;
+    Test.SyncTestCompleteFunc := @SyncDiscoverNodes;
     TestThread.Add(Test);
   end;
 end;
@@ -404,7 +412,7 @@ begin
   if Assigned(Test) then
   begin
     Test.FreeOnLog := True;
-    Test.TestCompleteCallback := @CallbackReadPIP;
+    Test.SyncTestCompleteFunc := @SyncReadPIP;
     TestThread.Add(Test);
   end;
 end;
@@ -707,7 +715,12 @@ begin
           else begin
             if not (Test is TTestGetNodesUnderTest) then
             begin
-              Test.TestCompleteCallback := @CallbackVerificationTests;
+              Test.SyncTestCompleteFunc := @SyncVerificationTests;
+              Test.SyncAliasChangedFunc := @SyncTargetAliasChanged;
+              Test.SyncAliasChangingFunc := @SyncTargetAliasChanging;
+              Test.SyncUpdateProgressBarFunc := @SyncUpdateProgressBar;
+              Test.SyncHideNodeResetMessageFunc := @SyncHideNodeResetMessage;
+              Test.SyncShowNodeResetMessageFunc := @SyncShowNodeResetMessage;
               ListItem := ListviewTestMatrix.Items.Add;
               ListItem.Caption := TestNameFromTestNode(TestNode);
               ListItem.SubItems.Add(TestDescriptionFromTestNode(TestNode));
@@ -744,14 +757,24 @@ begin
     ListViewTestMatrix.Items[i].ImageIndex := 2;
 end;
 
-procedure TFormMain.CallbackDiscoverNodes(Test: TTestBase);
+procedure TFormMain.SyncHideNodeResetMessage(Test: TTestBase);
+begin
+  FormRestartNode.Hide;
+end;
+
+procedure TFormMain.SyncShowNodeResetMessage(Test: TTestBase);
+begin
+  FormRestartNode.Show;
+end;
+
+procedure TFormMain.SyncDiscoverNodes(Test: TTestBase);
 var
   Helper: TOpenLCBMessageHelper;
   ResultStrings: TStringList;
   ListItem: TListItem;
   i: Integer;
 begin
- Helper := TOpenLCBMessageHelper.Create;
+  Helper := TOpenLCBMessageHelper.Create;
   ListViewNodeDiscovery.Items.BeginUpdate;
   try
     ResultStrings := TStringList.Create;
@@ -800,7 +823,7 @@ begin
   end;
 end;
 
-procedure TFormMain.CallbackReadPIP(Test: TTestBase);
+procedure TFormMain.SyncReadPIP(Test: TTestBase);
 var
   ReceiveResults: TStringList;
   Helper: TOpenLCBMessageHelper;
@@ -812,7 +835,6 @@ begin
     Helper := TOpenLCBMessageHelper.Create;
     try
       ExtractResultsFromXML(Test.XMLResults, ReceiveResults);
-      Test.StripReceivesNotForNodeUnderTest(ReceiveResults);
       if ReceiveResults.Count = 1 then
       begin
         Helper.Decompose(ReceiveResults[0]);
@@ -850,7 +872,7 @@ begin
     UpdateUI;
 end;
 
-procedure TFormMain.CallbackVerificationTests(Test: TTestBase);
+procedure TFormMain.SyncVerificationTests(Test: TTestBase);
  begin
   if Test.Passed then
     Test.ListItem.ImageIndex := 0
@@ -864,6 +886,33 @@ procedure TFormMain.CallbackVerificationTests(Test: TTestBase);
 
   if TestThread.TestCount = 0 then
     UpdateUI;
+end;
+
+procedure TFormMain.SyncTargetAliasChanged(Test: TTestBase);
+var
+  AliasStr: String;
+  i: Integer;
+begin
+  AliasStr := IntToHex(TargetAliasInPeril, 3);
+  for i := 0 to ListViewNodeDiscovery.Items.Count - 1 do
+  begin
+    if strcomp(PChar( ListViewNodeDiscovery.Items[i].Caption) , PChar( AliasStr)) = 0 then
+    begin
+      ListViewNodeDiscovery.Items[i].Caption := IntToHex(Settings.TargetNodeAlias, 3);
+      Break
+    end
+  end
+end;
+
+procedure TFormMain.SyncTargetAliasChanging(Test: TTestBase);
+begin
+  TargetAliasInPeril := Settings.TargetNodeAlias;
+end;
+
+procedure TFormMain.SyncUpdateProgressBar(Test: TTestBase);
+begin
+  ProgressBarTest.Max := Test.ProgressBarRange;
+  ProgressBarTest.Position := Test.ProgressBarPos;
 end;
 
 procedure TFormMain.Log(XML: TXMLDocument);
@@ -890,4 +939,4 @@ end;
 
 
 end.
-
+

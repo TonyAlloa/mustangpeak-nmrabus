@@ -279,6 +279,12 @@ begin
         MTI := MTI and not $10000000;    // Strip off the reserved bits
         MTI := MTI and $FFFFF000;        // Strip off the Source Alias
 
+        if Layer = ol_CAN then
+        begin
+          if MTI and MTI_CID_MASK <> 0 then
+            MTI := MTI and MTI_CID_MASK;
+        end;
+
         for i := 0 to CAN_BYTE_COUNT - 1 do
           Data[i] := 0;
 
@@ -295,16 +301,19 @@ begin
 
         // Determine if the message has a destination address and if so store it
         HasDestinationAddress := False;
-        if MTI and $07000000 > $01000000 then        // See if the destination Alias is in the MTI
+        if Layer = ol_OpenLCB then
         begin
-          DestinationAliasID := (MTI and $00FFF000) shr 12;
-          HasDestinationAddress := True;
-        end else
-        begin
-          if MTI and MTI_ADDRESS_PRESENT = MTI_ADDRESS_PRESENT then
+          if MTI and $07000000 > $01000000 then        // See if the destination Alias is in the MTI
           begin
-            DestinationAliasID := Word( (Data[0] shl 8)) or (Data[1]);
+            DestinationAliasID := (MTI and $00FFF000) shr 12;
             HasDestinationAddress := True;
+          end else
+          begin
+            if MTI and MTI_ADDRESS_PRESENT = MTI_ADDRESS_PRESENT then
+            begin
+              DestinationAliasID := Word( (Data[0] shl 8)) or (Data[1]);
+              HasDestinationAddress := True;
+            end
           end
         end
       end

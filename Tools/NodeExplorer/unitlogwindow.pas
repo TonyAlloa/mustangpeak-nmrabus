@@ -83,7 +83,7 @@ end;
 
 procedure TFormLog.SynMemoSpecialLineColors(Sender: TObject; Line: integer; var Special: boolean; var FG, BG: TColor);
 begin
-  if Pos(':X', SynMemo.Lines[Line-1]) > 0 then
+  if (Pos(':X', SynMemo.Lines[Line-1]) > 0) or (Pos(':S', SynMemo.Lines[Line-1]) > 0) then
   begin
     Special := True;
     FG := clGreen;
