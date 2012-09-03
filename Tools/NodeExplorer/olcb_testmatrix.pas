@@ -56,8 +56,6 @@ const
   MAX_ALIAS_VALUES = 4095; // = $FFF
   MAX_STANDARD_FRAME = 2047; // $7FF
 
-  SCROLLBAR_UPDATE_RATE = 100;
-
 
 type
   TTestErrorCode = (
@@ -464,7 +462,7 @@ begin
   case StateMachineIndex of
     0 : begin
           // Send Unknown MTI Messages:
-          if ScrollbarIndex mod SCROLLBAR_UPDATE_RATE = 0 then
+          if ScrollbarIndex mod Settings.UIRefreshRate = 0 then
             UpdateProgressBar(ScrollbarMax, ScrollbarIndex);
           UnknownMTI := MTIManager.FirstUnknownMTI;
           UpdateProgressBar(ScrollbarMax, ScrollbarIndex);
@@ -515,7 +513,7 @@ begin
             Inc(FStateMachineIndex);
             Inc(iObjective);
           end;
-          if ScrollbarIndex mod SCROLLBAR_UPDATE_RATE = 0 then
+          if ScrollbarIndex mod Settings.UIRefreshRate = 0 then
             UpdateProgressBar(ScrollbarMax, ScrollbarIndex);
         end;
   end;
@@ -535,6 +533,7 @@ procedure TTestStandardFrame.InitTest;
 begin
   inherited InitTest;
   FiFrame := 0;
+  UpdateProgressBar(MAX_STANDARD_FRAME, iFrame);
 end;
 
 procedure TTestStandardFrame.ProcessObjectives(Thread: TThread; SendStrings: TStringList; ReceiveString: String; var iObjective: Integer; var ReadTimeout: Integer; ReceiveTime: Integer; var SendNext: Boolean);
@@ -547,14 +546,14 @@ begin
           // Send all Standard Messages in one shot and see what comes back
           if Settings.PingPongStandardFrameTest then
           begin
-            if iFrame mod SCROLLBAR_UPDATE_RATE = 0 then
+            if iFrame mod Settings.UIRefreshRate = 0 then
               UpdateProgressBar(MAX_STANDARD_FRAME, iFrame);
             SendStrings.Add(':S' + IntToHex(iFrame, 3) + 'N;')
           end else
           begin
             for i := 0 to MAX_STANDARD_FRAME do
             begin
-              if i mod SCROLLBAR_UPDATE_RATE = 0 then
+              if i mod Settings.UIRefreshRate = 0 then
                 UpdateProgressBar(MAX_STANDARD_FRAME, i);
               SendStrings.Add(':S' + IntToHex(i, 3) + 'N;');
             end
@@ -1319,7 +1318,7 @@ begin
   case StateMachineIndex of
     0 : begin
           // Send Global Verify Nodes but use the NUT Alias as the source from NodeExplorer to force the NUT to reallocate its Alias
-          if ReAllocationCount mod SCROLLBAR_UPDATE_RATE = 0 then
+          if ReAllocationCount mod Settings.UIRefreshRate = 0 then
             UpdateProgressBar(MAX_ALIAS_VALUES, ReAllocationCount);
           MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.TargetNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
           SendStrings.Add(MessageHelper.Encode);
@@ -2375,4 +2374,4 @@ initialization
 finalization
 
 end.
-
+

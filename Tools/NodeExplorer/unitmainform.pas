@@ -33,7 +33,7 @@ uses
   unitLinuxFTDI,
   {$ENDIF}
   nodeexplorer_settings, olcb_utilities, unitolcb_defines,
-  types, SynEditKeyCmds, unitAbout, unitrestartnodeform;
+  types, SynEditKeyCmds, unitAbout, unitrestartnodeform, unitrawmessagelog;
 
 
 const
@@ -45,6 +45,13 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
+    ActionRawLogClear: TAction;
+    ActionRawLogSelectAll: TAction;
+    ActionRawLogPaste: TAction;
+    ActionRawLogMemoCopy: TAction;
+    ActionRawLogMemoCut: TAction;
+    ActionRawLogShowGutter: TAction;
+    ActionRawMessageLogShow: TAction;
     ActionExecuteTests: TAction;
     ActionCancelTests: TAction;
     ActionTerminateCurrentTest: TAction;
@@ -135,6 +142,7 @@ type
     ListViewProducers: TListView;
     MainMenu: TMainMenu;
     MenuItem1: TMenuItem;
+    MenuItemRawMessageLog: TMenuItem;
     MenuItemToolsSeparator1: TMenuItem;
     MenuItemToolsDiscoverNodes: TMenuItem;
     MenuItemToolStopCurrentTest: TMenuItem;
@@ -181,6 +189,13 @@ type
     procedure ActionLogMemoSelectAllExecute(Sender: TObject);
     procedure ActionLogShowGutterExecute(Sender: TObject);
     procedure ActionMemConfigExecute(Sender: TObject);
+    procedure ActionRawLogClearExecute(Sender: TObject);
+    procedure ActionRawLogShowGutterExecute(Sender: TObject);
+    procedure ActionRawLogMemoCopyExecute(Sender: TObject);
+    procedure ActionRawLogMemoCutExecute(Sender: TObject);
+    procedure ActionRawLogPasteExecute(Sender: TObject);
+    procedure ActionRawLogSelectAllExecute(Sender: TObject);
+    procedure ActionRawMessageLogShowExecute(Sender: TObject);
     procedure ActionReadPipExecute(Sender: TObject);
     procedure ActionReadXMLExecute(Sender: TObject);
     procedure ActionRescanPortsExecute(Sender: TObject);
@@ -202,7 +217,6 @@ type
     procedure ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
     procedure MenuItemConnectionClick(Sender: TObject);
-    procedure PageControlChange(Sender: TObject);
     procedure SynEditCDIKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { private declarations }
@@ -235,6 +249,8 @@ type
     procedure SyncTargetAliasChanged(Test: TTestBase);
     procedure SyncTargetAliasChanging(Test: TTestBase);
     procedure SyncUpdateProgressBar(Test: TTestBase);
+    procedure SyncRawMessage(MessageStr: String);
+    procedure CallbackRawMessageLogHiding;
     property TargetAliasInPeril: Word read FTargetAliasInPeril write FTargetAliasInPeril;
   public
     { public declarations }
@@ -295,6 +311,8 @@ begin
       else
         TestThread.BaudRate := StrToInt(ComboBoxBaud.Items[ComboBoxBaud.ItemIndex]);
       TestThread.Suspended := False;
+      TestThread.EnableRawMessages := ActionRawMessageLogShow.Checked;
+      TestThread.SyncRawMessageFunc := @SyncRawMessage;
       Sleep(500);
       if TestThread.Connected then
         ActionConnect.Caption:='Disconnect'
@@ -401,6 +419,53 @@ end;
 procedure TFormMain.ActionMemConfigExecute(Sender: TObject);
 begin
 
+end;
+
+procedure TFormMain.ActionRawLogClearExecute(Sender: TObject);
+begin
+    FormRawMessageLog.SynMemo.Lines.BeginUpdate;
+  try
+    FormRawMessageLog.SynMemo.Lines.Clear
+  finally
+    FormRawMessageLog.SynMemo.Lines.EndUpdate
+  end;
+end;
+
+procedure TFormMain.ActionRawLogShowGutterExecute(Sender: TObject);
+begin
+  FormRawMessageLog.SynMemo.Gutter.Visible := FormRawMessageLog.CheckBoxShowGutter.Checked;
+end;
+
+procedure TFormMain.ActionRawLogMemoCopyExecute(Sender: TObject);
+begin
+  FormRawMessageLog.SynMemo.CommandProcessor(TSynEditorCommand(ecCopy), ' ', nil);
+end;
+
+procedure TFormMain.ActionRawLogMemoCutExecute(Sender: TObject);
+begin
+  FormRawMessageLog.SynMemo.CommandProcessor(TSynEditorCommand(ecCut), ' ', nil);
+end;
+
+procedure TFormMain.ActionRawLogPasteExecute(Sender: TObject);
+begin
+  FormRawMessageLog.SynMemo.CommandProcessor(TSynEditorCommand(ecPaste), ' ', nil);
+end;
+
+procedure TFormMain.ActionRawLogSelectAllExecute(Sender: TObject);
+begin
+  FormRawMessageLog.SynMemo.SelectAll;
+end;
+
+procedure TFormMain.ActionRawMessageLogShowExecute(Sender: TObject);
+begin
+  FormRawMessageLog.Left := Left;
+  FormRawMessageLog.Top := Top + Height + 20;
+  FormRawMessageLog.Height := 160;
+  FormRawMessageLog.Width := Width;
+  FormRawMessageLog.Show;
+  ActionRawMessageLogShow.Checked := True;
+  if Assigned(TestThread) then
+    TestThread.EnableRawMessages := True;
 end;
 
 procedure TFormMain.ActionReadPipExecute(Sender: TObject);
@@ -578,6 +643,7 @@ begin
     ComboBoxBaud.ItemIndex := ComboBoxBaud.Items.IndexOf(IntToStr(Settings.BaudRate));
     ReadXMLFile(FXMLDocTestMatrix, Settings.TestMatrixFile);
     LoadTestMatrixListview;
+    FormRawMessageLog.HidingCallback := @CallbackRawMessageLogHiding;
     UpdateUI;
     {$IFDEF USE_DEBUG_LOGGER}
     FormDebugLogger.Show;
@@ -628,11 +694,6 @@ begin
     MenuItem.GroupIndex := GROUPINDEX_CONNECTION_PORTS;
     MenuItemConnection.Add(MenuItem);
   end;
-end;
-
-procedure TFormMain.PageControlChange(Sender: TObject);
-begin
-
 end;
 
 procedure TFormMain.SynEditCDIKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -915,6 +976,21 @@ begin
   ProgressBarTest.Position := Test.ProgressBarPos;
 end;
 
+procedure TFormMain.SyncRawMessage(MessageStr: String);
+begin
+  FormRawMessageLog.SynMemo.BeginUpdate;
+  FormRawMessageLog.SynMemo.Lines.Add(MessageStr);
+  FormRawMessageLog.SynMemo.CaretY := FormRawMessageLog.SynMemo.LineHeight * FormRawMessageLog.SynMemo.Lines.Count;
+  FormRawMessageLog.SynMemo.EndUpdate;
+end;
+
+procedure TFormMain.CallbackRawMessageLogHiding;
+begin
+  if Assigned(TestThread) then
+    TestThread.EnableRawMessages := False;
+  ActionRawMessageLogShow.Checked := False;
+end;
+
 procedure TFormMain.Log(XML: TXMLDocument);
 var
   MemStream: TMemoryStream;
@@ -930,6 +1006,7 @@ begin
       MemStream.Seek(0, soBeginning);
       MemStream.ReadBuffer(PChar( Str)^, MemStream.Size);
       FormLog.SynMemo.Text := FormLog.SynMemo.Text + Str;
+      FormLog.SynMemo.CaretY := FormLog.SynMemo.LineHeight * FormLog.SynMemo.Lines.Count;
       MemStream.Free;
     finally
       FormLog.SynMemo.Lines.EndUpdate;
@@ -939,4 +1016,4 @@ end;
 
 
 end.
-
+

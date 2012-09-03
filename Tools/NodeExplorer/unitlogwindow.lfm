@@ -7,7 +7,6 @@ object FormLog: TFormLog
   Caption = 'Log Window'
   ClientHeight = 469
   ClientWidth = 420
-  OnActivate = FormActivate
   LCLVersion = '0.9.31'
   object ButtonClear: TButton
     Left = 271

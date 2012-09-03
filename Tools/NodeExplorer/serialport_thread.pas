@@ -14,23 +14,25 @@ type
 
 { TComPortThread }
 
-  TSyncronizedMessageFunc = procedure(MessageStr: String);
+  TSyncRawMessageFunc = procedure(MessageStr: String) of object;
 
   TComPortThread = class(TThread)
   private
     FActiveTest: TTestBase;
     FBaudRate: DWord;
     FConnected: Boolean;
+    FEnableRawMessages: Boolean;
     FPort: String;
+    FRawMessageBuffer: string;
     FSerial: TBlockSerial;
+    FSyncRawMessageFunc: TSyncRawMessageFunc;
     FTerminatedTest: Boolean;
     FTerminateTest: Boolean;
     FTestCount: Integer;
     FThreadTestList: TThreadList;
-    FTimerUIUpdate: Word;
     protected
       property ActiveTest: TTestBase read FActiveTest write FActiveTest;
-      property TimerUIUpdate: Word read FTimerUIUpdate write FTimerUIUpdate;
+      property RawMessageBuffer: string read FRawMessageBuffer write FRawMessageBuffer;
       procedure Execute; override;
       procedure ErrorCodesToXML(RootXMLElement: TDOMNode);
       procedure ErrorCodesFormatToXML(RootXMLElement: TDOMNode);
@@ -38,7 +40,8 @@ type
       procedure ErrorCodesUnknownMTIToXML(RootXMLElement: TDOMNode);
       procedure ErrorCodesStartupToXML(RootXMLElement: TDOMNode);
       procedure ErrorCodesAliasToXML(RootXMLElement: TDOMNode);
-  //    procedure SyncronizeUpdateUI;
+      procedure SyncronizeUpdateUI;
+      procedure SyncRawMessage;
     public
       property Connected: Boolean read FConnected write FConnected;
       property Serial: TBlockSerial read FSerial write FSerial;
@@ -48,6 +51,8 @@ type
       property TerminateTest: Boolean read FTerminateTest write FTerminateTest;
       property TerminatedTest: Boolean read FTerminatedTest;
       property TestCount: Integer read FTestCount;
+      property SyncRawMessageFunc: TSyncRawMessageFunc read FSyncRawMessageFunc write FSyncRawMessageFunc;
+      property EnableRawMessages: Boolean read FEnableRawMessages write FEnableRawMessages;
       constructor Create(CreateSuspended: Boolean);
       destructor Destroy; override;
       procedure Add(Test: TTestBase);
@@ -107,8 +112,7 @@ begin
       begin
         case ActiveTest.TestState of
           ts_Initialize     : begin
-                            //    if Assigned(ActiveTest.ListItem) then
-                            //      Synchronize(@SyncronizeUpdateUI);
+                                if Assigned(ActiveTest.ListItem) then Synchronize(@SyncronizeUpdateUI);
                                 Objectives.Clear;
                                 ActiveTest.InitTest;
                                 iCurrentObjective := 0;
@@ -176,17 +180,16 @@ begin
                                   ActiveTest.TestState := ts_Sending;
                               end;
           ts_Sending :        begin
-                           //     if Assigned(ActiveTest.ListItem) then
-                           //     begin
-                           //       Inc(FTimerUIUpdate);
-                          //        if TimerUIUpdate = UI_UPDATE_RATE then Synchronize(@SyncronizeUpdateUI);
-                          //      end;
-
                                 ActiveTest.ProcessObjectives(Self, SendStrings, '', iNextObjective, TimeoutRead, 0, SendNext);
                                 for i := 0 to SendStrings.Count - 1 do                           // Start with the next objective information
                                 begin
                                   if TerminateTest then
                                     Break;
+                                  if EnableRawMessages then
+                                  begin
+                                    RawMessageBuffer := SendStrings[i];
+                                    Synchronize(@SyncRawMessage);
+                                  end;
                                   Serial.SendString(SendStrings[i] + LF);
                                   XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_SEND);
                                   XMLObjectiveResultsNode.AppendChild(XMLNode);
@@ -209,6 +212,11 @@ begin
                                 begin
                                   if ReceiveStr <> '' then
                                   begin
+                                    if EnableRawMessages then
+                                    begin
+                                    RawMessageBuffer := ReceiveStr;
+                                    Synchronize(@SyncRawMessage);
+                                    end;
                                     // Save messages received for the node in the XML file
                                     XMLNode := ActiveTest.XMLResults.CreateElement(XML_ELEMENT_RECEIVE);
                                     XMLObjectiveResultsNode.AppendChild(XMLNode);
@@ -246,11 +254,6 @@ begin
                                     else
                                       ActiveTest.TestState := ts_ObjectiveEnd;    // Start next objective
                                   end;
-                           //       if Assigned(ActiveTest.ListItem) then
-                           //       begin
-                           //         Inc(FTimerUIUpdate);
-                           //         if TimerUIUpdate = UI_UPDATE_RATE then Synchronize(@SyncronizeUpdateUI);
-                           //       end;
                                 end;
                               end;
           ts_ObjectiveEnd :   begin
@@ -518,21 +521,21 @@ begin
   end
 end;
 
-{
+
 procedure TComPortThread.SyncronizeUpdateUI;
 begin
   if Assigned(ActiveTest) then
   begin
     if Assigned(ActiveTest.ListItem) then
-    begin
-      if ActiveTest.ListItem.ImageIndex = 20 then
-        ActiveTest.ListItem.ImageIndex := 21
-      else
-        ActiveTest.ListItem.ImageIndex := 20;
-    end;
+      ActiveTest.ListItem.ImageIndex := 21
   end;
-  TimerUIUpdate := 0;
-end;     }
+ end;
+
+procedure TComPortThread.SyncRawMessage;
+begin
+  if Assigned(SyncRawMessageFunc) then
+    SyncRawMessageFunc(RawMessageBuffer)
+end;
 
 constructor TComPortThread.Create(CreateSuspended: Boolean);
 begin
@@ -541,10 +544,10 @@ begin
   FThreadTestList := TThreadList.Create;
   FBaudRate := 9600;
   FPort := '';
-  FTimerUIUpdate := 0;
   FTestCount := 0;
   FTerminateTest := False;
   FTerminatedTest := False;
+  FEnableRawMessages := False;
 end;
 
 destructor TComPortThread.Destroy;

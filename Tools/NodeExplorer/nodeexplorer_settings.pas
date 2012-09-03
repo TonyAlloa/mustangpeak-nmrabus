@@ -49,6 +49,7 @@ type
     FTargetNodeID: Int64;
     FTimeoutComRead: Integer;
     FTimeoutStartupRID: Integer;
+    FUIRefreshRate: Integer;
     FXMLSettings: TXMLDocument;
     function GetTestMatrixPath: string;
     function GetTextMatrixFile: string;
@@ -68,6 +69,7 @@ type
     property TimeoutStartupRID: Integer read FTimeoutStartupRID write FTimeoutStartupRID;
     property PingPongStandardFrameTest: Boolean read FPingPongStandardFrameTest write FPingPongStandardFrameTest;
     property SoftwareFlowControl: Boolean read FSoftwareFlowControl write FSoftwareFlowControl;
+    property UIRefreshRate: Integer read FUIRefreshRate write FUIRefreshRate;
     constructor Create;
     procedure ReadSettings;
     procedure WriteSettings;
@@ -133,6 +135,7 @@ begin
   FSoftwareFlowControl := False;
   FPingPongStandardFrameTest:= False;
   FTimeoutStartupRID := 2000; // 2 sec
+  FUIRefreshRate := 40;
 
   // Under OSX we get the path of the executable
 {$IFDEF DARWIN}
@@ -198,4 +201,4 @@ finalization
   FreeAndNil(Settings);
 
 end.
-
+

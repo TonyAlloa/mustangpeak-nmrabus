@@ -43,7 +43,6 @@ type
     PopupMenuSynMemo: TPopupMenu;
     SynMemo: TSynMemo;
     SynXMLSyn: TSynXMLSyn;
-    procedure FormActivate(Sender: TObject);
     procedure SynMemoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure SynMemoSpecialLineColors(Sender: TObject; Line: integer; var Special: boolean; var FG, BG: TColor);
   private
@@ -60,11 +59,6 @@ implementation
 {$R *.lfm}
 
 { TFormLog }
-
-procedure TFormLog.FormActivate(Sender: TObject);
-begin
-
-end;
 
 procedure TFormLog.SynMemoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin

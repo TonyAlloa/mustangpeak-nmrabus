@@ -10,7 +10,7 @@ uses
   Forms, runtimetypeinfocontrols, UnitMainForm, unitlogwindow, olcb_utilities,
   olcb_stringconstants, unitolcb_defines, unitsettings, serialport_thread,
   olcb_testmatrix, nodeexplorer_settings, unitDebugLogger, unitLinuxFTDI,
-  unitAbout, unitrestartnodeform, unitintegerlist;
+  unitAbout, unitrestartnodeform, unitintegerlist, unitrawmessagelog;
 
 {$R *.res}
 
@@ -22,6 +22,7 @@ begin
   Application.CreateForm(TFormDebugLogger, FormDebugLogger);
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormRestartNode, FormRestartNode);
+  Application.CreateForm(TFormRawMessageLog, FormRawMessageLog);
   Application.Run;
 end.
 

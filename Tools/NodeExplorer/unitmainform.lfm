@@ -1,20 +1,21 @@
 object FormMain: TFormMain
   Left = 537
   Height = 549
-  Top = 321
+  Top = 406
   Width = 855
   Caption = 'OpenLCB NodeExplorer'
-  ClientHeight = 529
+  ClientHeight = 549
   ClientWidth = 855
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
+  Position = poScreenCenter
   LCLVersion = '0.9.31'
   object PageControl: TPageControl
     Left = 8
-    Height = 498
+    Height = 518
     Top = 16
     Width = 838
     ActivePage = TabSheetHome
@@ -22,25 +23,24 @@ object FormMain: TFormMain
     MultiLine = True
     TabIndex = 0
     TabOrder = 0
-    OnChange = PageControlChange
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
       Caption = 'Home'
-      ClientHeight = 472
-      ClientWidth = 830
+      ClientHeight = 479
+      ClientWidth = 832
       object GroupBoxComPort: TGroupBox
         Left = 13
-        Height = 265
+        Height = 272
         Top = 164
-        Width = 807
+        Width = 809
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'COM Port Settings'
-        ClientHeight = 247
-        ClientWidth = 803
+        ClientHeight = 250
+        ClientWidth = 801
         TabOrder = 0
         object EditCustomBaudRate: TEdit
           Left = 405
-          Height = 21
+          Height = 22
           Top = 25
           Width = 109
           Enabled = False
@@ -48,19 +48,19 @@ object FormMain: TFormMain
         end
         object LabelCustomBaud: TLabel
           Left = 397
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 64
+          Width = 85
           Caption = 'Custom Baud'
           Enabled = False
           ParentColor = False
         end
         object ComboBoxBaud: TComboBox
           Left = 285
-          Height = 21
+          Height = 20
           Top = 26
           Width = 100
-          ItemHeight = 13
+          ItemHeight = 0
           ItemIndex = 10
           Items.Strings = (
             'Custom'
@@ -83,18 +83,18 @@ object FormMain: TFormMain
         end
         object LabelBaud: TLabel
           Left = 277
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 25
+          Width = 32
           Caption = 'Baud'
           ParentColor = False
         end
         object ComboBoxPorts: TComboBox
           Left = 20
-          Height = 21
+          Height = 20
           Top = 26
           Width = 248
-          ItemHeight = 13
+          ItemHeight = 0
           OnChange = ComboBoxPortsChange
           Style = csDropDownList
           TabOrder = 0
@@ -102,9 +102,9 @@ object FormMain: TFormMain
         end
         object LabelPort: TLabel
           Left = 13
-          Height = 14
+          Height = 17
           Top = 6
-          Width = 21
+          Width = 26
           Caption = 'Port'
           ParentColor = False
         end
@@ -118,23 +118,23 @@ object FormMain: TFormMain
         end
         object LabelDiscoverNodeID: TLabel
           Left = 127
-          Height = 14
+          Height = 17
           Top = 96
-          Width = 98
+          Width = 124
           Caption = 'Proxy NodeID (Hex)'
           ParentColor = False
         end
         object LabelDiscoverNodeAlias: TLabel
           Left = 13
-          Height = 14
+          Height = 17
           Top = 94
-          Width = 84
+          Width = 108
           Caption = 'Proxy Alias (Hex)'
           ParentColor = False
         end
         object EditDiscoverNodeAlias: TEdit
           Left = 21
-          Height = 21
+          Height = 22
           Top = 118
           Width = 88
           ParentShowHint = False
@@ -142,16 +142,16 @@ object FormMain: TFormMain
         end
         object EditDiscoverNodeID: TEdit
           Left = 135
-          Height = 21
+          Height = 22
           Top = 117
           Width = 200
           TabOrder = 5
         end
         object LabelHomeMessage: TLabel
           Left = 20
-          Height = 88
+          Height = 91
           Top = 150
-          Width = 768
+          Width = 766
           Anchors = [akTop, akLeft, akRight, akBottom]
           AutoSize = False
           Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages placed on the OpenLCB bus by NodeExplorer. '
@@ -169,18 +169,18 @@ object FormMain: TFormMain
         end
       end
       object ButtonConnect: TButton
-        Left = 668
+        Left = 670
         Height = 22
-        Top = 438
+        Top = 445
         Width = 150
         Action = ActionConnect
         Anchors = [akRight, akBottom]
         TabOrder = 1
       end
       object ButtonShowLog: TButton
-        Left = 511
+        Left = 513
         Height = 22
-        Top = 438
+        Top = 445
         Width = 150
         Action = ActionShowLog
         Anchors = [akRight, akBottom]
@@ -190,17 +190,17 @@ object FormMain: TFormMain
         Left = 13
         Height = 153
         Top = 3
-        Width = 807
+        Width = 809
         Anchors = [akTop, akLeft, akRight]
         Caption = 'PanelLogo'
         ClientHeight = 153
-        ClientWidth = 807
+        ClientWidth = 809
         TabOrder = 3
         object ImageOpenLCB: TImage
           Left = 1
           Height = 151
           Top = 1
-          Width = 805
+          Width = 807
           Align = alClient
           Center = True
           Picture.Data = {
@@ -617,7 +617,7 @@ object FormMain: TFormMain
         Width = 772
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
-        Caption = 'Select the tests to run against the node selected in the Discover tab.  A "?" icon indicates the test has not been executed.  A red "X" indicates one of the objectives of the test failed.  Open the log window from the Home tab and rerun the failed test to get detailed information on the failure.'
+        Caption = 'Select the tests to run against the node selected in the Discover tab.  A ''!'' icon indicates the test has not been executed.  The ''gear'' icon indicates the test is running.  The ''x'' icon indicates one of the objectives of the test failed.  Open the log window from the Home tab and rerun the failed test to get detailed information on the failure.'
         ParentColor = False
         WordWrap = True
       end
@@ -685,8 +685,8 @@ object FormMain: TFormMain
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 206
-        ClientWidth = 276
+        ClientHeight = 202
+        ClientWidth = 272
         Items.Strings = (
           'Write under mask'
           'Unaligned reads'
@@ -715,8 +715,8 @@ object FormMain: TFormMain
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 166
-        ClientWidth = 276
+        ClientHeight = 162
+        ClientWidth = 272
         Items.Strings = (
           '1 byte'
           '2 byte'
@@ -745,8 +745,8 @@ object FormMain: TFormMain
         Top = 4
         Width = 248
         Caption = 'Memory Space Options'
-        ClientHeight = 206
-        ClientWidth = 244
+        ClientHeight = 202
+        ClientWidth = 240
         TabOrder = 4
         object CheckBoxMemConfigPresent: TCheckBox
           Left = 4
@@ -823,7 +823,7 @@ object FormMain: TFormMain
         ParentFont = False
         TabOrder = 0
         OnKeyDown = SynEditCDIKeyDown
-        Gutter.Width = 51
+        Gutter.Width = 55
         Gutter.MouseActions = <>
         RightGutter.Width = 0
         RightGutter.MouseActions = <>
@@ -1272,7 +1272,7 @@ object FormMain: TFormMain
             MouseActions = <>
           end
           object SynGutterLineNumber1: TSynGutterLineNumber
-            Width = 11
+            Width = 15
             MouseActions = <>
             MarkupInfo.Background = clBtnFace
             MarkupInfo.Foreground = clNone
@@ -1321,8 +1321,8 @@ object FormMain: TFormMain
         Width = 802
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Consumers'
-        ClientHeight = 166
-        ClientWidth = 798
+        ClientHeight = 162
+        ClientWidth = 794
         TabOrder = 0
         object ListViewConsumers: TListView
           Left = 0
@@ -1368,8 +1368,8 @@ object FormMain: TFormMain
         Width = 804
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'Producers'
-        ClientHeight = 211
-        ClientWidth = 800
+        ClientHeight = 207
+        ClientWidth = 796
         TabOrder = 1
         object ListViewProducers: TListView
           Left = 0
@@ -1447,8 +1447,8 @@ object FormMain: TFormMain
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 2
-        ClientHeight = 292
-        ClientWidth = 800
+        ClientHeight = 288
+        ClientWidth = 796
         Columns = 2
         Items.Strings = (
           'Protocol Identification Protocol'
@@ -1579,7 +1579,7 @@ object FormMain: TFormMain
     left = 40
     top = 72
     object ActionLogClear: TAction
-      Category = 'Global'
+      Category = 'LogWindow'
       Caption = 'Clear'
       OnExecute = ActionLogClearExecute
     end
@@ -1611,13 +1611,13 @@ object FormMain: TFormMain
       OnExecute = ActionEventReaderExecute
     end
     object ActionShowLog: TAction
-      Category = 'Global'
+      Category = 'LogWindow'
       Caption = 'Show Log Window'
       ImageIndex = 18
       OnExecute = ActionShowLogExecute
     end
     object ActionHideLog: TAction
-      Category = 'Global'
+      Category = 'LogWindow'
       Caption = 'Hide Log Window'
       OnExecute = ActionHideLogExecute
     end
@@ -1706,6 +1706,45 @@ object FormMain: TFormMain
       Category = 'Verification'
       Caption = 'Execute Tests'
       OnExecute = ActionExecuteTestsExecute
+    end
+    object ActionRawMessageLogShow: TAction
+      Category = 'RawMessageLog'
+      Caption = 'Raw Message Log'
+      ImageIndex = 19
+      OnExecute = ActionRawMessageLogShowExecute
+    end
+    object ActionRawLogShowGutter: TAction
+      Category = 'RawMessageLog'
+      Caption = 'Show Gutter'
+      OnExecute = ActionRawLogShowGutterExecute
+    end
+    object ActionRawLogMemoCut: TAction
+      Category = 'RawMessageLog'
+      Caption = 'Cut'
+      ImageIndex = 17
+      OnExecute = ActionRawLogMemoCutExecute
+    end
+    object ActionRawLogMemoCopy: TAction
+      Category = 'RawMessageLog'
+      Caption = 'Copy'
+      ImageIndex = 16
+      OnExecute = ActionRawLogMemoCopyExecute
+    end
+    object ActionRawLogPaste: TAction
+      Category = 'RawMessageLog'
+      Caption = 'Paste'
+      ImageIndex = 15
+      OnExecute = ActionRawLogPasteExecute
+    end
+    object ActionRawLogSelectAll: TAction
+      Category = 'RawMessageLog'
+      Caption = 'Select All'
+      OnExecute = ActionRawLogSelectAllExecute
+    end
+    object ActionRawLogClear: TAction
+      Category = 'RawMessageLog'
+      Caption = 'Clear'
+      OnExecute = ActionRawLogClearExecute
     end
   end
   object MainMenu: TMainMenu
@@ -1847,6 +1886,45 @@ object FormMain: TFormMain
           7EFFC0A47EFFB09273FFB09273FFFFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
           FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
           FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00
+        }
+      end
+      object MenuItemRawMessageLog: TMenuItem
+        Action = ActionRawMessageLogShow
+        Bitmap.Data = {
+          36040000424D3604000000000000360000002800000010000000100000000100
+          2000000000000004000064000000640000000000000000000000905B3100905B
+          3184905B31A3905B31B6905B31C9905B31DA905B31EB905B31FA956139FF9A69
+          41FF727272FF5C5C5CFF905B31D9905B3134FFFFFF00FFFFFF00945F3368B890
+          6DFFD6BAA3FFDFC6B3FFE7D4C3FFEEDFD3FFF5EAE2FFB4B2B0FF696969FFD8D7
+          D6FFA2A2A2FF8B8B8BFFA28A77FF5D5D5DFE595959B9FFFFFF0099643689C7A4
+          85FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFCFFA0A0A0FFC9C9C9FFA5A5
+          A5FFCACACAFFC2C2C2FFA1A1A1FFC4C4C4FF6D6D6DFF6E6E6E039E6939579E69
+          39F6B48559FFD9A57BFFD89E6FFFD79B6AFFD49768FFB99980FFC9C9C9FFBDBD
+          BDFF9B9896FF9A9998FFB5B5B5FFC2C2C2FF6D6D6D9C65656512A46F3C14A46F
+          3CABD5AE8CFFFDF0E5FFF7C7A2FFF7CFADFFA5A5A5FFB7B7B7FFE1E1E1FF9C9C
+          9CFFFAE4CCFFFDF5ECFF9A9897FFD5D5D5FF999999FF656565FFFFFFFF00AA75
+          4028B78656FFFEFEFDFFFADEC2FFFADCBFFFB4B4B4FFCACACAFFE8E8E8FF8686
+          86FFFADCC3FFFDEBDEFF999998FFE2E2E2FFB6B6B6FF878787FFFFFFFF00B17B
+          431EB98652FFFEFCF9FFF9DCBFFFF8DBBFFFF8DCC0FFD5C7BBFFD2D2D2FFABAB
+          ABFF818181FF8A8A8AFFB4B4B4FFCACACAFF9393939EFFFFFF00FFFFFF00B782
+          4709B9854BFFFEFBF7FFF9DCC1FFF8DCBFFFF8DCBFFFBABABAFFDADADAFFBFBF
+          BFFFD6D6D6FFD8D8D8FFB8B8B8FFD4D4D4FF888888FF8686860AFFFFFF00FFFF
+          FF00BD884BF9FCF6F0FFF9DFC7FFF9DCBDFFFADCBFFFDECEC0FFBDBCBBFFECD5
+          C0FFC0C0C0FFBEBEBEFFE9E7E6FFAAA49DFFA4A2A09EFFFFFF00FFFFFF00FFFF
+          FF00C48E4EDAF5E7D8FFFAE5D2FFF9DABCFFF9DBBCFFFADBBFFFFADDC1FFFADD
+          C1FFBAB9B8FFB4B4B4FFFFFDFBFFC89457FFC48E4E12FFFFFF00FFFFFF00FFFF
+          FF00CA9452BBF0D9C1FFFBEDE1FFF9DAC0FFF9DCC2FFF9DEC5FFFAE0C7FFFAE2
+          CAFFFAE2CDFFFAE5D0FFFFFEFDFFCB8F5AFFCA9452F1CA945245FFFFFF00FFFF
+          FF00D09A55A4EDD0B2FFFFF6F0FFFAE1CAFFFBE3CCFFFBE3D0FFFBE6D3FFFBE9
+          D5FFFCE9D8FFFCEADBFFFFFFFDFFD29D71FFEED9C1FFD09A55E5FFFFFF00FFFF
+          FF00D59F5892EBCAA5FFFFFDFBFFFDE9D5FFFDEBD8FFFDEADBFFFDEDDFFFFDF0
+          E2FFFDF1E4FFFCF0E4FFFFFFFFFFE0A070FFFFFBF9FFDFB887FFFFFFFF00FFFF
+          FF00DAA45B84EBC69AFFFFFFFFFFFCEFE2FFFDF0E7FFFDF1EBFFFDF5EEFFFDF8
+          F1FFFDFAF7FFFFFCFAFFFFFFFFFFFEFBF7FFF4DAC0FFDAA45BEAFFFFFF00FFFF
+          FF00DEA85D6DEAC08CFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDF9F4FFFBF3
+          EAFFF8EBD9FFF8E6D3FFF5DFC6FFE9CBA6FFDEA85DEDDEA85D5DFFFFFF00FFFF
+          FF00E2AC5F36E2AC5FC6EABC81FFE8B777FFE6B26DFFE4B068FFE2AC5FF0E2AC
+          5FE3E2AC5FCFE2AC5FCCE2AC5FBBE2AC5FA8E2AC5F4BE2AC5F05
         }
       end
     end
@@ -2780,4 +2858,4 @@ object FormMain: TFormMain
       BEF62579BDF62377BDF62276BCC3
     }
   end
-end
+end
