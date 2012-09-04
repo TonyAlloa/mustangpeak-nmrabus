@@ -24,8 +24,6 @@ type
     procedure CheckBoxSoftwareFlowControlChange(Sender: TObject);
     procedure CheckBoxPingPongStandardFrameChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure SpinEditDelayTimeout1Change(Sender: TObject);
-    procedure SpinEditDelayTimeout1EditingDone(Sender: TObject);
     procedure SpinEditDelayTimeoutChange(Sender: TObject);
     procedure SpinEditDelayTimeoutRIDChange(Sender: TObject);
     procedure SpinEditDelayUIRefreshRateChange(Sender: TObject);
@@ -61,18 +59,13 @@ end;
 
 procedure TFormSettings.FormShow(Sender: TObject);
 begin
-  SpinEditDelayTimeout.Value := Settings.TimeoutComRead
+  SpinEditDelayTimeout.Value := Settings.TimeoutComRead;
+  SpinEditDelayTimeoutRID.Value := Settings.TimeoutStartupRID;
+  SpinEditDelayUIRefreshRate.Value := Settings.UIRefreshRate;
+  CheckBoxPingPongStandardFrame.Checked := Settings.PingPongStandardFrameTest;
+  CheckBoxSoftwareFlowControl.Checked := Settings.SoftwareFlowControl;
 end;
 
-procedure TFormSettings.SpinEditDelayTimeout1Change(Sender: TObject);
-begin
-
-end;
-
-procedure TFormSettings.SpinEditDelayTimeout1EditingDone(Sender: TObject);
-begin
-
-end;
 
 procedure TFormSettings.CheckBoxPingPongStandardFrameChange(Sender: TObject);
 begin

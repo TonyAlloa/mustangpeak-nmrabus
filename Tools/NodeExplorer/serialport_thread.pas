@@ -300,7 +300,11 @@ begin
         ReceiveStr := Serial.Recvstring(0);
         if ReceiveStr <> '' then
         begin
-          ///  Do something?///
+          if EnableRawMessages then
+          begin
+            RawMessageBuffer := ReceiveStr;
+            Synchronize(@SyncRawMessage);
+          end;
         end;
       end;
 
@@ -572,4 +576,4 @@ end;
 
 
 end.
-
+

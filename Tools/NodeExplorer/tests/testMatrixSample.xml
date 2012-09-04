@@ -179,4 +179,25 @@
       <Results>Four CID messages, one RID message, one AMD message, one Node Initialized message, and list of consumed and produced events</Results>
     </TestObjective>
   </Test>
+  <Test>
+    <Name>Events</Name>
+    <Description>Retrieve supported events in the NUT</Description>
+    <Classname>TTestEvents</Classname>
+    <Enabled>True</Enabled>
+    <TestObjective>
+      <SpecDoc>"TODO:"</SpecDoc>
+      <Objective>Retrieve events from a global Identify Events message</Objective>
+      <Results>Events supported by the nodes on the network</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>"TODO:"</SpecDoc>
+      <Objective>Retrieve events from an addressed Identify Events message</Objective>
+      <Results>Events supported by the addressed node on the network</Results>
+    </TestObjective>
+    <TestObjective>
+      <SpecDoc>"TODO:"</SpecDoc>
+      <Objective>Should not respond to an addressed Identify Events message to a different node</Objective>
+      <Results>No Reply</Results>
+    </TestObjective>
+  </Test>
 </TestMatrix>

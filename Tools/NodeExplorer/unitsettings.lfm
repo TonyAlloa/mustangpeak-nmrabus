@@ -16,7 +16,7 @@ object FormSettings: TFormSettings
     MaxValue = 10000
     OnChange = SpinEditDelayTimeoutChange
     TabOrder = 0
-    Value = 5
+    Value = 30
   end
   object Label1: TLabel
     Left = 24

@@ -10,21 +10,27 @@ object FormRestartNode: TFormRestartNode
   Position = poMainFormCenter
   LCLVersion = '0.9.31'
   object LabelRestart: TLabel
-    Left = 56
-    Height = 25
-    Top = 184
-    Width = 328
+    Left = 0
+    Height = 85
+    Top = 161
+    Width = 437
+    Align = alClient
+    Alignment = taCenter
+    AutoSize = False
+    BorderSpacing.Top = 20
     Caption = 'Please restart node within 5 seconds'
-    Font.Height = 24
+    Font.Height = 20
     ParentColor = False
     ParentFont = False
   end
   object ImageOpenLCB: TImage
-    Left = 55
+    Left = 0
     Height = 141
-    Top = 16
-    Width = 329
+    Top = 0
+    Width = 437
+    Align = alTop
     AutoSize = True
+    Center = True
     Picture.Data = {
       1754506F727461626C654E6574776F726B477261706869632522000089504E47
       0D0A1A0A0000000D49484452000001490000008D08060000003A8488BE000000
@@ -303,4 +309,4 @@ object FormRestartNode: TFormRestartNode
       82
     }
   end
-end
+end

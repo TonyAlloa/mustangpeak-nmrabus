@@ -149,9 +149,9 @@ object FormMain: TFormMain
         end
         object LabelHomeMessage: TLabel
           Left = 20
-          Height = 91
+          Height = 87
           Top = 150
-          Width = 766
+          Width = 762
           Anchors = [akTop, akLeft, akRight, akBottom]
           AutoSize = False
           Caption = 'The Alias Node ID and the Full Node ID that is associated with Node Explorer.  It is used as the Source for all messages placed on the OpenLCB bus by NodeExplorer. '
@@ -485,12 +485,12 @@ object FormMain: TFormMain
     end
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
-      ClientHeight = 473
+      ClientHeight = 472
       ClientWidth = 830
       object ButtonDiscoverNodes: TButton
         Left = 668
         Height = 22
-        Top = 439
+        Top = 438
         Width = 150
         Action = ActionDiscoverNode
         Anchors = [akRight, akBottom]
@@ -498,7 +498,7 @@ object FormMain: TFormMain
       end
       object ListViewNodeDiscovery: TListView
         Left = 12
-        Height = 285
+        Height = 284
         Top = 4
         Width = 801
         Align = alCustom
@@ -526,7 +526,7 @@ object FormMain: TFormMain
       object LabelHomeMessage1: TLabel
         Left = 29
         Height = 56
-        Top = 306
+        Top = 305
         Width = 766
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
@@ -537,7 +537,7 @@ object FormMain: TFormMain
       object LabelDiscoverMultiNode: TLabel
         Left = 29
         Height = 17
-        Top = 386
+        Top = 385
         Width = 264
         Anchors = [akLeft, akBottom]
         AutoSize = False
@@ -568,12 +568,8 @@ object FormMain: TFormMain
             Width = 330
           end        
           item
-            Caption = 'Spec'
-            Width = 200
-          end        
-          item
             Caption = 'Classname'
-            Width = 130
+            Width = 189
           end>
         GridLines = True
         ReadOnly = True
@@ -582,6 +578,9 @@ object FormMain: TFormMain
         TabOrder = 0
         ViewStyle = vsReport
         OnDeletion = ListViewTestMatrixDeletion
+        OnDragDrop = ListViewTestMatrixDragDrop
+        OnDragOver = ListViewTestMatrixDragOver
+        OnStartDrag = ListViewTestMatrixStartDrag
       end
       object ButtonLoadTests: TButton
         Left = 190

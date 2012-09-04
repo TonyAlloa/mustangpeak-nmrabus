@@ -216,6 +216,12 @@ type
     procedure FormShow(Sender: TObject);
     procedure ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
+    procedure ListViewTestMatrixDragDrop(Sender, Source: TObject; X, Y: Integer
+      );
+    procedure ListViewTestMatrixDragOver(Sender, Source: TObject; X,
+      Y: Integer; State: TDragState; var Accept: Boolean);
+    procedure ListViewTestMatrixStartDrag(Sender: TObject;
+      var DragObject: TDragObject);
     procedure MenuItemConnectionClick(Sender: TObject);
     procedure SynEditCDIKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
@@ -672,6 +678,40 @@ begin
   FreeAndNil( Test);
 end;
 
+procedure TFormMain.ListViewTestMatrixDragDrop(Sender, Source: TObject; X, Y: Integer);
+var
+  Item, ItemToMove: TListItem;
+  i: Integer;
+begin
+  Item := ListViewTestMatrix.GetItemAt(X, Y);
+  if Assigned(Item) then
+  begin
+    while ListViewTestMatrix.SelCount > 0 do
+    begin
+      i := 0;
+      ItemToMove := nil;
+      while not Assigned(ItemToMove) do
+      begin
+        if ListViewTestMatrix.Items[i].Selected then
+          ItemToMove := ListViewTestMatrix.Items[i];
+        Inc(i)
+      end;
+      ListViewTestMatrix.Items.Move(ItemToMove.Index, Item.Index);
+      ItemToMove.Selected := False;
+    end;
+  end;
+end;
+
+procedure TFormMain.ListViewTestMatrixDragOver(Sender, Source: TObject; X, Y: Integer; State: TDragState; var Accept: Boolean);
+begin
+
+end;
+
+procedure TFormMain.ListViewTestMatrixStartDrag(Sender: TObject; var DragObject: TDragObject);
+begin
+
+end;
+
 procedure TFormMain.MenuItemConnectionClick(Sender: TObject);
 var
   i: Integer;
@@ -785,7 +825,7 @@ begin
               ListItem := ListviewTestMatrix.Items.Add;
               ListItem.Caption := TestNameFromTestNode(TestNode);
               ListItem.SubItems.Add(TestDescriptionFromTestNode(TestNode));
-              ListItem.SubItems.Add(TestSpecDocFromTestNode(TestNode));
+         //     ListItem.SubItems.Add(TestSpecDocFromTestNode(TestNode));
               ListItem.SubItems.Add(TestClassnameFromTestNode(TestNode));
               ListItem.Checked :=  TestEnabledStateFromTestNode(TestNode) = 'True';
               ListItem.ImageIndex := 2;
