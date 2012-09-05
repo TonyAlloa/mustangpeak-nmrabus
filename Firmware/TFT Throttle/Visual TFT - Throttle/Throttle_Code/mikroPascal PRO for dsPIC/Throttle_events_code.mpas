@@ -7,6 +7,7 @@ procedure BoxRoundCmdStationsClick();
 procedure BoxRoundConsistNodesClick();
 procedure BoxRoundProgStationsClick();
 procedure BoxRoundTrainNodesClick();
+procedure ButtonRoundNodeSelectBackOnClick();
 //--------------------- Externals ---------------------//
 const Bkgnd : TCBox; code; far; external;
 const Label2 : TCLabel; code; far; external;
@@ -57,10 +58,16 @@ var LabelItem6_Caption : string[17]; external;
 var BoxRoundItem5 : TBox_Round; external;
 var LabelItem5 : TLabel; external;
 var LabelItem5_Caption : string[17]; external;
+var Button1 : TButton; external;
+var Button1_Caption : string[7]; external;
+var ButtonRoundNodeSelectBack : TButton_Round; external;
+var ButtonRoundNodeSelectBack_Caption : string[2]; external;
 const ScreenStart           : TCScreen; code; far;  external;
 var ScreenDetectingNodes           : TScreen; external;
 var ScreenNodeSelect           : TScreen; external;
 procedure DrawScreen(aScreenID : word); external;
+procedure DrawButton(Abutton : ^TButton); external;
+procedure DrawRoundButton(Around_button : ^TButton_Round); external;
 procedure DrawLabel(ALabel : ^TLabel); external;
 procedure DrawCLabel(ALabel : ^TCLabel); external;
 procedure DrawImage(AImage : ^TImage); external;
@@ -78,44 +85,38 @@ implementation
 
 //--------------------- User code ---------------------//
 
-procedure ShowDropDown(Active: Byte);
-begin
-  if Active = 1 then
-  begin
-    DrawScreen(ScreenNodeSelectScreenID);
-  end else
-  begin  
-    DrawScreen(ScreenDetectingNodesScreenID);
-  end
-end;
-
 //----------------- End of User code ------------------//
 
 // Event Handlers
 
 procedure BoxRoundCmdStationsClick();
 begin
-  ShowDropDown(1);    
+  DrawScreen(ScreenNodeSelectScreenID);
 end;
 
 procedure BoxRoundTrainNodesClick();
 begin
-  ShowDropDown(1);  
+  DrawScreen(ScreenNodeSelectScreenID);
 end;
 
 procedure BoxRoundProgStationsClick();
 begin
-  ShowDropDown(1);  
+  DrawScreen(ScreenNodeSelectScreenID);
 end;
 
 procedure BoxRoundAccyNodesClick();
 begin
-  ShowDropDown(1);  
+  DrawScreen(ScreenNodeSelectScreenID);
 end;
 
 procedure BoxRoundConsistNodesClick();
 begin
-  ShowDropDown(1);  
+  DrawScreen(ScreenNodeSelectScreenID);
+end;
+
+procedure ButtonRoundNodeSelectBackOnClick();
+begin
+  DrawScreen(ScreenDetectingNodesScreenID);
 end;
 
 end.

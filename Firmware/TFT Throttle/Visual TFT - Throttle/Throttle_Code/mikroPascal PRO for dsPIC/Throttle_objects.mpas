@@ -8,6 +8,65 @@ const  _taLeft   = 2;
 const  _taCenter = 3;
 const  _taRight = 4;
 
+type TButton = record
+  OwnerScreenID        : word;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Pen_Width            : byte;
+  Pen_Color            : word;
+  Visible              : byte;
+  Active               : byte;
+  Transparent          : byte;
+  Caption              : ^char;
+  TextAlign            : byte;
+  Fontname             : ^ const far byte;
+  Font_Color           : word;
+  Gradient             : byte;
+  Gradient_Orientation : byte;
+  Gradient_Start_Color : word;
+  Gradient_End_Color   : word;
+  Color                : word;
+  PressColEnabled      : byte;
+  Press_Color          : word;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
+
+type TButton_Round = record
+  OwnerScreenID        : word;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Pen_Width            : byte;
+  Pen_Color            : word;
+  Visible              : byte;
+  Active               : byte;
+  Transparent          : byte;
+  Caption              : ^char;
+  TextAlign            : byte;
+  Fontname             : ^ const far byte;
+  Font_Color           : word;
+  Gradient             : byte;
+  Gradient_Orientation : byte;
+  Gradient_Start_Color : word;
+  Gradient_End_Color   : word;
+  Color                : word;
+  Corner_Radius	    	: byte;
+  PressColEnabled      : byte;
+  Press_Color          : word;
+  OnUpPtr              : ^TOnEventPtr;
+  OnDownPtr            : ^TOnEventPtr;
+  OnClickPtr           : ^TOnEventPtr;
+  OnPressPtr           : ^TOnEventPtr;
+end;
+
 type TLabel = record
   OwnerScreenID        : word;
   Order                : byte;
@@ -158,6 +217,10 @@ type TScreen = record
   Width                      : word;
   Height                     : word;
   ObjectsCount               : byte;
+  ButtonsCount               : word;
+  Buttons                    : ^ const code far ^TButton;
+  Buttons_RoundCount         : word;
+  Buttons_Round              : ^ const code far ^TButton_Round;
   LabelsCount                : word;
   Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;
@@ -173,6 +236,10 @@ type TMyScreen = record
   Width                      : word;
   Height                     : word;
   ObjectsCount               : byte;
+  ButtonsCount               : word;
+  Buttons                    : ^ const code far ^TButton;
+  Buttons_RoundCount         : word;
+  Buttons_Round              : ^ const code far ^TButton_Round;
   LabelsCount                : word;
   Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;

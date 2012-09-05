@@ -122,10 +122,8 @@ begin
   if MTI = MTI_CID1 then Packet^.ID := Packet^.ID or ((NodeBuffer^.Node.ID[1] shl 12) and $00FFF000) else
   if MTI = MTI_CID2 then Packet^.ID := Packet^.ID or (NodeBuffer^.Node.ID[0] and $00FFF000) else
   if MTI = MTI_CID3 then Packet^.ID := Packet^.ID or ((NodeBuffer^.Node.ID[0] shl 12) and $00FFF000);
-  if MTI = MTI_AMD then
-  begin
+  if (MTI = MTI_AMD) or (MTI = MTI_AME) or (MTI = MTI_AMR) then
     NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer, Packet);
-  end;
 end;
 
 // *****************************************************************************

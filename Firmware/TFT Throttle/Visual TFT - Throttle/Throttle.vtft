@@ -2077,7 +2077,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'Label7'#13#10#13#10'Left      :     1'#13#10'Top      :     5'
+    Hint = 'Label7'#13#10#13#10'Left      :     7'#13#10'Top      :     4'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -2151,7 +2151,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'Label1'#13#10#13#10'Left      :     5'#13#10'Top      :     66'
+    Hint = 'Label1'#13#10#13#10'Left      :     7'#13#10'Top      :     69'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -2225,7 +2225,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'Label6'#13#10#13#10'Left      :     5'#13#10'Top      :     139'
+    Hint = 'Label6'#13#10#13#10'Left      :     7'#13#10'Top      :     134'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -3151,6 +3151,7 @@ object TatDiagram
   end
 end
 object TatDiagram
+  PaintLinesFirst = True
   NettoExportOffset = 1
   AutomaticNodes = False
   AutoScroll = True
@@ -3201,7 +3202,7 @@ object TatDiagram
   TopRuler.Size = 16
   TopRuler.AutoFactor = True
   TopRuler.GridColor = clBlack
-  Zoom = 400
+  Zoom = 219
   BorderColor = clGray
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
@@ -3247,8 +3248,8 @@ object TatDiagram
   ExplicitHeight = 200
   object Box1: TDgrBox
     Tag = 1
-    Width = 120.000000000000000000
-    Height = 160.000000000000000000
+    Width = 240.000000000000000000
+    Height = 320.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -3293,8 +3294,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'Box1'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     120'#13#10'H' +
-      'eight :     160'
+      'Box1'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     240'#13#10'H' +
+      'eight :     320'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = 2105376
@@ -3318,10 +3319,10 @@ object TatDiagram
   end
   object BoxRoundItem1: TDgrBoxRound
     Tag = 1
-    Left = 3.000000000000000000
-    Top = 4.000000000000000000
-    Width = 112.500000000000000000
-    Height = 19.000000000000000000
+    Left = 7.000000000000000000
+    Top = 38.000000000000000000
+    Width = 220.000000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3368,8 +3369,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'Double click on Box to add a handler. You can '#13#10'change a box rou' +
-      'ndnes by changing a Round Radius '#13#10'property in Object Inspector'
+      'BoxRoundItem1'#13#10#13#10'Left      :     7'#13#10'Top      :     38'#13#10'Width  : ' +
+      '    220'#13#10'Height :     36'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -3387,17 +3388,17 @@ object TatDiagram
     Transparency = 0
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = False
+    PressColorEnabled = True
     Static_ = False
     CornerRadius = 3
     Collapsed = False
   end
   object BoxRoundItem4: TDgrBoxRound
     Tag = 1
-    Left = 3.000000000000000000
-    Top = 81.500000000000000000
-    Width = 112.500000000000000000
-    Height = 19.000000000000000000
+    Left = 7.000000000000000000
+    Top = 181.400000000000000000
+    Width = 220.000000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3444,8 +3445,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'BoxRoundItem4'#13#10#13#10'Left      :     3'#13#10'Top      :     82'#13#10'Width  : ' +
-      '    112'#13#10'Height :     19'
+      'BoxRoundItem4'#13#10#13#10'Left      :     7'#13#10'Top      :     181'#13#10'Width  :' +
+      '     220'#13#10'Height :     36'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -3463,17 +3464,17 @@ object TatDiagram
     Transparency = 0
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = False
+    PressColorEnabled = True
     Static_ = False
     CornerRadius = 3
     Collapsed = False
   end
   object LabelItem1: TDgrLabel
     Tag = 1
-    Left = 4.500000000000000000
-    Top = 10.000000000000000000
-    Width = 24.164062500000000000
-    Height = 10.656250000000000000
+    Left = 14.000000000000000000
+    Top = 43.000000000000000000
+    Width = 63.596187591552730000
+    Height = 25.308593750000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3485,13 +3486,13 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -8
+        Font.Height = -19
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
-        Text = 'Item 1'
+        Text = 'RGS 20'
         Clip = False
         WordWrap = False
         DControlFont = False
@@ -3509,7 +3510,7 @@ object TatDiagram
     Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -8
+    Font.Height = -19
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
@@ -3521,9 +3522,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 
-      'Double click on Label to add handler. You can '#13#10'change a label c' +
-      'aption by changing a caption '#13#10'property in Object Inspector'
+    Hint = 'LabelItem1'#13#10#13#10'Left      :     14'#13#10'Top      :     43'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -3546,10 +3545,10 @@ object TatDiagram
   end
   object LabelItem4: TDgrLabel
     Tag = 1
-    Left = 4.500000000000000000
-    Top = 87.000000000000000000
-    Width = 24.164062500000000000
-    Height = 10.656250000000000000
+    Left = 14.000000000000000000
+    Top = 187.000000000000000000
+    Width = 63.596187591552730000
+    Height = 25.308593750000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3561,13 +3560,13 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -8
+        Font.Height = -19
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
-        Text = 'Item 4'
+        Text = 'RGS 40'
         Clip = False
         WordWrap = False
         DControlFont = False
@@ -3585,7 +3584,7 @@ object TatDiagram
     Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -8
+    Font.Height = -19
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
@@ -3597,7 +3596,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'LabelItem4'#13#10#13#10'Left      :     4'#13#10'Top      :     87'
+    Hint = 'LabelItem4'#13#10#13#10'Left      :     14'#13#10'Top      :     187'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -3620,10 +3619,10 @@ object TatDiagram
   end
   object BoxRoundItem2: TDgrBoxRound
     Tag = 1
-    Left = 3.000000000000000000
-    Top = 29.772510609303080000
-    Width = 112.500000000000000000
-    Height = 19.000000000000000000
+    Left = 7.000000000000000000
+    Top = 85.800000000000010000
+    Width = 220.000000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3670,8 +3669,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'BoxRoundItem2'#13#10#13#10'Left      :     3'#13#10'Top      :     30'#13#10'Width  : ' +
-      '    112'#13#10'Height :     19'
+      'BoxRoundItem2'#13#10#13#10'Left      :     7'#13#10'Top      :     86'#13#10'Width  : ' +
+      '    220'#13#10'Height :     36'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -3689,17 +3688,17 @@ object TatDiagram
     Transparency = 0
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = False
+    PressColorEnabled = True
     Static_ = False
     CornerRadius = 3
     Collapsed = False
   end
   object BoxRoundItem3: TDgrBoxRound
     Tag = 1
-    Left = 3.500000000000000000
-    Top = 55.500000000000000000
-    Width = 112.500000000000000000
-    Height = 19.000000000000000000
+    Left = 7.000000000000000000
+    Top = 133.600000000000000000
+    Width = 220.000000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3746,8 +3745,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'BoxRoundItem3'#13#10#13#10'Left      :     4'#13#10'Top      :     56'#13#10'Width  : ' +
-      '    112'#13#10'Height :     19'
+      'BoxRoundItem3'#13#10#13#10'Left      :     7'#13#10'Top      :     134'#13#10'Width  :' +
+      '     220'#13#10'Height :     36'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -3765,17 +3764,17 @@ object TatDiagram
     Transparency = 0
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = False
+    PressColorEnabled = True
     Static_ = False
     CornerRadius = 3
     Collapsed = False
   end
   object LabelItem2: TDgrLabel
     Tag = 1
-    Left = 4.500000000000000000
-    Top = 34.500000000000000000
-    Width = 24.164062500000000000
-    Height = 10.656250000000000000
+    Left = 14.000000000000000000
+    Top = 91.000000000000000000
+    Width = 107.487300872802700000
+    Height = 25.308593750000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3787,13 +3786,13 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -8
+        Font.Height = -19
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
-        Text = 'Item 2'
+        Text = 'DRG&W 452'
         Clip = False
         WordWrap = False
         DControlFont = False
@@ -3811,7 +3810,7 @@ object TatDiagram
     Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -8
+    Font.Height = -19
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
@@ -3823,7 +3822,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'LabelItem2'#13#10#13#10'Left      :     4'#13#10'Top      :     34'
+    Hint = 'LabelItem2'#13#10#13#10'Left      :     14'#13#10'Top      :     91'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -3846,10 +3845,10 @@ object TatDiagram
   end
   object LabelItem3: TDgrLabel
     Tag = 1
-    Left = 5.000000000000000000
-    Top = 61.500000000000000000
-    Width = 24.164062500000000000
-    Height = 10.656250000000000000
+    Left = 14.000000000000000000
+    Top = 139.000000000000000000
+    Width = 74.283687591552730000
+    Height = 25.308593750000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3861,13 +3860,13 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -8
+        Font.Height = -19
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
-        Text = 'Item 3'
+        Text = 'RGS 455'
         Clip = False
         WordWrap = False
         DControlFont = False
@@ -3885,7 +3884,7 @@ object TatDiagram
     Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -8
+    Font.Height = -19
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
@@ -3897,7 +3896,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'LabelItem3'#13#10#13#10'Left      :     5'#13#10'Top      :     62'
+    Hint = 'LabelItem3'#13#10#13#10'Left      :     14'#13#10'Top      :     139'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -3920,10 +3919,10 @@ object TatDiagram
   end
   object BoxRoundItem6: TDgrBoxRound
     Tag = 1
-    Left = 3.500000000000000000
-    Top = 134.000000000000000000
-    Width = 112.500000000000000000
-    Height = 19.000000000000000000
+    Left = 7.000000000000000000
+    Top = 277.000000000000000000
+    Width = 220.000000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -3970,8 +3969,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'BoxRoundItem6'#13#10#13#10'Left      :     4'#13#10'Top      :     134'#13#10'Width  :' +
-      '     112'#13#10'Height :     19'
+      'BoxRoundItem6'#13#10#13#10'Left      :     7'#13#10'Top      :     277'#13#10'Width  :' +
+      '     220'#13#10'Height :     36'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -3989,17 +3988,17 @@ object TatDiagram
     Transparency = 0
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = False
+    PressColorEnabled = True
     Static_ = False
     CornerRadius = 3
     Collapsed = False
   end
   object LabelItem6: TDgrLabel
     Tag = 1
-    Left = 5.000000000000000000
-    Top = 139.500000000000000000
-    Width = 24.164062500000000000
-    Height = 10.656250000000000000
+    Left = 14.000000000000000000
+    Top = 283.000000000000000000
+    Width = 107.487300872802700000
+    Height = 25.308593750000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -4011,13 +4010,13 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -8
+        Font.Height = -19
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
-        Text = 'Item 6'
+        Text = 'DRG&W 464'
         Clip = False
         WordWrap = False
         DControlFont = False
@@ -4035,7 +4034,7 @@ object TatDiagram
     Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -8
+    Font.Height = -19
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
@@ -4047,9 +4046,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 
-      'Double click on Label to add handler. You can '#13#10'change a label c' +
-      'aption by changing a caption '#13#10'property in Object Inspector'
+    Hint = 'LabelItem6'#13#10#13#10'Left      :     14'#13#10'Top      :     283'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -4072,10 +4069,10 @@ object TatDiagram
   end
   object BoxRoundItem5: TDgrBoxRound
     Tag = 1
-    Left = 3.000000000000000000
-    Top = 108.500000000000000000
-    Width = 112.500000000000000000
-    Height = 19.000000000000000000
+    Left = 7.000000000000000000
+    Top = 229.200000000000000000
+    Width = 220.000000000000000000
+    Height = 36.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -4122,8 +4119,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'BoxRoundItem5'#13#10#13#10'Left      :     3'#13#10'Top      :     108'#13#10'Width  :' +
-      '     112'#13#10'Height :     19'
+      'BoxRoundItem5'#13#10#13#10'Left      :     7'#13#10'Top      :     229'#13#10'Width  :' +
+      '     220'#13#10'Height :     36'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -4141,17 +4138,17 @@ object TatDiagram
     Transparency = 0
     GradientBackup = False
     PressColor = clBlack
-    PressColorEnabled = False
+    PressColorEnabled = True
     Static_ = False
     CornerRadius = 3
     Collapsed = False
   end
   object LabelItem5: TDgrLabel
     Tag = 1
-    Left = 4.500000000000000000
-    Top = 114.500000000000000000
-    Width = 24.164062500000000000
-    Height = 10.656250000000000000
+    Left = 14.000000000000000000
+    Top = 235.000000000000000000
+    Width = 74.283687591552730000
+    Height = 25.308593750000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clWhite
@@ -4163,13 +4160,13 @@ object TatDiagram
       item
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -8
+        Font.Height = -19
         Font.Name = 'Tahoma'
         Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
-        Text = 'Item 5'
+        Text = 'RGS 461'
         Clip = False
         WordWrap = False
         DControlFont = False
@@ -4187,7 +4184,7 @@ object TatDiagram
     Restrictions = [crNoResize, crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -8
+    Font.Height = -19
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
@@ -4199,7 +4196,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'LabelItem5'#13#10#13#10'Left      :     4'#13#10'Top      :     114'
+    Hint = 'LabelItem5'#13#10#13#10'Left      :     14'#13#10'Top      :     235'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -4218,6 +4215,169 @@ object TatDiagram
     Static_ = False
     StartChar = 32
     EndChar = 127
+    Collapsed = False
+  end
+  object Button1: TDgrButton
+    Tag = 1
+    Width = 240.000000000000000000
+    Height = 28.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Style = psClear
+    Pen.Width = 0
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Trains'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 45
+    MinHeight = 21
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'Button1'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     240' +
+      #13#10'Height :     28'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = 10921638
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    Collapsed = False
+  end
+  object ButtonRoundNodeSelectBack: TDgrButtonRound
+    Tag = 1
+    Left = 204.000000000000000000
+    Top = 3.000000000000000000
+    Width = 31.000000000000000000
+    Height = 20.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = clWhite
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'X'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    DiagramFont = False
+    MinWidth = 13
+    MinHeight = 19
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound2'#13#10#13#10'Left      :     204'#13#10'Top      :     3'#13#10'Width  : ' +
+      '    31'#13#10'Height :     20'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clRed
+    Gradient.EndColor = 176
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundNodeSelectBackOnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 3
     Collapsed = False
   end
 end
@@ -4252,7 +4412,7 @@ SCREEN_SECTION
 		ScreenGridColor=clBlack
 
 	ScreenCount=3
-	ActiveScreen=ScreenStart
+	ActiveScreen=ScreenNodeSelect
 
 SCREEN_SECTION_END
 
