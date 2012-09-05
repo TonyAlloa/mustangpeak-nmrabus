@@ -147,6 +147,7 @@ type
     FErrorCodesStartup: TTestNodeStartupCodes;
     FErrorCodesUnknownMTI: TTestUnknownMTICodes;
     FErrorCodesUnknownMTIStrings: TStringList;
+    FFilterRepliesForNUT: Boolean;
     FFreeOnLog: Boolean;
     FListItem: TListItem;
     FMessageHelper: TOpenLCBMessageHelper;
@@ -176,6 +177,7 @@ type
     property ErrorCodesUnknownMTI: TTestUnknownMTICodes read FErrorCodesUnknownMTI write FErrorCodesUnknownMTI;
     property ErrorCodesStartup: TTestNodeStartupCodes read FErrorCodesStartup write FErrorCodesStartup;
     property ErrorAliasConflict: TTestAliasConflictCodes read FErrorAliasConflict write FErrorAliasConflict;
+    property FilterRepliesForNUT: Boolean read FFilterRepliesForNUT write FFilterRepliesForNUT;
     property FreeOnLog: Boolean read FFreeOnLog write FFreeOnLog;
     property ListItem: TListItem read FListItem write FListItem;
     property Passed: Boolean read GetPassed;
@@ -216,6 +218,7 @@ type
 
   TTestGetNodesUnderTest = class(TTestBase)
   public
+    constructor Create; override;
     procedure ProcessObjectives(Thread: TThread; SendStrings: TStringList; ReceiveString: String; var iObjective: Integer; var ReadTimeout: Integer; ReceiveTime: Integer; var SendNext: Boolean); override;
   end;
   TTestVerifyNodesIDClass = class of TTestGetNodesUnderTest;
@@ -310,6 +313,13 @@ type
   end;
   TTestStartupClass = class of TTestStartup;
 
+  { TTestEvents }
+
+  TTestEvents = class(TTestBase)
+  public
+    procedure ProcessObjectives(Thread: TThread; SendStrings: TStringList; ReceiveString: String; var iObjective: Integer; var ReadTimeout: Integer; ReceiveTime: Integer; var SendNext: Boolean); override;
+  end;
+  TTestEventsClass = class of TTestEvents;
 
   function FindTestFromXML(XMLDocTests: TXMLDocument; TestClassName: String): TTestBase;
   procedure ExtractResultsFromXML(XMLDoc: TXMLDocument; ReceiveResults: TStringList);
@@ -375,6 +385,7 @@ begin
     end;
   end;
 end;
+
 
 
 { TKnownMTI }
@@ -1105,6 +1116,12 @@ end;
 
 { TTestGetNodesUnderTest }
 
+constructor TTestGetNodesUnderTest.Create;
+begin
+  inherited Create;
+  FFilterRepliesForNUT := False;
+end;
+
 procedure TTestGetNodesUnderTest.ProcessObjectives(Thread: TThread; SendStrings: TStringList; ReceiveString: String; var iObjective: Integer; var ReadTimeout: Integer; ReceiveTime: Integer; var SendNext: Boolean);
 begin
   inherited ProcessObjectives(Thread, SendStrings, ReceiveString, iObjective, ReadTimeout, ReceiveTime, SendNext);
@@ -1119,8 +1136,15 @@ begin
         end;
     1 : begin
           // There is no pass fail here we are just collecting the nodes
-          Inc(FStateMachineIndex);
-          Inc(iObjective);
+          if ReceiveString <> '' then
+          begin
+            Inc(FReceiveCount);
+            SendNext := False;
+          end else
+          begin
+            Inc(FStateMachineIndex);
+            Inc(iObjective);
+          end;
         end;
   end;
   UpdateProgressBar(1, StateMachineIndex);
@@ -2181,6 +2205,39 @@ begin
   UpdateProgressBar(1, StateMachineIndex);
 end;
 
+{ TTestEvents }
+
+procedure TTestEvents.ProcessObjectives(Thread: TThread; SendStrings: TStringList; ReceiveString: String; var iObjective: Integer; var ReadTimeout: Integer; ReceiveTime: Integer; var SendNext: Boolean);
+begin
+  inherited ProcessObjectives(Thread, SendStrings, ReceiveString, iObjective, ReadTimeout, ReceiveTime, SendNext);
+  case StateMachineIndex of
+    0 : begin
+          // Send Global Verify Nodes to collect all nodes on the bus
+     //     MessageHelper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, Settings.ProxyNodeAlias, 0, 0, 0, 0, 0, 0, 0 ,0 ,0 ,0);
+    //      SendStrings.Add(MessageHelper.Encode);
+
+          ReceiveCount := 0;
+          Inc(FStateMachineIndex);
+        end;
+    1 : begin
+          // There is no pass fail here we are just collecting the nodes
+          if ReceiveString <> '' then
+          begin
+            Inc(FReceiveCount);
+            SendNext := False;
+          end else
+          begin
+            Inc(FStateMachineIndex);
+            Inc(iObjective);
+          end;
+        end
+    else begin
+      Inc(iObjective);
+    end
+  end;
+  UpdateProgressBar(1, StateMachineIndex);
+end;
+
 { TTestBase }
 
 function TTestBase.IsMessageForNodeUnderTest(MessageStr: String): Boolean;
@@ -2297,6 +2354,7 @@ begin
   FSyncAliasChangingFunc := nil;
   FSyncAliasChangedFunc := nil;
   FSyncTestCompleteFunc := nil;
+  FFilterRepliesForNUT := True;  // Typical
 end;
 
 destructor TTestBase.Destroy;
@@ -2370,8 +2428,9 @@ initialization
   RegisterClass(TTestAliasConflict);
   RegisterClass(TTestZeroOrRepeatedAllocation);
   RegisterClass(TTestStartup);
+  RegisterClass(TTestEvents);
 
 finalization
 
 end.
-
+

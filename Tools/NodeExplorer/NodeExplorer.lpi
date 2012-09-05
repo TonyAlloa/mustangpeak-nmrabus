@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="41">
+    <Units Count="45">
       <Unit0>
         <Filename Value="NodeExplorer.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -50,7 +50,7 @@
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <CursorPos X="42" Y="2"/>
+        <CursorPos X="1" Y="27"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -63,8 +63,8 @@
         <UnitName Value="UnitMainForm"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="679"/>
-        <CursorPos X="32" Y="691"/>
+        <TopLine Value="297"/>
+        <CursorPos X="56" Y="315"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -78,10 +78,11 @@
         <UnitName Value="unitlogwindow"/>
         <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="65" Y="26"/>
+        <TopLine Value="31"/>
+        <CursorPos X="51" Y="46"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit2>
       <Unit3>
         <Filename Value="Z:\synapse40\source\lib\synaser.pas"/>
@@ -207,11 +208,10 @@
         <Filename Value="serialport_thread.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="serialport_thread"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="8"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="285"/>
-        <CursorPos X="43" Y="305"/>
+        <TopLine Value="65"/>
+        <CursorPos X="28" Y="82"/>
         <UsageCount Value="209"/>
         <Loaded Value="True"/>
       </Unit17>
@@ -219,10 +219,10 @@
         <Filename Value="olcb_testmatrix.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="olcb_testmatrix"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="10"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1627"/>
-        <CursorPos X="37" Y="1651"/>
+        <TopLine Value="2210"/>
+        <CursorPos X="1" Y="2235"/>
         <UsageCount Value="209"/>
         <Loaded Value="True"/>
       </Unit18>
@@ -230,10 +230,11 @@
         <Filename Value="nodeexplorer_settings.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="nodeexplorer_settings"/>
-        <EditorIndex Value="10"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="11"/>
         <WindowIndex Value="0"/>
         <TopLine Value="14"/>
-        <CursorPos X="3" Y="33"/>
+        <CursorPos X="102" Y="36"/>
         <UsageCount Value="209"/>
         <Loaded Value="True"/>
       </Unit19>
@@ -283,7 +284,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="55" Y="7"/>
-        <UsageCount Value="64"/>
+        <UsageCount Value="66"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit24>
@@ -323,7 +324,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="74"/>
         <CursorPos X="22" Y="93"/>
-        <UsageCount Value="61"/>
+        <UsageCount Value="63"/>
       </Unit29>
       <Unit30>
         <Filename Value="C:\lazarus\lcl\include\progressbar.inc"/>
@@ -349,7 +350,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="25"/>
         <CursorPos X="57" Y="44"/>
-        <UsageCount Value="52"/>
+        <UsageCount Value="54"/>
       </Unit32>
       <Unit33>
         <Filename Value="unitlogwindow.lfm"/>
@@ -386,7 +387,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="62" Y="9"/>
-        <UsageCount Value="52"/>
+        <UsageCount Value="54"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit36>
@@ -419,128 +420,92 @@
         <CursorPos X="1" Y="738"/>
         <UsageCount Value="7"/>
       </Unit40>
+      <Unit41>
+        <Filename Value="..\..\synapse40\source\lib\synaser.pas"/>
+        <UnitName Value="synaser"/>
+        <EditorIndex Value="9"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="986"/>
+        <CursorPos X="2" Y="993"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit41>
+      <Unit42>
+        <Filename Value="..\..\..\..\..\..\media\psf\Home\Documents\Lazarus\synapse40\source\lib\synaser.pas"/>
+        <UnitName Value="synaser"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="976"/>
+        <CursorPos X="67" Y="991"/>
+        <UsageCount Value="10"/>
+      </Unit42>
+      <Unit43>
+        <Filename Value="..\..\..\..\..\..\media\psf\Home\Documents\Lazarus\OpenLCB\NodeExplorer\unitmainform.pas"/>
+        <ComponentName Value="FormMain"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="UnitMainForm"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="288"/>
+        <CursorPos X="1" Y="307"/>
+        <UsageCount Value="10"/>
+      </Unit43>
+      <Unit44>
+        <Filename Value="..\..\..\..\..\..\usr\share\fpcsrc\2.6.0\rtl\unix\bunxovlh.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="11" Y="29"/>
+        <UsageCount Value="10"/>
+      </Unit44>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="29">
+    <JumpHistory Count="12" HistoryIndex="11">
       <Position1>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="84" Column="1" TopLine="73"/>
       </Position1>
       <Position2>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="696" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="86" Column="19" TopLine="73"/>
       </Position2>
       <Position3>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="87" Column="1" TopLine="73"/>
       </Position3>
       <Position4>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="699" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="88" Column="1" TopLine="73"/>
       </Position4>
       <Position5>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="700" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="89" Column="1" TopLine="73"/>
       </Position5>
       <Position6>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="691" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="90" Column="1" TopLine="73"/>
       </Position6>
       <Position7>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="692" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="91" Column="1" TopLine="73"/>
       </Position7>
       <Position8>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="693" Column="1" TopLine="679"/>
+        <Filename Value="..\..\synapse40\source\lib\synaser.pas"/>
+        <Caret Line="924" Column="1" TopLine="905"/>
       </Position8>
       <Position9>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
+        <Filename Value="..\..\synapse40\source\lib\synaser.pas"/>
+        <Caret Line="925" Column="1" TopLine="905"/>
       </Position9>
       <Position10>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="57" Column="79" TopLine="29"/>
       </Position10>
       <Position11>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="83" Column="14" TopLine="65"/>
       </Position11>
       <Position12>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
+        <Filename Value="serialport_thread.pas"/>
+        <Caret Line="82" Column="28" TopLine="65"/>
       </Position12>
-      <Position13>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
-      </Position13>
-      <Position14>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
-      </Position14>
-      <Position15>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
-      </Position15>
-      <Position16>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
-      </Position16>
-      <Position17>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
-      </Position17>
-      <Position18>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
-      </Position18>
-      <Position19>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
-      </Position19>
-      <Position20>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
-      </Position20>
-      <Position21>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
-      </Position21>
-      <Position22>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
-      </Position22>
-      <Position23>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="695" Column="1" TopLine="679"/>
-      </Position23>
-      <Position24>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="696" Column="1" TopLine="679"/>
-      </Position24>
-      <Position25>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="697" Column="1" TopLine="679"/>
-      </Position25>
-      <Position26>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="699" Column="1" TopLine="679"/>
-      </Position26>
-      <Position27>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="700" Column="1" TopLine="679"/>
-      </Position27>
-      <Position28>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="691" Column="1" TopLine="679"/>
-      </Position28>
-      <Position29>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="692" Column="1" TopLine="679"/>
-      </Position29>
-      <Position30>
-        <Filename Value="unitmainform.pas"/>
-        <Caret Line="693" Column="1" TopLine="679"/>
-      </Position30>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
@@ -574,14 +539,12 @@
       <CompilerMessages>
         <UseMsgFile Value="True"/>
       </CompilerMessages>
-      <CustomOptions Value="-dUseCThreads
--k-macosx_version_min -k10.5
--XR/Developer/SDKs/MacOSX10.5.sdk/"/>
+      <CustomOptions Value="-dUseCThreads"/>
       <CompilerPath Value="$(CompPath)"/>
     </Other>
   </CompilerOptions>
   <Debugging>
-    <BreakPoints Count="1">
+    <BreakPoints Count="5">
       <Item1>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
@@ -589,6 +552,34 @@
         <Source Value="C:\lazarus\fpc\2.6.0\source\packages\fcl-xml\src\dom.pp"/>
         <Line Value="1463"/>
       </Item1>
+      <Item2>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="..\..\synapse40\source\lib\synaser.pas"/>
+        <Line Value="1719"/>
+      </Item2>
+      <Item3>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="..\..\synapse40\source\lib\synaser.pas"/>
+        <Line Value="1682"/>
+      </Item3>
+      <Item4>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="..\..\..\..\..\..\media\psf\Home\Documents\Lazarus\synapse40\source\lib\synaser.pas"/>
+        <Line Value="1684"/>
+      </Item4>
+      <Item5>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="..\..\..\..\..\..\media\psf\Home\Documents\Lazarus\synapse40\source\lib\synaser.pas"/>
+        <Line Value="991"/>
+      </Item5>
     </BreakPoints>
     <Watches Count="2">
       <Item1>

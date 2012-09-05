@@ -22,6 +22,7 @@ type
     FBaudRate: DWord;
     FConnected: Boolean;
     FEnableRawMessages: Boolean;
+    FLastErrorDesc: string;
     FPort: String;
     FRawMessageBuffer: string;
     FSerial: TBlockSerial;
@@ -53,6 +54,7 @@ type
       property TestCount: Integer read FTestCount;
       property SyncRawMessageFunc: TSyncRawMessageFunc read FSyncRawMessageFunc write FSyncRawMessageFunc;
       property EnableRawMessages: Boolean read FEnableRawMessages write FEnableRawMessages;
+      property LastErrorDesc: string read FLastErrorDesc write FLastErrorDesc;
       constructor Create(CreateSuspended: Boolean);
       destructor Destroy; override;
       procedure Add(Test: TTestBase);
@@ -66,7 +68,7 @@ implementation
 procedure TComPortThread.Execute;
 var
   List: TList;
-  SendNext: Boolean;
+  SendNext, ProcessReply: Boolean;
   i, TimeoutRead: Integer;
   ReceiveStr: AnsiString;
   SendStrings, ReceiveStrings: TStringList;
@@ -208,7 +210,13 @@ begin
           ts_Receiving      : begin
                                 ReceiveStr := Trim( UpperCase(Serial.Recvstring(TimeoutRead))) ;  // Try to get something from the CAN
                                 TimeReceived := GetTickCount;
-                                if ActiveTest.IsMessageForNodeUnderTest(ReceiveStr) then   // Filter out messages not for this node if in MultiNode Mode
+
+                                if ActiveTest.FilterRepliesForNUT then
+                                  ProcessReply := ActiveTest.IsMessageForNodeUnderTest(ReceiveStr)
+                                else
+                                  ProcessReply := True;
+
+                                if ProcessReply then   // Filter out messages not for this node if in MultiNode Mode
                                 begin
                                   if ReceiveStr <> '' then
                                   begin
@@ -552,6 +560,7 @@ begin
   FTerminateTest := False;
   FTerminatedTest := False;
   FEnableRawMessages := False;
+  FLastErrorDesc := '';
 end;
 
 destructor TComPortThread.Destroy;

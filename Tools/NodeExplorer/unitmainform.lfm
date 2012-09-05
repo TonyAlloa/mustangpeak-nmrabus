@@ -1,7 +1,7 @@
 object FormMain: TFormMain
-  Left = 537
+  Left = 350
   Height = 549
-  Top = 406
+  Top = 248
   Width = 855
   Caption = 'OpenLCB NodeExplorer'
   ClientHeight = 549
@@ -12,22 +12,22 @@ object FormMain: TFormMain
   OnDestroy = FormDestroy
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '0.9.31'
+  LCLVersion = '1.0.1.3'
   object PageControl: TPageControl
     Left = 8
     Height = 518
     Top = 16
     Width = 838
-    ActivePage = TabSheetHome
+    ActivePage = TabSheetDiscover
     Anchors = [akTop, akLeft, akRight, akBottom]
     MultiLine = True
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 0
     Options = [nboMultiLine]
     object TabSheetHome: TTabSheet
       Caption = 'Home'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 487
+      ClientWidth = 834
       object GroupBoxComPort: TGroupBox
         Left = 13
         Height = 272
@@ -485,12 +485,12 @@ object FormMain: TFormMain
     end
     object TabSheetDiscover: TTabSheet
       Caption = 'Discover'
-      ClientHeight = 472
-      ClientWidth = 830
+      ClientHeight = 479
+      ClientWidth = 832
       object ButtonDiscoverNodes: TButton
-        Left = 668
+        Left = 670
         Height = 22
-        Top = 438
+        Top = 445
         Width = 150
         Action = ActionDiscoverNode
         Anchors = [akRight, akBottom]
@@ -498,9 +498,9 @@ object FormMain: TFormMain
       end
       object ListViewNodeDiscovery: TListView
         Left = 12
-        Height = 284
+        Height = 291
         Top = 4
-        Width = 801
+        Width = 803
         Align = alCustom
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoWidthLastColumn = True
@@ -526,8 +526,8 @@ object FormMain: TFormMain
       object LabelHomeMessage1: TLabel
         Left = 29
         Height = 56
-        Top = 305
-        Width = 766
+        Top = 312
+        Width = 768
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = False
         Caption = 'Select a node to communicate with.  The Alias and Node ID will be stored and used when executing tests within NodeExplorer.  Any errors messages refering to Alias or Full Node IDs not matching are comparing received test messages with these stored values. '
@@ -537,7 +537,7 @@ object FormMain: TFormMain
       object LabelDiscoverMultiNode: TLabel
         Left = 29
         Height = 17
-        Top = 385
+        Top = 392
         Width = 264
         Anchors = [akLeft, akBottom]
         AutoSize = False
@@ -548,8 +548,8 @@ object FormMain: TFormMain
     end
     object TabSheetVerification: TTabSheet
       Caption = 'VerificationTests'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 487
+      ClientWidth = 834
       object ListViewTestMatrix: TListView
         Left = 13
         Height = 308
@@ -647,8 +647,8 @@ object FormMain: TFormMain
     end
     object TabSheetMemConfiguration: TTabSheet
       Caption = 'Memory Configuration'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 487
+      ClientWidth = 834
       object ListViewConfigMem: TListView
         Left = 5
         Height = 464
@@ -662,7 +662,7 @@ object FormMain: TFormMain
           end        
           item
             Caption = 'Friendly Name'
-            Width = 150
+            Width = 154
           end>
         ReadOnly = True
         RowSelect = True
@@ -805,8 +805,8 @@ object FormMain: TFormMain
     end
     object TabSheetCDIReader: TTabSheet
       Caption = 'CDI Reader'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 487
+      ClientWidth = 834
       inline SynEditCDI: TSynEdit
         Left = 0
         Height = 425
@@ -1311,8 +1311,8 @@ object FormMain: TFormMain
     end
     object TabSheetEventReader: TTabSheet
       Caption = 'Event Reader'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 487
+      ClientWidth = 834
       object GroupBoxEventReaderConsumers: TGroupBox
         Left = 13
         Height = 184
@@ -1419,8 +1419,8 @@ object FormMain: TFormMain
     end
     object TabSheetProtocolID: TTabSheet
       Caption = 'Protocol ID'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 487
+      ClientWidth = 834
       object ButtonReadPIP: TButton
         Left = 670
         Height = 22
@@ -1499,8 +1499,8 @@ object FormMain: TFormMain
     end
     object TabSheetCustom: TTabSheet
       Caption = 'Custom'
-      ClientHeight = 479
-      ClientWidth = 832
+      ClientHeight = 487
+      ClientWidth = 834
       object EditTargetNodeAlias: TEdit
         Left = 36
         Height = 22

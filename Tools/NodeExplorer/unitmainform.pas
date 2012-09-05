@@ -309,6 +309,9 @@ begin
       TestThread.FreeOnTerminate := True;
       {$IFDEF MSWINDOWS}
       TestThread.Port := ComboBoxPorts.Text;
+      {$ENDIF}
+      {$IFDEF DARWIN}
+      TestThread.Port := 'dev/' + ComboBoxPorts.Text;
       {$ELSE}
       TestThread.Port := 'dev/' + ComboBoxPorts.Text;
       {$ENDIF}
@@ -316,13 +319,14 @@ begin
         TestThread.BaudRate := StrToInt(EditCustomBaudRate.Text)
       else
         TestThread.BaudRate := StrToInt(ComboBoxBaud.Items[ComboBoxBaud.ItemIndex]);
-      TestThread.Suspended := False;
       TestThread.EnableRawMessages := ActionRawMessageLogShow.Checked;
       TestThread.SyncRawMessageFunc := @SyncRawMessage;
+      TestThread.Suspended := False;
       Sleep(500);
       if TestThread.Connected then
         ActionConnect.Caption:='Disconnect'
       else begin
+     //   ShowMessage(TestThread.LastErrorDesc);
         TestThread.Terminate;
         TestThread := nil;
       end;
