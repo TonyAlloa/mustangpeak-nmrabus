@@ -224,6 +224,10 @@ type
     BaseBuffers: PBaseBuffer;
     DataBuffers: PDataBuffer;
     DatagramBuffers: PDatagramBuffer;
+    UserDataOffset: DWord;                                                      // Offset into the EEProm Memory
+    ParentAlias: Word;                                                          // Node that has reserved this node as a child.
+    ChildAlias: Word;                                                           // Node this node has reserved:  This will likely be a linked list when done:::::::::::::::::::::::::::::::
+//    ProgrammingStationAlias: Word;                                              // Programming Station this node sends NMRA Packets to
   end;
   PNMRAnetNode = ^TNMRAnetNode;
   

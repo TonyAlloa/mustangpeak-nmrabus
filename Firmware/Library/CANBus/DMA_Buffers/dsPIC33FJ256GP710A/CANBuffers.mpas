@@ -33,5 +33,8 @@ type
   TDummy = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;                    // Define a "dummy" array that overlays the above structures so the compiler
                                                                                 // can keep track of the memory and we can address the buffers as a normal array
                                                                                 // to initialize them
+                                                                                
+var
+  Dummy: TDummy; absolute $7800;
 
 end.

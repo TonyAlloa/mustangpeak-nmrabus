@@ -405,6 +405,9 @@ begin
   Node^.State := 0;
   Node^.MsgFlags := 0;
   Node^.EventCounter := 0;
+  Node^.UserDataOffset := 0;
+  Node^.ParentAlias := 0;
+  Node^.ChildAlias := 0;
   if (NodeID_HI <> 0) and (NodeID_LO <> 0) then
   begin
     Node^.Node.ID[0] := NodeID_LO;
@@ -490,6 +493,9 @@ begin
     NMRAnetUtilities_CreateNMRABusMessagePacketWithDestInMTI(Node, Buffer, MTI, DestinationAlias, DataCount, DataBytes)
   else
     NMRAnetUtilities_CreateNMRABusMessagePacket(Node, Buffer, MTI, DestinationAlias, DataCount, DataBytes);
+    
+  // TODO:  IF THE DESTINATION IS A VNNODE THEN WE NEED TO NOT PUT IT IN THE CAN BUFFER BUT JUST SHORT CUT IT TO THE RECEIVE BUFFER
+  
   CANStorage_AddToList(@TX_NMRAnetBufferList, Buffer);
   StartCANMessageEngine();
 end;
