@@ -7,6 +7,7 @@
 2x14 Header||28
 6N137||8
 23K256||8
+ADM2483||16
 Amplifier||3
 DPST Switch||6
 dsPIC30F1010-202X||28
@@ -21,6 +22,7 @@ Jumper Shunt||2
 L6206||24
 LD1086||3
 LM78xx Regulator||3
+LM78xx-SO8 Regulator||8
 LM79xx Regulator||3
 LT1054||8
 MAX232||16
@@ -49,4 +51,5 @@ SPST Single Contact||6
 Terminal Block 2 Wire||2
 Terminal Block 4 Wire||4
 TestPoint||1
+TL317-SO8 Regulator||8
 USB-B||4
