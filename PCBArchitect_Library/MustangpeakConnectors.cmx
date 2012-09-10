@@ -17,7 +17,7 @@ RJ45 Amphenol Plastic OpenLCB||#DIL=10||@Manufacturer=Amphenol||@Manufacturer Pa
 RJ45 Amphinol Dual SMT||#SM=18||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
 RJ45 Amphinol Dual SMT OpenLCB||#SM=18||@Manufacturer=Amphenol||@Manufacturer Part Number=RJSSE-5080-02||@Distributor=Digikey||@Distributor Part Number=RJSSE-5080-02-ND
 RJ45 Molex Plastic SMT OpenLCB||#SM=10||@Manufacturer=Molex||@Manufacturer Part Number=43743-8101||@Distributor=Digikey||@Distributor Part Number=WM6469CT-ND
-Terminal Block 2 Wire||#MISC=2||@Manufacturer=Tyco||@Manufacturer Part Number=282834-2||@Distributor=Digikey||@Distributor Part Number=A98333-ND
-Terminal Block 2 Wire - 100mil||#DIL=2||@Manufacturer=||@Manufacturer Part Number=||@Distributor=Digikey||@Distributor Part Number=
+Terminal Block 2 Wire - 100mil||#DIL=2||@Manufacturer=TE Connectivity||@Manufacturer Part Number=282834-2||@Distributor=Digikey||@Distributor Part Number=A98333-ND
+Terminal Block 2 Wire - 200mil||#MISC=2||@Manufacturer=TE Connectivity||@Manufacturer Part Number=282841-2||@Distributor=Digikey||@Distributor Part Number=A98342-ND
 Terminal Block 4 Wire||#MISC=4||@Manufacturer=||@Manufacturer Part Number=||@Distributor=Digikey||@Distributor Part Number=
 USB-B - Metal Shell||#MISC=6||@Manufacturer=TE Connecctivity||@Manufacturer Part Number=292304-1||@Distributor=Digikey||@Distributor Part Number=A31725-ND
