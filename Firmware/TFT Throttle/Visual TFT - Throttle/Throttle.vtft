@@ -49,7 +49,7 @@ object TatDiagram
   TopRuler.Size = 16
   TopRuler.AutoFactor = True
   TopRuler.GridColor = clBlack
-  Zoom = 229
+  Zoom = 309
   BorderColor = clGray
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
@@ -78,9 +78,9 @@ object TatDiagram
   CanMoveOutOfBounds = False
   PageSettings.PaperName = '0x0'
   PageSettings.PaperId = 1
-  PageSettings.PaperWidth = 63.500000000000000000
-  PageSettings.PaperHeight = 84.666666666666680000
-  PageSettings.Orientation = dpoLandscape
+  PageSettings.PaperWidth = 84.931250000000000000
+  PageSettings.PaperHeight = 63.764583333333320000
+  PageSettings.Orientation = dpoPortrait
   PageSettings.LeftMarginStr = '0'
   PageSettings.TopMarginStr = '0'
   PageSettings.RightMarginStr = '0'
@@ -98,8 +98,8 @@ object TatDiagram
   ExplicitHeight = 200
   object Bkgnd: TDgrBox
     Tag = 1
-    Width = 240.000000000000000000
-    Height = 320.000000000000000000
+    Width = 320.000000000000000000
+    Height = 240.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -144,8 +144,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'Bkgnd'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     240'#13#10 +
-      'Height :     320'
+      'Bkgnd'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     320'#13#10 +
+      'Height :     240'
     ParentShowHint = True
     Gradient.Direction = grBottomTop
     Gradient.StartColor = clGray
@@ -167,10 +167,10 @@ object TatDiagram
     Static_ = True
     Collapsed = False
   end
-  object Label2: TDgrLabel
+  object LabelStartMustangpeak: TDgrLabel
     Tag = 1
-    Left = 44.000000000000000000
-    Top = 18.000000000000000000
+    Left = 82.000000000000000000
+    Top = 13.000000000000000000
     Width = 146.138671875000000000
     Height = 27.972656250000000000
     Brush.Style = bsClear
@@ -220,7 +220,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'Label2'#13#10#13#10'Left      :     44'#13#10'Top      :     18'
+    Hint = 'LabelStartMustangpeak'#13#10#13#10'Left      :     77'#13#10'Top      :     10'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -241,10 +241,10 @@ object TatDiagram
     EndChar = 127
     Collapsed = False
   end
-  object Label3: TDgrLabel
+  object LabelStartThrottle: TDgrLabel
     Tag = 1
-    Left = 37.000000000000000000
-    Top = 47.000000000000000000
+    Left = 76.000000000000000000
+    Top = 44.000000000000000000
     Width = 164.874996185302700000
     Height = 21.312500000000000000
     Brush.Style = bsClear
@@ -294,7 +294,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'Label3'#13#10#13#10'Left      :     37'#13#10'Top      :     47'
+    Hint = 'LabelStartThrottle'#13#10#13#10'Left      :     76'#13#10'Top      :     44'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -315,85 +315,10 @@ object TatDiagram
     EndChar = 127
     Collapsed = False
   end
-  object BoxRound1: TDgrBoxRound
+  object LabelStartLoading: TDgrLabel
     Tag = 1
-    Left = 30.000000000000000000
-    Top = 270.000000000000000000
-    Width = 178.000000000000000000
-    Height = 18.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clSilver
-    SelColor = clSilver
-    Pen.Width = 5
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRound1'#13#10#13#10'Left      :     30'#13#10'Top      :     270'#13#10'Width  :   ' +
-      '  178'#13#10'Height :     18'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = 6974058
-    Gradient.EndColor = 10987431
-    Gradient.Visible = True
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object Label4: TDgrLabel
-    Tag = 1
-    Left = 86.000000000000000000
-    Top = 243.000000000000000000
+    Left = 111.000000000000000000
+    Top = 192.000000000000000000
     Width = 71.945308685302730000
     Height = 21.312500000000000000
     Brush.Style = bsClear
@@ -443,7 +368,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'Label4'#13#10#13#10'Left      :     86'#13#10'Top      :     243'
+    Hint = 'LabelStartLoading'#13#10#13#10'Left      :     111'#13#10'Top      :     192'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -464,84 +389,10 @@ object TatDiagram
     EndChar = 127
     Collapsed = False
   end
-  object BoxRoundProgressBar: TDgrBoxRound
+  object LabelStartVer: TDgrLabel
     Tag = 1
-    Left = 30.000000000000000000
-    Top = 270.000000000000000000
-    Width = 8.000000000000000000
-    Height = 17.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clSilver
-    SelColor = clSilver
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundProgressBar'#13#10#13#10'Left      :     30'#13#10'Top      :     271'#13#10'W' +
-      'idth  :     8'#13#10'Height :     17'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clLime
-    Gradient.EndColor = 8454016
-    Gradient.Visible = True
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object Label5: TDgrLabel
-    Tag = 1
-    Left = 54.000000000000000000
-    Top = 189.000000000000000000
+    Left = 84.000000000000000000
+    Top = 172.000000000000000000
     Width = 127.578121185302700000
     Height = 21.312500000000000000
     Brush.Style = bsClear
@@ -591,7 +442,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     ParentShowHint = True
-    Hint = 'Label5'#13#10#13#10'Left      :     54'#13#10'Top      :     189'
+    Hint = 'LabelStartVer'#13#10#13#10'Left      :     84'#13#10'Top      :     172'
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
     Gradient.EndColor = clYellow
@@ -612,12 +463,12 @@ object TatDiagram
     EndChar = 127
     Collapsed = False
   end
-  object BoxRound3: TDgrBoxRound
+  object BoxRoundStartBkGnd: TDgrBoxRound
     Tag = 1
-    Left = 18.000000000000000000
-    Top = 69.000000000000000000
+    Left = 57.000000000000000000
+    Top = 70.000000000000000000
     Width = 202.000000000000000000
-    Height = 114.000000000000000000
+    Height = 101.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -662,8 +513,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'BoxRound3'#13#10#13#10'Left      :     18'#13#10'Top      :     69'#13#10'Width  :    ' +
-      ' 202'#13#10'Height :     114'
+      'BoxRoundStartBkGnd'#13#10#13#10'Left      :     57'#13#10'Top      :     70'#13#10'Wid' +
+      'th  :     202'#13#10'Height :     101'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -686,9 +537,9 @@ object TatDiagram
     CornerRadius = 3
     Collapsed = False
   end
-  object Image1: TDgrImage
-    Left = 33.000000000000000000
-    Top = 85.000000000000000000
+  object ImageStart: TDgrImage
+    Left = 71.000000000000000000
+    Top = 83.000000000000000000
     Width = 78.000000000000000000
     Height = 32.000000000000000000
     Brush.Style = bsClear
@@ -734,7 +585,7 @@ object TatDiagram
     Shadow.HOffset = 1
     Shadow.VOffset = 1
     Shadow.Transparency = 1
-    Hint = 'Image1'#13#10#13#10'Left      :     76'#13#10'Top      :     107'
+    Hint = 'ImageStart'#13#10#13#10'Left      :     71'#13#10'Top      :     83'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -1857,127 +1708,45 @@ object TatDiagram
     PictureHeight = 0
     Collapsed = False
   end
-end
-object TatDiagram
-  NettoExportOffset = 1
-  AutomaticNodes = False
-  AutoScroll = True
-  AutoPage = False
-  Background.Scroll = True
-  Background.Style = biTile
-  Background.Visible = False
-  Background.Gradient.Direction = grTopBottom
-  Background.Gradient.StartColor = clWhite
-  Background.Gradient.EndColor = clYellow
-  Background.Gradient.Visible = False
-  Background.PrintGradient = False
-  SnapGrid.Active = True
-  SnapGrid.Force = True
-  SnapGrid.Visible = False
-  SnapGrid.SizeX = 1.000000000000000000
-  SnapGrid.SizeY = 1.000000000000000000
-  SnapGrid.Style = gsLines
-  SnapGrid.SnapToRuler = True
-  ShowLinkPoints = False
-  LeftRuler.Visible = False
-  LeftRuler.Divisions = 5
-  LeftRuler.Font.Charset = DEFAULT_CHARSET
-  LeftRuler.Font.Color = clWindowText
-  LeftRuler.Font.Height = -9
-  LeftRuler.Font.Name = 'Arial'
-  LeftRuler.Font.Style = []
-  LeftRuler.Units = unMili
-  LeftRuler.MinorTickLength = 4
-  LeftRuler.MajorTickLength = 6
-  LeftRuler.Color = clWhite
-  LeftRuler.TickColor = clBlack
-  LeftRuler.Size = 16
-  LeftRuler.AutoFactor = True
-  LeftRuler.GridColor = clBlack
-  TopRuler.Visible = False
-  TopRuler.Divisions = 5
-  TopRuler.Font.Charset = DEFAULT_CHARSET
-  TopRuler.Font.Color = clWindowText
-  TopRuler.Font.Height = -9
-  TopRuler.Font.Name = 'Arial'
-  TopRuler.Font.Style = []
-  TopRuler.Units = unMili
-  TopRuler.MinorTickLength = 4
-  TopRuler.MajorTickLength = 6
-  TopRuler.Color = clWhite
-  TopRuler.TickColor = clBlack
-  TopRuler.Size = 16
-  TopRuler.AutoFactor = True
-  TopRuler.GridColor = clBlack
-  Zoom = 235
-  BorderColor = clGray
-  VertScrollBar.Smooth = True
-  MouseWheelMode = mwOff
-  ActiveLayers = 7
-  Layers = <
-    item
-      LayerName = 'Layer0'
-    end>
-  LinkCursor = crHandPoint
-  PanCursor = crHandPoint
-  ZoomCursor = crSizeNS
-  IgnoreScreenDPI = False
-  ShowCrossIndicators = True
-  PageLines.Visible = False
-  PageLines.Pen.Color = clMaroon
-  PageLines.Pen.Mode = pmBlack
-  PageLines.Pen.Style = psDot
-  KeyActions = [kaEscape, kaMove, kaPage, kaResize, kaSelect]
-  HandlesStyle = hsVisio
-  SmoothMode = smAntiAlias
-  TextRenderingMode = tmAntiAlias
-  SelectionMode = slmMultiple
-  CanMoveOutOfBounds = False
-  PageSettings.PaperName = '240x320'
-  PageSettings.PaperId = 1
-  PageSettings.PaperWidth = 63.500000000000000000
-  PageSettings.PaperHeight = 84.666666666666680000
-  PageSettings.Orientation = dpoLandscape
-  PageSettings.LeftMarginStr = '0'
-  PageSettings.TopMarginStr = '0'
-  PageSettings.RightMarginStr = '0'
-  PageSettings.BottomMarginStr = '0'
-  RulerAutoUnit = True
-  MeasUnit = duMili
-  WheelZoom = True
-  WheelZoomIncrement = 10
-  WheelZoomMin = 50
-  WheelZoomMax = 1000
-  BorderStyle = bsSingle
-  Color = clGray
-  ParentColor = False
-  ExplicitWidth = 200
-  ExplicitHeight = 200
-  object BoxBkGnd: TDgrBox
+  object ProgressBarStart: TDgrProgressBar
     Tag = 1
-    Width = 240.000000000000000000
-    Height = 320.000000000000000000
+    Left = 49.000000000000000000
+    Top = 213.000000000000000000
+    Width = 193.000000000000000000
+    Height = 17.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
-    Color = clSilver
-    SelColor = clSilver
+    Color = clSkyBlue
+    SelColor = clSkyBlue
     ClipText = False
     TextCells = <
       item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
+        Text = '0%'
         Clip = False
-        WordWrap = True
-        DControlFont = False
+        WordWrap = False
+        DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
-        RotateFont = False
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
         CellFrame.Color = clWhite
         CellFrame.Transparent = True
         CellFrame.AutoFrame = False
@@ -1989,24 +1758,24 @@ object TatDiagram
     Restrictions = [crNoRotation]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -3
+    Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
-    MinWidth = 5
-    MinHeight = 5
+    MinWidth = 21
+    MinHeight = 17
     Shadow.Visible = False
     Shadow.Color = clGray
     Shadow.HOffset = 2
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'BoxBkGnd'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     24' +
-      '0'#13#10'Height :     320'
+      'ProgressBarStart'#13#10#13#10'Left      :     49'#13#10'Top      :     213'#13#10'Widt' +
+      'h  :     193'#13#10'Height :     17'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
-    Gradient.StartColor = 2105376
-    Gradient.EndColor = clGray
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clLime
     Gradient.Visible = True
     BitmapMode = bmStretch
     BitmapTransparent = False
@@ -2022,1136 +1791,23 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
-    Collapsed = False
-  end
-  object Label7: TDgrLabel
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 4.000000000000000000
-    Width = 211.827630996704100000
-    Height = 17.316406250000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -13
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Locating Command Station Nodes...'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 0
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'Label7'#13#10#13#10'Left      :     7'#13#10'Top      :     4'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = True
     StartChar = 32
     EndChar = 127
-    Collapsed = False
-  end
-  object Label1: TDgrLabel
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 69.000000000000000000
-    Width = 179.797357559204100000
-    Height = 17.316406250000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -13
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Locating Programmer Nodes...'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 0
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'Label1'#13#10#13#10'Left      :     7'#13#10'Top      :     69'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = True
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object Label6: TDgrLabel
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 134.000000000000000000
-    Width = 136.899896621704100000
-    Height = 17.316406250000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -13
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Locating Train Nodes...'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 0
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'Label6'#13#10#13#10'Left      :     7'#13#10'Top      :     134'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = True
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object Label8: TDgrLabel
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 264.000000000000000000
-    Width = 164.842279434204100000
-    Height = 17.316406250000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -13
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Locating Accessory Nodes...'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 0
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'Label8'#13#10#13#10'Left      :     7'#13#10'Top      :     264'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = True
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object BoxRoundCmdStations: TDgrBoxRound
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 21.000000000000000000
-    Width = 220.000000000000000000
-    Height = 28.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundCmdStations'#13#10#13#10'Left      :     7'#13#10'Top      :     21'#13#10'Wid' +
-      'th  :     220'#13#10'Height :     28'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    OnClick = 'BoxRoundCmdStationsClick'
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
+    TextAlign = _taCenter
+    Position = 0
+    Orientation = _pbHorizontal
+    MinPos = 0
+    MaxPos = 100
+    BackColor = clGray
+    Rounded = True
     CornerRadius = 3
-    Collapsed = False
-  end
-  object BoxRoundAccyNodes: TDgrBoxRound
-    Tag = 1
-    Left = 10.000000000000000000
-    Top = 284.000000000000000000
-    Width = 220.000000000000000000
-    Height = 28.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundAccyNodes'#13#10#13#10'Left      :     10'#13#10'Top      :     284'#13#10'Wid' +
-      'th  :     220'#13#10'Height :     28'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    OnClick = 'BoxRoundAccyNodesClick'
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object LabelCmdStationNodes: TDgrLabel
-    Tag = 1
-    Left = 20.500000000000000000
-    Top = 24.000000000000000000
-    Width = 113.332027435302700000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Ophir District'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 32
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelCmdStationNodes'#13#10#13#10'Left      :     20'#13#10'Top      :     24'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object LabelAccyNodes: TDgrLabel
-    Tag = 1
-    Left = 20.500000000000000000
-    Top = 286.000000000000000000
-    Width = 163.271968841552700000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Ophir Depot Siding'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 32
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelAccyNodes'#13#10#13#10'Left      :     20'#13#10'Top      :     286'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object BoxRoundProgStations: TDgrBoxRound
-    Tag = 1
-    Left = 10.000000000000000000
-    Top = 86.750000000000000000
-    Width = 220.000000000000000000
-    Height = 28.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundProgStations'#13#10#13#10'Left      :     10'#13#10'Top      :     87'#13#10'W' +
-      'idth  :     220'#13#10'Height :     28'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    OnClick = 'BoxRoundProgStationsClick'
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object BoxRoundTrainNodes: TDgrBoxRound
-    Tag = 1
-    Left = 9.000000000000000000
-    Top = 152.500000000000000000
-    Width = 220.000000000000000000
-    Height = 28.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundTrainNodes'#13#10#13#10'Left      :     9'#13#10'Top      :     152'#13#10'Wid' +
-      'th  :     220'#13#10'Height :     28'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    OnClick = 'BoxRoundTrainNodesClick'
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object LabelProgNodes: TDgrLabel
-    Tag = 1
-    Left = 20.500000000000000000
-    Top = 89.500000000000000000
-    Width = 94.768062591552730000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Rico Siding'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 32
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelProgNodes'#13#10#13#10'Left      :     20'#13#10'Top      :     90'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object LabelTrainNodes: TDgrLabel
-    Tag = 1
-    Left = 20.500000000000000000
-    Top = 155.000000000000000000
-    Width = 126.496578216552700000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'RGS 455 - K27'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 32
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelTrainNodes'#13#10#13#10'Left      :     20'#13#10'Top      :     155'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object Label9: TDgrLabel
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 199.000000000000000000
-    Width = 148.966791152954100000
-    Height = 17.316406250000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -13
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Locating Consist Nodes...'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 0
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'Label9'#13#10#13#10'Left      :     7'#13#10'Top      :     199'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = True
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object BoxRound2: TDgrBoxRound
-    Tag = 1
-    Left = 9.000000000000000000
-    Top = 218.250000000000000000
-    Width = 220.000000000000000000
-    Height = 28.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRound2'#13#10#13#10'Left      :     9'#13#10'Top      :     218'#13#10'Width  :    ' +
-      ' 220'#13#10'Height :     28'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    OnClick = 'BoxRoundConsistNodesClick'
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object Label10: TDgrLabel
-    Tag = 1
-    Left = 20.500000000000000000
-    Top = 220.500000000000000000
-    Width = 185.658199310302700000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'Southbound Extra #2'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 32
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'Label10'#13#10#13#10'Left      :     20'#13#10'Top      :     220'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
+    ShowPercentage = True
+    ShowPosition = True
+    Smooth = True
     Collapsed = False
   end
 end
 object TatDiagram
-  PaintLinesFirst = True
   NettoExportOffset = 1
   AutomaticNodes = False
   AutoScroll = True
@@ -3202,7 +1858,7 @@ object TatDiagram
   TopRuler.Size = 16
   TopRuler.AutoFactor = True
   TopRuler.GridColor = clBlack
-  Zoom = 219
+  Zoom = 200
   BorderColor = clGray
   VertScrollBar.Smooth = True
   MouseWheelMode = mwOff
@@ -3228,9 +1884,9 @@ object TatDiagram
   CanMoveOutOfBounds = False
   PageSettings.PaperName = '240x320'
   PageSettings.PaperId = 1
-  PageSettings.PaperWidth = 63.500000000000000000
-  PageSettings.PaperHeight = 84.666666666666680000
-  PageSettings.Orientation = dpoLandscape
+  PageSettings.PaperWidth = 84.931250000000000000
+  PageSettings.PaperHeight = 63.764583333333320000
+  PageSettings.Orientation = dpoPortrait
   PageSettings.LeftMarginStr = '0'
   PageSettings.TopMarginStr = '0'
   PageSettings.RightMarginStr = '0'
@@ -3242,14 +1898,16 @@ object TatDiagram
   WheelZoomMin = 50
   WheelZoomMax = 1000
   BorderStyle = bsSingle
-  Color = clGray
+  Color = clWhite
   ParentColor = False
   ExplicitWidth = 200
   ExplicitHeight = 200
-  object Box1: TDgrBox
+  object Button1: TDgrButton
     Tag = 1
-    Width = 240.000000000000000000
-    Height = 320.000000000000000000
+    Left = 146.000000000000000000
+    Top = 42.000000000000000000
+    Width = 160.000000000000000000
+    Height = 85.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
     Color = clSilver
@@ -3257,92 +1915,13 @@ object TatDiagram
     ClipText = False
     TextCells = <
       item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
+        Text = 'Text'
         Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 5
-    MinHeight = 5
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'Box1'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     240'#13#10'H' +
-      'eight :     320'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = 2105376
-    Gradient.EndColor = clGray
-    Gradient.Visible = True
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    Collapsed = False
-  end
-  object BoxRoundItem1: TDgrBoxRound
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 38.000000000000000000
-    Width = 220.000000000000000000
-    Height = 36.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
+        WordWrap = False
+        DControlFont = True
         Alignment = taCenter
         VertAlign = vaCenter
         RotateFont = True
@@ -3355,22 +1934,17 @@ object TatDiagram
         Transparency = 0
       end>
     Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
+    DiagramFont = True
+    MinWidth = 22
+    MinHeight = 15
     Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'BoxRoundItem1'#13#10#13#10'Left      :     7'#13#10'Top      :     38'#13#10'Width  : ' +
-      '    220'#13#10'Height :     36'
+      'Button1'#13#10#13#10'Left      :     146'#13#10'Top      :     42'#13#10'Width  :     ' +
+      '160'#13#10'Height :     85'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -3380,7 +1954,7 @@ object TatDiagram
     BitmapTransparent = False
     MetaFile.Data = {04000000}
     PictureMode = pmStretch
-    Transparent = False
+    Transparent = True
     Cursor = crDefault
     Visible = True
     Layer = 0
@@ -3390,836 +1964,14 @@ object TatDiagram
     PressColor = clBlack
     PressColorEnabled = True
     Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object BoxRoundItem4: TDgrBoxRound
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 181.400000000000000000
-    Width = 220.000000000000000000
-    Height = 36.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundItem4'#13#10#13#10'Left      :     7'#13#10'Top      :     181'#13#10'Width  :' +
-      '     220'#13#10'Height :     36'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object LabelItem1: TDgrLabel
-    Tag = 1
-    Left = 14.000000000000000000
-    Top = 43.000000000000000000
-    Width = 63.596187591552730000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'RGS 20'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 16
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelItem1'#13#10#13#10'Left      :     14'#13#10'Top      :     43'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
     StartChar = 32
     EndChar = 127
+    TextAlign = _taCenter
     Collapsed = False
   end
-  object LabelItem4: TDgrLabel
+  object ButtonHeader: TDgrButton
     Tag = 1
-    Left = 14.000000000000000000
-    Top = 187.000000000000000000
-    Width = 63.596187591552730000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'RGS 40'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 16
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelItem4'#13#10#13#10'Left      :     14'#13#10'Top      :     187'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object BoxRoundItem2: TDgrBoxRound
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 85.800000000000010000
-    Width = 220.000000000000000000
-    Height = 36.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundItem2'#13#10#13#10'Left      :     7'#13#10'Top      :     86'#13#10'Width  : ' +
-      '    220'#13#10'Height :     36'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object BoxRoundItem3: TDgrBoxRound
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 133.600000000000000000
-    Width = 220.000000000000000000
-    Height = 36.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundItem3'#13#10#13#10'Left      :     7'#13#10'Top      :     134'#13#10'Width  :' +
-      '     220'#13#10'Height :     36'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object LabelItem2: TDgrLabel
-    Tag = 1
-    Left = 14.000000000000000000
-    Top = 91.000000000000000000
-    Width = 107.487300872802700000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'DRG&W 452'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 16
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelItem2'#13#10#13#10'Left      :     14'#13#10'Top      :     91'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object LabelItem3: TDgrLabel
-    Tag = 1
-    Left = 14.000000000000000000
-    Top = 139.000000000000000000
-    Width = 74.283687591552730000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'RGS 455'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 16
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelItem3'#13#10#13#10'Left      :     14'#13#10'Top      :     139'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object BoxRoundItem6: TDgrBoxRound
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 277.000000000000000000
-    Width = 220.000000000000000000
-    Height = 36.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundItem6'#13#10#13#10'Left      :     7'#13#10'Top      :     277'#13#10'Width  :' +
-      '     220'#13#10'Height :     36'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object LabelItem6: TDgrLabel
-    Tag = 1
-    Left = 14.000000000000000000
-    Top = 283.000000000000000000
-    Width = 107.487300872802700000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'DRG&W 464'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 16
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelItem6'#13#10#13#10'Left      :     14'#13#10'Top      :     283'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object BoxRoundItem5: TDgrBoxRound
-    Tag = 1
-    Left = 7.000000000000000000
-    Top = 229.200000000000000000
-    Width = 220.000000000000000000
-    Height = 36.000000000000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Pen.Color = clSilver
-    Pen.Width = 2
-    ClipText = False
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -3
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 80.000000000000000000
-        Height = 40.000000000000000000
-        Clip = False
-        WordWrap = True
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = True
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -3
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 8
-    MinHeight = 8
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 2
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    Hint = 
-      'BoxRoundItem5'#13#10#13#10'Left      :     7'#13#10'Top      :     229'#13#10'Width  :' +
-      '     220'#13#10'Height :     36'
-    ParentShowHint = True
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clSilver
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    MetaFile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    GradientBackup = False
-    PressColor = clBlack
-    PressColorEnabled = True
-    Static_ = False
-    CornerRadius = 3
-    Collapsed = False
-  end
-  object LabelItem5: TDgrLabel
-    Tag = 1
-    Left = 14.000000000000000000
-    Top = 235.000000000000000000
-    Width = 74.283687591552730000
-    Height = 25.308593750000000000
-    Brush.Style = bsClear
-    SelBrush.Style = bsClear
-    Color = clWhite
-    SelColor = clWhite
-    Shape = bsNoShape
-    LinkPoints = <>
-    ClipText = True
-    TextCells = <
-      item
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -19
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        DControlAngle = True
-        Width = 100.000000000000000000
-        Height = 100.000000000000000000
-        Text = 'RGS 461'
-        Clip = False
-        WordWrap = False
-        DControlFont = False
-        Alignment = taCenter
-        VertAlign = vaCenter
-        RotateFont = False
-        CellFrame.Color = clWhite
-        CellFrame.Transparent = True
-        CellFrame.AutoFrame = False
-        CellFrame.AutoFrameMargin = 0
-        CellFrame.Visible = False
-        Visible = True
-        Transparency = 0
-      end>
-    Restrictions = [crNoResize, crNoRotation]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    DiagramFont = False
-    MinWidth = 40
-    MinHeight = 40
-    Shadow.Visible = False
-    Shadow.Color = clGray
-    Shadow.HOffset = 16
-    Shadow.VOffset = 1
-    Shadow.Transparency = 0
-    ParentShowHint = True
-    Hint = 'LabelItem5'#13#10#13#10'Left      :     14'#13#10'Top      :     235'
-    Gradient.Direction = grTopBottom
-    Gradient.StartColor = clWhite
-    Gradient.EndColor = clYellow
-    Gradient.Visible = False
-    BitmapMode = bmStretch
-    BitmapTransparent = False
-    Metafile.Data = {04000000}
-    PictureMode = pmStretch
-    Transparent = False
-    Cursor = crDefault
-    Visible = True
-    Layer = 0
-    LayerName = 'Layer0'
-    Transparency = 0
-    PressColor = clBlack
-    Static_ = False
-    StartChar = 32
-    EndChar = 127
-    Collapsed = False
-  end
-  object Button1: TDgrButton
-    Tag = 1
-    Width = 240.000000000000000000
+    Width = 320.000000000000000000
     Height = 28.000000000000000000
     Brush.Style = bsClear
     SelBrush.Style = bsClear
@@ -4233,7 +1985,7 @@ object TatDiagram
         DControlAngle = True
         Width = 100.000000000000000000
         Height = 100.000000000000000000
-        Text = 'Trains'
+        Text = 'RGS #455'
         Clip = False
         WordWrap = False
         DControlFont = True
@@ -4255,7 +2007,7 @@ object TatDiagram
     Font.Name = 'Tahoma'
     Font.Style = []
     DiagramFont = False
-    MinWidth = 45
+    MinWidth = 75
     MinHeight = 21
     Shadow.Visible = False
     Shadow.Color = clSilver
@@ -4263,8 +2015,8 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'Button1'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     240' +
-      #13#10'Height :     28'
+      'ButtonHeader'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :   ' +
+      '  320'#13#10'Height :     28'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
     Gradient.StartColor = clWhite
@@ -4289,9 +2041,9 @@ object TatDiagram
     TextAlign = _taCenter
     Collapsed = False
   end
-  object ButtonRoundNodeSelectBack: TDgrButtonRound
+  object ButtonRound1: TDgrButtonRound
     Tag = 1
-    Left = 204.000000000000000000
+    Left = 285.000000000000000000
     Top = 3.000000000000000000
     Width = 31.000000000000000000
     Height = 20.000000000000000000
@@ -4352,7 +2104,7 @@ object TatDiagram
     Shadow.VOffset = 1
     Shadow.Transparency = 0
     Hint = 
-      'ButtonRound2'#13#10#13#10'Left      :     204'#13#10'Top      :     3'#13#10'Width  : ' +
+      'ButtonRound1'#13#10#13#10'Left      :     285'#13#10'Top      :     3'#13#10'Width  : ' +
       '    31'#13#10'Height :     20'
     ParentShowHint = True
     Gradient.Direction = grTopBottom
@@ -4369,7 +2121,6 @@ object TatDiagram
     Layer = 0
     LayerName = 'Layer0'
     Transparency = 0
-    OnClick = 'ButtonRoundNodeSelectBackOnClick'
     GradientBackup = False
     PressColor = clBlack
     PressColorEnabled = True
@@ -4380,39 +2131,2713 @@ object TatDiagram
     CornerRadius = 3
     Collapsed = False
   end
+  object ButtonRound2: TDgrButtonRound
+    Tag = 1
+    Left = 2.000000000000000000
+    Top = 31.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Light'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 29
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound2'#13#10#13#10'Left      :     2'#13#10'Top      :     31'#13#10'Width  :  ' +
+      '   66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound3: TDgrButtonRound
+    Tag = 1
+    Left = 2.000000000000000000
+    Top = 66.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Whistle'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 41
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound3'#13#10#13#10'Left      :     2'#13#10'Top      :     66'#13#10'Width  :  ' +
+      '   66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound4: TDgrButtonRound
+    Tag = 1
+    Left = 2.000000000000000000
+    Top = 101.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Hiss'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 24
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound4'#13#10#13#10'Left      :     2'#13#10'Top      :     101'#13#10'Width  : ' +
+      '    66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound5: TDgrButtonRound
+    Tag = 1
+    Left = 2.000000000000000000
+    Top = 136.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Coupler'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 42
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound5'#13#10#13#10'Left      :     2'#13#10'Top      :     136'#13#10'Width  : ' +
+      '    66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound6: TDgrButtonRound
+    Tag = 1
+    Left = 2.000000000000000000
+    Top = 171.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Mute'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 29
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound6'#13#10#13#10'Left      :     2'#13#10'Top      :     171'#13#10'Width  : ' +
+      '    66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound7: TDgrButtonRound
+    Tag = 1
+    Left = 2.000000000000000000
+    Top = 206.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Injectors'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 48
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound7'#13#10#13#10'Left      :     2'#13#10'Top      :     206'#13#10'Width  : ' +
+      '    66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound8: TDgrButtonRound
+    Tag = 1
+    Left = 71.000000000000000000
+    Top = 31.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Bell'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 22
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound8'#13#10#13#10'Left      :     71'#13#10'Top      :     31'#13#10'Width  : ' +
+      '    66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound9: TDgrButtonRound
+    Tag = 1
+    Left = 71.000000000000000000
+    Top = 66.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Sht Whistle'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 60
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound9'#13#10#13#10'Left      :     71'#13#10'Top      :     66'#13#10'Width  : ' +
+      '    66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound10: TDgrButtonRound
+    Tag = 1
+    Left = 71.000000000000000000
+    Top = 101.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Water Stop'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 60
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound10'#13#10#13#10'Left      :     71'#13#10'Top      :     101'#13#10'Width  ' +
+      ':     66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound11: TDgrButtonRound
+    Tag = 1
+    Left = 71.000000000000000000
+    Top = 136.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Dimmer'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 43
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound11'#13#10#13#10'Left      :     71'#13#10'Top      :     136'#13#10'Width  ' +
+      ':     66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound12: TDgrButtonRound
+    Tag = 1
+    Left = 71.000000000000000000
+    Top = 171.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Brake'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 32
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound12'#13#10#13#10'Left      :     71'#13#10'Top      :     171'#13#10'Width  ' +
+      ':     66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound13: TDgrButtonRound
+    Tag = 1
+    Left = 71.000000000000000000
+    Top = 206.000000000000000000
+    Width = 66.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 14
+    MinHeight = 14
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound13'#13#10#13#10'Left      :     71'#13#10'Top      :     206'#13#10'Width  ' +
+      ':     66'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ProgressBarSpeed: TDgrProgressBar
+    Tag = 1
+    Left = 141.000000000000000000
+    Top = 143.000000000000000000
+    Width = 176.000000000000000000
+    Height = 17.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSkyBlue
+    SelColor = clSkyBlue
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = '0%'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 21
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 2
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ProgressBarSpeed'#13#10#13#10'Left      :     141'#13#10'Top      :     143'#13#10'Wid' +
+      'th  :     176'#13#10'Height :     17'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clLime
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    Position = 0
+    Orientation = _pbHorizontal
+    MinPos = 0
+    MaxPos = 28
+    BackColor = clGray
+    Rounded = True
+    CornerRadius = 3
+    ShowPercentage = True
+    ShowPosition = True
+    Smooth = True
+    Collapsed = False
+  end
+  object ButtonRoundSpeedInc: TDgrButtonRound
+    Tag = 1
+    Left = 142.000000000000000000
+    Top = 170.000000000000000000
+    Width = 85.000000000000000000
+    Height = 68.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Inc Speed'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 54
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRoundSpeedInc'#13#10#13#10'Left      :     142'#13#10'Top      :     170'#13#10 +
+      'Width  :     85'#13#10'Height :     68'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundSpeedIncOnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRoundSpeedDec: TDgrButtonRound
+    Tag = 1
+    Left = 232.000000000000000000
+    Top = 169.000000000000000000
+    Width = 85.000000000000000000
+    Height = 69.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Dec Speed'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 57
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRoundSpeedDec'#13#10#13#10'Left      :     232'#13#10'Top      :     169'#13#10 +
+      'Width  :     85'#13#10'Height :     69'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundSpeedDecOnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ImageRGS455: TDgrImage
+    Left = 150.000000000000000000
+    Top = 58.000000000000000000
+    Width = 151.000000000000000000
+    Height = 50.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clWhite
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoResize, crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 5
+    MinHeight = 5
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 1
+    Shadow.VOffset = 1
+    Shadow.Transparency = 1
+    Hint = 'ImageRGS455'#13#10#13#10'Left      :     150'#13#10'Top      :     58'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = clYellow
+    Gradient.Visible = False
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    Picture.Data = {
+      0A544A504547496D6167658B150000FFD8FFE000104A46494600010101004800
+      480000FFE100404578696600004D4D002A000000080001876900040000000100
+      00001A000000000002A00200040000000100000097A003000400000001000000
+      3200000000FFDB00430001010101010101010101010101010203020202020203
+      0203020304030404040304040405060504050605040405070606060707070704
+      05080808070806070707FFDB0043010101010201020302020307050405070707
+      0707070707070707070707070707070707070707070707070707070707070707
+      070707070707070707070707070707FFC0001108003200970301220002110103
+      1101FFC4001F0000010501010101010100000000000000000102030405060708
+      090A0BFFC400B5100002010303020403050504040000017D0102030004110512
+      2131410613516107227114328191A1082342B1C11552D1F02433627282090A16
+      1718191A25262728292A3435363738393A434445464748494A53545556575859
+      5A636465666768696A737475767778797A838485868788898A92939495969798
+      999AA2A3A4A5A6A7A8A9AAB2B3B4B5B6B7B8B9BAC2C3C4C5C6C7C8C9CAD2D3D4
+      D5D6D7D8D9DAE1E2E3E4E5E6E7E8E9EAF1F2F3F4F5F6F7F8F9FAFFC4001F0100
+      030101010101010101010000000000000102030405060708090A0BFFC400B511
+      0002010204040304070504040001027700010203110405213106124151076171
+      1322328108144291A1B1C109233352F0156272D10A162434E125F11718191A26
+      2728292A35363738393A434445464748494A535455565758595A636465666768
+      696A737475767778797A82838485868788898A92939495969798999AA2A3A4A5
+      A6A7A8A9AAB2B3B4B5B6B7B8B9BAC2C3C4C5C6C7C8C9CAD2D3D4D5D6D7D8D9DA
+      E2E3E4E5E6E7E8E9EAF2F3F4F5F6F7F8F9FAFFDA000C03010002110311003F00
+      FEFE28A29AE70A4E718A00757C6FFB4A7EDA3E05FD98FC79F06BC01E2FF0978D
+      7C41AAFC6EBC96CB4B974B82296285E392256F38BBAE3FD7290067215BD2BC5B
+      F69EFF008295F813F65EFDA8BE04FECC3E27F045EEAFABFC79591AC7544D5ED2
+      D56D0473411BB3DBC9FBC71FBF054AFDEF2A6C7FAB35F08FFC157BE28F845BF6
+      ABFD81A1B6D7B4FD4ECB43BBBFD72FA5B49E3B94B3B5FB55944B33EC63842565
+      E7A7EE9FFBA6B25554B603FA189AE60B6B792EAE658ADA0890C8EF2304545032
+      49278000E49AE03E17FC5EF85FF1AFC31FF09A7C24F1FF00843E24784CDD4F65
+      FDA3A2EA10EA36FE7C1218E687CC8895DC8EA548CE4115F94BFF000555FDB4FF
+      0067083FE09F1FB493784FE38F847C4DA9F89344B8F0FD92F8675982FEE56FA7
+      6585500B7767528CF97C02557248C57E28FF00C1BE9FB627C09F80F61F16344F
+      8BFF00178E8AFE39D3F4536F25C33DCD9C571697178B334C610DE54D27DBAD40
+      3200CC91F658EAB9D5DDCAE5BAB9FD3E7ED45FB70FC1FF00D96F53F0E786FC6D
+      ABD9A78A3C4F73651C36CEEE44305CB5C2FDAE5F295D923536CEB96500BC9128
+      24B62BEB4F0C78A3C3DE33D074BF1478535BD2BC47E1FD6A213DADED95C25CC3
+      7087F891D090C3A8FA822BFCF77FE0B2BF177C05FB45FF00C149F51F197804EB
+      3AC7832C74AB0D217538A19A2B6D50A431878F715F9572186240B9CB601C9AFD
+      F2FF00826AFF00C147FF0064DFD99FF649F0E7C2FF0089DE2FD63C35AEF83EFA
+      FBCE37316F4B8124C6412A4923AEF5C3019F5538E959467CADC9BD0A9A4AC91F
+      B65FB577ED5DF0D7F645FD9E3E327ED23E3B4D67C4BE12F823A6B5FEAB61A0DB
+      B6AB7ECDE6246902C31659497950333616342CEE5511987F295E13FF0083A2BE
+      2878ABC797D06B5FB3C782FE1CFC3CD5557FB39EEAFE6D42EEC4B92145DED0AB
+      C01963182179F4AECB58FF0082897ECB37567FF0545B8B3F1F5D4BE21FDB0B4A
+      D4340F0CC92882D22B9F3B4A96CADAE1A517241D8D32A61577E17BE401FC6D7C
+      5AF11F8CFC1FE24BB875DF0FE87168FA05EACCA1634FB25DC6F3B322325BBE5D
+      080149250B03D8E6A154735768DA1496BA9FDA76A9FF0005CCFDA3DA594E97E2
+      9F81F6D0CEC5A35FEC3B9B9308E8143FDA76CA3B86EFE94FD4FF00E0BC7F1E5A
+      D5ED6C13E1F7DA571B675D2E497F846405F33DC9FC6BF9CEFD9C3491E24F81BE
+      039753693C4D7A21161653DCAA4EEA916DB78D43100FC8D194523076A81EB9FB
+      2FFE0A8DF0CFE157EC23F0EBC51E3BF867E0AB3D6BC4D75F1C1BE1E69B6FE369
+      EE6EA1D2F488B43D3EEDFCD8ED2E21469BCD9E560F9E8E3AE2BAEA6153517CCF
+      547337ADADB1FB35F043FE0BEFE2BF0DF89B46B0F8EFA5699E32F045D4AB15E5
+      F695A73DA5ED946CE4FDA7CB56659B68232A00242F1926BF61FF00692FF82C27
+      FC13DFF659D086A5F11BF68BF03EADAF4D6E9710F87BC3F751EB9AAC81D15D51
+      ADE163E4310CA713347F787AD7F999F8B3F6B0F881A07ED1BF177E1A4DA7781F
+      C4FF000BAC35E5B3B4D2EDD2E7437B29249238F7477768E9745E2998C88B34B3
+      2A1215480001ED83F651F84168048351F15C577738964717F14EEE7CC6720C9F
+      676627E6C13BB9CE7A935AD1C1CAA690D7D4CA75E34F599FD9F7867FE0E98FF8
+      27C6B9E23B5D2B55F067ED07E16D0AE586ED56EB428664810BEDF3248A299A50
+      AA30CDB431018601EDFBDBF00BF68EF81FFB517C3CD3FE2A7C02F89DE11F8A5E
+      06D458C6B7DA4DDADC086518DD04C9C3C12AE46E8E45575C8C8AFF002E64FD9E
+      7E0F59CD6774FA95FC8B6D9C41348F316FE1DC480AC1B20F7EDD3AD7B2FC22F1
+      2C9FB35EBD79E2FF00815F153E247C15D7AF62115CDF681ACDE699F698D49212
+      755631DCA02721254741C7CB5DAB2BA8FAA38E599D24F467FA8B4F7F636BB4DC
+      DEDA5B873B479922A64FA727AD78D7C29F8BD75F11FC4DF15743B9F0FF00F61D
+      B7C3ED5CE9D6D3197CC37F1841FBF2318505B76064F1835FE634FAB5D789EFFC
+      45A86A5F19FE3CFC52F0DF8C9EE20D57C35AAF8D350BCF0CEA5E6CA279639B4F
+      B796DA33FBE8D27DAAE80C912960718AF49F83FF0018FE337ECAF69A9CBFB3DF
+      C57F8CBF0CAC67924BC92CAC3C65E22B6B1F3181258D90D49ED24E4F05E16206
+      79E73512CB2AC75BA2BFB429F5B9FEA16183720823DA8AF95BF61EF1CF8D3E26
+      FEC8DFB3AFC41F887AC49E22F1AF8D3C21A56A9A95FBC71C4D7735C59C7334A5
+      6355404EF19DAA0673C0A2BCD8CEEB53B8FAA89C64D66EA5A9D869B6CF73A85C
+      C56B6E064B39007D3DCFB0E6B41FEEB7D2BF8BEFF82AFF00FC1467E32789BF6C
+      0F167C39F825E2BF06DCFC2DF810E9A4DB3DC68B15FBAEBA8B2C7A94D14FBD5B
+      01985A919C6EB793190D9254938AD0A8C7999D77FC17EFE027C3A93E3EFC1DFD
+      A6AE3C55E28F05787BC67E1EBAB1D5D74DD9A6BDE3E9F1CD225CA9DC9319DD6E
+      82920A3E2D117E625767E5BFC22D2FC3CFA2C377E2AF8BDE23F0B43673433DAD
+      CA6BD3DAA2DA0B2D8934B713CA660EEF6CEE423EEDC09639DE4F897C4DF8E9F1
+      DBE2FAE9E9F1475CF0BF896D745DFF006284692F0476C64C6E741E712AC40032
+      08F7CD7E7EFED07F1F7C4DF0E7C7FF000DFC0BA2E95A2C3A978A6D079577702E
+      6E06FB8BD78A18EE18CC254B7F305C3B792CB212A0EEC20158D28B7D0D270B1F
+      A83F17BC3BF0AF50F8996F7777FB46F88A5F0F78934296F356BD8FC537B7AE6F
+      6DA68638DE7984E5C66072AB96E911E0E38F9F3C6B6DF043C33E04D6BC41E2AF
+      8E7ADDE6A3711491E976DFDBB73A94773860CB2B2B4A0315FBC786006D5EAC01
+      F2BD63E1AFC45F13F85F46D757E287ECDBA07C476B3064B196C351B8CC8A8654
+      8A2596EE450422390F860DC9C8F9ABE71F88DF0BFE36D9E87E19F112FC4CFD9C
+      BC49E64325D6E9BE1D68FAE5B69A1C20DC65BDB4B8489642E8176E376D6E7E41
+      9EA4B974B1CE9F36A99FA15E0983F633F8A9E1DD0BC4D1F872EF5FD3A784496F
+      3CFA7C462CE30E15A44F9407257D7A1EF5B7E201F02F4AF0FEA569F06FC0BE1B
+      B9F15AED8ED85C995604624619C471287E703FD674279AF82FE1BF836EF51FD9
+      FF005ED565FDA0ED3E1FF8B346963BDD4753B6B6B3B7D234259F55BC8638A2D3
+      ADA089608E60231B4E230C14A00375741A87C02FDA33C53E1F875FF857FB52FF
+      00C2CBD220FDCCD7F6FA169DA5DB69EFB15B25FCB669402CA308A58739C62B4E
+      676B242B72BBDCF62F839AEEB3E192D67F19B4F3E2BF126B37921D0BFB120091
+      BF996F3EEB411878D65CAEE015C38C80DC32861E2BFB6A789BE19F8F7E0ADFFC
+      53D23C056FE0AF1447717763025AC982B1240B246A59599676FDE2E5F2738207
+      154FE147C35FDA8742D2BC57E2DF0BEBBE17F8ABAEFC18D55B59D4356798C861
+      99EC479AAE80A19CA4797D9852B1AE5483C5769F0D3C0DAAEB5E10F0DE83E36F
+      04FC3CBCB0BCD12DB56B3D335FF0B586AC1636B58A5BB904B7F70D2416B0EF0A
+      AE09036AA9C13452DECD0AA6E99EC7FB06CB69ADFECD3F0364B8D6AE343B1D5E
+      4B9F36F921F39AD54EA9703CD0806491807AF5AFBDBE2F683A6F8CF4C8DBE25F
+      C49F12FC5ED6756BC1AFC96DAFC37710B8D4AE6D62867BF7494ED9E758EDE088
+      4F26E7D9185538C83F991AFF00C32F10784FC39E32BED06DEC7C25E01F0B41B8
+      5EF8752EF4BD3F40259188B948711592179782AAAAECC40258E0F93EB369E3E0
+      75CB7F1D7C61B5F04A785F4C8BC51A90D6E1B9D5E5BC5912297ECB74CFB8A6F4
+      9233B95C95DD8203139F423351E55F819CDB9269753F3A747824D5BF6ABF8BC5
+      B2D757DF10AE81DE58BBC23552D1FDEEDB00C1F4C57EE4EA1A3DEDB4CF145149
+      B5C060149E0638CFBD7E507C2DF037852E7E307C50F8BBAEC9E37F0FE85E1B96
+      3D7B4D9134F7BB5BC8E7759A28E504B6CCC4C6407CCE851428C851FA3F3FED03
+      AC412F84F4FD43E1FEA96BAA78CF425F1069CCE21862BEB1F987990BCD201206
+      DBB97A6E0411F7B15585AB1A4DBB91293934923F4F3C33E2EFD94B4CF853A0F8
+      5B56F05FC245F1F5FE87651EA7E22BBF0C59DEEA3A64C6D849308243034B72F2
+      4A8AB26F9A365F31807016323D6B44FDAE7F677D1F57D5EEDFE1EE9F6F0698F0
+      C9A1CBA1F8234CB71BE5B8B7BBB94780C4C52349ECAD4A6E92438565C88D990F
+      957FC12F7F638D43FE0A83E06F8E1E37F097C537F8597BF092F6D74F6B09B41B
+      4D48DE4D3DA997CB32F9A563915A368DC6D603E4209C90BF2CFEDCFF00B3FF00
+      EDD5FB1EFC58F893F0D97E137C49F19FC38F06E850F8834DF15B48F059EA1686
+      047B9940B2B430406DE490A3A34CAD8CB0C8C9AE59469393529C9FCCD52718A4
+      A28FA67F6C8FDA25BF69987C196FA66A3E3B8AC3C317D25DA6957EB325A969A1
+      997ED015A77447854882351182B15CCAA1F6FCB5F9F9AFF86F52163A8432D9DC
+      94113296D9D4107D2B223F82BFF0521F88BF0F7E1F7C43F83DF02B50F88FE1AF
+      8876B76F6B793C3AAD932F973AC31CE1DEFED62915F73B031A642AA9FE219FD3
+      6FF825F7FC1327C7BFB6849F10F4AFDA23F677F8D9F0B749F87F04B65AADE78A
+      758D4EC61F116A38606D74D766F36DA3DE417902B37979092AB959176863A184
+      8A8453689961FDBDDBB23FB24FF82785E5A5C7EC3FFB29DB5BCA1A6D37E1FE81
+      6F3260A98DD74C814820FD334578B7FC12B7F67AF1BFEC9DFB3643F027C67F0F
+      BC3DE07FF844EF8B5AB586BD1F881F51DD6F12CB713CCB0C5873223E015242E3
+      9A2BC6D1EA7417FF00E0A67F0F3F69DF8B7F08BC3BF0FF00F65FD53E21F857C4
+      F79AA2DE6A3AC787BC407C3B225A245221B57991D646491A45628A4644782467
+      35FCDAE95FF046CFDAE341D63C69E27D43E1BF887C4FE23F883AACFACEA7772E
+      A56F217BA9E46925645DE1230D23BB9DA064BE0F0A31FDA87896D356BBB2F2B4
+      9BB96DA673B5B66D53B48E4EE2320FD2B8BD1A0F136870CB622296FD5E5326FB
+      87329C93CFCD9E9DF9A7283937765465CA7F11FF0013FF0060EF8E3F0D0A59EB
+      BF0A7C537FAD348918B0B2297D2976FBA18405CA7507271D6B13C55FF06FEFED
+      99F1CF46B6F899E3BD57E1DFC18F0E6936D6D736DE1ED575FB894DE957964DEF
+      1C1BE3866292468E180398B3924E17FB4ED4BE18BEA9A9EA5AACBA7159F5399A
+      67C85639639C12464FA7E159F2FC2B9594C325ADCBC0C798F86538EE477FC6AA
+      9AB7DA1CA6E47F1B3F11FF00E08F1E34F06F85BC3771A0FC2CF00EB1E3DD3A1B
+      9D32CAEB4DF135DDFDCC503D82DA348E5244554648546D52AD965CF424EEFC37
+      FF008269FED19AAFECEFA27C32F190B1D16CB49B7B7B58B4A99F53B6B898C0EC
+      C55AE6CB508E411BF98D8F3262331C276F0C4FF618BF0AE38F023B0B88C8EEA0
+      0FE42AD2FC2EF914B586F3D4921491F4C8AD74EB2334B97447F203F0B7FE092D
+      F167C2FF000CAF3C35A6E99A17C3E6975917A9630EB1717325E1E6669A5B8B88
+      EFA4DA662498DE56562A8D8CA26DEF7E117FC12EFE3F782AEAE34D8357D36CBE
+      1EEA3759BAD2E66B3BC97709E374B88A58ACE1C44ABE6131BEE767F2F9DAACAD
+      FD628F870B1C640B0607D48FE7B719A953E1BF9716FF00B1302C7A28000FC00A
+      5C907D4764F73F965F83DFF044FF000CF81748F8D1E0CBCF13788FC2FF000DFE
+      28B219EC74FBBFED29AE0BC8CB3397BBB6C43BA23B083E7AF038F5F5BD5BFE09
+      0BE00D63C21E11F097FC263E3AD266F094C2D975484DBCAF77A4981ADDEC1950
+      4455BCA2D8904A46E62C50E176FF004823E1F148E456B4BA7F30F1B873F4071D
+      29ADF0F660151EC9B04638183FA7F5AD94A226AE7E64FC1DFF00826EFEC15F0B
+      7E1F7C43D1BC47E10F187C75D3BE2168F1699A9E8BE39920D5A210858E3D96D1
+      C714514328091E678C097F76183E79AF74F0A784BE13FC3D7D0ADFC0DFB3D780
+      B41D2BC336E6DED56E6C21D5260A2010AC9F68B8469C4A630A1DCBB3483218B6
+      49AFB09BE1D4CD82962DD73D06698FF0F640E5E4B090B9E08E483FD2A1461D5D
+      C6B43F243E30FEC4FF0000FE37EABE2CD4FC57F01FE12E8C3C54D08BD3A17867
+      4BD0AEAF2185C98E19AF6DA04BA7520E1879B9E48054703BAD1BF662F859E1DD
+      33C27A27873E14FC31D1349F0868F1E8F676F6DE1BD32158ED10304B572B1EE9
+      E35562B894B677BE73B9B3FA5F0FC3B7DDB3EC4CCA783B901FE62ADAFC3694EE
+      02D0F3EA8807F2CD6AA718EC07817ECC969F0FBE03FC35D6BE1FF87FC09E0AF8
+      77A1ADD49756D67E1AD0AD3488E67987EF65923B58E346909C12E46E3DC9C66B
+      C9FE2078322F13F8EF56F135ACDA86A56575B45AFDAA26DD020403CB1BF71503
+      071838E7381935F6C0F86D2678B490678FBF53FF00C2B29DD7FE3CF39EE653FE
+      3509C549C80FCFE7F85C81E068A29DA48811B8866C8CFE1EDF957AB7C385D7BE
+      17A788AEF4C65BC8F5D836490199A21138276CC028396193C77FC057D52FF0C2
+      489159AC94E78E1B3FD6A33F0F243D2C33D3200FF1A729C66ACC0F47F867A86A
+      7AA784B4EBED520B1B592550238A0428B1A2FCA0724E7A668AED34F823B5B3B7
+      B68942470205551D80038A2B9B910172AB927CD032704D14537B013E07A0A638
+      18CE0668A2A20045112CDF312DF5E6AC607A0A28AC6B6E044FC6E0381C7F314A
+      C0151C0E68A2AE900D500B0E0524C4A91B4919F4E28A2B37B80F8BE64C9E4FBD
+      040DF8C77A28A70DD00C2483C1239353E07A0A28AEA00C0F414B45140114C485
+      041239A6C24B6EDC4B63D79A28ACAAF40254FBA28A28AD40FFD9}
+    PictureMode = pmStretch
+    Transparent = True
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ImageRGS455OnClick'
+    PressColor = clBlack
+    Ratio = 0
+    PicturePath = 'C:\Documents and Settings\Jim\Desktop\NMRABus\Images\RGS455.jpg'
+    Static_ = True
+    PictureWidth = 0
+    PictureHeight = 0
+    Collapsed = False
+  end
+end
+object TatDiagram
+  NettoExportOffset = 1
+  AutomaticNodes = False
+  AutoScroll = True
+  AutoPage = False
+  Background.Scroll = True
+  Background.Style = biTile
+  Background.Visible = False
+  Background.Gradient.Direction = grTopBottom
+  Background.Gradient.StartColor = clWhite
+  Background.Gradient.EndColor = clYellow
+  Background.Gradient.Visible = False
+  Background.PrintGradient = False
+  SnapGrid.Active = True
+  SnapGrid.Force = True
+  SnapGrid.Visible = False
+  SnapGrid.SizeX = 1.000000000000000000
+  SnapGrid.SizeY = 1.000000000000000000
+  SnapGrid.Style = gsLines
+  SnapGrid.SnapToRuler = True
+  ShowLinkPoints = False
+  LeftRuler.Visible = False
+  LeftRuler.Divisions = 5
+  LeftRuler.Font.Charset = DEFAULT_CHARSET
+  LeftRuler.Font.Color = clWindowText
+  LeftRuler.Font.Height = -9
+  LeftRuler.Font.Name = 'Arial'
+  LeftRuler.Font.Style = []
+  LeftRuler.Units = unMili
+  LeftRuler.MinorTickLength = 4
+  LeftRuler.MajorTickLength = 6
+  LeftRuler.Color = clWhite
+  LeftRuler.TickColor = clBlack
+  LeftRuler.Size = 16
+  LeftRuler.AutoFactor = True
+  LeftRuler.GridColor = clBlack
+  TopRuler.Visible = False
+  TopRuler.Divisions = 5
+  TopRuler.Font.Charset = DEFAULT_CHARSET
+  TopRuler.Font.Color = clWindowText
+  TopRuler.Font.Height = -9
+  TopRuler.Font.Name = 'Arial'
+  TopRuler.Font.Style = []
+  TopRuler.Units = unMili
+  TopRuler.MinorTickLength = 4
+  TopRuler.MajorTickLength = 6
+  TopRuler.Color = clWhite
+  TopRuler.TickColor = clBlack
+  TopRuler.Size = 16
+  TopRuler.AutoFactor = True
+  TopRuler.GridColor = clBlack
+  Zoom = 200
+  BorderColor = clGray
+  VertScrollBar.Smooth = True
+  MouseWheelMode = mwOff
+  ActiveLayers = 5
+  Layers = <
+    item
+      LayerName = 'Layer0'
+    end>
+  LinkCursor = crHandPoint
+  PanCursor = crHandPoint
+  ZoomCursor = crSizeNS
+  IgnoreScreenDPI = False
+  ShowCrossIndicators = True
+  PageLines.Visible = False
+  PageLines.Pen.Color = clMaroon
+  PageLines.Pen.Mode = pmBlack
+  PageLines.Pen.Style = psDot
+  KeyActions = [kaEscape, kaMove, kaPage, kaResize, kaSelect]
+  HandlesStyle = hsVisio
+  SmoothMode = smAntiAlias
+  TextRenderingMode = tmAntiAlias
+  SelectionMode = slmMultiple
+  CanMoveOutOfBounds = False
+  PageSettings.PaperName = '320x240'
+  PageSettings.PaperId = 1
+  PageSettings.PaperWidth = 84.931250000000000000
+  PageSettings.PaperHeight = 63.764583333333320000
+  PageSettings.Orientation = dpoPortrait
+  PageSettings.LeftMarginStr = '0'
+  PageSettings.TopMarginStr = '0'
+  PageSettings.RightMarginStr = '0'
+  PageSettings.BottomMarginStr = '0'
+  RulerAutoUnit = True
+  MeasUnit = duMili
+  WheelZoom = True
+  WheelZoomIncrement = 10
+  WheelZoomMin = 50
+  WheelZoomMax = 1000
+  BorderStyle = bsSingle
+  Color = clWhite
+  ParentColor = False
+  ExplicitWidth = 200
+  ExplicitHeight = 200
+  object ButtonRound23: TDgrButtonRound
+    Tag = 1
+    Left = 276.000000000000000000
+    Top = 31.000000000000000000
+    Width = 40.000000000000000000
+    Height = 207.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 14
+    MinHeight = 14
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound23'#13#10#13#10'Left      :     268'#13#10'Top      :     31'#13#10'Width  ' +
+      ':     51'#13#10'Height :     207'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRoundTrainSelction0: TDgrButtonRound
+    Tag = 1
+    Left = 74.000000000000000000
+    Top = 30.000000000000000000
+    Width = 200.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'RGS #20 C17'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 72
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRoundTrainSelction0'#13#10#13#10'Left      :     74'#13#10'Top      :     ' +
+      '30'#13#10'Width  :     200'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundTrainSelction0OnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRoundTrainSelction1: TDgrButtonRound
+    Tag = 1
+    Left = 74.000000000000000000
+    Top = 65.000000000000000000
+    Width = 200.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'D&RGW #343 C19'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 97
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRoundTrainSelction1'#13#10#13#10'Left      :     74'#13#10'Top      :     ' +
+      '65'#13#10'Width  :     200'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundTrainSelction0OnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRoundTrainSelction2: TDgrButtonRound
+    Tag = 1
+    Left = 74.000000000000000000
+    Top = 100.000000000000000000
+    Width = 200.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'RGS #455 K27'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 78
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRoundTrainSelction2'#13#10#13#10'Left      :     74'#13#10'Top      :     ' +
+      '100'#13#10'Width  :     200'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundTrainSelction0OnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRoundTrainSelction3: TDgrButtonRound
+    Tag = 1
+    Left = 74.000000000000000000
+    Top = 135.000000000000000000
+    Width = 200.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'RGS #4 Galloping Goose'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 127
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRoundTrainSelction3'#13#10#13#10'Left      :     74'#13#10'Top      :     ' +
+      '135'#13#10'Width  :     200'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundTrainSelction0OnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRoundTrainSelction04: TDgrButtonRound
+    Tag = 1
+    Left = 74.000000000000000000
+    Top = 170.000000000000000000
+    Width = 200.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'D&RGW 464 K27'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 89
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRoundTrainSelction04'#13#10#13#10'Left      :     74'#13#10'Top      :    ' +
+      ' 170'#13#10'Width  :     200'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundTrainSelction0OnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRoundTrainSelction5: TDgrButtonRound
+    Tag = 1
+    Left = 74.000000000000000000
+    Top = 205.000000000000000000
+    Width = 200.000000000000000000
+    Height = 32.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'RGS #461 K27'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 78
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRoundTrainSelction5'#13#10#13#10'Left      :     74'#13#10'Top      :     ' +
+      '205'#13#10'Width  :     200'#13#10'Height :     32'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    OnClick = 'ButtonRoundTrainSelction0OnClick'
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object Button3: TDgrButton
+    Tag = 1
+    Width = 320.000000000000000000
+    Height = 28.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Style = psClear
+    Pen.Width = 0
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 100.000000000000000000
+        Height = 100.000000000000000000
+        Text = 'Train Selector'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = False
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 101
+    MinHeight = 21
+    Shadow.Visible = False
+    Shadow.Color = clSilver
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'Button3'#13#10#13#10'Left      :     0'#13#10'Top      :     0'#13#10'Width  :     320' +
+      #13#10'Height :     28'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clWhite
+    Gradient.EndColor = 10921638
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    Collapsed = False
+  end
+  object ButtonRound20: TDgrButtonRound
+    Tag = 1
+    Left = 285.000000000000000000
+    Top = 3.000000000000000000
+    Width = 31.000000000000000000
+    Height = 20.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = clWhite
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'X'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    DiagramFont = False
+    MinWidth = 13
+    MinHeight = 19
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound1'#13#10#13#10'Left      :     285'#13#10'Top      :     3'#13#10'Width  : ' +
+      '    31'#13#10'Height :     20'
+    ParentShowHint = True
+    Gradient.Direction = grTopBottom
+    Gradient.StartColor = clRed
+    Gradient.EndColor = 176
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 3
+    Collapsed = False
+  end
+  object ButtonRound21: TDgrButtonRound
+    Tag = 1
+    Left = 276.000000000000000000
+    Top = 31.000000000000000000
+    Width = 40.000000000000000000
+    Height = 64.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Up'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 18
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound21'#13#10#13#10'Left      :     276'#13#10'Top      :     31'#13#10'Width  ' +
+      ':     40'#13#10'Height :     64'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
+  object ButtonRound22: TDgrButtonRound
+    Tag = 1
+    Left = 276.000000000000000000
+    Top = 173.000000000000000000
+    Width = 40.000000000000000000
+    Height = 64.000000000000000000
+    Brush.Style = bsClear
+    SelBrush.Style = bsClear
+    Color = clSilver
+    SelColor = clSilver
+    Pen.Color = 4194304
+    ClipText = False
+    TextCells = <
+      item
+        DControlAngle = True
+        Width = 80.000000000000000000
+        Height = 40.000000000000000000
+        Text = 'Down'
+        Clip = False
+        WordWrap = False
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaCenter
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end
+      item
+        DControlAngle = True
+        Clip = False
+        WordWrap = True
+        DControlFont = True
+        Alignment = taCenter
+        VertAlign = vaTop
+        RotateFont = True
+        CellFrame.Color = clWhite
+        CellFrame.Transparent = True
+        CellFrame.AutoFrame = False
+        CellFrame.AutoFrameMargin = 0
+        CellFrame.Visible = False
+        Visible = True
+        Transparency = 0
+      end>
+    Restrictions = [crNoRotation]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    DiagramFont = False
+    MinWidth = 33
+    MinHeight = 17
+    Shadow.Visible = False
+    Shadow.Color = clGray
+    Shadow.HOffset = 0
+    Shadow.VOffset = 1
+    Shadow.Transparency = 0
+    Hint = 
+      'ButtonRound22'#13#10#13#10'Left      :     276'#13#10'Top      :     173'#13#10'Width ' +
+      ' :     40'#13#10'Height :     64'
+    ParentShowHint = True
+    Gradient.Direction = grBottomTop
+    Gradient.StartColor = clBlack
+    Gradient.EndColor = clGray
+    Gradient.Visible = True
+    BitmapMode = bmStretch
+    BitmapTransparent = False
+    MetaFile.Data = {04000000}
+    PictureMode = pmStretch
+    Transparent = False
+    Cursor = crDefault
+    Visible = True
+    Layer = 0
+    LayerName = 'Layer0'
+    Transparency = 0
+    GradientBackup = False
+    PressColor = clBlack
+    PressColorEnabled = True
+    Static_ = False
+    StartChar = 32
+    EndChar = 127
+    TextAlign = _taCenter
+    CornerRadius = 6
+    Collapsed = False
+  end
 end
 
 SCREEN_SECTION
 
-	ScreenName=ScreenStart
+	ScreenName=Start
 		CurrentLayer=0
 		StartScreen=True
 		StaticScreen=True
 		ScreenColor=clMedGray
-		ScreenOrientation=1
+		ScreenOrientation=0
 		ScreenShowGrid=False
 		ScreenGridColor=clBlack
 
-	ScreenName=ScreenDetectingNodes
+	ScreenName=Train
 		CurrentLayer=0
 		StartScreen=False
 		StaticScreen=False
-		ScreenColor=clGray
-		ScreenOrientation=1
+		ScreenColor=clWhite
+		ScreenOrientation=0
 		ScreenShowGrid=False
 		ScreenGridColor=clBlack
 
-	ScreenName=ScreenNodeSelect
+	ScreenName=TrainSelector
 		CurrentLayer=0
 		StartScreen=False
 		StaticScreen=False
-		ScreenColor=clGray
-		ScreenOrientation=1
+		ScreenColor=clWhite
+		ScreenOrientation=0
 		ScreenShowGrid=False
 		ScreenGridColor=clBlack
 
 	ScreenCount=3
-	ActiveScreen=ScreenNodeSelect
+	ActiveScreen=Train
 
 SCREEN_SECTION_END
 
@@ -4422,7 +4847,7 @@ VERSION       = 3
 BOARD         = MikroMMB_for_dsPIC33_hw_rev_1.10
 COMPILER      = mikroPascal PRO for dsPIC
 CONTROLLER    = HX8347-D
-DIMENSIONS    = 240x320
+DIMENSIONS    = 320x240
 DEVICE        = P33FJ256GP710A
 CLOCK         = 64000000
 TP_CHECKED    = True

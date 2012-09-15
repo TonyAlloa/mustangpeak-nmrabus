@@ -32,9 +32,10 @@ uses
   NodeIDs;
   
 const
-  STATE_SPLASH_SCREEN = 0;
-  STATE_GATHER_NODES  = 1;
-  STATE_RUN           = 2;
+  STATE_START         = 0;
+  STATE_SPLASH_SCREEN = 1;
+  STATE_GATHER_NODES  = 2;
+  STATE_RUN           = 3;
   
 var
   MainState: Byte;
@@ -42,8 +43,6 @@ var
   
 procedure Interrupt_Timer2(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 100m
-var
-  i: Integer;
 begin
   // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
   {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
@@ -65,9 +64,7 @@ begin
   NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_TFT_THROTTLE_ID_0_LO);       
   MCU_Setup_Initialize;
 
-  MainState := STATE_SPLASH_SCREEN;
-  BoxRoundProgressBar.Width := 0;
-  i := 0;
+  MainState := STATE_START;
 
   Start_TP();
 
@@ -83,19 +80,22 @@ begin
       NMRAnetStateMachine_Process(ActiveNode);
       
       case MainState of
+        STATE_START :
+          begin
+            ProgressBarStart.Position := 0;
+            DrawProgressBar(@ProgressBarStart);
+            Delay_ms(1500);
+            MainState := STATE_SPLASH_SCREEN;
+          end;
         STATE_SPLASH_SCREEN :
           begin
-            Inc(i);
-            if i = 2 then
+            ProgressBarStart.Position := ProgressBarStart.Position + 1;
+            DrawProgressBar(@ProgressBarStart);
+
+            Delay_us(10000);
+            if ProgressBarStart.Position >= 100 then
             begin
-              BoxRoundProgressBar.Width := BoxRoundProgressBar.Width + 1;
-              DrawRoundBox(@BoxRoundProgressBar);
-              i := 0;
-            end;
-            
-            if BoxRoundProgressBar.Width >= 150 then
-            begin
-              DrawScreen(ScreenDetectingNodesScreenID);
+              DrawScreen(TrainSelectorScreenID);
               MainState := STATE_GATHER_NODES;
             end;
           end;

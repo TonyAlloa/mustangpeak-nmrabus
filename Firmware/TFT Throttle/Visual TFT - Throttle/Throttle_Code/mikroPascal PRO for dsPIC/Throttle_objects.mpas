@@ -67,24 +67,6 @@ type TButton_Round = record
   OnPressPtr           : ^TOnEventPtr;
 end;
 
-type TLabel = record
-  OwnerScreenID        : word;
-  Order                : byte;
-  Left                 : word;
-  Top                  : word;
-  Width                : word;
-  Height               : word;
-  Caption              : ^char;
-  Fontname             : ^ const far byte;
-  Font_Color           : word;
-  Visible              : byte;
-  Active               : byte;
-  OnUpPtr              : ^TOnEventPtr;
-  OnDownPtr            : ^TOnEventPtr;
-  OnClickPtr           : ^TOnEventPtr;
-  OnPressPtr           : ^TOnEventPtr;
-end;
-
 type TCLabel = record
   OwnerScreenID        : word;
   Order                : byte;
@@ -121,30 +103,23 @@ type TImage = record
   OnPressPtr           : ^TOnEventPtr;
 end;
 
-type TBox = record
+type TCImage = record
   OwnerScreenID        : word;
   Order                : byte;
   Left                 : word;
   Top                  : word;
   Width                : word;
   Height               : word;
-  Pen_Width            : byte;
-  Pen_Color            : word;
+  Picture_Name         : ^ const far byte;
   Visible              : byte;
   Active               : byte;
-  Transparent          : byte;
-  Gradient             : byte;
-  Gradient_Orientation : byte;
-  Gradient_Start_Color : word;
-  Gradient_End_Color   : word;
-  Color                : word;
-  PressColEnabled      : byte;
-  Press_Color          : word;
+  Picture_Type         : byte;
+  Picture_Ratio        : byte;
   OnUpPtr              : ^TOnEventPtr;
   OnDownPtr            : ^TOnEventPtr;
   OnClickPtr           : ^TOnEventPtr;
   OnPressPtr           : ^TOnEventPtr;
-end;
+end; code; far;
 
 type TCBox = record
   OwnerScreenID        : word;
@@ -197,6 +172,37 @@ type TBox_Round = record
   OnPressPtr           : ^TOnEventPtr;
 end;
 
+type TProgressBar = record
+  OwnerScreenID        : word;
+  Order                : byte;
+  Left                 : word;
+  Top                  : word;
+  Width                : word;
+  Height               : word;
+  Pen_Width            : byte;
+  Pen_Color            : word;
+  Visible              : byte;
+  Active               : byte;
+  Transparent          : byte;
+  Caption              : ^char;
+  Fontname             : ^ const far byte;
+  Font_Color           : word;
+  Gradient             : byte;
+  Gradient_Orientation : byte;
+  Gradient_Start_Color : word;
+  Gradient_End_Color   : word;
+  Color                : word;
+  Background_Color     : word;
+  Min									: word;
+  Max                  : word;
+  Position							: word;
+  Show_Position				: byte;
+  Show_Percentage	  	: byte;
+  Smooth						  	: byte;
+  Rounded				      : byte;
+  Corner_Radius			  : byte;
+end;
+
 type TCScreen = record
   Color                      : word;
   Width                      : word;
@@ -210,6 +216,8 @@ type TCScreen = record
   CBoxes                     : ^ const code far ^TCBox;
   Boxes_RoundCount           : word;
   Boxes_Round                : ^ const code far ^TBox_Round;
+  ProgressBarsCount             : word;
+  ProgressBars                  : ^ const code far ^TProgressBar;
 end; code; far;
 
 type TScreen = record
@@ -221,14 +229,10 @@ type TScreen = record
   Buttons                    : ^ const code far ^TButton;
   Buttons_RoundCount         : word;
   Buttons_Round              : ^ const code far ^TButton_Round;
-  LabelsCount                : word;
-  Labels                     : ^ const code far ^TLabel;
-  CLabelsCount               : word;
-  CLabels                    : ^ const code far ^TCLabel;
-  BoxesCount                 : word;
-  Boxes                      : ^ const code far ^TBox;
-  Boxes_RoundCount           : word;
-  Boxes_Round                : ^ const code far ^TBox_Round;
+  CImagesCount               : word;
+  CImages                    : ^ const code far ^TCImage;
+  ProgressBarsCount             : word;
+  ProgressBars                  : ^ const code far ^TProgressBar;
 end;
 
 type TMyScreen = record
@@ -240,24 +244,24 @@ type TMyScreen = record
   Buttons                    : ^ const code far ^TButton;
   Buttons_RoundCount         : word;
   Buttons_Round              : ^ const code far ^TButton_Round;
-  LabelsCount                : word;
-  Labels                     : ^ const code far ^TLabel;
   CLabelsCount               : word;
   CLabels                    : ^ const code far ^TCLabel;
   ImagesCount                : word;
   Images                     : ^ const code far ^TImage;
-  BoxesCount                 : word;
-  Boxes                      : ^ const code far ^TBox;
+  CImagesCount               : word;
+  CImages                    : ^ const code far ^TCImage;
   CBoxesCount                : word;
   CBoxes                     : ^ const code far ^TCBox;
   Boxes_RoundCount           : word;
   Boxes_Round                : ^ const code far ^TBox_Round;
+  ProgressBarsCount             : word;
+  ProgressBars                  : ^ const code far ^TProgressBar;
 end;
 
 
-  const ScreenStartScreenID = 32768;
-  const ScreenDetectingNodesScreenID = 0;
-  const ScreenNodeSelectScreenID = 1;
+  const StartScreenID  = 32768;
+  const TrainScreenID  = 0;
+  const TrainSelectorScreenID = 1;
 
 implementation
 

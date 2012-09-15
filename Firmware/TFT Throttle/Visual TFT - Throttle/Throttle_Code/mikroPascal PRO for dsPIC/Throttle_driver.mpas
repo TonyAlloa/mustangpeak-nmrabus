@@ -4,13 +4,12 @@ uses Throttle_objects, Throttle_resources;
 
 /////////////////////////
 // External Declarations
-procedure BoxRoundAccyNodesClick(); external;
-procedure BoxRoundCmdStationsClick(); external;
-procedure BoxRoundConsistNodesClick(); external;
-procedure BoxRoundProgStationsClick(); external;
-procedure BoxRoundTrainNodesClick(); external;
-procedure ButtonRound2OnClick(); external;
-procedure ButtonRoundNodeSelectBackOnClick(); external;
+procedure ButtonRoundSpeedDecOnClick(); external;
+procedure ButtonRoundSpeedIncOnClick(); external;
+procedure ButtonRoundTrainSelction0OnClick(); external;
+procedure ImageRGS40OnClick(); external;
+procedure ImageRGS455OnClick(); external;
+procedure ImageTrainOnClick(); external;
 /////////////////////////
 
 procedure DrawScreen(aScreenID : word);
@@ -19,12 +18,13 @@ procedure Check_TP();
 procedure Start_TP();
 procedure DrawButton(Abutton : ^TButton);
 procedure DrawRoundButton(Around_button : ^TButton_Round);
-procedure DrawLabel(ALabel : ^TLabel);
 procedure DrawCLabel(ALabel : ^TCLabel);
 procedure DrawImage(AImage : ^TImage);
-procedure DrawBox(ABox : ^TBox);
+procedure DrawCImage(AImage : ^TCImage);
 procedure DrawCBox(ABox : ^TCBox);
 procedure DrawRoundBox(Around_box : ^TBox_Round);
+procedure DrawProgressBar(AProgressBar : ^TProgressBar);
+procedure UpdatePBPosition(AProgressBar : ^TProgressBar);
 
 
 // TFT module connections
@@ -73,24 +73,24 @@ var
     local_round_button : ^TButton_Round;
     exec_round_button : ^TButton_Round;
     round_button_order : integer;
-    local_label : ^TLabel;
-    exec_label : ^TLabel;
-    label_order : integer;
     local_clabel : ^TCLabel;
     exec_clabel : ^TCLabel;
     clabel_order : integer;
     local_image : ^TImage;
     exec_image : ^TImage;
     image_order : integer;
-    local_box : ^TBox;
-    exec_box : ^TBox;
-    box_order : integer;
+    local_cimage : ^TCImage;
+    exec_cimage : ^TCImage;
+    cimage_order : integer;
     local_cbox : ^TCBox;
     exec_cbox : ^TCBox;
     cbox_order : integer;
     local_round_box : ^TBox_Round;
     exec_round_box : ^TBox_Round;
     box_round_order : integer;
+    local_progress_bar : ^TProgressBar;
+    exec_progress_bar : ^TProgressBar;
+    progress_bar_order : integer;
 
 
 
@@ -100,21 +100,25 @@ var CurrentScreenID : word;
 const Screen1_CLabels  : array[4] of ^TCLabel; code; far; forward;
 const Screen1_Images  : array[1] of ^TImage; code; far; forward;
 const Screen1_CBoxes  : array[1] of ^TCBox; code; far; forward;
-const Screen1_Boxes_Round  : array[3] of ^TBox_Round; code; far; forward;
-const ScreenStart           : TCScreen =
+const Screen1_Boxes_Round  : array[1] of ^TBox_Round; code; far; forward;
+const Screen1_ProgressBars  : array[1] of ^TProgressBar; code; far; forward;
+
+const Start           : TCScreen =
          (
-         0xA514                ,//  ScreenStart.Color
-         240                   ,//  ScreenStart.Width                     
-         320                   ,//  ScreenStart.Height                    
-         9                     ,//  ScreenStart.ObjectsCount             
-         4                     ,//  ScreenStart.CLabelsCount              
-         @Screen1_CLabels      ,//  ScreenStart.CLabels
-         1                     ,//  ScreenStart.ImagesCount              
-         @Screen1_Images       ,//  ScreenStart.Images
-         1                     ,//  ScreenStart.CBoxesCount              
-         @Screen1_CBoxes       ,//  ScreenStart.CBoxes
-         3                     ,//  ScreenStart.Boxes_RoundCount              
-         @Screen1_Boxes_Round  //  ScreenStart.Boxes_Round
+         0xA514                ,//  Start.Color
+         320                   ,//  Start.Width                     
+         240                   ,//  Start.Height                    
+         8                     ,//  Start.ObjectsCount             
+         4                     ,//  Start.CLabelsCount              
+         @Screen1_CLabels      ,//  Start.CLabels
+         1                     ,//  Start.ImagesCount              
+         @Screen1_Images       ,//  Start.Images
+         1                     ,//  Start.CBoxesCount              
+         @Screen1_CBoxes       ,//  Start.CBoxes
+         1                     ,//  Start.Boxes_RoundCount              
+         @Screen1_Boxes_Round  ,//  Start.Boxes_Round
+         1                     ,//  Start.ProgressBarsCount         
+         @Screen1_ProgressBars //  Start._ProgressBars
          ); code; far;
 
     const Bkgnd_Caption : string[1] = '';
@@ -124,8 +128,8 @@ const ScreenStart           : TCScreen =
          0                     , //   Bkgnd.Order           
          0                     , //   Bkgnd.Left           
          0                     , //   Bkgnd.Top             
-         240                   , //   Bkgnd.Width           
-         320                   , //   Bkgnd.Height          
+         320                   , //   Bkgnd.Width           
+         240                   , //   Bkgnd.Height          
          1                     , //   Bkgnd.Pen_Width       
          0x0000                , //   Bkgnd.Pen_Color       
          1                     , //   Bkgnd.Visible         
@@ -143,363 +147,293 @@ const ScreenStart           : TCScreen =
          0                     ,//    Bkgnd.OnClickPtr
          0                      //    Bkgnd.OnPressPtr
          ); code; far;
-    const Label2_Caption : string[12] = 'Mustangpeak'; code; far;
-    const Label2 : TCLabel = 
+    const LabelStartMustangpeak_Caption : string[12] = 'Mustangpeak'; code; far;
+    const LabelStartMustangpeak : TCLabel = 
          (
-         32768                 , //   Label2.OwnerScreenID
-         1                     , //   Label2.Order          
-         44                    , //   Label2.Left           
-         18                    , //   Label2.Top             
-         146                   , //   Label2.Width         
-         28                    , //   Label2.Height       
-         @Label2_Caption       , //   Label2.Caption        
-         @Tahoma25x25_Bold     , //   Label2.FontName       
-         0xFFFF                , //   Label2.Font_Color     
-         1                     , //   Label2.Visible        
-         0                     , //   Label2.Active        
-         0                     ,//    Label2.OnUpPtr
-         0                     ,//    Label2.OnDownPtr
-         0                     ,//    Label2.OnClickPtr
-         0                      //    Label2.OnPressPtr
+         32768                 , //   LabelStartMustangpeak.OwnerScreenID
+         1                     , //   LabelStartMustangpeak.Order          
+         82                    , //   LabelStartMustangpeak.Left           
+         13                    , //   LabelStartMustangpeak.Top             
+         146                   , //   LabelStartMustangpeak.Width         
+         28                    , //   LabelStartMustangpeak.Height       
+         @LabelStartMustangpeak_Caption, //   LabelStartMustangpeak.Caption        
+         @Tahoma25x25_Bold     , //   LabelStartMustangpeak.FontName       
+         0xFFFF                , //   LabelStartMustangpeak.Font_Color     
+         1                     , //   LabelStartMustangpeak.Visible        
+         0                     , //   LabelStartMustangpeak.Active        
+         0                     ,//    LabelStartMustangpeak.OnUpPtr
+         0                     ,//    LabelStartMustangpeak.OnDownPtr
+         0                     ,//    LabelStartMustangpeak.OnClickPtr
+         0                      //    LabelStartMustangpeak.OnPressPtr
          ); code; far;
 
-    const Label3_Caption : string[21] = 'OpenLCB DCC Throttle'; code; far;
-    const Label3 : TCLabel = 
+    const LabelStartThrottle_Caption : string[21] = 'OpenLCB DCC Throttle'; code; far;
+    const LabelStartThrottle : TCLabel = 
          (
-         32768                 , //   Label3.OwnerScreenID
-         2                     , //   Label3.Order          
-         37                    , //   Label3.Left           
-         47                    , //   Label3.Top             
-         165                   , //   Label3.Width         
-         21                    , //   Label3.Height       
-         @Label3_Caption       , //   Label3.Caption        
-         @Tahoma16x19_Regular  , //   Label3.FontName       
-         0xFFFF                , //   Label3.Font_Color     
-         1                     , //   Label3.Visible        
-         0                     , //   Label3.Active        
-         0                     ,//    Label3.OnUpPtr
-         0                     ,//    Label3.OnDownPtr
-         0                     ,//    Label3.OnClickPtr
-         0                      //    Label3.OnPressPtr
+         32768                 , //   LabelStartThrottle.OwnerScreenID
+         2                     , //   LabelStartThrottle.Order          
+         76                    , //   LabelStartThrottle.Left           
+         44                    , //   LabelStartThrottle.Top             
+         165                   , //   LabelStartThrottle.Width         
+         21                    , //   LabelStartThrottle.Height       
+         @LabelStartThrottle_Caption, //   LabelStartThrottle.Caption        
+         @Tahoma16x19_Regular  , //   LabelStartThrottle.FontName       
+         0xFFFF                , //   LabelStartThrottle.Font_Color     
+         1                     , //   LabelStartThrottle.Visible        
+         0                     , //   LabelStartThrottle.Active        
+         0                     ,//    LabelStartThrottle.OnUpPtr
+         0                     ,//    LabelStartThrottle.OnDownPtr
+         0                     ,//    LabelStartThrottle.OnClickPtr
+         0                      //    LabelStartThrottle.OnPressPtr
          ); code; far;
 
-var BoxRound1 : TBox_Round;
-    BoxRound1_Caption : string[1];
-    const Label4_Caption : string[11] = 'Loading...'; code; far;
-    const Label4 : TCLabel = 
+    const LabelStartLoading_Caption : string[11] = 'Loading...'; code; far;
+    const LabelStartLoading : TCLabel = 
          (
-         32768                 , //   Label4.OwnerScreenID
-         4                     , //   Label4.Order          
-         86                    , //   Label4.Left           
-         243                   , //   Label4.Top             
-         72                    , //   Label4.Width         
-         21                    , //   Label4.Height       
-         @Label4_Caption       , //   Label4.Caption        
-         @Tahoma16x19_Regular  , //   Label4.FontName       
-         0xFFFF                , //   Label4.Font_Color     
-         1                     , //   Label4.Visible        
-         1                     , //   Label4.Active        
-         0                     ,//    Label4.OnUpPtr
-         0                     ,//    Label4.OnDownPtr
-         0                     ,//    Label4.OnClickPtr
-         0                      //    Label4.OnPressPtr
+         32768                 , //   LabelStartLoading.OwnerScreenID
+         3                     , //   LabelStartLoading.Order          
+         111                   , //   LabelStartLoading.Left           
+         192                   , //   LabelStartLoading.Top             
+         72                    , //   LabelStartLoading.Width         
+         21                    , //   LabelStartLoading.Height       
+         @LabelStartLoading_Caption, //   LabelStartLoading.Caption        
+         @Tahoma16x19_Regular  , //   LabelStartLoading.FontName       
+         0xFFFF                , //   LabelStartLoading.Font_Color     
+         1                     , //   LabelStartLoading.Visible        
+         1                     , //   LabelStartLoading.Active        
+         0                     ,//    LabelStartLoading.OnUpPtr
+         0                     ,//    LabelStartLoading.OnDownPtr
+         0                     ,//    LabelStartLoading.OnClickPtr
+         0                      //    LabelStartLoading.OnPressPtr
          ); code; far;
 
-var BoxRoundProgressBar : TBox_Round;
-    BoxRoundProgressBar_Caption : string[1];
-    const Label5_Caption : string[18] = 'Version 0.1 Alpha'; code; far;
-    const Label5 : TCLabel = 
+    const LabelStartVer_Caption : string[18] = 'Version 0.1 Alpha'; code; far;
+    const LabelStartVer : TCLabel = 
          (
-         32768                 , //   Label5.OwnerScreenID
-         6                     , //   Label5.Order          
-         54                    , //   Label5.Left           
-         189                   , //   Label5.Top             
-         128                   , //   Label5.Width         
-         21                    , //   Label5.Height       
-         @Label5_Caption       , //   Label5.Caption        
-         @Tahoma16x19_Regular  , //   Label5.FontName       
-         0xFFFF                , //   Label5.Font_Color     
-         1                     , //   Label5.Visible        
-         1                     , //   Label5.Active        
-         0                     ,//    Label5.OnUpPtr
-         0                     ,//    Label5.OnDownPtr
-         0                     ,//    Label5.OnClickPtr
-         0                      //    Label5.OnPressPtr
+         32768                 , //   LabelStartVer.OwnerScreenID
+         4                     , //   LabelStartVer.Order          
+         84                    , //   LabelStartVer.Left           
+         172                   , //   LabelStartVer.Top             
+         128                   , //   LabelStartVer.Width         
+         21                    , //   LabelStartVer.Height       
+         @LabelStartVer_Caption, //   LabelStartVer.Caption        
+         @Tahoma16x19_Regular  , //   LabelStartVer.FontName       
+         0xFFFF                , //   LabelStartVer.Font_Color     
+         1                     , //   LabelStartVer.Visible        
+         1                     , //   LabelStartVer.Active        
+         0                     ,//    LabelStartVer.OnUpPtr
+         0                     ,//    LabelStartVer.OnDownPtr
+         0                     ,//    LabelStartVer.OnClickPtr
+         0                      //    LabelStartVer.OnPressPtr
          ); code; far;
 
-var BoxRound3 : TBox_Round;
-    BoxRound3_Caption : string[1];
-var Image1 : TImage;
-    Image1_Caption : string[1];
+var BoxRoundStartBkGnd : TBox_Round;
+    BoxRoundStartBkGnd_Caption : string[1];
+var ImageStart : TImage;
+    ImageStart_Caption : string[1];
+var ProgressBarStart : TProgressBar;
+    ProgressBarStart_Caption : string[8];
+
       const Screen1_CLabels  : array[4] of ^TCLabel =
          (
-         @Label2,              
-         @Label3,              
-         @Label4,              
-         @Label5               
+         @LabelStartMustangpeak,
+         @LabelStartThrottle,  
+         @LabelStartLoading,   
+         @LabelStartVer        
          ); code; far;
       const Screen1_Images  : array[1] of ^TImage =
          (
-         @Image1               
+         @ImageStart           
          ); code; far;
       const Screen1_CBoxes  : array[1] of ^TCBox =
          (
          @Bkgnd                
          ); code; far;
-      const Screen1_Boxes_Round  : array[3] of ^TBox_Round =
+      const Screen1_Boxes_Round  : array[1] of ^TBox_Round =
          (
-         @BoxRound1,           
-         @BoxRoundProgressBar, 
-         @BoxRound3            
+         @BoxRoundStartBkGnd   
+         ); code; far;
+      const Screen1_ProgressBars  : array[1] of ^TProgressBar =
+         (
+         @ProgressBarStart     
          ); code; far;
 
 
-const Screen2_Labels  : array[5] of ^TLabel; code; far; forward;
-const Screen2_CLabels  : array[5] of ^TCLabel; code; far; forward;
-const Screen2_Boxes  : array[1] of ^TBox; code; far; forward;
-const Screen2_Boxes_Round  : array[5] of ^TBox_Round; code; far; forward;
-var ScreenDetectingNodes           : TScreen;
-var BoxBkGnd : TBox;
-    BoxBkGnd_Caption : string[1];
-    const Label7_Caption : string[34] = 'Locating Command Station Nodes...'; code; far;
-    const Label7 : TCLabel = 
+const Screen2_Buttons  : array[2] of ^TButton; code; far; forward;
+const Screen2_Buttons_Round  : array[15] of ^TButton_Round; code; far; forward;
+const Screen2_CImages  : array[1] of ^TCImage; code; far; forward;
+const Screen2_ProgressBars  : array[1] of ^TProgressBar; code; far; forward;
+
+var Train           : TScreen;
+var Button1 : TButton;
+    Button1_Caption : string[5];
+
+var ButtonHeader : TButton;
+    ButtonHeader_Caption : string[9];
+
+var ButtonRound1 : TButton_Round;
+    ButtonRound1_Caption : string[2];
+
+var ButtonRound2 : TButton_Round;
+    ButtonRound2_Caption : string[6];
+
+var ButtonRound3 : TButton_Round;
+    ButtonRound3_Caption : string[8];
+
+var ButtonRound4 : TButton_Round;
+    ButtonRound4_Caption : string[5];
+
+var ButtonRound5 : TButton_Round;
+    ButtonRound5_Caption : string[8];
+
+var ButtonRound6 : TButton_Round;
+    ButtonRound6_Caption : string[5];
+
+var ButtonRound7 : TButton_Round;
+    ButtonRound7_Caption : string[10];
+
+var ButtonRound8 : TButton_Round;
+    ButtonRound8_Caption : string[5];
+
+var ButtonRound9 : TButton_Round;
+    ButtonRound9_Caption : string[12];
+
+var ButtonRound10 : TButton_Round;
+    ButtonRound10_Caption : string[11];
+
+var ButtonRound11 : TButton_Round;
+    ButtonRound11_Caption : string[7];
+
+var ButtonRound12 : TButton_Round;
+    ButtonRound12_Caption : string[6];
+
+var ButtonRound13 : TButton_Round;
+    ButtonRound13_Caption : string[1];
+
+var ProgressBarSpeed : TProgressBar;
+    ProgressBarSpeed_Caption : string[8];
+
+var ButtonRoundSpeedInc : TButton_Round;
+    ButtonRoundSpeedInc_Caption : string[10];
+
+var ButtonRoundSpeedDec : TButton_Round;
+    ButtonRoundSpeedDec_Caption : string[10];
+
+    const ImageRGS455_Caption : string[1] = ''; code; far;
+    const ImageRGS455 : TCImage = 
          (
-         0                     , //   Label7.OwnerScreenID
-         1                     , //   Label7.Order          
-         7                     , //   Label7.Left           
-         4                     , //   Label7.Top             
-         212                   , //   Label7.Width         
-         17                    , //   Label7.Height       
-         @Label7_Caption       , //   Label7.Caption        
-         @Tahoma13x16_Regular  , //   Label7.FontName       
-         0xFFFF                , //   Label7.Font_Color     
-         1                     , //   Label7.Visible        
-         1                     , //   Label7.Active        
-         0                     ,//    Label7.OnUpPtr
-         0                     ,//    Label7.OnDownPtr
-         0                     ,//    Label7.OnClickPtr
-         0                      //    Label7.OnPressPtr
+         0                     , //   ImageRGS455.OwnerScreenID
+         18                     ,//  ImageRGS455.Order          
+         150                    ,//  ImageRGS455.Left           
+         58                     ,//  ImageRGS455.Top            
+         151                    ,//  ImageRGS455.Width          
+         50                     ,//  ImageRGS455.Height         
+         @RGS455_jpg            ,//  ImageRGS455.Picture_Name  
+         1                      ,//  ImageRGS455.Visible      
+         1                     , //   ImageRGS455.Active         
+         1                      ,//  ImageRGS455.Picture_Type   
+         1                      ,//  ImageRGS455.Picture_Ratio       
+         0                     ,//    ImageRGS455.OnUpPtr
+         0                     ,//    ImageRGS455.OnDownPtr
+         @ImageRGS455OnClick   ,//    ImageRGS455.OnClickPtr
+         0                      //    ImageRGS455.OnPressPtr
          ); code; far;
-
-    const Label1_Caption : string[29] = 'Locating Programmer Nodes...'; code; far;
-    const Label1 : TCLabel = 
+      const Screen2_Buttons  : array[2] of ^TButton =
          (
-         0                     , //   Label1.OwnerScreenID
-         2                     , //   Label1.Order          
-         7                     , //   Label1.Left           
-         69                    , //   Label1.Top             
-         180                   , //   Label1.Width         
-         17                    , //   Label1.Height       
-         @Label1_Caption       , //   Label1.Caption        
-         @Tahoma13x16_Regular  , //   Label1.FontName       
-         0xFFFF                , //   Label1.Font_Color     
-         1                     , //   Label1.Visible        
-         1                     , //   Label1.Active        
-         0                     ,//    Label1.OnUpPtr
-         0                     ,//    Label1.OnDownPtr
-         0                     ,//    Label1.OnClickPtr
-         0                      //    Label1.OnPressPtr
+         @Button1,             
+         @ButtonHeader         
          ); code; far;
-
-    const Label6_Caption : string[24] = 'Locating Train Nodes...'; code; far;
-    const Label6 : TCLabel = 
+      const Screen2_Buttons_Round  : array[15] of ^TButton_Round =
          (
-         0                     , //   Label6.OwnerScreenID
-         3                     , //   Label6.Order          
-         7                     , //   Label6.Left           
-         134                   , //   Label6.Top             
-         137                   , //   Label6.Width         
-         17                    , //   Label6.Height       
-         @Label6_Caption       , //   Label6.Caption        
-         @Tahoma13x16_Regular  , //   Label6.FontName       
-         0xFFFF                , //   Label6.Font_Color     
-         1                     , //   Label6.Visible        
-         1                     , //   Label6.Active        
-         0                     ,//    Label6.OnUpPtr
-         0                     ,//    Label6.OnDownPtr
-         0                     ,//    Label6.OnClickPtr
-         0                      //    Label6.OnPressPtr
+         @ButtonRound1,        
+         @ButtonRound2,        
+         @ButtonRound3,        
+         @ButtonRound4,        
+         @ButtonRound5,        
+         @ButtonRound6,        
+         @ButtonRound7,        
+         @ButtonRound8,        
+         @ButtonRound9,        
+         @ButtonRound10,       
+         @ButtonRound11,       
+         @ButtonRound12,       
+         @ButtonRound13,       
+         @ButtonRoundSpeedInc, 
+         @ButtonRoundSpeedDec  
          ); code; far;
-
-    const Label8_Caption : string[28] = 'Locating Accessory Nodes...'; code; far;
-    const Label8 : TCLabel = 
+      const Screen2_CImages  : array[1] of ^TCImage =
          (
-         0                     , //   Label8.OwnerScreenID
-         4                     , //   Label8.Order          
-         7                     , //   Label8.Left           
-         264                   , //   Label8.Top             
-         165                   , //   Label8.Width         
-         17                    , //   Label8.Height       
-         @Label8_Caption       , //   Label8.Caption        
-         @Tahoma13x16_Regular  , //   Label8.FontName       
-         0xFFFF                , //   Label8.Font_Color     
-         1                     , //   Label8.Visible        
-         1                     , //   Label8.Active        
-         0                     ,//    Label8.OnUpPtr
-         0                     ,//    Label8.OnDownPtr
-         0                     ,//    Label8.OnClickPtr
-         0                      //    Label8.OnPressPtr
+         @ImageRGS455          
          ); code; far;
-
-var BoxRoundCmdStations : TBox_Round;
-    BoxRoundCmdStations_Caption : string[1];
-var BoxRoundAccyNodes : TBox_Round;
-    BoxRoundAccyNodes_Caption : string[1];
-var LabelCmdStationNodes : TLabel;
-    LabelCmdStationNodes_Caption : string[33];
-
-var LabelAccyNodes : TLabel;
-    LabelAccyNodes_Caption : string[33];
-
-var BoxRoundProgStations : TBox_Round;
-    BoxRoundProgStations_Caption : string[1];
-var BoxRoundTrainNodes : TBox_Round;
-    BoxRoundTrainNodes_Caption : string[1];
-var LabelProgNodes : TLabel;
-    LabelProgNodes_Caption : string[33];
-
-var LabelTrainNodes : TLabel;
-    LabelTrainNodes_Caption : string[33];
-
-    const Label9_Caption : string[26] = 'Locating Consist Nodes...'; code; far;
-    const Label9 : TCLabel = 
+      const Screen2_ProgressBars  : array[1] of ^TProgressBar =
          (
-         0                     , //   Label9.OwnerScreenID
-         13                    , //   Label9.Order          
-         7                     , //   Label9.Left           
-         199                   , //   Label9.Top             
-         149                   , //   Label9.Width         
-         17                    , //   Label9.Height       
-         @Label9_Caption       , //   Label9.Caption        
-         @Tahoma13x16_Regular  , //   Label9.FontName       
-         0xFFFF                , //   Label9.Font_Color     
-         1                     , //   Label9.Visible        
-         1                     , //   Label9.Active        
-         0                     ,//    Label9.OnUpPtr
-         0                     ,//    Label9.OnDownPtr
-         0                     ,//    Label9.OnClickPtr
-         0                      //    Label9.OnPressPtr
-         ); code; far;
-
-var BoxRound2 : TBox_Round;
-    BoxRound2_Caption : string[1];
-var Label10 : TLabel;
-    Label10_Caption : string[33];
-
-      const Screen2_Labels  : array[5] of ^TLabel =
-         (
-         @LabelCmdStationNodes,
-         @LabelAccyNodes,      
-         @LabelProgNodes,      
-         @LabelTrainNodes,     
-         @Label10              
-         ); code; far;
-      const Screen2_CLabels  : array[5] of ^TCLabel =
-         (
-         @Label7,              
-         @Label1,              
-         @Label6,              
-         @Label8,              
-         @Label9               
-         ); code; far;
-      const Screen2_Boxes  : array[1] of ^TBox =
-         (
-         @BoxBkGnd             
-         ); code; far;
-      const Screen2_Boxes_Round  : array[5] of ^TBox_Round =
-         (
-         @BoxRoundCmdStations, 
-         @BoxRoundAccyNodes,   
-         @BoxRoundProgStations,
-         @BoxRoundTrainNodes,  
-         @BoxRound2            
+         @ProgressBarSpeed     
          ); code; far;
 
 
 const Screen3_Buttons  : array[1] of ^TButton; code; far; forward;
-const Screen3_Buttons_Round  : array[1] of ^TButton_Round; code; far; forward;
-const Screen3_Labels  : array[6] of ^TLabel; code; far; forward;
-const Screen3_Boxes  : array[1] of ^TBox; code; far; forward;
-const Screen3_Boxes_Round  : array[6] of ^TBox_Round; code; far; forward;
-var ScreenNodeSelect           : TScreen;
-var Box1 : TBox;
-    Box1_Caption : string[1];
-var BoxRoundItem1 : TBox_Round;
-    BoxRoundItem1_Caption : string[1];
-var BoxRoundItem4 : TBox_Round;
-    BoxRoundItem4_Caption : string[1];
-var LabelItem1 : TLabel;
-    LabelItem1_Caption : string[17];
+const Screen3_Buttons_Round  : array[10] of ^TButton_Round; code; far; forward;
+var TrainSelector           : TScreen;
+var ButtonRound23 : TButton_Round;
+    ButtonRound23_Caption : string[1];
 
-var LabelItem4 : TLabel;
-    LabelItem4_Caption : string[17];
+var ButtonRoundTrainSelction0 : TButton_Round;
+    ButtonRoundTrainSelction0_Caption : string[12];
 
-var BoxRoundItem2 : TBox_Round;
-    BoxRoundItem2_Caption : string[1];
-var BoxRoundItem3 : TBox_Round;
-    BoxRoundItem3_Caption : string[1];
-var LabelItem2 : TLabel;
-    LabelItem2_Caption : string[17];
+var ButtonRoundTrainSelction1 : TButton_Round;
+    ButtonRoundTrainSelction1_Caption : string[15];
 
-var LabelItem3 : TLabel;
-    LabelItem3_Caption : string[17];
+var ButtonRoundTrainSelction2 : TButton_Round;
+    ButtonRoundTrainSelction2_Caption : string[13];
 
-var BoxRoundItem6 : TBox_Round;
-    BoxRoundItem6_Caption : string[1];
-var LabelItem6 : TLabel;
-    LabelItem6_Caption : string[17];
+var ButtonRoundTrainSelction3 : TButton_Round;
+    ButtonRoundTrainSelction3_Caption : string[23];
 
-var BoxRoundItem5 : TBox_Round;
-    BoxRoundItem5_Caption : string[1];
-var LabelItem5 : TLabel;
-    LabelItem5_Caption : string[17];
+var ButtonRoundTrainSelction04 : TButton_Round;
+    ButtonRoundTrainSelction04_Caption : string[14];
 
-var Button1 : TButton;
-    Button1_Caption : string[7];
+var ButtonRoundTrainSelction5 : TButton_Round;
+    ButtonRoundTrainSelction5_Caption : string[13];
 
-var ButtonRoundNodeSelectBack : TButton_Round;
-    ButtonRoundNodeSelectBack_Caption : string[2];
+var Button3 : TButton;
+    Button3_Caption : string[15];
+
+var ButtonRound20 : TButton_Round;
+    ButtonRound20_Caption : string[2];
+
+var ButtonRound21 : TButton_Round;
+    ButtonRound21_Caption : string[3];
+
+var ButtonRound22 : TButton_Round;
+    ButtonRound22_Caption : string[5];
 
       const Screen3_Buttons  : array[1] of ^TButton =
          (
-         @Button1              
+         @Button3              
          ); code; far;
-      const Screen3_Buttons_Round  : array[1] of ^TButton_Round =
+      const Screen3_Buttons_Round  : array[10] of ^TButton_Round =
          (
-         @ButtonRoundNodeSelectBack
-         ); code; far;
-      const Screen3_Labels  : array[6] of ^TLabel =
-         (
-         @LabelItem1,          
-         @LabelItem4,          
-         @LabelItem2,          
-         @LabelItem3,          
-         @LabelItem6,          
-         @LabelItem5           
-         ); code; far;
-      const Screen3_Boxes  : array[1] of ^TBox =
-         (
-         @Box1                 
-         ); code; far;
-      const Screen3_Boxes_Round  : array[6] of ^TBox_Round =
-         (
-         @BoxRoundItem1,       
-         @BoxRoundItem4,       
-         @BoxRoundItem2,       
-         @BoxRoundItem3,       
-         @BoxRoundItem6,       
-         @BoxRoundItem5        
+         @ButtonRound23,       
+         @ButtonRoundTrainSelction0,
+         @ButtonRoundTrainSelction1,
+         @ButtonRoundTrainSelction2,
+         @ButtonRoundTrainSelction3,
+         @ButtonRoundTrainSelction04,
+         @ButtonRoundTrainSelction5,
+         @ButtonRound20,       
+         @ButtonRound21,       
+         @ButtonRound22        
          ); code; far;
 
 
 const DScreens : array[2] of ^TScreen =
          (
-                  @ScreenDetectingNodes ,//   ScreenDetectingNodesScreenID = 0
-                  @ScreenNodeSelect     //   ScreenNodeSelectScreenID = 1
+                  @Train                ,//   TrainScreenID = 0
+                  @TrainSelector        //   TrainSelectorScreenID = 1
          ); code; far;
 const CScreens : array[1] of ^TCScreen = 
          (
-                  @ScreenStart          //   ScreenStartScreenID = 32768
+                  @Start                //   StartScreenID = 32768
          ); code; far;
 
 var CurrentMyScreen : TMyScreen;
@@ -545,9 +479,9 @@ procedure InitializeTouchPanel(); // static
   begin
     Init_ADC();
     TFT_Set_Active(@Set_Index, @Write_Command, @Write_Data);
-    TFT_Init(240, 320);
+    TFT_Init(320, 240);
 
-    TP_TFT_Init(240, 320, 13, 12);                                  // Initialize touch panel
+    TP_TFT_Init(320, 240, 13, 12);                                  // Initialize touch panel
     TP_TFT_Set_ADC_Threshold(ADC_THRESHOLD);                              // Set touch panel ADC threshold
 
     PenDown := 0;
@@ -559,644 +493,122 @@ procedure InitializeTouchPanel(); // static
 procedure InitializeObjects();    // static
   begin
 
-    ScreenDetectingNodes.Color                     := 0x8410;
-    ScreenDetectingNodes.Width                     := 240;
-    ScreenDetectingNodes.Height                    := 320;
-    ScreenDetectingNodes.ButtonsCount              := 0;
-    ScreenDetectingNodes.Buttons_RoundCount        := 0;
-    ScreenDetectingNodes.LabelsCount               := 5;
-    ScreenDetectingNodes.Labels                    := @Screen2_Labels;
-    ScreenDetectingNodes.CLabelsCount               := 5;
-    ScreenDetectingNodes.CLabels                    := @Screen2_CLabels;
-    ScreenDetectingNodes.BoxesCount                := 1;
-    ScreenDetectingNodes.Boxes                     := @Screen2_Boxes;
-    ScreenDetectingNodes.Boxes_RoundCount          := 5;
-    ScreenDetectingNodes.Boxes_Round               := @Screen2_Boxes_Round;
-    ScreenDetectingNodes.ObjectsCount              := 16;
+    Train.Color                     := 0xFFFF;
+    Train.Width                     := 320;
+    Train.Height                    := 240;
+    Train.ButtonsCount              := 2;
+    Train.Buttons                   := @Screen2_Buttons;
+    Train.Buttons_RoundCount        := 15;
+    Train.Buttons_Round             := @Screen2_Buttons_Round;
+    Train.CImagesCount               := 1;
+    Train.CImages                    := @Screen2_CImages;
+    Train.ProgressBarsCount           := 1;
+    Train.ProgressBars                := @Screen2_ProgressBars;
+    Train.ObjectsCount              := 19;
 
-    ScreenNodeSelect.Color                     := 0x8410;
-    ScreenNodeSelect.Width                     := 240;
-    ScreenNodeSelect.Height                    := 320;
-    ScreenNodeSelect.ButtonsCount              := 1;
-    ScreenNodeSelect.Buttons                   := @Screen3_Buttons;
-    ScreenNodeSelect.Buttons_RoundCount        := 1;
-    ScreenNodeSelect.Buttons_Round             := @Screen3_Buttons_Round;
-    ScreenNodeSelect.LabelsCount               := 6;
-    ScreenNodeSelect.Labels                    := @Screen3_Labels;
-    ScreenNodeSelect.CLabelsCount               := 0;
-    ScreenNodeSelect.BoxesCount                := 1;
-    ScreenNodeSelect.Boxes                     := @Screen3_Boxes;
-    ScreenNodeSelect.Boxes_RoundCount          := 6;
-    ScreenNodeSelect.Boxes_Round               := @Screen3_Boxes_Round;
-    ScreenNodeSelect.ObjectsCount              := 15;
+    TrainSelector.Color                     := 0xFFFF;
+    TrainSelector.Width                     := 320;
+    TrainSelector.Height                    := 240;
+    TrainSelector.ButtonsCount              := 1;
+    TrainSelector.Buttons                   := @Screen3_Buttons;
+    TrainSelector.Buttons_RoundCount        := 10;
+    TrainSelector.Buttons_Round             := @Screen3_Buttons_Round;
+    TrainSelector.CImagesCount               := 0;
+    TrainSelector.ProgressBarsCount           := 0;
+    TrainSelector.ObjectsCount              := 11;
 
 
-    BoxRound1.OwnerScreenID       := 32768;
-    BoxRound1.Order               := 3;
-    BoxRound1.Left                := 30;
-    BoxRound1.Top                 := 270;
-    BoxRound1.Width               := 178;
-    BoxRound1.Height              := 18;
-    BoxRound1.Pen_Width           := 5;
-    BoxRound1.Pen_Color           := 0x0000;
-    BoxRound1.Visible             := 1;
-    BoxRound1.Active              := 0;
-    BoxRound1.Transparent         := 1;
-    BoxRound1.Gradient            := 1;
-    BoxRound1.Gradient_Orientation := 0;
-    BoxRound1.Gradient_Start_Color := 0x6B4D;
-    BoxRound1.Gradient_End_Color  := 0xA534;
-    BoxRound1.Color               := 0xC618;
-    BoxRound1.PressColEnabled := 1;
-    BoxRound1.Press_Color         := 0x8410;
-    BoxRound1.Corner_Radius          := 3;
-    BoxRound1.OnUpPtr             := 0;
-    BoxRound1.OnDownPtr           := 0;
-    BoxRound1.OnClickPtr          := 0;
-    BoxRound1.OnPressPtr          := 0;
+    BoxRoundStartBkGnd.OwnerScreenID       := 32768;
+    BoxRoundStartBkGnd.Order               := 5;
+    BoxRoundStartBkGnd.Left                := 57;
+    BoxRoundStartBkGnd.Top                 := 70;
+    BoxRoundStartBkGnd.Width               := 202;
+    BoxRoundStartBkGnd.Height              := 101;
+    BoxRoundStartBkGnd.Pen_Width           := 1;
+    BoxRoundStartBkGnd.Pen_Color           := 0x0000;
+    BoxRoundStartBkGnd.Visible             := 1;
+    BoxRoundStartBkGnd.Active              := 1;
+    BoxRoundStartBkGnd.Transparent         := 1;
+    BoxRoundStartBkGnd.Gradient            := 1;
+    BoxRoundStartBkGnd.Gradient_Orientation := 0;
+    BoxRoundStartBkGnd.Gradient_Start_Color := 0xFFFF;
+    BoxRoundStartBkGnd.Gradient_End_Color  := 0xC618;
+    BoxRoundStartBkGnd.Color               := 0xC618;
+    BoxRoundStartBkGnd.PressColEnabled := 1;
+    BoxRoundStartBkGnd.Press_Color         := 0x8410;
+    BoxRoundStartBkGnd.Corner_Radius          := 3;
+    BoxRoundStartBkGnd.OnUpPtr             := 0;
+    BoxRoundStartBkGnd.OnDownPtr           := 0;
+    BoxRoundStartBkGnd.OnClickPtr          := 0;
+    BoxRoundStartBkGnd.OnPressPtr          := 0;
 
-    BoxRoundProgressBar.OwnerScreenID       := 32768;
-    BoxRoundProgressBar.Order               := 5;
-    BoxRoundProgressBar.Left                := 30;
-    BoxRoundProgressBar.Top                 := 270;
-    BoxRoundProgressBar.Width               := 8;
-    BoxRoundProgressBar.Height              := 17;
-    BoxRoundProgressBar.Pen_Width           := 1;
-    BoxRoundProgressBar.Pen_Color           := 0x0000;
-    BoxRoundProgressBar.Visible             := 1;
-    BoxRoundProgressBar.Active              := 0;
-    BoxRoundProgressBar.Transparent         := 1;
-    BoxRoundProgressBar.Gradient            := 1;
-    BoxRoundProgressBar.Gradient_Orientation := 0;
-    BoxRoundProgressBar.Gradient_Start_Color := 0x07E0;
-    BoxRoundProgressBar.Gradient_End_Color  := 0x87F0;
-    BoxRoundProgressBar.Color               := 0xC618;
-    BoxRoundProgressBar.PressColEnabled := 1;
-    BoxRoundProgressBar.Press_Color         := 0x8410;
-    BoxRoundProgressBar.Corner_Radius          := 3;
-    BoxRoundProgressBar.OnUpPtr             := 0;
-    BoxRoundProgressBar.OnDownPtr           := 0;
-    BoxRoundProgressBar.OnClickPtr          := 0;
-    BoxRoundProgressBar.OnPressPtr          := 0;
+    ImageStart.OwnerScreenID       := 32768;
+    ImageStart.Order               := 6;
+    ImageStart.Left                := 71;
+    ImageStart.Top                 := 83;
+    ImageStart.Width               := 78;
+    ImageStart.Height              := 32;
+    ImageStart.Picture_Type        := 0;
+    ImageStart.Picture_Ratio       := 1;
+    ImageStart.Picture_Name        := @OpenLCB_bmp;
+    ImageStart.Visible             := 1;
+    ImageStart.Active              := 1;
+    ImageStart.OnUpPtr             := 0;
+    ImageStart.OnDownPtr           := 0;
+    ImageStart.OnClickPtr          := 0;
+    ImageStart.OnPressPtr          := 0;
 
-    BoxRound3.OwnerScreenID       := 32768;
-    BoxRound3.Order               := 7;
-    BoxRound3.Left                := 18;
-    BoxRound3.Top                 := 69;
-    BoxRound3.Width               := 202;
-    BoxRound3.Height              := 114;
-    BoxRound3.Pen_Width           := 1;
-    BoxRound3.Pen_Color           := 0x0000;
-    BoxRound3.Visible             := 1;
-    BoxRound3.Active              := 1;
-    BoxRound3.Transparent         := 1;
-    BoxRound3.Gradient            := 1;
-    BoxRound3.Gradient_Orientation := 0;
-    BoxRound3.Gradient_Start_Color := 0xFFFF;
-    BoxRound3.Gradient_End_Color  := 0xC618;
-    BoxRound3.Color               := 0xC618;
-    BoxRound3.PressColEnabled := 1;
-    BoxRound3.Press_Color         := 0x8410;
-    BoxRound3.Corner_Radius          := 3;
-    BoxRound3.OnUpPtr             := 0;
-    BoxRound3.OnDownPtr           := 0;
-    BoxRound3.OnClickPtr          := 0;
-    BoxRound3.OnPressPtr          := 0;
+    ProgressBarStart.OwnerScreenID       := 32768;
+    ProgressBarStart.Order               := 7;
+    ProgressBarStart.Left                := 49;
+    ProgressBarStart.Top                 := 213;
+    ProgressBarStart.Width               := 193;
+    ProgressBarStart.Height              := 17;
+    ProgressBarStart.Pen_Width           := 1;
+    ProgressBarStart.Pen_Color           := 0x0000;
+    ProgressBarStart.Visible             := 1;
+    ProgressBarStart.Active              := 1;
+    ProgressBarStart.Transparent         := 1;
+    ProgressBarStart.Caption             := @ProgressBarStart_Caption;
+    ProgressBarStart_Caption             := '0%';
+    ProgressBarStart.FontName            := @Tahoma11x13_Regular;
+    ProgressBarStart.Font_Color          := 0x0000;
+    ProgressBarStart.Gradient            := 1;
+    ProgressBarStart.Gradient_Orientation := 0;
+    ProgressBarStart.Gradient_Start_Color := 0xFFFF;
+    ProgressBarStart.Gradient_End_Color  := 0x07E0;
+    ProgressBarStart.Color               := 0xA65E;
+    ProgressBarStart.Background_Color    := 0x8410;
+    ProgressBarStart.Min                 := 0;
+    ProgressBarStart.Max                 := 100;
+    ProgressBarStart.Position            := 0;
+    ProgressBarStart.Show_Position       := 1;
+    ProgressBarStart.Show_Percentage     := 1;
+    ProgressBarStart.Smooth              := 1;
+    ProgressBarStart.Rounded             := 1;
+    ProgressBarStart.Corner_Radius          := 3;
 
-    Image1.OwnerScreenID       := 32768;
-    Image1.Order               := 8;
-    Image1.Left                := 33;
-    Image1.Top                 := 85;
-    Image1.Width               := 78;
-    Image1.Height              := 32;
-    Image1.Picture_Type        := 0;
-    Image1.Picture_Ratio       := 1;
-    Image1.Picture_Name        := @OpenLCB_bmp;
-    Image1.Visible             := 1;
-    Image1.Active              := 1;
-    Image1.OnUpPtr             := 0;
-    Image1.OnDownPtr           := 0;
-    Image1.OnClickPtr          := 0;
-    Image1.OnPressPtr          := 0;
-
-    BoxBkGnd.OwnerScreenID       := 0;
-    BoxBkGnd.Order               := 0;
-    BoxBkGnd.Left                := 0;
-    BoxBkGnd.Top                 := 0;
-    BoxBkGnd.Width               := 240;
-    BoxBkGnd.Height              := 320;
-    BoxBkGnd.Pen_Width           := 1;
-    BoxBkGnd.Pen_Color           := 0x0000;
-    BoxBkGnd.Visible             := 1;
-    BoxBkGnd.Active              := 0;
-    BoxBkGnd.Transparent         := 1;
-    BoxBkGnd.Gradient            := 1;
-    BoxBkGnd.Gradient_Orientation := 0;
-    BoxBkGnd.Gradient_Start_Color := 0x2104;
-    BoxBkGnd.Gradient_End_Color  := 0x8410;
-    BoxBkGnd.Color               := 0xC618;
-    BoxBkGnd.PressColEnabled := 1;
-    BoxBkGnd.Press_Color         := 0x8410;
-    BoxBkGnd.OnUpPtr             := 0;
-    BoxBkGnd.OnDownPtr           := 0;
-    BoxBkGnd.OnClickPtr          := 0;
-    BoxBkGnd.OnPressPtr          := 0;
-
-    BoxRoundCmdStations.OwnerScreenID       := 0;
-    BoxRoundCmdStations.Order               := 5;
-    BoxRoundCmdStations.Left                := 7;
-    BoxRoundCmdStations.Top                 := 21;
-    BoxRoundCmdStations.Width               := 220;
-    BoxRoundCmdStations.Height              := 28;
-    BoxRoundCmdStations.Pen_Width           := 2;
-    BoxRoundCmdStations.Pen_Color           := 0xC618;
-    BoxRoundCmdStations.Visible             := 1;
-    BoxRoundCmdStations.Active              := 1;
-    BoxRoundCmdStations.Transparent         := 1;
-    BoxRoundCmdStations.Gradient            := 0;
-    BoxRoundCmdStations.Gradient_Orientation := 0;
-    BoxRoundCmdStations.Gradient_Start_Color := 0xFFFF;
-    BoxRoundCmdStations.Gradient_End_Color  := 0xC618;
-    BoxRoundCmdStations.Color               := 0xFFFF;
-    BoxRoundCmdStations.PressColEnabled := 1;
-    BoxRoundCmdStations.Press_Color         := 0x8410;
-    BoxRoundCmdStations.Corner_Radius          := 3;
-    BoxRoundCmdStations.OnUpPtr             := 0;
-    BoxRoundCmdStations.OnDownPtr           := 0;
-    BoxRoundCmdStations.OnClickPtr          := @BoxRoundCmdStationsClick;
-    BoxRoundCmdStations.OnPressPtr          := 0;
-
-    BoxRoundAccyNodes.OwnerScreenID       := 0;
-    BoxRoundAccyNodes.Order               := 6;
-    BoxRoundAccyNodes.Left                := 10;
-    BoxRoundAccyNodes.Top                 := 284;
-    BoxRoundAccyNodes.Width               := 220;
-    BoxRoundAccyNodes.Height              := 28;
-    BoxRoundAccyNodes.Pen_Width           := 2;
-    BoxRoundAccyNodes.Pen_Color           := 0xC618;
-    BoxRoundAccyNodes.Visible             := 1;
-    BoxRoundAccyNodes.Active              := 1;
-    BoxRoundAccyNodes.Transparent         := 1;
-    BoxRoundAccyNodes.Gradient            := 0;
-    BoxRoundAccyNodes.Gradient_Orientation := 0;
-    BoxRoundAccyNodes.Gradient_Start_Color := 0xFFFF;
-    BoxRoundAccyNodes.Gradient_End_Color  := 0xC618;
-    BoxRoundAccyNodes.Color               := 0xFFFF;
-    BoxRoundAccyNodes.PressColEnabled := 1;
-    BoxRoundAccyNodes.Press_Color         := 0x8410;
-    BoxRoundAccyNodes.Corner_Radius          := 3;
-    BoxRoundAccyNodes.OnUpPtr             := 0;
-    BoxRoundAccyNodes.OnDownPtr           := 0;
-    BoxRoundAccyNodes.OnClickPtr          := @BoxRoundAccyNodesClick;
-    BoxRoundAccyNodes.OnPressPtr          := 0;
-
-    LabelCmdStationNodes.OwnerScreenID       := 0;
-    LabelCmdStationNodes.Order               := 7;
-    LabelCmdStationNodes.Left                := 20;
-    LabelCmdStationNodes.Top                 := 24;
-    LabelCmdStationNodes.Width               := 113;
-    LabelCmdStationNodes.Height              := 25;
-    LabelCmdStationNodes.Visible             := 1;
-    LabelCmdStationNodes.Active              := 0;
-    LabelCmdStationNodes.Caption             := @LabelCmdStationNodes_Caption;
-    LabelCmdStationNodes_Caption             := 'Ophir District';
-    LabelCmdStationNodes.FontName            := @Tahoma19x23_Regular;
-    LabelCmdStationNodes.Font_Color          := 0x0000;
-    LabelCmdStationNodes.OnUpPtr             := 0;
-    LabelCmdStationNodes.OnDownPtr           := 0;
-    LabelCmdStationNodes.OnClickPtr          := 0;
-    LabelCmdStationNodes.OnPressPtr          := 0;
-
-    LabelAccyNodes.OwnerScreenID       := 0;
-    LabelAccyNodes.Order               := 8;
-    LabelAccyNodes.Left                := 20;
-    LabelAccyNodes.Top                 := 286;
-    LabelAccyNodes.Width               := 163;
-    LabelAccyNodes.Height              := 25;
-    LabelAccyNodes.Visible             := 1;
-    LabelAccyNodes.Active              := 0;
-    LabelAccyNodes.Caption             := @LabelAccyNodes_Caption;
-    LabelAccyNodes_Caption             := 'Ophir Depot Siding';
-    LabelAccyNodes.FontName            := @Tahoma19x23_Regular;
-    LabelAccyNodes.Font_Color          := 0x0000;
-    LabelAccyNodes.OnUpPtr             := 0;
-    LabelAccyNodes.OnDownPtr           := 0;
-    LabelAccyNodes.OnClickPtr          := 0;
-    LabelAccyNodes.OnPressPtr          := 0;
-
-    BoxRoundProgStations.OwnerScreenID       := 0;
-    BoxRoundProgStations.Order               := 9;
-    BoxRoundProgStations.Left                := 10;
-    BoxRoundProgStations.Top                 := 87;
-    BoxRoundProgStations.Width               := 220;
-    BoxRoundProgStations.Height              := 28;
-    BoxRoundProgStations.Pen_Width           := 2;
-    BoxRoundProgStations.Pen_Color           := 0xC618;
-    BoxRoundProgStations.Visible             := 1;
-    BoxRoundProgStations.Active              := 1;
-    BoxRoundProgStations.Transparent         := 1;
-    BoxRoundProgStations.Gradient            := 0;
-    BoxRoundProgStations.Gradient_Orientation := 0;
-    BoxRoundProgStations.Gradient_Start_Color := 0xFFFF;
-    BoxRoundProgStations.Gradient_End_Color  := 0xC618;
-    BoxRoundProgStations.Color               := 0xFFFF;
-    BoxRoundProgStations.PressColEnabled := 1;
-    BoxRoundProgStations.Press_Color         := 0x8410;
-    BoxRoundProgStations.Corner_Radius          := 3;
-    BoxRoundProgStations.OnUpPtr             := 0;
-    BoxRoundProgStations.OnDownPtr           := 0;
-    BoxRoundProgStations.OnClickPtr          := @BoxRoundProgStationsClick;
-    BoxRoundProgStations.OnPressPtr          := 0;
-
-    BoxRoundTrainNodes.OwnerScreenID       := 0;
-    BoxRoundTrainNodes.Order               := 10;
-    BoxRoundTrainNodes.Left                := 9;
-    BoxRoundTrainNodes.Top                 := 152;
-    BoxRoundTrainNodes.Width               := 220;
-    BoxRoundTrainNodes.Height              := 28;
-    BoxRoundTrainNodes.Pen_Width           := 2;
-    BoxRoundTrainNodes.Pen_Color           := 0xC618;
-    BoxRoundTrainNodes.Visible             := 1;
-    BoxRoundTrainNodes.Active              := 1;
-    BoxRoundTrainNodes.Transparent         := 1;
-    BoxRoundTrainNodes.Gradient            := 0;
-    BoxRoundTrainNodes.Gradient_Orientation := 0;
-    BoxRoundTrainNodes.Gradient_Start_Color := 0xFFFF;
-    BoxRoundTrainNodes.Gradient_End_Color  := 0xC618;
-    BoxRoundTrainNodes.Color               := 0xFFFF;
-    BoxRoundTrainNodes.PressColEnabled := 1;
-    BoxRoundTrainNodes.Press_Color         := 0x8410;
-    BoxRoundTrainNodes.Corner_Radius          := 3;
-    BoxRoundTrainNodes.OnUpPtr             := 0;
-    BoxRoundTrainNodes.OnDownPtr           := 0;
-    BoxRoundTrainNodes.OnClickPtr          := @BoxRoundTrainNodesClick;
-    BoxRoundTrainNodes.OnPressPtr          := 0;
-
-    LabelProgNodes.OwnerScreenID       := 0;
-    LabelProgNodes.Order               := 11;
-    LabelProgNodes.Left                := 20;
-    LabelProgNodes.Top                 := 90;
-    LabelProgNodes.Width               := 95;
-    LabelProgNodes.Height              := 25;
-    LabelProgNodes.Visible             := 1;
-    LabelProgNodes.Active              := 0;
-    LabelProgNodes.Caption             := @LabelProgNodes_Caption;
-    LabelProgNodes_Caption             := 'Rico Siding';
-    LabelProgNodes.FontName            := @Tahoma19x23_Regular;
-    LabelProgNodes.Font_Color          := 0x0000;
-    LabelProgNodes.OnUpPtr             := 0;
-    LabelProgNodes.OnDownPtr           := 0;
-    LabelProgNodes.OnClickPtr          := 0;
-    LabelProgNodes.OnPressPtr          := 0;
-
-    LabelTrainNodes.OwnerScreenID       := 0;
-    LabelTrainNodes.Order               := 12;
-    LabelTrainNodes.Left                := 20;
-    LabelTrainNodes.Top                 := 155;
-    LabelTrainNodes.Width               := 126;
-    LabelTrainNodes.Height              := 25;
-    LabelTrainNodes.Visible             := 1;
-    LabelTrainNodes.Active              := 0;
-    LabelTrainNodes.Caption             := @LabelTrainNodes_Caption;
-    LabelTrainNodes_Caption             := 'RGS 455 - K27';
-    LabelTrainNodes.FontName            := @Tahoma19x23_Regular;
-    LabelTrainNodes.Font_Color          := 0x0000;
-    LabelTrainNodes.OnUpPtr             := 0;
-    LabelTrainNodes.OnDownPtr           := 0;
-    LabelTrainNodes.OnClickPtr          := 0;
-    LabelTrainNodes.OnPressPtr          := 0;
-
-    BoxRound2.OwnerScreenID       := 0;
-    BoxRound2.Order               := 14;
-    BoxRound2.Left                := 9;
-    BoxRound2.Top                 := 218;
-    BoxRound2.Width               := 220;
-    BoxRound2.Height              := 28;
-    BoxRound2.Pen_Width           := 2;
-    BoxRound2.Pen_Color           := 0xC618;
-    BoxRound2.Visible             := 1;
-    BoxRound2.Active              := 1;
-    BoxRound2.Transparent         := 1;
-    BoxRound2.Gradient            := 0;
-    BoxRound2.Gradient_Orientation := 0;
-    BoxRound2.Gradient_Start_Color := 0xFFFF;
-    BoxRound2.Gradient_End_Color  := 0xC618;
-    BoxRound2.Color               := 0xFFFF;
-    BoxRound2.PressColEnabled := 1;
-    BoxRound2.Press_Color         := 0x8410;
-    BoxRound2.Corner_Radius          := 3;
-    BoxRound2.OnUpPtr             := 0;
-    BoxRound2.OnDownPtr           := 0;
-    BoxRound2.OnClickPtr          := @BoxRoundConsistNodesClick;
-    BoxRound2.OnPressPtr          := 0;
-
-    Label10.OwnerScreenID       := 0;
-    Label10.Order               := 15;
-    Label10.Left                := 20;
-    Label10.Top                 := 220;
-    Label10.Width               := 186;
-    Label10.Height              := 25;
-    Label10.Visible             := 1;
-    Label10.Active              := 0;
-    Label10.Caption             := @Label10_Caption;
-    Label10_Caption             := 'Southbound Extra #2';
-    Label10.FontName            := @Tahoma19x23_Regular;
-    Label10.Font_Color          := 0x0000;
-    Label10.OnUpPtr             := 0;
-    Label10.OnDownPtr           := 0;
-    Label10.OnClickPtr          := 0;
-    Label10.OnPressPtr          := 0;
-
-    Box1.OwnerScreenID       := 1;
-    Box1.Order               := 0;
-    Box1.Left                := 0;
-    Box1.Top                 := 0;
-    Box1.Width               := 240;
-    Box1.Height              := 320;
-    Box1.Pen_Width           := 1;
-    Box1.Pen_Color           := 0x0000;
-    Box1.Visible             := 1;
-    Box1.Active              := 0;
-    Box1.Transparent         := 1;
-    Box1.Gradient            := 1;
-    Box1.Gradient_Orientation := 0;
-    Box1.Gradient_Start_Color := 0x2104;
-    Box1.Gradient_End_Color  := 0x8410;
-    Box1.Color               := 0xC618;
-    Box1.PressColEnabled := 1;
-    Box1.Press_Color         := 0x8410;
-    Box1.OnUpPtr             := 0;
-    Box1.OnDownPtr           := 0;
-    Box1.OnClickPtr          := 0;
-    Box1.OnPressPtr          := 0;
-
-    BoxRoundItem1.OwnerScreenID       := 1;
-    BoxRoundItem1.Order               := 1;
-    BoxRoundItem1.Left                := 7;
-    BoxRoundItem1.Top                 := 38;
-    BoxRoundItem1.Width               := 220;
-    BoxRoundItem1.Height              := 36;
-    BoxRoundItem1.Pen_Width           := 2;
-    BoxRoundItem1.Pen_Color           := 0xC618;
-    BoxRoundItem1.Visible             := 1;
-    BoxRoundItem1.Active              := 1;
-    BoxRoundItem1.Transparent         := 1;
-    BoxRoundItem1.Gradient            := 0;
-    BoxRoundItem1.Gradient_Orientation := 0;
-    BoxRoundItem1.Gradient_Start_Color := 0xFFFF;
-    BoxRoundItem1.Gradient_End_Color  := 0xC618;
-    BoxRoundItem1.Color               := 0xFFFF;
-    BoxRoundItem1.PressColEnabled := 1;
-    BoxRoundItem1.Press_Color         := 0x8410;
-    BoxRoundItem1.Corner_Radius          := 3;
-    BoxRoundItem1.OnUpPtr             := 0;
-    BoxRoundItem1.OnDownPtr           := 0;
-    BoxRoundItem1.OnClickPtr          := 0;
-    BoxRoundItem1.OnPressPtr          := 0;
-
-    BoxRoundItem4.OwnerScreenID       := 1;
-    BoxRoundItem4.Order               := 2;
-    BoxRoundItem4.Left                := 7;
-    BoxRoundItem4.Top                 := 181;
-    BoxRoundItem4.Width               := 220;
-    BoxRoundItem4.Height              := 36;
-    BoxRoundItem4.Pen_Width           := 2;
-    BoxRoundItem4.Pen_Color           := 0xC618;
-    BoxRoundItem4.Visible             := 1;
-    BoxRoundItem4.Active              := 1;
-    BoxRoundItem4.Transparent         := 1;
-    BoxRoundItem4.Gradient            := 0;
-    BoxRoundItem4.Gradient_Orientation := 0;
-    BoxRoundItem4.Gradient_Start_Color := 0xFFFF;
-    BoxRoundItem4.Gradient_End_Color  := 0xC618;
-    BoxRoundItem4.Color               := 0xFFFF;
-    BoxRoundItem4.PressColEnabled := 1;
-    BoxRoundItem4.Press_Color         := 0x8410;
-    BoxRoundItem4.Corner_Radius          := 3;
-    BoxRoundItem4.OnUpPtr             := 0;
-    BoxRoundItem4.OnDownPtr           := 0;
-    BoxRoundItem4.OnClickPtr          := 0;
-    BoxRoundItem4.OnPressPtr          := 0;
-
-    LabelItem1.OwnerScreenID       := 1;
-    LabelItem1.Order               := 3;
-    LabelItem1.Left                := 14;
-    LabelItem1.Top                 := 43;
-    LabelItem1.Width               := 64;
-    LabelItem1.Height              := 25;
-    LabelItem1.Visible             := 1;
-    LabelItem1.Active              := 0;
-    LabelItem1.Caption             := @LabelItem1_Caption;
-    LabelItem1_Caption             := 'RGS 20';
-    LabelItem1.FontName            := @Tahoma19x23_Regular;
-    LabelItem1.Font_Color          := 0x0000;
-    LabelItem1.OnUpPtr             := 0;
-    LabelItem1.OnDownPtr           := 0;
-    LabelItem1.OnClickPtr          := 0;
-    LabelItem1.OnPressPtr          := 0;
-
-    LabelItem4.OwnerScreenID       := 1;
-    LabelItem4.Order               := 4;
-    LabelItem4.Left                := 14;
-    LabelItem4.Top                 := 187;
-    LabelItem4.Width               := 64;
-    LabelItem4.Height              := 25;
-    LabelItem4.Visible             := 1;
-    LabelItem4.Active              := 0;
-    LabelItem4.Caption             := @LabelItem4_Caption;
-    LabelItem4_Caption             := 'RGS 40';
-    LabelItem4.FontName            := @Tahoma19x23_Regular;
-    LabelItem4.Font_Color          := 0x0000;
-    LabelItem4.OnUpPtr             := 0;
-    LabelItem4.OnDownPtr           := 0;
-    LabelItem4.OnClickPtr          := 0;
-    LabelItem4.OnPressPtr          := 0;
-
-    BoxRoundItem2.OwnerScreenID       := 1;
-    BoxRoundItem2.Order               := 5;
-    BoxRoundItem2.Left                := 7;
-    BoxRoundItem2.Top                 := 86;
-    BoxRoundItem2.Width               := 220;
-    BoxRoundItem2.Height              := 36;
-    BoxRoundItem2.Pen_Width           := 2;
-    BoxRoundItem2.Pen_Color           := 0xC618;
-    BoxRoundItem2.Visible             := 1;
-    BoxRoundItem2.Active              := 1;
-    BoxRoundItem2.Transparent         := 1;
-    BoxRoundItem2.Gradient            := 0;
-    BoxRoundItem2.Gradient_Orientation := 0;
-    BoxRoundItem2.Gradient_Start_Color := 0xFFFF;
-    BoxRoundItem2.Gradient_End_Color  := 0xC618;
-    BoxRoundItem2.Color               := 0xFFFF;
-    BoxRoundItem2.PressColEnabled := 1;
-    BoxRoundItem2.Press_Color         := 0x8410;
-    BoxRoundItem2.Corner_Radius          := 3;
-    BoxRoundItem2.OnUpPtr             := 0;
-    BoxRoundItem2.OnDownPtr           := 0;
-    BoxRoundItem2.OnClickPtr          := 0;
-    BoxRoundItem2.OnPressPtr          := 0;
-
-    BoxRoundItem3.OwnerScreenID       := 1;
-    BoxRoundItem3.Order               := 6;
-    BoxRoundItem3.Left                := 7;
-    BoxRoundItem3.Top                 := 134;
-    BoxRoundItem3.Width               := 220;
-    BoxRoundItem3.Height              := 36;
-    BoxRoundItem3.Pen_Width           := 2;
-    BoxRoundItem3.Pen_Color           := 0xC618;
-    BoxRoundItem3.Visible             := 1;
-    BoxRoundItem3.Active              := 1;
-    BoxRoundItem3.Transparent         := 1;
-    BoxRoundItem3.Gradient            := 0;
-    BoxRoundItem3.Gradient_Orientation := 0;
-    BoxRoundItem3.Gradient_Start_Color := 0xFFFF;
-    BoxRoundItem3.Gradient_End_Color  := 0xC618;
-    BoxRoundItem3.Color               := 0xFFFF;
-    BoxRoundItem3.PressColEnabled := 1;
-    BoxRoundItem3.Press_Color         := 0x8410;
-    BoxRoundItem3.Corner_Radius          := 3;
-    BoxRoundItem3.OnUpPtr             := 0;
-    BoxRoundItem3.OnDownPtr           := 0;
-    BoxRoundItem3.OnClickPtr          := 0;
-    BoxRoundItem3.OnPressPtr          := 0;
-
-    LabelItem2.OwnerScreenID       := 1;
-    LabelItem2.Order               := 7;
-    LabelItem2.Left                := 14;
-    LabelItem2.Top                 := 91;
-    LabelItem2.Width               := 107;
-    LabelItem2.Height              := 25;
-    LabelItem2.Visible             := 1;
-    LabelItem2.Active              := 0;
-    LabelItem2.Caption             := @LabelItem2_Caption;
-    LabelItem2_Caption             := 'DRG&W 452';
-    LabelItem2.FontName            := @Tahoma19x23_Regular;
-    LabelItem2.Font_Color          := 0x0000;
-    LabelItem2.OnUpPtr             := 0;
-    LabelItem2.OnDownPtr           := 0;
-    LabelItem2.OnClickPtr          := 0;
-    LabelItem2.OnPressPtr          := 0;
-
-    LabelItem3.OwnerScreenID       := 1;
-    LabelItem3.Order               := 8;
-    LabelItem3.Left                := 14;
-    LabelItem3.Top                 := 139;
-    LabelItem3.Width               := 74;
-    LabelItem3.Height              := 25;
-    LabelItem3.Visible             := 1;
-    LabelItem3.Active              := 0;
-    LabelItem3.Caption             := @LabelItem3_Caption;
-    LabelItem3_Caption             := 'RGS 455';
-    LabelItem3.FontName            := @Tahoma19x23_Regular;
-    LabelItem3.Font_Color          := 0x0000;
-    LabelItem3.OnUpPtr             := 0;
-    LabelItem3.OnDownPtr           := 0;
-    LabelItem3.OnClickPtr          := 0;
-    LabelItem3.OnPressPtr          := 0;
-
-    BoxRoundItem6.OwnerScreenID       := 1;
-    BoxRoundItem6.Order               := 9;
-    BoxRoundItem6.Left                := 7;
-    BoxRoundItem6.Top                 := 277;
-    BoxRoundItem6.Width               := 220;
-    BoxRoundItem6.Height              := 36;
-    BoxRoundItem6.Pen_Width           := 2;
-    BoxRoundItem6.Pen_Color           := 0xC618;
-    BoxRoundItem6.Visible             := 1;
-    BoxRoundItem6.Active              := 1;
-    BoxRoundItem6.Transparent         := 1;
-    BoxRoundItem6.Gradient            := 0;
-    BoxRoundItem6.Gradient_Orientation := 0;
-    BoxRoundItem6.Gradient_Start_Color := 0xFFFF;
-    BoxRoundItem6.Gradient_End_Color  := 0xC618;
-    BoxRoundItem6.Color               := 0xFFFF;
-    BoxRoundItem6.PressColEnabled := 1;
-    BoxRoundItem6.Press_Color         := 0x8410;
-    BoxRoundItem6.Corner_Radius          := 3;
-    BoxRoundItem6.OnUpPtr             := 0;
-    BoxRoundItem6.OnDownPtr           := 0;
-    BoxRoundItem6.OnClickPtr          := 0;
-    BoxRoundItem6.OnPressPtr          := 0;
-
-    LabelItem6.OwnerScreenID       := 1;
-    LabelItem6.Order               := 10;
-    LabelItem6.Left                := 14;
-    LabelItem6.Top                 := 283;
-    LabelItem6.Width               := 107;
-    LabelItem6.Height              := 25;
-    LabelItem6.Visible             := 1;
-    LabelItem6.Active              := 0;
-    LabelItem6.Caption             := @LabelItem6_Caption;
-    LabelItem6_Caption             := 'DRG&W 464';
-    LabelItem6.FontName            := @Tahoma19x23_Regular;
-    LabelItem6.Font_Color          := 0x0000;
-    LabelItem6.OnUpPtr             := 0;
-    LabelItem6.OnDownPtr           := 0;
-    LabelItem6.OnClickPtr          := 0;
-    LabelItem6.OnPressPtr          := 0;
-
-    BoxRoundItem5.OwnerScreenID       := 1;
-    BoxRoundItem5.Order               := 11;
-    BoxRoundItem5.Left                := 7;
-    BoxRoundItem5.Top                 := 229;
-    BoxRoundItem5.Width               := 220;
-    BoxRoundItem5.Height              := 36;
-    BoxRoundItem5.Pen_Width           := 2;
-    BoxRoundItem5.Pen_Color           := 0xC618;
-    BoxRoundItem5.Visible             := 1;
-    BoxRoundItem5.Active              := 1;
-    BoxRoundItem5.Transparent         := 1;
-    BoxRoundItem5.Gradient            := 0;
-    BoxRoundItem5.Gradient_Orientation := 0;
-    BoxRoundItem5.Gradient_Start_Color := 0xFFFF;
-    BoxRoundItem5.Gradient_End_Color  := 0xC618;
-    BoxRoundItem5.Color               := 0xFFFF;
-    BoxRoundItem5.PressColEnabled := 1;
-    BoxRoundItem5.Press_Color         := 0x8410;
-    BoxRoundItem5.Corner_Radius          := 3;
-    BoxRoundItem5.OnUpPtr             := 0;
-    BoxRoundItem5.OnDownPtr           := 0;
-    BoxRoundItem5.OnClickPtr          := 0;
-    BoxRoundItem5.OnPressPtr          := 0;
-
-    LabelItem5.OwnerScreenID       := 1;
-    LabelItem5.Order               := 12;
-    LabelItem5.Left                := 14;
-    LabelItem5.Top                 := 235;
-    LabelItem5.Width               := 74;
-    LabelItem5.Height              := 25;
-    LabelItem5.Visible             := 1;
-    LabelItem5.Active              := 0;
-    LabelItem5.Caption             := @LabelItem5_Caption;
-    LabelItem5_Caption             := 'RGS 461';
-    LabelItem5.FontName            := @Tahoma19x23_Regular;
-    LabelItem5.Font_Color          := 0x0000;
-    LabelItem5.OnUpPtr             := 0;
-    LabelItem5.OnDownPtr           := 0;
-    LabelItem5.OnClickPtr          := 0;
-    LabelItem5.OnPressPtr          := 0;
-
-    Button1.OwnerScreenID       := 1;
-    Button1.Order               := 13;
-    Button1.Left                := 0;
-    Button1.Top                 := 0;
-    Button1.Width               := 240;
-    Button1.Height              := 28;
-    Button1.Pen_Width           := 0;
+    Button1.OwnerScreenID       := 0;
+    Button1.Order               := 0;
+    Button1.Left                := 146;
+    Button1.Top                 := 42;
+    Button1.Width               := 160;
+    Button1.Height              := 85;
+    Button1.Pen_Width           := 1;
     Button1.Pen_Color           := 0x0000;
     Button1.Visible             := 1;
-    Button1.Active              := 0;
-    Button1.Transparent         := 1;
+    Button1.Active              := 1;
+    Button1.Transparent         := 0;
     Button1.Caption             := @Button1_Caption;
-    Button1_Caption             := 'Trains';
+    Button1_Caption             := 'Text';
     Button1.TextAlign             := _taCenter;
-    Button1.FontName            := @Tahoma16x19_Regular;
+    Button1.FontName            := @Tahoma11x13_Regular;
     Button1.PressColEnabled     := 1;
     Button1.Font_Color          := 0x0000;
-    Button1.Gradient            := 1;
+    Button1.Gradient            := 0;
     Button1.Gradient_Orientation := 0;
     Button1.Gradient_Start_Color := 0xFFFF;
-    Button1.Gradient_End_Color  := 0xA534;
+    Button1.Gradient_End_Color  := 0xC618;
     Button1.Color               := 0xC618;
     Button1.Press_Color         := 0xC618;
     Button1.OnUpPtr             := 0;
@@ -1204,34 +616,816 @@ procedure InitializeObjects();    // static
     Button1.OnClickPtr          := 0;
     Button1.OnPressPtr          := 0;
 
-    ButtonRoundNodeSelectBack.OwnerScreenID       := 1;
-    ButtonRoundNodeSelectBack.Order               := 14;
-    ButtonRoundNodeSelectBack.Left                := 204;
-    ButtonRoundNodeSelectBack.Top                 := 3;
-    ButtonRoundNodeSelectBack.Width               := 31;
-    ButtonRoundNodeSelectBack.Height              := 20;
-    ButtonRoundNodeSelectBack.Pen_Width           := 1;
-    ButtonRoundNodeSelectBack.Pen_Color           := 0xFFFF;
-    ButtonRoundNodeSelectBack.Visible             := 1;
-    ButtonRoundNodeSelectBack.Active              := 1;
-    ButtonRoundNodeSelectBack.Transparent         := 1;
-    ButtonRoundNodeSelectBack.Caption             := @ButtonRoundNodeSelectBack_Caption;
-    ButtonRoundNodeSelectBack_Caption             := 'X';
-    ButtonRoundNodeSelectBack.TextAlign             := _taCenter;
-    ButtonRoundNodeSelectBack.FontName            := @Tahoma14x16_Bold;
-    ButtonRoundNodeSelectBack.PressColEnabled     := 1;
-    ButtonRoundNodeSelectBack.Font_Color          := 0xFFFF;
-    ButtonRoundNodeSelectBack.Gradient            := 1;
-    ButtonRoundNodeSelectBack.Gradient_Orientation := 0;
-    ButtonRoundNodeSelectBack.Gradient_Start_Color := 0xF800;
-    ButtonRoundNodeSelectBack.Gradient_End_Color  := 0xB000;
-    ButtonRoundNodeSelectBack.Color               := 0xC618;
-    ButtonRoundNodeSelectBack.Press_Color         := 0x8410;
-    ButtonRoundNodeSelectBack.Corner_Radius          := 3;
-    ButtonRoundNodeSelectBack.OnUpPtr             := 0;
-    ButtonRoundNodeSelectBack.OnDownPtr           := 0;
-    ButtonRoundNodeSelectBack.OnClickPtr          := @ButtonRoundNodeSelectBackOnClick;
-    ButtonRoundNodeSelectBack.OnPressPtr          := 0;
+    ButtonHeader.OwnerScreenID       := 0;
+    ButtonHeader.Order               := 1;
+    ButtonHeader.Left                := 0;
+    ButtonHeader.Top                 := 0;
+    ButtonHeader.Width               := 320;
+    ButtonHeader.Height              := 28;
+    ButtonHeader.Pen_Width           := 0;
+    ButtonHeader.Pen_Color           := 0x0000;
+    ButtonHeader.Visible             := 1;
+    ButtonHeader.Active              := 0;
+    ButtonHeader.Transparent         := 1;
+    ButtonHeader.Caption             := @ButtonHeader_Caption;
+    ButtonHeader_Caption             := 'RGS #455';
+    ButtonHeader.TextAlign             := _taCenter;
+    ButtonHeader.FontName            := @Tahoma16x19_Regular;
+    ButtonHeader.PressColEnabled     := 1;
+    ButtonHeader.Font_Color          := 0x0000;
+    ButtonHeader.Gradient            := 1;
+    ButtonHeader.Gradient_Orientation := 0;
+    ButtonHeader.Gradient_Start_Color := 0xFFFF;
+    ButtonHeader.Gradient_End_Color  := 0xA534;
+    ButtonHeader.Color               := 0xC618;
+    ButtonHeader.Press_Color         := 0xC618;
+    ButtonHeader.OnUpPtr             := 0;
+    ButtonHeader.OnDownPtr           := 0;
+    ButtonHeader.OnClickPtr          := 0;
+    ButtonHeader.OnPressPtr          := 0;
+
+    ButtonRound1.OwnerScreenID       := 0;
+    ButtonRound1.Order               := 2;
+    ButtonRound1.Left                := 285;
+    ButtonRound1.Top                 := 3;
+    ButtonRound1.Width               := 31;
+    ButtonRound1.Height              := 20;
+    ButtonRound1.Pen_Width           := 1;
+    ButtonRound1.Pen_Color           := 0xFFFF;
+    ButtonRound1.Visible             := 1;
+    ButtonRound1.Active              := 1;
+    ButtonRound1.Transparent         := 1;
+    ButtonRound1.Caption             := @ButtonRound1_Caption;
+    ButtonRound1_Caption             := 'X';
+    ButtonRound1.TextAlign             := _taCenter;
+    ButtonRound1.FontName            := @Tahoma14x16_Bold;
+    ButtonRound1.PressColEnabled     := 1;
+    ButtonRound1.Font_Color          := 0xFFFF;
+    ButtonRound1.Gradient            := 1;
+    ButtonRound1.Gradient_Orientation := 0;
+    ButtonRound1.Gradient_Start_Color := 0xF800;
+    ButtonRound1.Gradient_End_Color  := 0xB000;
+    ButtonRound1.Color               := 0xC618;
+    ButtonRound1.Press_Color         := 0x8410;
+    ButtonRound1.Corner_Radius          := 3;
+    ButtonRound1.OnUpPtr             := 0;
+    ButtonRound1.OnDownPtr           := 0;
+    ButtonRound1.OnClickPtr          := 0;
+    ButtonRound1.OnPressPtr          := 0;
+
+    ButtonRound2.OwnerScreenID       := 0;
+    ButtonRound2.Order               := 3;
+    ButtonRound2.Left                := 2;
+    ButtonRound2.Top                 := 31;
+    ButtonRound2.Width               := 66;
+    ButtonRound2.Height              := 32;
+    ButtonRound2.Pen_Width           := 1;
+    ButtonRound2.Pen_Color           := 0x0008;
+    ButtonRound2.Visible             := 1;
+    ButtonRound2.Active              := 1;
+    ButtonRound2.Transparent         := 1;
+    ButtonRound2.Caption             := @ButtonRound2_Caption;
+    ButtonRound2_Caption             := 'Light';
+    ButtonRound2.TextAlign             := _taCenter;
+    ButtonRound2.FontName            := @Tahoma11x13_Regular;
+    ButtonRound2.PressColEnabled     := 1;
+    ButtonRound2.Font_Color          := 0xFFFF;
+    ButtonRound2.Gradient            := 1;
+    ButtonRound2.Gradient_Orientation := 0;
+    ButtonRound2.Gradient_Start_Color := 0x8410;
+    ButtonRound2.Gradient_End_Color  := 0x0000;
+    ButtonRound2.Color               := 0xC618;
+    ButtonRound2.Press_Color         := 0x8410;
+    ButtonRound2.Corner_Radius          := 6;
+    ButtonRound2.OnUpPtr             := 0;
+    ButtonRound2.OnDownPtr           := 0;
+    ButtonRound2.OnClickPtr          := 0;
+    ButtonRound2.OnPressPtr          := 0;
+
+    ButtonRound3.OwnerScreenID       := 0;
+    ButtonRound3.Order               := 4;
+    ButtonRound3.Left                := 2;
+    ButtonRound3.Top                 := 66;
+    ButtonRound3.Width               := 66;
+    ButtonRound3.Height              := 32;
+    ButtonRound3.Pen_Width           := 1;
+    ButtonRound3.Pen_Color           := 0x0008;
+    ButtonRound3.Visible             := 1;
+    ButtonRound3.Active              := 1;
+    ButtonRound3.Transparent         := 1;
+    ButtonRound3.Caption             := @ButtonRound3_Caption;
+    ButtonRound3_Caption             := 'Whistle';
+    ButtonRound3.TextAlign             := _taCenter;
+    ButtonRound3.FontName            := @Tahoma11x13_Regular;
+    ButtonRound3.PressColEnabled     := 1;
+    ButtonRound3.Font_Color          := 0xFFFF;
+    ButtonRound3.Gradient            := 1;
+    ButtonRound3.Gradient_Orientation := 0;
+    ButtonRound3.Gradient_Start_Color := 0x8410;
+    ButtonRound3.Gradient_End_Color  := 0x0000;
+    ButtonRound3.Color               := 0xC618;
+    ButtonRound3.Press_Color         := 0x8410;
+    ButtonRound3.Corner_Radius          := 6;
+    ButtonRound3.OnUpPtr             := 0;
+    ButtonRound3.OnDownPtr           := 0;
+    ButtonRound3.OnClickPtr          := 0;
+    ButtonRound3.OnPressPtr          := 0;
+
+    ButtonRound4.OwnerScreenID       := 0;
+    ButtonRound4.Order               := 5;
+    ButtonRound4.Left                := 2;
+    ButtonRound4.Top                 := 101;
+    ButtonRound4.Width               := 66;
+    ButtonRound4.Height              := 32;
+    ButtonRound4.Pen_Width           := 1;
+    ButtonRound4.Pen_Color           := 0x0008;
+    ButtonRound4.Visible             := 1;
+    ButtonRound4.Active              := 1;
+    ButtonRound4.Transparent         := 1;
+    ButtonRound4.Caption             := @ButtonRound4_Caption;
+    ButtonRound4_Caption             := 'Hiss';
+    ButtonRound4.TextAlign             := _taCenter;
+    ButtonRound4.FontName            := @Tahoma11x13_Regular;
+    ButtonRound4.PressColEnabled     := 1;
+    ButtonRound4.Font_Color          := 0xFFFF;
+    ButtonRound4.Gradient            := 1;
+    ButtonRound4.Gradient_Orientation := 0;
+    ButtonRound4.Gradient_Start_Color := 0x8410;
+    ButtonRound4.Gradient_End_Color  := 0x0000;
+    ButtonRound4.Color               := 0xC618;
+    ButtonRound4.Press_Color         := 0x8410;
+    ButtonRound4.Corner_Radius          := 6;
+    ButtonRound4.OnUpPtr             := 0;
+    ButtonRound4.OnDownPtr           := 0;
+    ButtonRound4.OnClickPtr          := 0;
+    ButtonRound4.OnPressPtr          := 0;
+
+    ButtonRound5.OwnerScreenID       := 0;
+    ButtonRound5.Order               := 6;
+    ButtonRound5.Left                := 2;
+    ButtonRound5.Top                 := 136;
+    ButtonRound5.Width               := 66;
+    ButtonRound5.Height              := 32;
+    ButtonRound5.Pen_Width           := 1;
+    ButtonRound5.Pen_Color           := 0x0008;
+    ButtonRound5.Visible             := 1;
+    ButtonRound5.Active              := 1;
+    ButtonRound5.Transparent         := 1;
+    ButtonRound5.Caption             := @ButtonRound5_Caption;
+    ButtonRound5_Caption             := 'Coupler';
+    ButtonRound5.TextAlign             := _taCenter;
+    ButtonRound5.FontName            := @Tahoma11x13_Regular;
+    ButtonRound5.PressColEnabled     := 1;
+    ButtonRound5.Font_Color          := 0xFFFF;
+    ButtonRound5.Gradient            := 1;
+    ButtonRound5.Gradient_Orientation := 0;
+    ButtonRound5.Gradient_Start_Color := 0x8410;
+    ButtonRound5.Gradient_End_Color  := 0x0000;
+    ButtonRound5.Color               := 0xC618;
+    ButtonRound5.Press_Color         := 0x8410;
+    ButtonRound5.Corner_Radius          := 6;
+    ButtonRound5.OnUpPtr             := 0;
+    ButtonRound5.OnDownPtr           := 0;
+    ButtonRound5.OnClickPtr          := 0;
+    ButtonRound5.OnPressPtr          := 0;
+
+    ButtonRound6.OwnerScreenID       := 0;
+    ButtonRound6.Order               := 7;
+    ButtonRound6.Left                := 2;
+    ButtonRound6.Top                 := 171;
+    ButtonRound6.Width               := 66;
+    ButtonRound6.Height              := 32;
+    ButtonRound6.Pen_Width           := 1;
+    ButtonRound6.Pen_Color           := 0x0008;
+    ButtonRound6.Visible             := 1;
+    ButtonRound6.Active              := 1;
+    ButtonRound6.Transparent         := 1;
+    ButtonRound6.Caption             := @ButtonRound6_Caption;
+    ButtonRound6_Caption             := 'Mute';
+    ButtonRound6.TextAlign             := _taCenter;
+    ButtonRound6.FontName            := @Tahoma11x13_Regular;
+    ButtonRound6.PressColEnabled     := 1;
+    ButtonRound6.Font_Color          := 0xFFFF;
+    ButtonRound6.Gradient            := 1;
+    ButtonRound6.Gradient_Orientation := 0;
+    ButtonRound6.Gradient_Start_Color := 0x8410;
+    ButtonRound6.Gradient_End_Color  := 0x0000;
+    ButtonRound6.Color               := 0xC618;
+    ButtonRound6.Press_Color         := 0x8410;
+    ButtonRound6.Corner_Radius          := 6;
+    ButtonRound6.OnUpPtr             := 0;
+    ButtonRound6.OnDownPtr           := 0;
+    ButtonRound6.OnClickPtr          := 0;
+    ButtonRound6.OnPressPtr          := 0;
+
+    ButtonRound7.OwnerScreenID       := 0;
+    ButtonRound7.Order               := 8;
+    ButtonRound7.Left                := 2;
+    ButtonRound7.Top                 := 206;
+    ButtonRound7.Width               := 66;
+    ButtonRound7.Height              := 32;
+    ButtonRound7.Pen_Width           := 1;
+    ButtonRound7.Pen_Color           := 0x0008;
+    ButtonRound7.Visible             := 1;
+    ButtonRound7.Active              := 1;
+    ButtonRound7.Transparent         := 1;
+    ButtonRound7.Caption             := @ButtonRound7_Caption;
+    ButtonRound7_Caption             := 'Injectors';
+    ButtonRound7.TextAlign             := _taCenter;
+    ButtonRound7.FontName            := @Tahoma11x13_Regular;
+    ButtonRound7.PressColEnabled     := 1;
+    ButtonRound7.Font_Color          := 0xFFFF;
+    ButtonRound7.Gradient            := 1;
+    ButtonRound7.Gradient_Orientation := 0;
+    ButtonRound7.Gradient_Start_Color := 0x8410;
+    ButtonRound7.Gradient_End_Color  := 0x0000;
+    ButtonRound7.Color               := 0xC618;
+    ButtonRound7.Press_Color         := 0x8410;
+    ButtonRound7.Corner_Radius          := 6;
+    ButtonRound7.OnUpPtr             := 0;
+    ButtonRound7.OnDownPtr           := 0;
+    ButtonRound7.OnClickPtr          := 0;
+    ButtonRound7.OnPressPtr          := 0;
+
+    ButtonRound8.OwnerScreenID       := 0;
+    ButtonRound8.Order               := 9;
+    ButtonRound8.Left                := 71;
+    ButtonRound8.Top                 := 31;
+    ButtonRound8.Width               := 66;
+    ButtonRound8.Height              := 32;
+    ButtonRound8.Pen_Width           := 1;
+    ButtonRound8.Pen_Color           := 0x0008;
+    ButtonRound8.Visible             := 1;
+    ButtonRound8.Active              := 1;
+    ButtonRound8.Transparent         := 1;
+    ButtonRound8.Caption             := @ButtonRound8_Caption;
+    ButtonRound8_Caption             := 'Bell';
+    ButtonRound8.TextAlign             := _taCenter;
+    ButtonRound8.FontName            := @Tahoma11x13_Regular;
+    ButtonRound8.PressColEnabled     := 1;
+    ButtonRound8.Font_Color          := 0xFFFF;
+    ButtonRound8.Gradient            := 1;
+    ButtonRound8.Gradient_Orientation := 0;
+    ButtonRound8.Gradient_Start_Color := 0x8410;
+    ButtonRound8.Gradient_End_Color  := 0x0000;
+    ButtonRound8.Color               := 0xC618;
+    ButtonRound8.Press_Color         := 0x8410;
+    ButtonRound8.Corner_Radius          := 6;
+    ButtonRound8.OnUpPtr             := 0;
+    ButtonRound8.OnDownPtr           := 0;
+    ButtonRound8.OnClickPtr          := 0;
+    ButtonRound8.OnPressPtr          := 0;
+
+    ButtonRound9.OwnerScreenID       := 0;
+    ButtonRound9.Order               := 10;
+    ButtonRound9.Left                := 71;
+    ButtonRound9.Top                 := 66;
+    ButtonRound9.Width               := 66;
+    ButtonRound9.Height              := 32;
+    ButtonRound9.Pen_Width           := 1;
+    ButtonRound9.Pen_Color           := 0x0008;
+    ButtonRound9.Visible             := 1;
+    ButtonRound9.Active              := 1;
+    ButtonRound9.Transparent         := 1;
+    ButtonRound9.Caption             := @ButtonRound9_Caption;
+    ButtonRound9_Caption             := 'Sht Whistle';
+    ButtonRound9.TextAlign             := _taCenter;
+    ButtonRound9.FontName            := @Tahoma11x13_Regular;
+    ButtonRound9.PressColEnabled     := 1;
+    ButtonRound9.Font_Color          := 0xFFFF;
+    ButtonRound9.Gradient            := 1;
+    ButtonRound9.Gradient_Orientation := 0;
+    ButtonRound9.Gradient_Start_Color := 0x8410;
+    ButtonRound9.Gradient_End_Color  := 0x0000;
+    ButtonRound9.Color               := 0xC618;
+    ButtonRound9.Press_Color         := 0x8410;
+    ButtonRound9.Corner_Radius          := 6;
+    ButtonRound9.OnUpPtr             := 0;
+    ButtonRound9.OnDownPtr           := 0;
+    ButtonRound9.OnClickPtr          := 0;
+    ButtonRound9.OnPressPtr          := 0;
+
+    ButtonRound10.OwnerScreenID       := 0;
+    ButtonRound10.Order               := 11;
+    ButtonRound10.Left                := 71;
+    ButtonRound10.Top                 := 101;
+    ButtonRound10.Width               := 66;
+    ButtonRound10.Height              := 32;
+    ButtonRound10.Pen_Width           := 1;
+    ButtonRound10.Pen_Color           := 0x0008;
+    ButtonRound10.Visible             := 1;
+    ButtonRound10.Active              := 1;
+    ButtonRound10.Transparent         := 1;
+    ButtonRound10.Caption             := @ButtonRound10_Caption;
+    ButtonRound10_Caption             := 'Water Stop';
+    ButtonRound10.TextAlign             := _taCenter;
+    ButtonRound10.FontName            := @Tahoma11x13_Regular;
+    ButtonRound10.PressColEnabled     := 1;
+    ButtonRound10.Font_Color          := 0xFFFF;
+    ButtonRound10.Gradient            := 1;
+    ButtonRound10.Gradient_Orientation := 0;
+    ButtonRound10.Gradient_Start_Color := 0x8410;
+    ButtonRound10.Gradient_End_Color  := 0x0000;
+    ButtonRound10.Color               := 0xC618;
+    ButtonRound10.Press_Color         := 0x8410;
+    ButtonRound10.Corner_Radius          := 6;
+    ButtonRound10.OnUpPtr             := 0;
+    ButtonRound10.OnDownPtr           := 0;
+    ButtonRound10.OnClickPtr          := 0;
+    ButtonRound10.OnPressPtr          := 0;
+
+    ButtonRound11.OwnerScreenID       := 0;
+    ButtonRound11.Order               := 12;
+    ButtonRound11.Left                := 71;
+    ButtonRound11.Top                 := 136;
+    ButtonRound11.Width               := 66;
+    ButtonRound11.Height              := 32;
+    ButtonRound11.Pen_Width           := 1;
+    ButtonRound11.Pen_Color           := 0x0008;
+    ButtonRound11.Visible             := 1;
+    ButtonRound11.Active              := 1;
+    ButtonRound11.Transparent         := 1;
+    ButtonRound11.Caption             := @ButtonRound11_Caption;
+    ButtonRound11_Caption             := 'Dimmer';
+    ButtonRound11.TextAlign             := _taCenter;
+    ButtonRound11.FontName            := @Tahoma11x13_Regular;
+    ButtonRound11.PressColEnabled     := 1;
+    ButtonRound11.Font_Color          := 0xFFFF;
+    ButtonRound11.Gradient            := 1;
+    ButtonRound11.Gradient_Orientation := 0;
+    ButtonRound11.Gradient_Start_Color := 0x8410;
+    ButtonRound11.Gradient_End_Color  := 0x0000;
+    ButtonRound11.Color               := 0xC618;
+    ButtonRound11.Press_Color         := 0x8410;
+    ButtonRound11.Corner_Radius          := 6;
+    ButtonRound11.OnUpPtr             := 0;
+    ButtonRound11.OnDownPtr           := 0;
+    ButtonRound11.OnClickPtr          := 0;
+    ButtonRound11.OnPressPtr          := 0;
+
+    ButtonRound12.OwnerScreenID       := 0;
+    ButtonRound12.Order               := 13;
+    ButtonRound12.Left                := 71;
+    ButtonRound12.Top                 := 171;
+    ButtonRound12.Width               := 66;
+    ButtonRound12.Height              := 32;
+    ButtonRound12.Pen_Width           := 1;
+    ButtonRound12.Pen_Color           := 0x0008;
+    ButtonRound12.Visible             := 1;
+    ButtonRound12.Active              := 1;
+    ButtonRound12.Transparent         := 1;
+    ButtonRound12.Caption             := @ButtonRound12_Caption;
+    ButtonRound12_Caption             := 'Brake';
+    ButtonRound12.TextAlign             := _taCenter;
+    ButtonRound12.FontName            := @Tahoma11x13_Regular;
+    ButtonRound12.PressColEnabled     := 1;
+    ButtonRound12.Font_Color          := 0xFFFF;
+    ButtonRound12.Gradient            := 1;
+    ButtonRound12.Gradient_Orientation := 0;
+    ButtonRound12.Gradient_Start_Color := 0x8410;
+    ButtonRound12.Gradient_End_Color  := 0x0000;
+    ButtonRound12.Color               := 0xC618;
+    ButtonRound12.Press_Color         := 0x8410;
+    ButtonRound12.Corner_Radius          := 6;
+    ButtonRound12.OnUpPtr             := 0;
+    ButtonRound12.OnDownPtr           := 0;
+    ButtonRound12.OnClickPtr          := 0;
+    ButtonRound12.OnPressPtr          := 0;
+
+    ButtonRound13.OwnerScreenID       := 0;
+    ButtonRound13.Order               := 14;
+    ButtonRound13.Left                := 71;
+    ButtonRound13.Top                 := 206;
+    ButtonRound13.Width               := 66;
+    ButtonRound13.Height              := 32;
+    ButtonRound13.Pen_Width           := 1;
+    ButtonRound13.Pen_Color           := 0x0008;
+    ButtonRound13.Visible             := 1;
+    ButtonRound13.Active              := 1;
+    ButtonRound13.Transparent         := 1;
+    ButtonRound13.Caption             := @ButtonRound13_Caption;
+    ButtonRound13_Caption             := '';
+    ButtonRound13.TextAlign             := _taCenter;
+    ButtonRound13.FontName            := @Tahoma11x13_Regular;
+    ButtonRound13.PressColEnabled     := 1;
+    ButtonRound13.Font_Color          := 0xFFFF;
+    ButtonRound13.Gradient            := 1;
+    ButtonRound13.Gradient_Orientation := 0;
+    ButtonRound13.Gradient_Start_Color := 0x8410;
+    ButtonRound13.Gradient_End_Color  := 0x0000;
+    ButtonRound13.Color               := 0xC618;
+    ButtonRound13.Press_Color         := 0x8410;
+    ButtonRound13.Corner_Radius          := 6;
+    ButtonRound13.OnUpPtr             := 0;
+    ButtonRound13.OnDownPtr           := 0;
+    ButtonRound13.OnClickPtr          := 0;
+    ButtonRound13.OnPressPtr          := 0;
+
+    ProgressBarSpeed.OwnerScreenID       := 0;
+    ProgressBarSpeed.Order               := 15;
+    ProgressBarSpeed.Left                := 141;
+    ProgressBarSpeed.Top                 := 143;
+    ProgressBarSpeed.Width               := 176;
+    ProgressBarSpeed.Height              := 17;
+    ProgressBarSpeed.Pen_Width           := 1;
+    ProgressBarSpeed.Pen_Color           := 0x0000;
+    ProgressBarSpeed.Visible             := 1;
+    ProgressBarSpeed.Active              := 1;
+    ProgressBarSpeed.Transparent         := 1;
+    ProgressBarSpeed.Caption             := @ProgressBarSpeed_Caption;
+    ProgressBarSpeed_Caption             := '0%';
+    ProgressBarSpeed.FontName            := @Tahoma11x13_Regular;
+    ProgressBarSpeed.Font_Color          := 0x0000;
+    ProgressBarSpeed.Gradient            := 1;
+    ProgressBarSpeed.Gradient_Orientation := 0;
+    ProgressBarSpeed.Gradient_Start_Color := 0xFFFF;
+    ProgressBarSpeed.Gradient_End_Color  := 0x07E0;
+    ProgressBarSpeed.Color               := 0xA65E;
+    ProgressBarSpeed.Background_Color    := 0x8410;
+    ProgressBarSpeed.Min                 := 0;
+    ProgressBarSpeed.Max                 := 28;
+    ProgressBarSpeed.Position            := 0;
+    ProgressBarSpeed.Show_Position       := 1;
+    ProgressBarSpeed.Show_Percentage     := 1;
+    ProgressBarSpeed.Smooth              := 1;
+    ProgressBarSpeed.Rounded             := 1;
+    ProgressBarSpeed.Corner_Radius          := 3;
+
+    ButtonRoundSpeedInc.OwnerScreenID       := 0;
+    ButtonRoundSpeedInc.Order               := 16;
+    ButtonRoundSpeedInc.Left                := 142;
+    ButtonRoundSpeedInc.Top                 := 170;
+    ButtonRoundSpeedInc.Width               := 85;
+    ButtonRoundSpeedInc.Height              := 68;
+    ButtonRoundSpeedInc.Pen_Width           := 1;
+    ButtonRoundSpeedInc.Pen_Color           := 0x0008;
+    ButtonRoundSpeedInc.Visible             := 1;
+    ButtonRoundSpeedInc.Active              := 1;
+    ButtonRoundSpeedInc.Transparent         := 1;
+    ButtonRoundSpeedInc.Caption             := @ButtonRoundSpeedInc_Caption;
+    ButtonRoundSpeedInc_Caption             := 'Inc Speed';
+    ButtonRoundSpeedInc.TextAlign             := _taCenter;
+    ButtonRoundSpeedInc.FontName            := @Tahoma11x13_Regular;
+    ButtonRoundSpeedInc.PressColEnabled     := 1;
+    ButtonRoundSpeedInc.Font_Color          := 0xFFFF;
+    ButtonRoundSpeedInc.Gradient            := 1;
+    ButtonRoundSpeedInc.Gradient_Orientation := 0;
+    ButtonRoundSpeedInc.Gradient_Start_Color := 0x8410;
+    ButtonRoundSpeedInc.Gradient_End_Color  := 0x0000;
+    ButtonRoundSpeedInc.Color               := 0xC618;
+    ButtonRoundSpeedInc.Press_Color         := 0x8410;
+    ButtonRoundSpeedInc.Corner_Radius          := 6;
+    ButtonRoundSpeedInc.OnUpPtr             := 0;
+    ButtonRoundSpeedInc.OnDownPtr           := 0;
+    ButtonRoundSpeedInc.OnClickPtr          := @ButtonRoundSpeedIncOnClick;
+    ButtonRoundSpeedInc.OnPressPtr          := 0;
+
+    ButtonRoundSpeedDec.OwnerScreenID       := 0;
+    ButtonRoundSpeedDec.Order               := 17;
+    ButtonRoundSpeedDec.Left                := 232;
+    ButtonRoundSpeedDec.Top                 := 169;
+    ButtonRoundSpeedDec.Width               := 85;
+    ButtonRoundSpeedDec.Height              := 69;
+    ButtonRoundSpeedDec.Pen_Width           := 1;
+    ButtonRoundSpeedDec.Pen_Color           := 0x0008;
+    ButtonRoundSpeedDec.Visible             := 1;
+    ButtonRoundSpeedDec.Active              := 1;
+    ButtonRoundSpeedDec.Transparent         := 1;
+    ButtonRoundSpeedDec.Caption             := @ButtonRoundSpeedDec_Caption;
+    ButtonRoundSpeedDec_Caption             := 'Dec Speed';
+    ButtonRoundSpeedDec.TextAlign             := _taCenter;
+    ButtonRoundSpeedDec.FontName            := @Tahoma11x13_Regular;
+    ButtonRoundSpeedDec.PressColEnabled     := 1;
+    ButtonRoundSpeedDec.Font_Color          := 0xFFFF;
+    ButtonRoundSpeedDec.Gradient            := 1;
+    ButtonRoundSpeedDec.Gradient_Orientation := 0;
+    ButtonRoundSpeedDec.Gradient_Start_Color := 0x8410;
+    ButtonRoundSpeedDec.Gradient_End_Color  := 0x0000;
+    ButtonRoundSpeedDec.Color               := 0xC618;
+    ButtonRoundSpeedDec.Press_Color         := 0x8410;
+    ButtonRoundSpeedDec.Corner_Radius          := 6;
+    ButtonRoundSpeedDec.OnUpPtr             := 0;
+    ButtonRoundSpeedDec.OnDownPtr           := 0;
+    ButtonRoundSpeedDec.OnClickPtr          := @ButtonRoundSpeedDecOnClick;
+    ButtonRoundSpeedDec.OnPressPtr          := 0;
+
+    ButtonRound23.OwnerScreenID       := 1;
+    ButtonRound23.Order               := 0;
+    ButtonRound23.Left                := 276;
+    ButtonRound23.Top                 := 31;
+    ButtonRound23.Width               := 40;
+    ButtonRound23.Height              := 207;
+    ButtonRound23.Pen_Width           := 1;
+    ButtonRound23.Pen_Color           := 0x0008;
+    ButtonRound23.Visible             := 1;
+    ButtonRound23.Active              := 1;
+    ButtonRound23.Transparent         := 1;
+    ButtonRound23.Caption             := @ButtonRound23_Caption;
+    ButtonRound23_Caption             := '';
+    ButtonRound23.TextAlign             := _taCenter;
+    ButtonRound23.FontName            := @Tahoma11x13_Regular;
+    ButtonRound23.PressColEnabled     := 1;
+    ButtonRound23.Font_Color          := 0xFFFF;
+    ButtonRound23.Gradient            := 1;
+    ButtonRound23.Gradient_Orientation := 0;
+    ButtonRound23.Gradient_Start_Color := 0x8410;
+    ButtonRound23.Gradient_End_Color  := 0x0000;
+    ButtonRound23.Color               := 0xC618;
+    ButtonRound23.Press_Color         := 0x8410;
+    ButtonRound23.Corner_Radius          := 6;
+    ButtonRound23.OnUpPtr             := 0;
+    ButtonRound23.OnDownPtr           := 0;
+    ButtonRound23.OnClickPtr          := 0;
+    ButtonRound23.OnPressPtr          := 0;
+
+    ButtonRoundTrainSelction0.OwnerScreenID       := 1;
+    ButtonRoundTrainSelction0.Order               := 1;
+    ButtonRoundTrainSelction0.Left                := 74;
+    ButtonRoundTrainSelction0.Top                 := 30;
+    ButtonRoundTrainSelction0.Width               := 200;
+    ButtonRoundTrainSelction0.Height              := 32;
+    ButtonRoundTrainSelction0.Pen_Width           := 1;
+    ButtonRoundTrainSelction0.Pen_Color           := 0x0008;
+    ButtonRoundTrainSelction0.Visible             := 1;
+    ButtonRoundTrainSelction0.Active              := 1;
+    ButtonRoundTrainSelction0.Transparent         := 1;
+    ButtonRoundTrainSelction0.Caption             := @ButtonRoundTrainSelction0_Caption;
+    ButtonRoundTrainSelction0_Caption             := 'RGS #20 C17';
+    ButtonRoundTrainSelction0.TextAlign             := _taCenter;
+    ButtonRoundTrainSelction0.FontName            := @Tahoma11x13_Regular;
+    ButtonRoundTrainSelction0.PressColEnabled     := 1;
+    ButtonRoundTrainSelction0.Font_Color          := 0xFFFF;
+    ButtonRoundTrainSelction0.Gradient            := 1;
+    ButtonRoundTrainSelction0.Gradient_Orientation := 0;
+    ButtonRoundTrainSelction0.Gradient_Start_Color := 0x8410;
+    ButtonRoundTrainSelction0.Gradient_End_Color  := 0x0000;
+    ButtonRoundTrainSelction0.Color               := 0xC618;
+    ButtonRoundTrainSelction0.Press_Color         := 0x8410;
+    ButtonRoundTrainSelction0.Corner_Radius          := 6;
+    ButtonRoundTrainSelction0.OnUpPtr             := 0;
+    ButtonRoundTrainSelction0.OnDownPtr           := 0;
+    ButtonRoundTrainSelction0.OnClickPtr          := @ButtonRoundTrainSelction0OnClick;
+    ButtonRoundTrainSelction0.OnPressPtr          := 0;
+
+    ButtonRoundTrainSelction1.OwnerScreenID       := 1;
+    ButtonRoundTrainSelction1.Order               := 2;
+    ButtonRoundTrainSelction1.Left                := 74;
+    ButtonRoundTrainSelction1.Top                 := 65;
+    ButtonRoundTrainSelction1.Width               := 200;
+    ButtonRoundTrainSelction1.Height              := 32;
+    ButtonRoundTrainSelction1.Pen_Width           := 1;
+    ButtonRoundTrainSelction1.Pen_Color           := 0x0008;
+    ButtonRoundTrainSelction1.Visible             := 1;
+    ButtonRoundTrainSelction1.Active              := 1;
+    ButtonRoundTrainSelction1.Transparent         := 1;
+    ButtonRoundTrainSelction1.Caption             := @ButtonRoundTrainSelction1_Caption;
+    ButtonRoundTrainSelction1_Caption             := 'D&RGW #343 C19';
+    ButtonRoundTrainSelction1.TextAlign             := _taCenter;
+    ButtonRoundTrainSelction1.FontName            := @Tahoma11x13_Regular;
+    ButtonRoundTrainSelction1.PressColEnabled     := 1;
+    ButtonRoundTrainSelction1.Font_Color          := 0xFFFF;
+    ButtonRoundTrainSelction1.Gradient            := 1;
+    ButtonRoundTrainSelction1.Gradient_Orientation := 0;
+    ButtonRoundTrainSelction1.Gradient_Start_Color := 0x8410;
+    ButtonRoundTrainSelction1.Gradient_End_Color  := 0x0000;
+    ButtonRoundTrainSelction1.Color               := 0xC618;
+    ButtonRoundTrainSelction1.Press_Color         := 0x8410;
+    ButtonRoundTrainSelction1.Corner_Radius          := 6;
+    ButtonRoundTrainSelction1.OnUpPtr             := 0;
+    ButtonRoundTrainSelction1.OnDownPtr           := 0;
+    ButtonRoundTrainSelction1.OnClickPtr          := @ButtonRoundTrainSelction0OnClick;
+    ButtonRoundTrainSelction1.OnPressPtr          := 0;
+
+    ButtonRoundTrainSelction2.OwnerScreenID       := 1;
+    ButtonRoundTrainSelction2.Order               := 3;
+    ButtonRoundTrainSelction2.Left                := 74;
+    ButtonRoundTrainSelction2.Top                 := 100;
+    ButtonRoundTrainSelction2.Width               := 200;
+    ButtonRoundTrainSelction2.Height              := 32;
+    ButtonRoundTrainSelction2.Pen_Width           := 1;
+    ButtonRoundTrainSelction2.Pen_Color           := 0x0008;
+    ButtonRoundTrainSelction2.Visible             := 1;
+    ButtonRoundTrainSelction2.Active              := 1;
+    ButtonRoundTrainSelction2.Transparent         := 1;
+    ButtonRoundTrainSelction2.Caption             := @ButtonRoundTrainSelction2_Caption;
+    ButtonRoundTrainSelction2_Caption             := 'RGS #455 K27';
+    ButtonRoundTrainSelction2.TextAlign             := _taCenter;
+    ButtonRoundTrainSelction2.FontName            := @Tahoma11x13_Regular;
+    ButtonRoundTrainSelction2.PressColEnabled     := 1;
+    ButtonRoundTrainSelction2.Font_Color          := 0xFFFF;
+    ButtonRoundTrainSelction2.Gradient            := 1;
+    ButtonRoundTrainSelction2.Gradient_Orientation := 0;
+    ButtonRoundTrainSelction2.Gradient_Start_Color := 0x8410;
+    ButtonRoundTrainSelction2.Gradient_End_Color  := 0x0000;
+    ButtonRoundTrainSelction2.Color               := 0xC618;
+    ButtonRoundTrainSelction2.Press_Color         := 0x8410;
+    ButtonRoundTrainSelction2.Corner_Radius          := 6;
+    ButtonRoundTrainSelction2.OnUpPtr             := 0;
+    ButtonRoundTrainSelction2.OnDownPtr           := 0;
+    ButtonRoundTrainSelction2.OnClickPtr          := @ButtonRoundTrainSelction0OnClick;
+    ButtonRoundTrainSelction2.OnPressPtr          := 0;
+
+    ButtonRoundTrainSelction3.OwnerScreenID       := 1;
+    ButtonRoundTrainSelction3.Order               := 4;
+    ButtonRoundTrainSelction3.Left                := 74;
+    ButtonRoundTrainSelction3.Top                 := 135;
+    ButtonRoundTrainSelction3.Width               := 200;
+    ButtonRoundTrainSelction3.Height              := 32;
+    ButtonRoundTrainSelction3.Pen_Width           := 1;
+    ButtonRoundTrainSelction3.Pen_Color           := 0x0008;
+    ButtonRoundTrainSelction3.Visible             := 1;
+    ButtonRoundTrainSelction3.Active              := 1;
+    ButtonRoundTrainSelction3.Transparent         := 1;
+    ButtonRoundTrainSelction3.Caption             := @ButtonRoundTrainSelction3_Caption;
+    ButtonRoundTrainSelction3_Caption             := 'RGS #4 Galloping Goose';
+    ButtonRoundTrainSelction3.TextAlign             := _taCenter;
+    ButtonRoundTrainSelction3.FontName            := @Tahoma11x13_Regular;
+    ButtonRoundTrainSelction3.PressColEnabled     := 1;
+    ButtonRoundTrainSelction3.Font_Color          := 0xFFFF;
+    ButtonRoundTrainSelction3.Gradient            := 1;
+    ButtonRoundTrainSelction3.Gradient_Orientation := 0;
+    ButtonRoundTrainSelction3.Gradient_Start_Color := 0x8410;
+    ButtonRoundTrainSelction3.Gradient_End_Color  := 0x0000;
+    ButtonRoundTrainSelction3.Color               := 0xC618;
+    ButtonRoundTrainSelction3.Press_Color         := 0x8410;
+    ButtonRoundTrainSelction3.Corner_Radius          := 6;
+    ButtonRoundTrainSelction3.OnUpPtr             := 0;
+    ButtonRoundTrainSelction3.OnDownPtr           := 0;
+    ButtonRoundTrainSelction3.OnClickPtr          := @ButtonRoundTrainSelction0OnClick;
+    ButtonRoundTrainSelction3.OnPressPtr          := 0;
+
+    ButtonRoundTrainSelction04.OwnerScreenID       := 1;
+    ButtonRoundTrainSelction04.Order               := 5;
+    ButtonRoundTrainSelction04.Left                := 74;
+    ButtonRoundTrainSelction04.Top                 := 170;
+    ButtonRoundTrainSelction04.Width               := 200;
+    ButtonRoundTrainSelction04.Height              := 32;
+    ButtonRoundTrainSelction04.Pen_Width           := 1;
+    ButtonRoundTrainSelction04.Pen_Color           := 0x0008;
+    ButtonRoundTrainSelction04.Visible             := 1;
+    ButtonRoundTrainSelction04.Active              := 1;
+    ButtonRoundTrainSelction04.Transparent         := 1;
+    ButtonRoundTrainSelction04.Caption             := @ButtonRoundTrainSelction04_Caption;
+    ButtonRoundTrainSelction04_Caption             := 'D&RGW 464 K27';
+    ButtonRoundTrainSelction04.TextAlign             := _taCenter;
+    ButtonRoundTrainSelction04.FontName            := @Tahoma11x13_Regular;
+    ButtonRoundTrainSelction04.PressColEnabled     := 1;
+    ButtonRoundTrainSelction04.Font_Color          := 0xFFFF;
+    ButtonRoundTrainSelction04.Gradient            := 1;
+    ButtonRoundTrainSelction04.Gradient_Orientation := 0;
+    ButtonRoundTrainSelction04.Gradient_Start_Color := 0x8410;
+    ButtonRoundTrainSelction04.Gradient_End_Color  := 0x0000;
+    ButtonRoundTrainSelction04.Color               := 0xC618;
+    ButtonRoundTrainSelction04.Press_Color         := 0x8410;
+    ButtonRoundTrainSelction04.Corner_Radius          := 6;
+    ButtonRoundTrainSelction04.OnUpPtr             := 0;
+    ButtonRoundTrainSelction04.OnDownPtr           := 0;
+    ButtonRoundTrainSelction04.OnClickPtr          := @ButtonRoundTrainSelction0OnClick;
+    ButtonRoundTrainSelction04.OnPressPtr          := 0;
+
+    ButtonRoundTrainSelction5.OwnerScreenID       := 1;
+    ButtonRoundTrainSelction5.Order               := 6;
+    ButtonRoundTrainSelction5.Left                := 74;
+    ButtonRoundTrainSelction5.Top                 := 205;
+    ButtonRoundTrainSelction5.Width               := 200;
+    ButtonRoundTrainSelction5.Height              := 32;
+    ButtonRoundTrainSelction5.Pen_Width           := 1;
+    ButtonRoundTrainSelction5.Pen_Color           := 0x0008;
+    ButtonRoundTrainSelction5.Visible             := 1;
+    ButtonRoundTrainSelction5.Active              := 1;
+    ButtonRoundTrainSelction5.Transparent         := 1;
+    ButtonRoundTrainSelction5.Caption             := @ButtonRoundTrainSelction5_Caption;
+    ButtonRoundTrainSelction5_Caption             := 'RGS #461 K27';
+    ButtonRoundTrainSelction5.TextAlign             := _taCenter;
+    ButtonRoundTrainSelction5.FontName            := @Tahoma11x13_Regular;
+    ButtonRoundTrainSelction5.PressColEnabled     := 1;
+    ButtonRoundTrainSelction5.Font_Color          := 0xFFFF;
+    ButtonRoundTrainSelction5.Gradient            := 1;
+    ButtonRoundTrainSelction5.Gradient_Orientation := 0;
+    ButtonRoundTrainSelction5.Gradient_Start_Color := 0x8410;
+    ButtonRoundTrainSelction5.Gradient_End_Color  := 0x0000;
+    ButtonRoundTrainSelction5.Color               := 0xC618;
+    ButtonRoundTrainSelction5.Press_Color         := 0x8410;
+    ButtonRoundTrainSelction5.Corner_Radius          := 6;
+    ButtonRoundTrainSelction5.OnUpPtr             := 0;
+    ButtonRoundTrainSelction5.OnDownPtr           := 0;
+    ButtonRoundTrainSelction5.OnClickPtr          := @ButtonRoundTrainSelction0OnClick;
+    ButtonRoundTrainSelction5.OnPressPtr          := 0;
+
+    Button3.OwnerScreenID       := 1;
+    Button3.Order               := 7;
+    Button3.Left                := 0;
+    Button3.Top                 := 0;
+    Button3.Width               := 320;
+    Button3.Height              := 28;
+    Button3.Pen_Width           := 0;
+    Button3.Pen_Color           := 0x0000;
+    Button3.Visible             := 1;
+    Button3.Active              := 0;
+    Button3.Transparent         := 1;
+    Button3.Caption             := @Button3_Caption;
+    Button3_Caption             := 'Train Selector';
+    Button3.TextAlign             := _taCenter;
+    Button3.FontName            := @Tahoma16x19_Regular;
+    Button3.PressColEnabled     := 1;
+    Button3.Font_Color          := 0x0000;
+    Button3.Gradient            := 1;
+    Button3.Gradient_Orientation := 0;
+    Button3.Gradient_Start_Color := 0xFFFF;
+    Button3.Gradient_End_Color  := 0xA534;
+    Button3.Color               := 0xC618;
+    Button3.Press_Color         := 0xC618;
+    Button3.OnUpPtr             := 0;
+    Button3.OnDownPtr           := 0;
+    Button3.OnClickPtr          := 0;
+    Button3.OnPressPtr          := 0;
+
+    ButtonRound20.OwnerScreenID       := 1;
+    ButtonRound20.Order               := 8;
+    ButtonRound20.Left                := 285;
+    ButtonRound20.Top                 := 3;
+    ButtonRound20.Width               := 31;
+    ButtonRound20.Height              := 20;
+    ButtonRound20.Pen_Width           := 1;
+    ButtonRound20.Pen_Color           := 0xFFFF;
+    ButtonRound20.Visible             := 1;
+    ButtonRound20.Active              := 1;
+    ButtonRound20.Transparent         := 1;
+    ButtonRound20.Caption             := @ButtonRound20_Caption;
+    ButtonRound20_Caption             := 'X';
+    ButtonRound20.TextAlign             := _taCenter;
+    ButtonRound20.FontName            := @Tahoma14x16_Bold;
+    ButtonRound20.PressColEnabled     := 1;
+    ButtonRound20.Font_Color          := 0xFFFF;
+    ButtonRound20.Gradient            := 1;
+    ButtonRound20.Gradient_Orientation := 0;
+    ButtonRound20.Gradient_Start_Color := 0xF800;
+    ButtonRound20.Gradient_End_Color  := 0xB000;
+    ButtonRound20.Color               := 0xC618;
+    ButtonRound20.Press_Color         := 0x8410;
+    ButtonRound20.Corner_Radius          := 3;
+    ButtonRound20.OnUpPtr             := 0;
+    ButtonRound20.OnDownPtr           := 0;
+    ButtonRound20.OnClickPtr          := 0;
+    ButtonRound20.OnPressPtr          := 0;
+
+    ButtonRound21.OwnerScreenID       := 1;
+    ButtonRound21.Order               := 9;
+    ButtonRound21.Left                := 276;
+    ButtonRound21.Top                 := 31;
+    ButtonRound21.Width               := 40;
+    ButtonRound21.Height              := 64;
+    ButtonRound21.Pen_Width           := 1;
+    ButtonRound21.Pen_Color           := 0x0008;
+    ButtonRound21.Visible             := 1;
+    ButtonRound21.Active              := 1;
+    ButtonRound21.Transparent         := 1;
+    ButtonRound21.Caption             := @ButtonRound21_Caption;
+    ButtonRound21_Caption             := 'Up';
+    ButtonRound21.TextAlign             := _taCenter;
+    ButtonRound21.FontName            := @Tahoma11x13_Regular;
+    ButtonRound21.PressColEnabled     := 1;
+    ButtonRound21.Font_Color          := 0xFFFF;
+    ButtonRound21.Gradient            := 1;
+    ButtonRound21.Gradient_Orientation := 0;
+    ButtonRound21.Gradient_Start_Color := 0x8410;
+    ButtonRound21.Gradient_End_Color  := 0x0000;
+    ButtonRound21.Color               := 0xC618;
+    ButtonRound21.Press_Color         := 0x8410;
+    ButtonRound21.Corner_Radius          := 6;
+    ButtonRound21.OnUpPtr             := 0;
+    ButtonRound21.OnDownPtr           := 0;
+    ButtonRound21.OnClickPtr          := 0;
+    ButtonRound21.OnPressPtr          := 0;
+
+    ButtonRound22.OwnerScreenID       := 1;
+    ButtonRound22.Order               := 10;
+    ButtonRound22.Left                := 276;
+    ButtonRound22.Top                 := 173;
+    ButtonRound22.Width               := 40;
+    ButtonRound22.Height              := 64;
+    ButtonRound22.Pen_Width           := 1;
+    ButtonRound22.Pen_Color           := 0x0008;
+    ButtonRound22.Visible             := 1;
+    ButtonRound22.Active              := 1;
+    ButtonRound22.Transparent         := 1;
+    ButtonRound22.Caption             := @ButtonRound22_Caption;
+    ButtonRound22_Caption             := 'Down';
+    ButtonRound22.TextAlign             := _taCenter;
+    ButtonRound22.FontName            := @Tahoma11x13_Regular;
+    ButtonRound22.PressColEnabled     := 1;
+    ButtonRound22.Font_Color          := 0xFFFF;
+    ButtonRound22.Gradient            := 1;
+    ButtonRound22.Gradient_Orientation := 0;
+    ButtonRound22.Gradient_Start_Color := 0x8410;
+    ButtonRound22.Gradient_End_Color  := 0x0000;
+    ButtonRound22.Color               := 0xC618;
+    ButtonRound22.Press_Color         := 0x8410;
+    ButtonRound22.Corner_Radius          := 6;
+    ButtonRound22.OnUpPtr             := 0;
+    ButtonRound22.OnDownPtr           := 0;
+    ButtonRound22.OnClickPtr          := 0;
+    ButtonRound22.OnPressPtr          := 0;
   end;
 
 function IsInsideObject (X, Y, Left, Top, Width, Height : word) : byte; // static
@@ -1257,13 +1451,6 @@ var objPtr : ^ const code far ^TButton_Round;
     Result := objPtr^;
   end;
 
-function GetLabel (index : byte) : ^TLabel; // static
-var objPtr : ^ const code far ^TLabel;
-  begin
-    objPtr := CurrentMyScreen.Labels + index;
-    Result := objPtr^;
-  end;
-
 function GetCLabel (index : byte) : ^TCLabel; // static
 var objPtr : ^ const code far ^TCLabel;
   begin
@@ -1277,10 +1464,10 @@ var objPtr : ^ const code far ^TImage;
     objPtr := CurrentMyScreen.Images + index;
     Result := objPtr^;
   end;
-function GetBox (index : byte) : ^TBox; // static
-var objPtr : ^ const code far ^TBox;
+function GetCImage (index : byte) : ^TCImage; // static
+var objPtr : ^ const code far ^TCImage;
   begin
-    objPtr := CurrentMyScreen.Boxes + index;
+    objPtr := CurrentMyScreen.CImages + index;
     Result := objPtr^;
   end;
 function GetCBox (index : byte) : ^TCBox; // static
@@ -1295,6 +1482,13 @@ var objPtr : ^ const code far ^TBox_Round;
     objPtr := CurrentMyScreen.Boxes_Round + index;
     Result := objPtr^;
   end;
+function GetProgressBar (index : byte) : ^TProgressBar; //
+var objPtr : ^ const code far ^TProgressBar;
+begin
+  objPtr := CurrentMyScreen.ProgressBars + index;
+  Result := objPtr^;
+end;
+
 
  procedure DeleteTrailingSpaces(var str : string);
   var
@@ -1370,15 +1564,6 @@ procedure DrawRoundButton(Around_button : ^TButton_Round);
         end;
   end;
 
-procedure DrawLabel(ALabel : ^TLabel);
-begin
-    if (ALabel^.Visible = 1) then
-      begin
-        TFT_Set_Font(ALabel^.FontName, ALabel^.Font_Color, FO_HORIZONTAL);
-          TFT_Write_Text(ALabel^.Caption, ALabel^.Left, ALabel^.Top);
-      end;
-end;
-
 procedure DrawCLabel(ALabel : ^TCLabel);
 begin
     if (ALabel^.Visible = 1) then
@@ -1392,25 +1577,23 @@ procedure DrawImage(AImage : ^TImage);
   begin
     if (AImage^.Visible) then
       begin
-        TFT_Image(AImage^.Left, AImage^.Top, AImage^.Picture_Name, AImage^.Picture_Ratio);
+        if (AImage^.Picture_Type = 0) then
+          TFT_Image(AImage^.Left, AImage^.Top, AImage^.Picture_Name, AImage^.Picture_Ratio);
+        if (AImage^.Picture_Type = 1) then
+          TFT_Image_Jpeg(AImage^.Left, AImage^.Top, AImage^.Picture_Name);
       end;
 end;
 
-procedure DrawBox(ABox : ^TBox);
+procedure DrawCImage(AImage : ^TCImage);
   begin
-    if (ABox^.Visible = 1) then
+    if (AImage^.Visible) then
       begin
-        if object_pressed = 1 then
-          begin
-            object_pressed := 0;
-            TFT_Set_Brush(ABox^.Transparent, ABox^.Press_Color, ABox^.Gradient, ABox^.Gradient_Orientation, ABox^.Gradient_End_Color, ABox^.Gradient_Start_Color);
-          end
-        else
-          TFT_Set_Brush(ABox^.Transparent, ABox^.Color, ABox^.Gradient, ABox^.Gradient_Orientation, ABox^.Gradient_Start_Color, ABox^.Gradient_End_Color);
-        TFT_Set_Pen(ABox^.Pen_Color, ABox^.Pen_Width);
-        TFT_Rectangle(ABox^.Left, ABox^.Top, ABox^.Left + ABox^.Width - 1, ABox^.Top + ABox^.Height - 1);
+        if (AImage^.Picture_Type = 0) then
+          TFT_Image(AImage^.Left, AImage^.Top, AImage^.Picture_Name, AImage^.Picture_Ratio);
+        if (AImage^.Picture_Type = 1) then
+          TFT_Image_Jpeg(AImage^.Left, AImage^.Top, AImage^.Picture_Name);
       end;
-  end;
+end;
 
 procedure DrawCBox(ABox : ^TCBox);
   begin
@@ -1453,6 +1636,187 @@ procedure DrawRoundBox(Around_box : ^TBox_Round);
       end;
   end;
 
+procedure UpdatePBPosition(AProgressBar : ^TProgressBar);
+ var
+  locPosition : word;
+  move_offset  : integer;
+  cnt : integer;
+  tmpStr : string[8];
+  tmpWidth : word;
+  tmpRound :  word;
+  begin
+  move_offset := 10;
+  locPosition := real(AProgressBar^.Position - AProgressBar^.Min) / real(AProgressBar^.Max - AProgressBar^.Min) * 100;
+    if (AProgressBar^.Visible = 1) then
+      begin
+    TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Background_Color, 0,0,0,0);
+    TFT_Set_Pen(AProgressBar^.Background_Color, AProgressBar^.Pen_Width);
+    TFT_Write_Text_Return_Pos(AProgressBar^.Caption, AProgressBar^.Left, AProgressBar^.Top);
+    if (caption_height >  AProgressBar^.Height) then
+        caption_height :=  AProgressBar^.Height;
+    if (caption_length >  AProgressBar^.Width)then 
+        caption_length :=  AProgressBar^.Width;
+    if (AProgressBar^.Position < (AProgressBar^.Left + (AProgressBar^.Width - caption_length) div 2)) then
+      begin
+    TFT_Rectangle(AProgressBar^.Left + (AProgressBar^.Width - caption_length) div 2,
+                  AProgressBar^.Top +(AProgressBar^.Height - caption_height) div 2,
+                  AProgressBar^.Left + (AProgressBar^.Width - caption_length) div 2 + caption_length,
+                  AProgressBar^.Top +(AProgressBar^.Height - caption_height) div 2 + caption_height);
+      end;
+    TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Color, AProgressBar^.Gradient, AProgressBar^.Gradient_Orientation, AProgressBar^.Gradient_Start_Color, AProgressBar^.Gradient_End_Color);
+    TFT_Set_Pen(AProgressBar^.Pen_Color, AProgressBar^.Pen_Width);
+       if (AProgressBar^.Rounded = 1) then
+         begin
+           // First draw back rect
+           if (locPosition > 0) then
+             begin
+               // Then position rect
+               TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Color, AProgressBar^.Gradient, AProgressBar^.Gradient_Orientation, AProgressBar^.Gradient_Start_Color, AProgressBar^.Gradient_End_Color);
+               TFT_Rectangle(AProgressBar^.Left + AProgressBar^.Corner_Radius, AProgressBar^.Top,  AProgressBar^.Left + AProgressBar^.Corner_Radius  + locPosition *  (AProgressBar^.Width-AProgressBar^.Corner_Radius*2) div 100, AProgressBar^.Top + AProgressBar^.Height);
+             end;
+         end
+       else
+         begin
+          if (locPosition > 0) then
+            begin
+              // Then position rect
+              TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Color, AProgressBar^.Gradient, AProgressBar^.Gradient_Orientation, AProgressBar^.Gradient_Start_Color, AProgressBar^.Gradient_End_Color);
+              TFT_Rectangle(AProgressBar^.Left, AProgressBar^.Top,  AProgressBar^.Left + (locPosition * AProgressBar^.Width) div 100, AProgressBar^.Top + AProgressBar^.Height);
+            end;
+         end;
+       // Draw not smoothed position rect
+       if (AProgressBar^.Smooth <> 1) then
+          begin
+            if(AProgressBar^.Rounded = 1) then
+               begin
+                 tmpRound := AProgressBar^.Corner_Radius;
+                 cnt := move_offset + tmpRound;
+                 tmpWidth := AProgressBar^.Width - AProgressBar^.Corner_Radius * 2;
+               end
+            else
+               begin
+                 tmpRound := 0;
+                 cnt := move_offset;
+                 tmpWidth := AProgressBar^.Width;
+               end;
+            TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Background_Color, 0,0,0,0);
+            while (cnt-tmpRound < (locPosition * tmpWidth) div 100) do
+              begin
+                if  (cnt - tmpRound + 3 >=  tmpWidth * locPosition) then
+                    TFT_Rectangle(AProgressBar^.Left + cnt, AProgressBar^.Top, AProgressBar^.Left + tmpRound  + tmpWidth * locPosition , AProgressBar^.Top + AProgressBar^.Height)
+                else
+                    TFT_Rectangle(AProgressBar^.Left + cnt, AProgressBar^.Top,  AProgressBar^.Left + cnt + 3, AProgressBar^.Top + AProgressBar^.Height);
+                cnt := cnt + move_offset + 3;
+              end;
+          end;
+    // Clear caption frist
+    if (AProgressBar^.Show_Position = 1) then
+       begin
+        if (AProgressBar^.Show_Percentage = 1) then
+           begin
+             IntToStr(locPosition , tmpStr);
+             DeleteTrailingSpaces(tmpStr);
+             strcpy(AProgressBar^.Caption, tmpStr);
+             strcat(AProgressBar^.Caption, '%');
+           end
+         else 
+           begin
+             IntToStr(AProgressBar^.Position , tmpStr);
+             DeleteTrailingSpaces(tmpStr);
+             strcpy(AProgressBar^.Caption, tmpStr);
+           end
+       end;
+            TFT_Set_Font(AProgressBar^.FontName, AProgressBar^.Font_Color, FO_HORIZONTAL);
+            TFT_Write_Text_Return_Pos(AProgressBar^.Caption, AProgressBar^.Left, AProgressBar^.Top);
+            TFT_Write_Text(AProgressBar^.Caption, AProgressBar^.Left + (AProgressBar^.Width - caption_length) div 2, AProgressBar^.Top + (AProgressBar^.Height - caption_height) div 2);
+ end;
+end;
+
+procedure DrawProgressBar(AProgressBar : ^TProgressBar);
+ var
+  move_offset : integer;
+  locPosition : word;
+  cnt : integer;
+  tmpStr : string[8];
+  tmpWidth : word;
+  tmpRound : word;
+  begin
+  move_offset := 10;
+  locPosition := real(AProgressBar^.Position - AProgressBar^.Min) / real(AProgressBar^.Max - AProgressBar^.Min) * 100;
+    if (AProgressBar^.Visible = 1) then
+      begin
+       TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Background_Color, 0,0,0,0);
+       TFT_Set_Pen(AProgressBar^.Pen_Color, AProgressBar^.Pen_Width);
+       if (AProgressBar^.Rounded = 1) then
+         begin
+           // First draw back rect
+           TFT_Rectangle_Round_Edges(AProgressBar^.Left, AProgressBar^.Top,  AProgressBar^.Left + AProgressBar^.Width, AProgressBar^.Top + AProgressBar^.Height, AProgressBar^.Corner_Radius);
+           if (locPosition > 0) then
+             begin
+               // Then position rect
+               TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Color, AProgressBar^.Gradient, AProgressBar^.Gradient_Orientation, AProgressBar^.Gradient_Start_Color, AProgressBar^.Gradient_End_Color);
+               TFT_Rectangle(AProgressBar^.Left + AProgressBar^.Corner_Radius, AProgressBar^.Top,  AProgressBar^.Left + AProgressBar^.Corner_Radius  + locPosition *  (AProgressBar^.Width-AProgressBar^.Corner_Radius*2) div 100, AProgressBar^.Top + AProgressBar^.Height);
+             end;
+         end
+       else
+         begin
+          // First draw back rect
+          TFT_Rectangle(AProgressBar^.Left, AProgressBar^.Top, AProgressBar^.Left + AProgressBar^.Width, AProgressBar^.Top + AProgressBar^.Height);
+          if (locPosition > 0) then
+            begin
+              // Then position rect
+              TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Color, AProgressBar^.Gradient, AProgressBar^.Gradient_Orientation, AProgressBar^.Gradient_Start_Color, AProgressBar^.Gradient_End_Color);
+              TFT_Rectangle(AProgressBar^.Left, AProgressBar^.Top,  AProgressBar^.Left + (locPosition * AProgressBar^.Width) div 100, AProgressBar^.Top + AProgressBar^.Height);
+            end;
+         end;
+       // Draw not smoothed position rect
+       if (AProgressBar^.Smooth <> 1) then
+          begin
+            if(AProgressBar^.Rounded = 1) then
+               begin
+                 tmpRound := AProgressBar^.Corner_Radius;
+                 cnt := move_offset + tmpRound;
+                 tmpWidth := AProgressBar^.Width - AProgressBar^.Corner_Radius * 2;
+               end
+            else
+               begin
+                 tmpRound := 0;
+                 cnt := move_offset;
+                 tmpWidth := AProgressBar^.Width;
+               end;
+            TFT_Set_Brush(AProgressBar^.Transparent, AProgressBar^.Background_Color, 0,0,0,0);
+            while (cnt-tmpRound < (locPosition * tmpWidth) div 100) do
+              begin
+                if  (cnt - tmpRound + 3 >=  tmpWidth * locPosition) then
+                    TFT_Rectangle(AProgressBar^.Left + cnt, AProgressBar^.Top, AProgressBar^.Left + tmpRound  + tmpWidth * locPosition , AProgressBar^.Top + AProgressBar^.Height)
+                else
+                    TFT_Rectangle(AProgressBar^.Left + cnt, AProgressBar^.Top,  AProgressBar^.Left + cnt + 3, AProgressBar^.Top + AProgressBar^.Height);
+                cnt := cnt + move_offset + 3;
+              end;
+          end;
+       // Clear caption frist
+       if (AProgressBar^.Show_Position = 1) then
+          begin
+            if (AProgressBar^.Show_Percentage = 1) then
+              begin
+                IntToStr(locPosition , tmpStr);
+                DeleteTrailingSpaces(tmpStr);
+                strcpy(AProgressBar^.Caption, tmpStr);
+                strcat(AProgressBar^.Caption, '%');
+              end
+            else 
+              begin
+               IntToStr(AProgressBar^.Position , tmpStr);
+               DeleteTrailingSpaces(tmpStr);
+               strcpy(AProgressBar^.Caption, tmpStr);
+            end;
+        TFT_Set_Font(AProgressBar^.FontName, AProgressBar^.Font_Color, FO_HORIZONTAL);
+        TFT_Write_Text_Return_Pos(AProgressBar^.Caption, AProgressBar^.Left, AProgressBar^.Top);
+        TFT_Write_Text(AProgressBar^.Caption, AProgressBar^.Left + (AProgressBar^.Width - caption_length) div 2, AProgressBar^.Top + (AProgressBar^.Height - caption_height) div 2);
+    end;
+ end;
+end;
+
 procedure SetCurrentMyScreenByIndex(aScreenID : word);
 begin
   memset(@CurrentMyScreen, 0, sizeof(CurrentMyScreen));
@@ -1471,6 +1835,8 @@ begin
       CurrentMyScreen.CBoxes        :=  CScreens[aScreenID]^.CBoxes;
       CurrentMyScreen.Boxes_RoundCount   :=  CScreens[aScreenID]^.Boxes_RoundCount;
       CurrentMyScreen.Boxes_Round        :=  CScreens[aScreenID]^.Boxes_Round;
+      CurrentMyScreen.ProgressBarsCount   :=  CScreens[aScreenID]^.ProgressBarsCount;
+      CurrentMyScreen.ProgressBars        :=  CScreens[aScreenID]^.ProgressBars;
     end
   else
     begin
@@ -1482,14 +1848,10 @@ begin
       CurrentMyScreen.Buttons        :=  DScreens[aScreenID]^.Buttons;
       CurrentMyScreen.Buttons_RoundCount   :=  DScreens[aScreenID]^.Buttons_RoundCount;
       CurrentMyScreen.Buttons_Round        :=  DScreens[aScreenID]^.Buttons_Round;
-      CurrentMyScreen.LabelsCount   :=  DScreens[aScreenID]^.LabelsCount;
-      CurrentMyScreen.Labels        :=  DScreens[aScreenID]^.Labels;
-      CurrentMyScreen.CLabelsCount   :=  DScreens[aScreenID]^.CLabelsCount;
-      CurrentMyScreen.CLabels        :=  DScreens[aScreenID]^.CLabels;
-      CurrentMyScreen.BoxesCount   :=  DScreens[aScreenID]^.BoxesCount;
-      CurrentMyScreen.Boxes        :=  DScreens[aScreenID]^.Boxes;
-      CurrentMyScreen.Boxes_RoundCount   :=  DScreens[aScreenID]^.Boxes_RoundCount;
-      CurrentMyScreen.Boxes_Round        :=  DScreens[aScreenID]^.Boxes_Round;
+      CurrentMyScreen.CImagesCount   :=  DScreens[aScreenID]^.CImagesCount;
+      CurrentMyScreen.CImages        :=  DScreens[aScreenID]^.CImages;
+      CurrentMyScreen.ProgressBarsCount   :=  DScreens[aScreenID]^.ProgressBarsCount;
+      CurrentMyScreen.ProgressBars        :=  DScreens[aScreenID]^.ProgressBars;
     end;
 end;
 
@@ -1499,18 +1861,18 @@ var button_idx : byte;
     local_button : ^TButton;
 var round_button_idx : byte;
     local_round_button : ^TButton_Round;
-var label_idx : byte;
-    local_label : ^TLabel;
 var clabel_idx : byte;
     local_clabel : ^TCLabel;
 var image_idx : byte;
     local_image : ^TImage;
-var box_idx : byte;
-    local_box : ^TBox;
+var cimage_idx : byte;
+    local_cimage : ^TCImage;
 var cbox_idx : byte;
     local_cbox : ^TCBox;
 var round_box_idx : byte;
     local_round_box : ^TBox_Round;
+var progress_bar_idx : byte;
+    local_progress_bar : ^TProgressBar;
 var save_bled, save_bled_direction : byte;
 
   begin
@@ -1518,12 +1880,12 @@ var save_bled, save_bled_direction : byte;
     order := 0;
     button_idx := 0;
     round_button_idx := 0;
-    label_idx := 0;
     clabel_idx := 0;
     image_idx := 0;
-    box_idx := 0;
+    cimage_idx := 0;
     cbox_idx := 0;
     round_box_idx := 0;
+    progress_bar_idx := 0;
     SetCurrentMyScreenByIndex(aScreenID);
     CurrentScreenID := aScreenID;
 
@@ -1571,17 +1933,6 @@ var save_bled, save_bled_direction : byte;
             end
         end;
 
-      if (label_idx < CurrentMyScreen.LabelsCount) then
-        begin
-          local_label := GetLabel(label_idx);
-          if (order = local_label^.Order) then
-            begin
-              Inc(label_idx);
-              Inc(order);
-              DrawLabel(local_label);
-            end
-        end;
-
       if (clabel_idx < CurrentMyScreen.CLabelsCount) then
         begin
           local_clabel := GetCLabel(clabel_idx);
@@ -1590,17 +1941,6 @@ var save_bled, save_bled_direction : byte;
               Inc(clabel_idx);
               Inc(order);
               DrawCLabel(local_clabel);
-            end
-        end;
-
-      if (box_idx < CurrentMyScreen.BoxesCount) then
-        begin
-          local_box := GetBox(box_idx);
-          if (order = local_box^.Order) then
-            begin
-              Inc(box_idx);
-              Inc(order);
-              DrawBox(local_box);
             end
         end;
 
@@ -1637,6 +1977,28 @@ var save_bled, save_bled_direction : byte;
             end
         end;
 
+      if (cimage_idx < CurrentMyScreen.CImagesCount) then
+        begin
+          local_cimage := GetCImage(cimage_idx);
+          if (order = local_cimage^.Order) then
+            begin
+              Inc(cimage_idx);
+              Inc(order);
+              DrawCImage(local_cimage);
+            end
+        end;
+
+      if (progress_bar_idx < CurrentMyScreen.ProgressBarsCount) then
+        begin
+          local_progress_bar := GetProgressBar(progress_bar_idx);
+          if (order = local_progress_bar^.Order) then
+            begin
+              Inc(progress_bar_idx);
+              Inc(order);
+              DrawProgressBar(local_progress_bar);
+            end
+        end;
+
     end;
 end;
 
@@ -1645,12 +2007,12 @@ var counter : integer;
   begin
     button_order        := -1;
     round_button_order  := -1;
-    label_order         := -1;
     clabel_order        := -1;
     image_order         := -1;
-    box_order           := -1;
+    cimage_order        := -1;
     cbox_order          := -1;
     box_round_order     := -1;
+    progress_bar_order   := -1;
     //  Buttons
     counter := CurrentMyScreen.ButtonsCount;
     for _object_count := 0 to counter - 1 do
@@ -1676,20 +2038,6 @@ var counter : integer;
             begin
               round_button_order := local_round_button^.Order;
               exec_round_button := local_round_button;
-            end;
-      end;
-
-    //  Labels
-    counter := CurrentMyScreen.LabelsCount;
-    for _object_count := 0 to counter - 1 do
-      begin
-        local_label := GetLabel(_object_count);
-        if (local_label^.Active = 1) then
-          if (IsInsideObject(X, Y, local_label^.Left, local_label^.Top,
-                             local_label^.Width, local_label^.Height) = 1) then
-            begin
-              label_order := local_label^.Order;
-              exec_label := local_label;
             end;
       end;
 
@@ -1721,17 +2069,17 @@ var counter : integer;
             end;
       end;
 
-    //  Boxes
-    counter := CurrentMyScreen.BoxesCount;
+    //  CImages
+    counter := CurrentMyScreen.CImagesCount;
     for _object_count := 0 to counter - 1 do
       begin
-        local_box := GetBox(_object_count);
-        if (local_box^.Active = 1) then
-          if (IsInsideObject(X, Y, local_box^.Left, local_box^.Top,
-                             local_box^.Width, local_box^.Height) = 1) then
+        local_cimage := GetCImage(_object_count);
+        if (local_cimage^.Active = 1) then
+          if (IsInsideObject(X, Y, local_cimage^.Left, local_cimage^.Top,
+                             local_cimage^.Width, local_cimage^.Height) = 1) then
             begin
-              box_order := local_box^.Order;
-              exec_box := local_box;
+              cimage_order := local_cimage^.Order;
+              exec_cimage := local_cimage;
             end;
       end;
 
@@ -1763,23 +2111,37 @@ var counter : integer;
             end;
       end;
 
+    // ProgressBar
+    counter := CurrentMyScreen.ProgressBarsCount;
+    for _object_count := 0 to counter - 1 do
+      begin
+        local_progress_bar := GetProgressBar(_object_count);
+        if (local_progress_bar^.Active = 1) then
+          if (IsInsideObject(X, Y, local_progress_bar^.Left, local_progress_bar^.Top,
+                             local_progress_bar^.Width, local_progress_bar^.Height) = 1) then
+            begin
+              progress_bar_order := local_progress_bar^.Order;
+              exec_progress_bar := local_progress_bar;
+            end;
+      end;
+
     _object_count := -1;
     if (button_order >  _object_count ) then
       _object_count := button_order;
     if (round_button_order >  _object_count ) then
       _object_count := round_button_order;
-    if (label_order >  _object_count ) then
-      _object_count := label_order;
     if (clabel_order >  _object_count ) then
       _object_count := clabel_order;
     if (image_order >  _object_count ) then
       _object_count := image_order;
-    if (box_order >  _object_count ) then
-      _object_count := box_order;
+    if (cimage_order >  _object_count ) then
+      _object_count := cimage_order;
     if (cbox_order >  _object_count ) then
       _object_count := cbox_order;
     if (box_round_order >  _object_count ) then
       _object_count := box_round_order;
+    if (progress_bar_order >  _object_count ) then
+      _object_count := progress_bar_order;
   end;
 
 
@@ -1787,10 +2149,9 @@ procedure Process_TP_Press( X : word; Y : word); // static
   begin
     exec_button         := 0;
     exec_round_button   := 0;
-    exec_label          := 0;
     exec_clabel         := 0;
     exec_image          := 0;
-    exec_box            := 0;
+    exec_cimage         := 0;
     exec_cbox           := 0;
     exec_round_box      := 0;
 
@@ -1815,14 +2176,6 @@ procedure Process_TP_Press( X : word; Y : word); // static
                 exit;
               end;
 
-        if (_object_count = label_order) then
-          if (exec_label^.Active = 1) then
-            if (exec_label^.OnPressPtr <> 0) then
-              begin
-                exec_label^.OnPressPtr^();
-                exit;
-              end;
-
         if (_object_count = clabel_order) then
           if (exec_clabel^.Active = 1) then
             if (exec_clabel^.OnPressPtr <> 0) then
@@ -1839,11 +2192,11 @@ procedure Process_TP_Press( X : word; Y : word); // static
                 exit;
               end;
 
-        if (_object_count = box_order) then
-          if (exec_box^.Active = 1) then
-            if (exec_box^.OnPressPtr <> 0) then
+        if (_object_count = cimage_order) then
+          if (exec_cimage^.Active = 1) then
+            if (exec_cimage^.OnPressPtr <> 0) then
               begin
-                exec_box^.OnPressPtr^();
+                exec_cimage^.OnPressPtr^();
                 exit;
               end;
 
@@ -1891,15 +2244,6 @@ procedure Process_TP_Up( X : word; Y : word); // static
                   end;
               end;
           end;
-      // Box
-      6 : begin
-            if (PressedObject <> 0) then
-              begin
-                exec_box := ^TBox(PressedObject);
-                if ((exec_box^.PressColEnabled = 1) and (exec_box^.OwnerScreenID = CurrentScreenID)) then
-                    DrawBox(exec_box);
-              end;
-          end;
       // CBox
       14 : begin
             if (PressedObject <> 0) then
@@ -1920,9 +2264,9 @@ procedure Process_TP_Up( X : word; Y : word); // static
           end;
     end;
 
-    exec_label          := 0;
     exec_clabel          := 0;
     exec_image          := 0;
+    exec_cimage          := 0;
 
     Get_Object(X, Y);
 
@@ -1954,22 +2298,6 @@ procedure Process_TP_Up( X : word; Y : word); // static
                 if PressedObject = TPointer(exec_round_button) then
                   if (exec_round_button^.OnClickPtr <> 0) then
                     exec_round_button^.OnClickPtr^();
-                PressedObject := 0;
-                PressedObjectType := -1;
-                exit;
-              end;
-          end;
-
-        // Labels
-        if (_object_count = label_order) then
-          begin
-            if (exec_label^.Active = 1) then
-              begin
-                if (exec_label^.OnUpPtr <> 0) then
-                  exec_label^.OnUpPtr();
-                if PressedObject = TPointer(exec_label) then
-                  if (exec_label^.OnClickPtr <> 0) then
-                    exec_label^.OnClickPtr^();
                 PressedObject := 0;
                 PressedObjectType := -1;
                 exit;
@@ -2008,16 +2336,16 @@ procedure Process_TP_Up( X : word; Y : word); // static
               end;
           end;
 
-        // Boxes
-        if (_object_count = box_order) then
+        // CImages
+        if (_object_count = cimage_order) then
           begin
-            if (exec_box^.Active = 1) then
+            if (exec_cimage^.Active = 1) then
               begin
-                if (exec_box^.OnUpPtr <> 0) then
-                  exec_box^.OnUpPtr();
-                if PressedObject = TPointer(exec_box) then
-                  if (exec_box^.OnClickPtr <> 0) then
-                    exec_box^.OnClickPtr^();
+                if (exec_cimage^.OnUpPtr <> 0) then
+                  exec_cimage^.OnUpPtr();
+                if PressedObject = TPointer(exec_cimage) then
+                  if (exec_cimage^.OnClickPtr <> 0) then
+                    exec_cimage^.OnClickPtr^();
                 PressedObject := 0;
                 PressedObjectType := -1;
                 exit;
@@ -2066,10 +2394,9 @@ procedure Process_TP_Down( X : word; Y : word); // static
     object_pressed      := 0;
     exec_button         := 0;
     exec_round_button   := 0;
-    exec_label          := 0;
     exec_clabel         := 0;
     exec_image          := 0;
-    exec_box            := 0;
+    exec_cimage         := 0;
     exec_cbox           := 0;
     exec_round_box      := 0;
 
@@ -2111,18 +2438,6 @@ procedure Process_TP_Down( X : word; Y : word); // static
                 end;
             end;
 
-        if (_object_count = label_order) then
-          if (exec_label^.Active = 1) then
-            begin
-              PressedObject := TPointer(exec_label);
-              PressedObjectType := 2;
-              if (exec_label^.OnDownPtr <> 0) then
-                begin
-                  exec_label^.OnDownPtr^();
-                  exit;
-                end;
-            end;
-
         if (_object_count = clabel_order) then
           if (exec_clabel^.Active = 1) then
             begin
@@ -2147,19 +2462,14 @@ procedure Process_TP_Down( X : word; Y : word); // static
                 end;
             end;
 
-        if (_object_count = box_order) then
-          if (exec_box^.Active = 1) then
+        if (_object_count = cimage_order) then
+          if (exec_cimage^.Active = 1) then
             begin
-              if (exec_box^.PressColEnabled = 1) then
+              PressedObject := TPointer(exec_cimage);
+              PressedObjectType := 11;
+              if (exec_cimage^.OnDownPtr <> 0) then
                 begin
-                  object_pressed := 1;
-                  DrawBox(exec_box);
-                end;
-              PressedObject := TPointer(exec_box);
-              PressedObjectType := 6;
-              if (exec_box^.OnDownPtr <> 0) then
-                begin
-                  exec_box^.OnDownPtr^();
+                  exec_cimage^.OnDownPtr^();
                   exit;
                 end;
             end;
@@ -2250,8 +2560,8 @@ procedure Start_TP();
     TP_TFT_Set_Calibration_Consts(157, 780, 85, 749);    // Set calibration constants
 
     InitializeObjects();
-    display_width := ScreenStart.Width;
-    display_height := ScreenStart.Height;
+    display_width := Start.Width;
+    display_height := Start.Height;
     DrawScreen(32768);
   end;
 
