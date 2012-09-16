@@ -335,6 +335,7 @@ end;
 // *****************************************************************************
 function NMRAnetNode_NextNode: PNMRAnetNode;
 begin
+  Result := PNMRAnetNode( nil);
   LockCANInterrupt;
   if Nodes.Count > 0 then
   begin

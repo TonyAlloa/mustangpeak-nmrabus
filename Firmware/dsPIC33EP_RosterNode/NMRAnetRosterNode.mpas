@@ -1,0 +1,150 @@
+program NMRABusRosterNode;
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//
+// * Description:
+//    Implements a NMRABus based Command Station
+//
+// BUGS, BUGS, BUGS,
+//
+//  July 14, 2012
+//  Response to the Memory Configuration Protocol can respond with Datagrams MUCH larger than 72 bytes.......Ok per Bob
+//  Memory Config not working with VNodes
+//
+// ******************************************************************************
+ 
+uses
+  MCU_Setup_dsPIC33EP64GP502,
+  NMRAnetStateMachine,
+  NMRAnetDefines,
+  CANDefines,
+  CANStorage,
+  NMRAnetEventDefines,
+  NMRAnetBufferPools,
+  NMRAnetBufferPoolsDefines,
+  NMRAnetNode,
+  NodeIDs;
+  
+{$I Options.inc}
+
+var
+  // EEPROM SPI PINS
+  CS_Bank_0                         : sbit at LATB12_bit;
+  CS_Bank_1                         : sbit at LATB11_bit;
+  CS_Bank_0_Direction               : sbit at TRISB12_bit;
+  CS_Bank_1_Direction               : sbit at TRISB12_bit;
+
+
+// *****************************************************************************
+//  INTERRUPTS
+// *****************************************************************************
+
+procedure INTERRUPT_Timer(); iv IVT_ADDR_T1INTERRUPT;
+begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+  T1IF_bit := 0;                                                                // Clear the Flag
+end;
+
+procedure INTERRUPT_1ms_Timer(); iv IVT_ADDR_T2INTERRUPT;
+// Called once every 100m
+var
+  i: Integer;
+begin
+  // Silicon Bug in the 4013, if Interrupt is disabled, then Interrupt 2 of higher priority is called (nested) an Address Trap can be thrown
+  {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+  T2IF_bit := 0;                                                                // Clear the Flag
+  for i := 0 to Nodes.Count - 1 do
+    NMRAnetStateMachine_100ms_Timer(Nodes.AllocatedList[i]);
+end;
+
+procedure PrintBufferPools(var j: Integer);
+begin
+  if j = 50000 then
+  begin
+   NMRAnetBufferPools_Print;
+   j := 0;
+  end;
+  Inc(j);
+end;
+
+procedure PrintMaxLoopTimes(var x, y: Word);
+begin
+  if x <> MaxTime_RX then
+  begin
+    FloatToStr(double( MaxTime_RX)*50e-3, s1);
+    UART1_Write_Text('Interrupt Time: '+s1+'us'+LF);
+    x := MaxTime_RX
+  end;
+
+  if y <> MaxTime_StateMachine then
+  begin
+    FloatToStr(double( MaxTime_StateMachine)*50e-3, s1);
+    UART1_Write_Text('Statemachine Time: '+s1+'us'+LF);
+    y := MaxTime_StateMachine
+  end;
+end;
+
+// *******************
+// MAIN LOOP
+// *******************
+var
+  ActiveNode: PNMRAnetNode;
+  i, j: Integer;
+  x, y: Word;
+
+begin
+  _25AAxxxx_Initialize;
+  CANStorage_Initialize;
+  dsPIC33_CAN_Initialize;
+  NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_ROSTER_NODE_ID_0_LO);
+  MCU_Setup_Initialize;                                                         // Start the timers and perpherials last
+
+ // NMRAnetMobileNode_InitializeEEPROM;
+   
+  UART1_Write_Text('Starting'+LF);
+  
+  for i := 0 to 50 do
+    NMRAnetNode_Allocate;
+
+  
+  x := 0;
+  y := 0;
+  j := 0;
+  i := 0;
+  MaxTime_RX := 0;
+  MaxTime_StateMachine := 0;
+  
+  while (TRUE) do
+  begin
+    delay_us(2000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
+    //  PrintBufferPools(j);
+    
+    if C1IE_bit = 0 then
+      UART1_Write_Text('CAN Interrupt Disabled!');
+      
+    ActiveNode := NMRAnetNode_NextNode;
+    if ActiveNode <> PNMRAnetNode( nil) then
+    begin
+    
+      TMR3 := 0;
+      NMRAnetStateMachine_Process(ActiveNode);
+      if TMR3 > MaxTime_StateMachine then MaxTime_StateMachine := TMR3;
+
+      if NMRAnetNode_TestStateFlag(ActiveNode, NS_PERMITTED) then
+      begin
+
+      end;
+    end;
+  //  PrintMaxLoopTimes(x, y);
+  end;
+end.

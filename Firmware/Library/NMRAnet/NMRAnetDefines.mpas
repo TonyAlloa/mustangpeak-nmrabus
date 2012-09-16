@@ -214,6 +214,18 @@ type
     iCID: Byte;
   end;
   
+  TDCCVolatileData = record
+    Speed: Word;                                                                // Float 16 so negative is reverse
+    Functions: DWord;                                                           // Function State (F0..F31)
+  end;
+  
+  TDCCNonVolatileData = record
+    FunctionLatch: DWord;                                                       // If the Function is latching or not, F0..F31
+    FunctionName: array[32] of string[16];                                      // Names for the Functions
+    ConsistNext,
+    ConsistPrev: TNodeID;
+  end;
+  
   TNMRAnetNode = record
     State: Byte;                                                                // See the NS_xxxx flags; State of the Node
     Node: TNodeInfo;                                                            // Information about a Node
@@ -225,9 +237,11 @@ type
     DataBuffers: PDataBuffer;
     DatagramBuffers: PDatagramBuffer;
     UserDataOffset: DWord;                                                      // Offset into the EEProm Memory
-    ParentAlias: Word;                                                          // Node that has reserved this node as a child.
-    ChildAlias: Word;                                                           // Node this node has reserved:  This will likely be a linked list when done:::::::::::::::::::::::::::::::
-    RAMData: ^Word;                                                        // Pointer to a DataStructure that is in RAM
+    ParentAlias,                                                                // Definition depends on what kind of node.  If a Throttle then Parent should never be set, If a Train then the will be the Owner Throttle
+    ChildAlias,                                                                 // Definition depends on what kind of node.  If a Throttle then Child should the Train it is controlling, if a Train then should not be set
+    LeftSibling,                                                                // Definition depends on what kind of node.  If Train then may be the next in a Consist Chain
+    RightSibling: Word;                                                         // Definition depends on what kind of node.  If Train then may be the previous in a Consist Chain
+    RAMData: ^Word;                                                             // Pointer to a DataStructure that is in RAM
   end;
   PNMRAnetNode = ^TNMRAnetNode;
   
