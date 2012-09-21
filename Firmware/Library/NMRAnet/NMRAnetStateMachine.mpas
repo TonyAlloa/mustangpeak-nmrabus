@@ -410,12 +410,21 @@ begin
   Node^.ChildAlias := 0;
   if (NodeID_HI <> 0) and (NodeID_LO <> 0) then
   begin
+    // Only done on the very first initialization
     Node^.Node.ID[0] := NodeID_LO;
     Node^.Node.ID[1] := NodeID_HI;
     Node^.Node.Seed := Node^.Node.ID;
+    Node^.Login.TimeCounter := 0;
+    Node^.Login.iCID := 0;
+    Node^.RAMData := 0;
   end;
   Node^.iStateMachine := STATE_NMRABUS_START;
-end;    
+  Node^.UserDataOffset := 0;
+  Node^.ParentAlias := 0;
+  Node^.ChildAlias := 0;
+  Node^.LeftSibling := 0;
+  Node^.RightSibling := 0;
+end;
 
 // *****************************************************************************
 //  procedure NMRAnetStateMachine_Initialize
@@ -587,7 +596,7 @@ var
   ByteArray: PByteArray;
   ErrorCode: Word;
 begin
-
+  TMR3 := 0;
 
   // The first thing to check is for duplicate Node ID's or Aliases and handle
   // them first and exclusively
@@ -912,17 +921,17 @@ begin
                                                                                                                                                             end;
                                                                                                                                             MSI_ALL       : MemorySpaceOffset := ALL_MAP.HighMem;
                                                                                                                                             MSI_CONFIG    : MemorySpaceOffset := MAX_USER_NAME+MAX_USER_DESC;
-                                                                                                                                            MSI_ACDI_MFG  : MemorySpaceOffset := 1 + CDI_MAP.Manufacturer.Length+CDI_MAP.ManufacturerModel.Length+CDI_MAP.ManufacturerHWVersion.Length+CDI_MAP.ManufacturerSWVersion.Length+1;
-                                                                                                                                            MSI_ACDI_USER : MemorySpaceOffset := 1 + MAX_USER_NAME+MAX_USER_DESC+1;  // PLUS 1 HERE???????????????????????????
+                                                                                                                                            MSI_ACDI_MFG  : MemorySpaceOffset := 1 + CDI_MAP.Manufacturer.Length+CDI_MAP.ManufacturerModel.Length+CDI_MAP.ManufacturerHWVersion.Length+CDI_MAP.ManufacturerSWVersion.Length + 1;
+                                                                                                                                            MSI_ACDI_USER : MemorySpaceOffset := 1 + MAX_USER_NAME+MAX_USER_DESC + 1;  // for the Version ID Byte
                                                                                                                                           end;
                                                                                                                                           DatagramBuffer^.DataBytes[3] := (DWord(MemorySpaceOffset) shr 24) and $000000FF;
                                                                                                                                           DatagramBuffer^.DataBytes[4] := (DWord(MemorySpaceOffset) shr 16) and $000000FF;
                                                                                                                                           DatagramBuffer^.DataBytes[5] := (DWord(MemorySpaceOffset) shr 8) and $000000FF;
                                                                                                                                           DatagramBuffer^.DataBytes[6] := DWord(MemorySpaceOffset) and $000000FF;
                                                                                                                                           case DatagramBuffer^.DataBytes[2] of
-                                                                                                                                            MSI_CONFIG, MSI_ACDI_MFG, MSI_ACDI_USER : DatagramBuffer^.DataBytes[7] := $00        // Read/Write Only
+                                                                                                                                            MSI_CONFIG, MSI_ACDI_USER : DatagramBuffer^.DataBytes[7] := $00          // Read/Write
                                                                                                                                           else
-                                                                                                                                            DatagramBuffer^.DataBytes[7] := $01;                                                 // Read Only
+                                                                                                                                            DatagramBuffer^.DataBytes[7] := $01;                                     // Read Only
                                                                                                                                           end;
                                                                                                                                          DatagramBuffer^.iByteCount := 8;
                                                                                                                                         end;
@@ -1147,7 +1156,7 @@ begin
     end;
     UnLockCANInterrupt;
   end;
-
+  if TMR3 > MaxTime_StateMachine then MaxTime_StateMachine := TMR3;
 end;
 
 

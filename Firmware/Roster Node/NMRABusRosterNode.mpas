@@ -34,6 +34,7 @@ uses
   NMRAnetBufferPoolsDefines,
   NMRAnetNode,
   dsPIC30_Traps,
+  NMRAnetDecoderNode,
   NodeIDs;
   
 {$I Options.inc}
@@ -103,8 +104,8 @@ begin
 end;
 
 procedure MemConfigurationCallback(Node: PNMRAnetNode; Datagram: PDatagramBuffer);
-//var
- // j, i: Integer;
+var
+  j, i: Integer;
 begin
  { j := Datagram^.iByteCount;
   UART1_Write_Text('MemConfig Datagram:'+LF);
@@ -160,10 +161,9 @@ begin
   _25AAxxxx_Initialize;
   CANStorage_Initialize;
   NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_ROSTER_NODE_ID_0_LO);
+  NMRAnetDecoderNode_Initialize(Nodes);
   MCU_Setup_Initialize;                                                         // Start the timers and perpherials last
 
- // NMRAnetMobileNode_InitializeEEPROM;
-   
   NMRAnetDatagrams_SetCallback(DatagramTrainControlCallbackFunc, @TrainControlCallback);
   NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallbackFunc, @MemConfigurationCallback);
 
@@ -182,7 +182,7 @@ begin
   
   while (TRUE) do
   begin
-    delay_us(2000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
+    delay_us(1000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
     //  PrintBufferPools(j);
     
     if C1IE_bit = 0 then
