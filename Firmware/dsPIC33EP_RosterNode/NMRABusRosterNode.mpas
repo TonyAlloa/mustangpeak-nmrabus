@@ -161,6 +161,7 @@ begin
   CANStorage_Initialize;
   NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_ROSTER_NODE_ID_0_LO);
   NMRAnetDecoderNode_Initialize(Nodes);
+  NMRAnetAppDefines_Initialize;
   MCU_Setup_Initialize;                                                         // Start the timers and perpherials last
 
  // NMRAnetMobileNode_InitializeEEPROM;

@@ -25,7 +25,8 @@ uses
   CANDefines,
   NMRAnetDefines,
   NMRAnetEventDefines,
-  NMRAnetMemoryConfigurationDefines;
+  NMRAnetMemoryConfigurationDefines,
+  NMRAnetDatagramDefines;
   
 {$I Options.inc}
 
@@ -227,10 +228,10 @@ type
 
 const
   CDI_MAP: TCDIStringMap = (
-    (308, 12),    // Manufacturer - [String Offset, Length] into the CDI Memory Space ($FF)
-    (341, 6),    // ManufacturerModel - [String Offset, Length] into the CDI Memory Space ($FF)
-    (371, 4),    // ManufacturerHWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
-    (409, 4)     // ManufacturerSWVersion - [String Offset, Length] into the CDI Memory Space ($FF)
+    (308, 12),    // Manufacturer - [String Offset, Length] into the CDI Memory Space ($FF)         - Includes the Terminating NULL
+    (341, 6),    // ManufacturerModel - [String Offset, Length] into the CDI Memory Space ($FF)     - Includes the Terminating NULL
+    (371, 4),    // ManufacturerHWVersion - [String Offset, Length] into the CDI Memory Space ($FF) - Includes the Terminating NULL
+    (409, 4)     // ManufacturerSWVersion - [String Offset, Length] into the CDI Memory Space ($FF) - Includes the Terminating NULL
   );
 
 
@@ -380,7 +381,24 @@ const
     ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
   );
   {$ENDIF}
+  
+type
+  TConfigurationReadFunc = procedure(Node: PNMRAnetNode; Datagram: PDatagram; iDatagramStart: Byte; MemorySpaceOffset, MemorySpaceCount: DWord);
+
+var
+  ConfigurationReadFunc: ^TConfigurationReadFunc;
+  
+procedure NMRAnetAppDefines_Initialize;
 
 implementation
+
+procedure ConfigurationRead(Node: PNMRAnetNode; Datagram: PDatagram; iDatagramStart: Byte; MemorySpaceOffset, MemorySpaceCount: DWord);
+begin
+end;
+
+procedure NMRAnetAppDefines_Initialize;
+begin
+  ConfigurationReadFunc := @ConfigurationRead
+end;
 
 end.

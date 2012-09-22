@@ -24,9 +24,9 @@ uses
 type
   TNodes = record
     RawList: array[0..MAX_NODE_COUNT-1] of TNMRAnetNode;                         // Node [0] is ALWAYS the physical node
-    AllocatedList: array[0..MAX_NODE_COUNT-1] of PNMRAnetNode;
-    Count: Integer;
-    iActiveNode: Word;
+    AllocatedList: array[0..MAX_NODE_COUNT-1] of PNMRAnetNode;                   // Node List sorted by Alias
+    Count: Integer;                                                              // Number of Nodes Allocated
+    iActiveNode: Word;                                                           // The node that is "active" which means it is the one that the main statemachine is giving a time slice to execute
   end;
   PNodes = ^TNodes;
 
