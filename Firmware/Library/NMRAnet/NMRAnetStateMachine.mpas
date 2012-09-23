@@ -965,7 +965,7 @@ begin
                                                                                                           LongWordToStr(MemorySpaceMax, s1);
                                                                                                           UART1_Write_Text('MemorySpaceMax= '+s1+LF);
                                                                                                           LongWordToStr(MemorySpaceOffset, s1);
-                                                                                                          UART1_Write_Text('MemorySpaceOffset= '+s1+LF);}
+                                                                                                          UART1_Write_Text('MemorySpaceOffset= '+s1+LF);
                                                                                                           ShortToStr(MemorySpaceCount, s1);
                                                                                                           UART1_Write_Text('MemorySpaceCount= '+s1+LF);
                                                                                                           {$ENDIF}
@@ -1036,7 +1036,13 @@ begin
                                                                                                           begin
                                                                                                             // Reuse the Datagram and the first 6 Bytes.  The beauty here is the defines for this allow it to be a reply and still correctly enter this statemachine!  Thanks Bob!
                                                                                                             DatagramBuffer^.DataBytes[1] := MCP_READ_DATAGRAM_REPLY or DatagramBuffer^.DataBytes[1];
-                                                                                                            DatagramOffset := 6;
+                                                                                                            
+                                                                                                            // Depends of if the {Space} byte is used
+                                                                                                            if DatagramBuffer^.DataBytes[1] and $03 = 0 then
+                                                                                                              DatagramOffset := 7
+                                                                                                            else
+                                                                                                              DatagramOffset := 6;
+                                                                                                              
                                                                                                             case MemorySpace of
                                                                                                               MSI_CDI       : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
