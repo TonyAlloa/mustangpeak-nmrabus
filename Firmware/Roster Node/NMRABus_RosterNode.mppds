@@ -46,14 +46,15 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=7
+Count=8
 File0=NMRABusRosterNode.mpas
 File1=..\Library\NMRAnet\NMRAnetNode.mpas
 File2=NMRAnetAppDefines.mpas
 File3=..\Library\NMRAnet\NMRAnetDecoderNode.mpas
 File4=..\Library\NMRAnet\NMRAnetDatagramDefines.mpas
 File5=..\Library\NMRAnet\NMRAnetStateMachine.mpas
-File6=..\Library\NMRAnet\NMRAnetMemoryConfigurationDefines.mpas
+File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
+File7=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\CANDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -62,16 +63,25 @@ Count=0
 Count=1
 File0=Options.inc
 [SEARCH_PATH]
-Count=9
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Roster Node\
-Path3=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
-Path4=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
-Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
-Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Math\
-Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
-Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Count=18
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Roster Node\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Roster Node\
+Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
+Path9=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\Math\
+Path10=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path11=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\
+Path12=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\CANBus\
+Path13=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\dsPIC30F\
+Path14=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\InterfaceIntegratedCircuits\
+Path15=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\Math\
+Path16=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
+Path17=C:\Users\Jim\Desktop\NMRABus\Firmware\Library\
 [HEADER_PATH]
 Count=0
 [HEADERS]
@@ -87,6 +97,5 @@ File3=CAN
 File4=UART
 [EXPANDED NODES]
 Node1=Sources
-Node2=Output Files
-Node3=Other Files
-Count=3
+Node2=Other Files
+Count=2

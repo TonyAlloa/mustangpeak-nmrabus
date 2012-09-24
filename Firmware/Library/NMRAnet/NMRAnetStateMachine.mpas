@@ -78,6 +78,7 @@ var
   
 implementation
 
+
 procedure TransmitNMRABusLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; DestinationAliasID: Word; DataCount: Byte; DataBytes: PCAN_DataBytes; AliasInHeader: Boolean); forward;
 function NMRABusBufferAvailable: Boolean; forward;
 
@@ -564,6 +565,31 @@ begin
   end
 end;
 
+function MaxAddressByAddressSpace(Node: PNMRAnetNode; AddressSpace: Byte): DWord;
+ begin
+   case AddressSpace of
+      MSI_CDI       : begin
+                        {$IFDEF SUPPORT_VIRTUAL_NODES}
+                        if Node^.State and NS_VIRTUAL <> 0 then
+                          Result := MAX_CDI_ARRAY_VNODE
+                        else {$ENDIF}
+                          Result := MAX_CDI_ARRAY;
+                      end;
+      MSI_ALL       : Result := ALL_MAP.HighMem;
+      MSI_CONFIG    : Result := ConfigurationSize(Node);
+      MSI_ACDI_MFG  : begin
+                        {$IFDEF SUPPORT_VIRTUAL_NODES}
+                        if Node^.State and NS_VIRTUAL <> 0 then
+                          Result := MAX_ACDI_MFG_ARRAY_VNODE + 1 // for the Version ID Byte
+                        else {$ENDIF}
+                          Result := MAX_ACDI_MFG_ARRAY + 1 // for the Version ID Byte
+                      end;
+      MSI_ACDI_USER : Result := ConfigurationSize(Node) + 1  // for the Version ID Byte
+    else
+      Result := 0;
+    end;
+ end;
+
 // *****************************************************************************
 //  procedure ProcessNode
 //     Parameters:
@@ -590,9 +616,8 @@ var
   DatagramBuffer, TxDatagramBuffer: PDatagramBuffer;
   MemorySpace: Byte;
   MemorySpaceCount: Short;
-  DatagramOffset: Byte;
-  MemorySpaceOffset, MemorySpaceMax : DWord;
-  AddressSpace: ^Byte;
+  DatagramAddress: Byte;
+  MemorySpaceAddress, MemorySpaceMaxAddress : DWord;
   ByteArray: PByteArray;
   ErrorCode: Word;
 begin
@@ -709,15 +734,12 @@ begin
         BMC_SIMPLE_NODE_INFO_REQEUST :      begin
                                               if NMRABusBufferAvailable then
                                               begin
-                                                i := 0;                                                                    // All messages have the Destination as the first 2 bytes
-                                                while (BaseBuffer^.StateMachine <> STATE_ACDI_DONE) and (i < 6) do
+                                                i := 0;
+                                                while (BaseBuffer^.StateMachine <> STATE_ACDI_DONE) and (i < 6) do   // All messages have the Destination Alias as the first 2 bytes so only 6 left to use
                                                 begin
                                                   case BaseBuffer^.StateMachine of
-                                                    STATE_ACDI_MFG_VERSION  : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                  DataBytes[i] := ACDI_MFG_VERSION_VNODE
-                                                                                else {$ENDIF}
-                                                                                  DataBytes[i] := ACDI_MFG_VERSION;
+                                                    STATE_ACDI_MFG_VERSION  : begin
+                                                                                DataBytes[i] := ACDI_MFG_VERSION;
                                                                                 Inc(i);
                                                                                 BaseBuffer^.Tag := 0;
                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_MFG_INFO;
@@ -743,11 +765,8 @@ begin
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_USER_VERSION;
                                                                                 end;
                                                                               end;
-                                                    STATE_ACDI_USER_VERSION : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                  DataBytes[i] := ACDI_USER_VERSION_VNODE
-                                                                                else {$ENDIF}
-                                                                                  DataBytes[i] := ACDI_USER_VERSION;
+                                                    STATE_ACDI_USER_VERSION : begin
+                                                                                DataBytes[i] := ACDI_USER_VERSION;
                                                                                 Inc(i);
                                                                                 BaseBuffer^.StateMachine := STATE_ACDI_USER_NAME;
                                                                                 BaseBuffer^.Tag := 0;
@@ -910,24 +929,13 @@ begin
                                                                                                                                           DatagramBuffer^.DataBytes[0] := DATAGRAM_TYPE_MEMORY_CONFIGURATION;
                                                                                                                                           DatagramBuffer^.DataBytes[1] := MCP_OP_GET_ADD_SPACE_INFO_REPLY or MCP_OP_GET_ADD_SPACE_INFO_REPLY_PRESENT;  // assumption is we support ALL Address Spaces
                                                                                                                                           DatagramBuffer^.DataBytes[2] := DatagramBuffer^.DataBytes[2];
+                                                                                                                                          
                                                                                                                                            // I am not supporting the ability to return anything but a $0 for the lower address so we only deal with offsets from zero in these calls
-                                                                                                                                          case DatagramBuffer^.DataBytes[2] of
-                                                                                                                                            MSI_CDI       : begin
-                                                                                                                                                              {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                                                                                              if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                                                MemorySpaceOffset := MAX_CDI_ARRAY_VNODE
-                                                                                                                                                              else {$ENDIF}
-                                                                                                                                                                MemorySpaceOffset := MAX_CDI_ARRAY;
-                                                                                                                                                            end;
-                                                                                                                                            MSI_ALL       : MemorySpaceOffset := ALL_MAP.HighMem;
-                                                                                                                                            MSI_CONFIG    : MemorySpaceOffset := MAX_USER_NAME+MAX_USER_DESC;
-                                                                                                                                            MSI_ACDI_MFG  : MemorySpaceOffset := {1 + }CDI_MAP.Manufacturer.Length+CDI_MAP.ManufacturerModel.Length+CDI_MAP.ManufacturerHWVersion.Length+CDI_MAP.ManufacturerSWVersion.Length + 1;
-                                                                                                                                            MSI_ACDI_USER : MemorySpaceOffset := {1 +} MAX_USER_NAME+MAX_USER_DESC + 1;  // for the Version ID Byte
-                                                                                                                                          end;
-                                                                                                                                          DatagramBuffer^.DataBytes[3] := (DWord(MemorySpaceOffset) shr 24) and $000000FF;
-                                                                                                                                          DatagramBuffer^.DataBytes[4] := (DWord(MemorySpaceOffset) shr 16) and $000000FF;
-                                                                                                                                          DatagramBuffer^.DataBytes[5] := (DWord(MemorySpaceOffset) shr 8) and $000000FF;
-                                                                                                                                          DatagramBuffer^.DataBytes[6] := DWord(MemorySpaceOffset) and $000000FF;
+                                                                                                                                          MemorySpaceMaxAddress := MaxAddressByAddressSpace(Node, DatagramBuffer^.DataBytes[2]);
+                                                                                                                                          DatagramBuffer^.DataBytes[3] := (DWord(MemorySpaceMaxAddress) shr 24) and $000000FF;
+                                                                                                                                          DatagramBuffer^.DataBytes[4] := (DWord(MemorySpaceMaxAddress) shr 16) and $000000FF;
+                                                                                                                                          DatagramBuffer^.DataBytes[5] := (DWord(MemorySpaceMaxAddress) shr 8) and $000000FF;
+                                                                                                                                          DatagramBuffer^.DataBytes[6] := DWord(MemorySpaceMaxAddress) and $000000FF;
                                                                                                                                           case DatagramBuffer^.DataBytes[2] of
                                                                                                                                             MSI_CONFIG, MSI_ACDI_USER : DatagramBuffer^.DataBytes[7] := $00          // Read/Write
                                                                                                                                           else
@@ -954,77 +962,30 @@ begin
                                                                                                         end else
                                                                                                         begin    // Is a Read or Write
                                                                                                           MemorySpace := 0;
-                                                                                                          MemorySpaceOffset := 0;
+                                                                                                          MemorySpaceAddress := 0;
                                                                                                           MemorySpaceCount := 0;
-                                                                                                          DecodeMemoryConfigurationReadWrite(@DatagramBuffer^.DataBytes, MemorySpace, MemorySpaceOffset, MemorySpaceCount);
+                                                                                                          DecodeMemoryConfigurationReadWrite(@DatagramBuffer^.DataBytes, MemorySpace, MemorySpaceAddress, MemorySpaceCount);
+                                                                                                          MemorySpaceMaxAddress := MaxAddressByAddressSpace(Node, MemorySpace);
 
-                                                                                                          {$IFDEF TRACE_CONFIG_MEM_DECODE}
-                                                                                                          UART1_Write_Text('Before'+LF);
-                                                                                                          ByteToStr(MemorySpace, s1);
-                                                                                                          UART1_Write_Text('MemorySpace= '+s1+LF);
-                                                                                                          LongWordToStr(MemorySpaceMax, s1);
-                                                                                                          UART1_Write_Text('MemorySpaceMax= '+s1+LF);
-                                                                                                          LongWordToStr(MemorySpaceOffset, s1);
-                                                                                                          UART1_Write_Text('MemorySpaceOffset= '+s1+LF);
-                                                                                                          ShortToStr(MemorySpaceCount, s1);
-                                                                                                          UART1_Write_Text('MemorySpaceCount= '+s1+LF);
-                                                                                                          {$ENDIF}
-
-                                                                                                          case MemorySpace of
-                                                                                                            MSI_CDI         : begin
-                                                                                                                                {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                                                                if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                  MemorySpaceMax := MAX_CDI_ARRAY_VNODE
-                                                                                                                                else {$ENDIF}
-                                                                                                                                  MemorySpaceMax := MAX_CDI_ARRAY
-                                                                                                                              end;
-                                                                                                            MSI_ALL         : MemorySpaceMax := ALL_MAP.HighMem;
-                                                                                                            MSI_CONFIG      : begin
-                                                                                                                                {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                                                                if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                  MemorySpaceMax := MAX_CONFIG_DATA_VNODE
-                                                                                                                                else {$ENDIF}
-                                                                                                                                  MemorySpaceMax := MAX_CONFIG_DATA
-                                                                                                                              end;
-                                                                                                            MSI_ACDI_MFG    : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                                                                if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                  MemorySpaceMax := MAX_ACDI_MFG_ARRAY_VNODE + 1 // for the Version ID Byte
-                                                                                                                                else {$ENDIF}
-                                                                                                                                  MemorySpaceMax := MAX_ACDI_MFG_ARRAY + 1 // for the Version ID Byte
-                                                                                                                              end;
-                                                                                                            MSI_ACDI_USER   : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                                                                if Node^.State and NS_VIRTUAL <> 0 then
-                                                                                                                                  MemorySpaceMax := MAX_CONFIG_DATA_VNODE + 1 // for the Version ID Byte
-                                                                                                                                else {$ENDIF}
-                                                                                                                                  MemorySpaceMax := MAX_CONFIG_DATA + 1 // for the Version ID Byte
-                                                                                                                              end
-                                                                                                          else
-                                                                                                            MemorySpaceMax := 0;
+                                                                                                          if MemorySpaceAddress >= MemorySpaceMaxAddress then
+                                                                                                             MemorySpaceCount := 0
+                                                                                                          else begin
+                                                                                                            if MemorySpaceAddress + MemorySpaceCount >= MemorySpaceMaxAddress then
+                                                                                                              MemorySpaceCount := MemorySpaceMaxAddress - MemorySpaceAddress
                                                                                                           end;
-                                                                                                          if MemorySpaceOffset >= MemorySpaceMax then
-                                                                                                          begin
-                                                                                                             MemorySpaceOffset := 0;
-                                                                                                             MemorySpaceCount := 0;
-                                                                                                          end else
-                                                                                                          begin
-                                                                                                            if MemorySpaceOffset + MemorySpaceCount >= MemorySpaceMax then
-                                                                                                              MemorySpaceCount := MemorySpaceMax - MemorySpaceOffset
-                                                                                                          end;
+                                                                                                          if MemorySpaceCount > 64 then
+                                                                                                            MemorySpaceCount := 64;       // By the spec the requestor can NOT send a request for more than 64 Bytes
                                                                                                           
                                                                                                           {$IFDEF TRACE_CONFIG_MEM_DECODE}
-                                                                                                          UART1_Write_Text('After'+LF);
-                                                                                                          ByteToStr(MemorySpace, s1);
-                                                                                                          UART1_Write_Text('MemorySpace= '+s1+LF);
-                                                                                                          LongWordToStr(MemorySpaceMax, s1);
-                                                                                                          UART1_Write_Text('MemorySpaceMax= '+s1+LF);
-                                                                                                          LongWordToStr(MemorySpaceOffset, s1);
-                                                                                                          UART1_Write_Text('MemorySpaceOffset= '+s1+LF);
-                                                                                                          ShortToStr(MemorySpaceCount, s1);
+                                                                                                          UART1_Write_Text('After'+LF); ByteToStr(MemorySpace, s1);
+                                                                                                          UART1_Write_Text('MemorySpace= '+s1+LF); LongWordToStr(MemorySpaceMaxAddress, s1);
+                                                                                                          UART1_Write_Text('MemorySpaceMaxAddress= '+s1+LF); LongWordToStr(MemorySpaceAddress, s1);
+                                                                                                          UART1_Write_Text('MemorySpaceAddress= '+s1+LF); ShortToStr(MemorySpaceCount, s1);
                                                                                                           UART1_Write_Text('MemorySpaceCount= '+s1+LF);
                                                                                                           {$ENDIF}
 
                                                                                                           // Now we have all we need:
-                                                                                                          //    MemorySpaceOffset = Offset from start of Memory Space use as the starting position for copying/writing memory
+                                                                                                          //    MemorySpaceAddress = Offset from start of Memory Space use as the starting position for copying/writing memory
                                                                                                           //    MemorySpaceCount = Number of bytes to copy, corrected for possible overrunning the end of valid Memory Space
 
                                                                                                           if DatagramBuffer^.DataBytes[1] and $C0 = MCP_WRITE then         // It is a Write
@@ -1039,94 +1000,62 @@ begin
                                                                                                             
                                                                                                             // Depends of if the {Space} byte is used
                                                                                                             if DatagramBuffer^.DataBytes[1] and $03 = 0 then
-                                                                                                              DatagramOffset := 7
+                                                                                                              DatagramAddress := 7
                                                                                                             else
-                                                                                                              DatagramOffset := 6;
+                                                                                                              DatagramAddress := 6;
+                                                                                                            DatagramBuffer^.iByteCount := DatagramAddress;  // Start out with the 6 or 7 bytes for the header
                                                                                                               
                                                                                                             case MemorySpace of
                                                                                                               MSI_CDI       : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                 begin
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := CDI_ARRAY_VNODE[i+MemorySpaceOffset]
+                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramAddress] := CDI_ARRAY_VNODE[i+MemorySpaceAddress]
                                                                                                                                 end else {$ENDIF}
                                                                                                                                 begin
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := CDI_ARRAY[i+MemorySpaceOffset]
-                                                                                                                                end
+                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramAddress] := CDI_ARRAY[i+MemorySpaceAddress]
+                                                                                                                                end;
+                                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + MemorySpaceCount;
                                                                                                                               end;
                                                                                                               MSI_ALL       : begin
                                                                                                                                 ByteArray := PByteArray( ALL_MAP.LowMem);
                                                                                                                                 for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                  DatagramBuffer^.DataBytes[i+DatagramOffset] := ByteArray^[i+MemorySpaceOffset]
+                                                                                                                                  DatagramBuffer^.DataBytes[i+DatagramAddress] := ByteArray^[i+MemorySpaceAddress];
+                                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + MemorySpaceCount;
                                                                                                                               end;
-                                                                                                              MSI_CONFIG    : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                                                                if Node^.State and NS_VIRTUAL <> 0 then
+                                                                                                              MSI_CONFIG    : begin
+                                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + ConfigurationRead(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount, False, False);
+                                                                                                                              end;
+                                                                                                              MSI_ACDI_MFG  : begin
+                                                                                                                                if MemorySpaceAddress = 0 then
                                                                                                                                 begin
-                                                                                                                                  for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA_VNODE[i+MemorySpaceOffset]
-                                                                                                                                end else {$ENDIF}
-                                                                                                                                begin
-                                                                                                                                  for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA[i+MemorySpaceOffset]
+                                                                                                                                  DatagramBuffer^.DataBytes[DatagramAddress] := ACDI_MFG_VERSION;
+                                                                                                                                  Inc(DatagramAddress);
+                                                                                                                                  Dec(MemorySpaceCount);
                                                                                                                                 end;
-                                                                                                                                
-                                                                                                                       //         if ConfigurationReadFunc <> nil then
-                                                                                                                       //           ConfigurationReadFunc(Node, @DatagramBuffer^.DataBytes, DatagramOffset, MemorySpaceOffset, MemorySpaceCount);
-                                                                                                                                
-                                                                                                                              end;
-                                                                                                              MSI_ACDI_MFG  : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
+                                                                                                                                {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                 begin
-                                                                                                                                  if MemorySpaceOffset = 0 then
-                                                                                                                                  begin
-                                                                                                                                    DatagramBuffer^.DataBytes[DatagramOffset] := ACDI_MFG_VERSION_VNODE;
-                                                                                                                                    Inc(DatagramOffset);
-                                                                                                                                    Dec(MemorySpaceCount);
-                                                                                                                                    MemorySpaceOffset := 0;
-                                                                                                                                  end;
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := ACDI_MFG_STRINGS_VNODE[i+MemorySpaceOffset-1]
+                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramAddress] := ACDI_MFG_STRINGS_VNODE[i+MemorySpaceAddress]
                                                                                                                                 end else {$ENDIF}
                                                                                                                                 begin
-                                                                                                                                  if MemorySpaceOffset = 0 then
-                                                                                                                                  begin
-                                                                                                                                    DatagramBuffer^.DataBytes[DatagramOffset] := ACDI_MFG_VERSION;
-                                                                                                                                    Inc(DatagramOffset);
-                                                                                                                                    Dec(MemorySpaceCount);
-                                                                                                                                    MemorySpaceOffset := 0;
-                                                                                                                                  end;
                                                                                                                                   for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := ACDI_MFG_STRINGS[i+MemorySpaceOffset-1]
+                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramAddress] := ACDI_MFG_STRINGS[i+MemorySpaceAddress]
                                                                                                                                 end;
+                                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + MemorySpaceCount;
                                                                                                                               end;
-                                                                                                              MSI_ACDI_USER : begin {$IFDEF SUPPORT_VIRTUAL_NODES}
-                                                                                                                                if Node^.State and NS_VIRTUAL <> 0 then
+                                                                                                              MSI_ACDI_USER : begin
+                                                                                                                                if MemorySpaceAddress = 0 then
                                                                                                                                 begin
-                                                                                                                                  if MemorySpaceOffset = 0 then
-                                                                                                                                  begin
-                                                                                                                                    DatagramBuffer^.DataBytes[DatagramOffset] := ACDI_USER_VERSION_VNODE;
-                                                                                                                                    Inc(DatagramOffset);
-                                                                                                                                    Dec(MemorySpaceCount);
-                                                                                                                                    MemorySpaceOffset := 0;
-                                                                                                                                  end;
-                                                                                                                                  for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA_VNODE[i+MemorySpaceOffset-1] // -1 is for the Version ID offset
-                                                                                                                                end else {$ENDIF}
-                                                                                                                                begin
-                                                                                                                                  if MemorySpaceOffset = 0 then
-                                                                                                                                  begin
-                                                                                                                                    DatagramBuffer^.DataBytes[DatagramOffset] := ACDI_USER_VERSION;
-                                                                                                                                    Inc(DatagramOffset);
-                                                                                                                                    Dec(MemorySpaceCount);
-                                                                                                                                    MemorySpaceOffset := 0;
-                                                                                                                                  end;
-                                                                                                                                  for i := 0 to MemorySpaceCount - 1 do
-                                                                                                                                    DatagramBuffer^.DataBytes[i+DatagramOffset] := CONFIG_DATA[i+MemorySpaceOffset-1]       // -1 is for the Version ID offset
-                                                                                                                                end
+                                                                                                                                  DatagramBuffer^.DataBytes[DatagramAddress] := ACDI_USER_VERSION;
+                                                                                                                                  Inc(DatagramAddress);
+                                                                                                                                  Dec(MemorySpaceCount);
+                                                                                                                                end;
+                                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + ConfigurationRead(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount, False, False);
                                                                                                                               end;
                                                                                                             end;
-                                                                                                            DatagramBuffer^.iByteCount := MemorySpaceCount + DatagramOffset;
                                                                                                           end;
                                                                                                         end;
                                                                                                         // This is safe because this will not be called until CBS_PROCESSSING is cleared simulating a "WaitForSendComplete"
