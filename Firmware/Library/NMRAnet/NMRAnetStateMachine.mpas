@@ -784,6 +784,7 @@ begin
                                                                                   end else
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_START_DESC;
                                                                                 end else {$ENDIF}
+                                      UPDATE TO NEW WAY TO ACCESS USER INFO
                                                                                 begin
                                                                                   if BaseBuffer^.Tag < MAX_USER_NAME then
                                                                                   begin
@@ -808,6 +809,7 @@ begin
                                                                                     DataBytes[i] :=  CONFIG_DATA_VNODE[BaseBuffer^.Tag];
                                                                                     Inc(BaseBuffer^.Tag);
                                                                                     Inc(i);
+                           UPDATE TO NEW WAY TO ACCESS USER INFO                                                         
                                                                                     if CONFIG_DATA_VNODE[BaseBuffer^.Tag-1] = #0 then
                                                                                       BaseBuffer^.StateMachine := STATE_ACDI_DONE;
                                                                                   end else
@@ -1033,7 +1035,10 @@ begin
                                                                                                                                   DatagramBuffer^.DataBytes[DatagramAddress] := ACDI_MFG_VERSION;
                                                                                                                                   Inc(DatagramAddress);
                                                                                                                                   Dec(MemorySpaceCount);
-                                                                                                                                end;
+                                                                                                                                  Inc(DatagramBuffer^.iByteCount);
+                                                                                                                                end else
+                                                                                                                                  Dec(MemorySpaceAddress);        // Need to adjust the Address Pointer in subsequent calls to account for the virtual Version Byte
+                                                                                                                               
                                                                                                                                 {$IFDEF SUPPORT_VIRTUAL_NODES}
                                                                                                                                 if Node^.State and NS_VIRTUAL <> 0 then
                                                                                                                                 begin
@@ -1052,7 +1057,10 @@ begin
                                                                                                                                   DatagramBuffer^.DataBytes[DatagramAddress] := ACDI_USER_VERSION;
                                                                                                                                   Inc(DatagramAddress);
                                                                                                                                   Dec(MemorySpaceCount);
-                                                                                                                                end;
+                                                                                                                                  Inc(DatagramBuffer^.iByteCount);
+                                                                                                                                end else
+                                                                                                                                  Dec(MemorySpaceAddress);        // Need to adjust the Address Pointer in subsequent calls to account for the virtual Version Byte
+                                                                                                                                  
                                                                                                                                 DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + ConfigurationRead(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount, False, False);
                                                                                                                               end;
                                                                                                             end;
@@ -1061,7 +1069,7 @@ begin
                                                                                                         // This is safe because this will not be called until CBS_PROCESSSING is cleared simulating a "WaitForSendComplete"
                                                                                                         DatagramBuffer^.State := (DatagramBuffer^.State or CBS_OUTGOING or CBS_PROCESSING) and not CBS_TRANSFER_COMPLETE;  // Turn it into an outgoing Datagram
                                                                                                         DatagramBuffer^.Tag := 0;                                                          // Reset for the Transmit side
-                                                                                                        DatagramBuffer^.SourceNodePtr := Node;                                             // So the Transmit Engine knows what source Node and Alias to associate the Datagram to
+                                                                                                        DatagramBuffer^.SourceNodePtr := GenericPointerAdapter( Node);                                             // So the Transmit Engine knows what source Node and Alias to associate the Datagram to
                                                                                                         DatagramBuffer^.Statemachine := STATE_MEM_CONFIG_WAITFOR_REPLY;
                                                                                                       end;
                                                                      STATE_MEM_CONFIG_WRITE         : begin   {$IFDEF TRACE_MEM_CONFIG_STATEMACHINE} UART1_Write_Text('STATE_MEM_CONFIG_WRITE'+LF);    {$ENDIF}

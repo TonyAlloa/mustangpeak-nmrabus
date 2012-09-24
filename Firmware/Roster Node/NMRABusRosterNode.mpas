@@ -91,6 +91,7 @@ begin
   UART1_Write_Text('Train Datagram:'+LF);
   if Datagram <> nil then
   begin
+    TxDatagramBuffer := nil;
     if NMRAnetBufferPools_AllocateDatagramBuffer(TxDatagramBuffer, True) then
     begin
       TxDatagramBuffer^.Alias := Datagram^.Alias;
