@@ -62,11 +62,13 @@ const
   MCWL_ARBITRARY_BYTE                = $02;                                     // MemoryConfigurationWriteLength - Any Number of Byte Write Supported
   MCWL_STREAM_WRITE_SUPPORTED        = $01;                                     // MemoryConfigurationWriteLength - Stream Write Supported
   
-  STATE_MEM_CONFIG_SEND_REPLY        = $00;
-  STATE_MEM_CONFIG_ALLOC_DATAGRAM    = $01;
-  STATE_MEM_CONFIG_LOAD_DATAGRAM     = $02;
-  STATE_MEM_CONFIG_WRITE             = $03;
-  STATE_MEM_CONFIG_WAITFOR_REPLY     = $04;
+  STATE_MEM_CONFIG_SEND_REPLY            = $00;
+  STATE_MEM_CONFIG_OPERATION_DATAGRAM    = $01;
+  STATE_MEM_CONFIG_READ_DATAGRAM         = $02;
+  STATE_MEM_CONFIG_WRITE_DATAGRAM        = $03;
+  STATE_MEM_CONFIG_REPLY_TO_WRITE_DATAGRAM = $04;
+  STATE_MEM_CONFIG_SEND_RESUSED_DATAGRAM = $05;
+  STATE_MEM_CONFIG_WAITFOR_REPLY         = $06;
   
 type
   TMemConfigurationOptions = record

@@ -17,7 +17,8 @@ unit NMRAnetBufferPoolsDefines;
 // ******************************************************************************
 
 type
-  GenericPointerAdapter = Word;
+  Generic16BitPointer = Word;
+  Generic32BitPointer = DWord;
   
 const
   CBS_ALLOCATED                            = $01;                               // CommonBufferState is allocated but may be in Process, need to check for inprocess flags

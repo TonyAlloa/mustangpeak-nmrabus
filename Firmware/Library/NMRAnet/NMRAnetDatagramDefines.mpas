@@ -98,7 +98,7 @@ type
     iByteCount: Byte;                                                           // The number of bytes recevied as they come in, or the number of bytes to transmit
     DataBytes: TDatagram;                                                       // The 72 bytes sent in the datagram
     ErrorCode: TDatagramError;                                                  // Tracks any errors that occur through the MTI/Error Codes send as the first few bytes in the datagram
-    SourceNodePtr: Word;                                                        // Pointer to the Node that is transmitting the Datagram
+    SourceNodePtr: Generic16BitPointer;                                         // Pointer to the Node that is transmitting the Datagram
     
     iWatchdog: Word;                                                            // Increments every 1ms or so to allow detecting a datagram that was abandon and never sent the End message or during transmit the Target Node never responds
     iRetransmit: Byte;                                                          // Number of times the Datagram was attempted to transmit use to test before not trying any more

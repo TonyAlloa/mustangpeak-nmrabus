@@ -227,7 +227,11 @@ begin
   Nodes.iActiveNode := 0;
   Nodes.Count := 0;
   for i := 0 to MAX_NODE_COUNT - 1 do
+  begin
     NMRAnetStateMachine_InitializeNode(@Nodes.RawList[i], PhysicalNodeID_HI, PhysicalNodeID_LO + i);  // Physical Node + i MUST FIT IN THE LOWER 3 BYTES
+    AssignConfigurationAddress(@Nodes.RawList[i], i);
+    AssignRAMAddress(@Nodes.RawList[i], i);
+  end;
   Node := NMRAnetNode_Allocate;                                                 // Allocate the Physical Node
   Node^.State := Node^.State and not NS_VIRTUAL;
 end;
