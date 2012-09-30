@@ -210,8 +210,8 @@ const
 
 type
   TNMRAnetNodeLoginInfo = record
-    TimeCounter: Byte;
-    iCID: Byte;
+    TimeCounter: Byte;                                                          // Number of timer ticks into the time waiting for a RID response from another node for our RID broadcasts
+    iCID: Byte;                                                                 // Which of the 4 CIDs we are broadcasting
   end;
   
   TNMRAnetNode = record
