@@ -23,6 +23,8 @@ uses
   
 {$I Options.inc}
 
+{$DEFINE TRACK_CAN_BUFFER_OVERFLOWS}
+
 procedure CANStorage_Initialize;
 function CANStorage_Head(List: PCANBufferList): PCANBuffer;
 function CANStorage_Tail(List: PCANBufferList): PCANBuffer;
@@ -177,7 +179,12 @@ begin
     Head^ := Buffer^;
     CANStorage_IncHead(List);
     Result := True
-  end;
+  end {$IFDEF TRACK_CAN_BUFFER_OVERFLOWS} else
+  begin
+    UART1_Write_Text('CAN Buffer Full');
+  end
+  {$ENDIF}
+  
 end;
 
 // *****************************************************************************

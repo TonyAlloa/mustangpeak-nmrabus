@@ -20,6 +20,7 @@ unit dsPIC30_Traps;
 {$I Options.inc}
 
 {$IFDEF ENABLE_TRAPS}
+  {.$DEFINE PRINT_TRAPS}
   {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP}
   var
     TrapFlagPin: sbit; sfr; external;
@@ -32,6 +33,7 @@ implementation
 
 procedure Trap_OscillatorFail; iv IVT_ADDR_OSCILLATORFAIL;
 begin
+  {$IFDEF PRINT_TRAP}UART1_Write_Text('Oscillator Error');{$ENDIF}
   asm
  //   MOV [w15-36], w13
  //   MOV w13, _Addr_Minus36
@@ -47,6 +49,7 @@ end;
 
 procedure Trap_AddressError; iv IVT_ADDR_ADDRESSERROR;
 begin
+  {$IFDEF PRINT_TRAP}UART1_Write_Text('Address Error');{$ENDIF}
   asm
  //   MOV [w15-36], w13
  //   MOV w13, _Addr_Minus36
@@ -62,6 +65,7 @@ end;
 
 procedure Trap_StackError; iv IVT_ADDR_STACKERROR;
 begin
+  {$IFDEF PRINT_TRAP}UART1_Write_Text('Stack Error');{$ENDIF}
   asm
   //  MOV [w15-36], w13
   //  MOV w13, _Addr_Minus36
@@ -77,6 +81,7 @@ end;
 
 procedure Trap_MathError; iv IVT_ADDR_MATHERROR;
 begin
+  {$IFDEF PRINT_TRAP}UART1_Write_Text('Math Error');{$ENDIF}
   asm
   //  MOV [w15-36], w13
   //  MOV w13, _Addr_Minus36

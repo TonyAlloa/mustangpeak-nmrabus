@@ -81,7 +81,7 @@ function NMRAnetUtilities_NextDatagramBuffer(Node: PNMRAnetNode): PDatagramBuffe
 
 var
   s1: array[32] of char;
-  s2: array[32] of char;
+  sInterrupt: array[32] of char;
   
 implementation
 

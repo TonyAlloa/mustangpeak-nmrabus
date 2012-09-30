@@ -44,6 +44,8 @@ var
   CS_Bank_1                         : sbit at LATB11_bit;
   CS_Bank_0_Direction               : sbit at TRISB12_bit;
   CS_Bank_1_Direction               : sbit at TRISB12_bit;
+  
+  TrapFlagPin                       : sbit at LATD0_bit;
 
 
 // *****************************************************************************
@@ -87,7 +89,7 @@ var
   i: Integer;
   TxDatagramBuffer: PDatagramBuffer;
 begin
-  UART1_Write_Text('Train Datagram:'+LF);
+ // UART1_Write_Text('Train Datagram:'+LF);
   if Datagram <> nil then
   begin
     TxDatagramBuffer := nil;
@@ -119,32 +121,41 @@ begin
   UART1_Write_Text(LF);  }
 end;
 
-procedure PrintBufferPools(var j: Integer);
+{$IFDEF UART_ENABLE}
+procedure PrintBufferPools(var j: DWORD);
 begin
-  if j = 50000 then
+  if j = 200000 then
   begin
    NMRAnetBufferPools_Print;
    j := 0;
   end;
   Inc(j);
 end;
+{$ENDIF}
 
-procedure PrintMaxLoopTimes(var x, y: Word);
+{$IFDEF UART_ENABLE}
+procedure PrintMaxLoopTimes(var PrintCount: DWord; var x, y: Word);
 begin
-  if x <> MaxTime_RX then
+  Inc(PrintCount);
+  if PrintCount > 200000 then
   begin
-    FloatToStr(double( MaxTime_RX)*50e-3, s1);
-    UART1_Write_Text('Interrupt Time: '+s1+'us'+LF);
-    x := MaxTime_RX
-  end;
+    if x <> MaxTime_RX then
+    begin
+      FloatToStr(double( MaxTime_RX)*50e-3, s1);
+      UART1_Write_Text('Interrupt Time: '+s1+'us'+LF);
+      x := MaxTime_RX
+    end;
 
-  if y <> MaxTime_StateMachine then
-  begin
-    FloatToStr(double( MaxTime_StateMachine)*50e-3, s1);
-    UART1_Write_Text('Statemachine Time: '+s1+'us'+LF);
-    y := MaxTime_StateMachine
+    if y <> MaxTime_StateMachine then
+    begin
+      FloatToStr(double( MaxTime_StateMachine)*50e-3, s1);
+      UART1_Write_Text('Statemachine Time: '+s1+'us'+LF);
+      y := MaxTime_StateMachine
+    end;
+    PrintCount := 0;
   end;
 end;
+{$ENDIF}
 
 // *******************
 // MAIN LOOP
@@ -153,9 +164,12 @@ var
   ActiveNode: PNMRAnetNode;
   i, j: Integer;
   x, y: Word;
+  PrintCount, Print2Count: DWord;
 
 begin
-  LATD0_bit := 0;         // Debugging output
+
+
+  LATD0_bit := 0;         // Debugging output     // THIS IS FOR TRAPS RIGHT NOW
   TRISD0_bit := 0;        // Debugging output
 
   _25AAxxxx_Initialize;
@@ -163,50 +177,36 @@ begin
   NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_ROSTER_NODE_ID_0_LO);
   MCU_Setup_Initialize;                                                         // Start the timers and perpherials last
 
- // NMRAnetDatagrams_SetCallback(DatagramTrainControlCallbackFunc, @TrainControlCallback);
- // NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallbackFunc, @MemConfigurationCallback);
-
-  UART1_Write_Text('Starting'+LF);
-  if BOR_bit = 0 then
-    UART1_Write_Text('No Brownout Detected'+LF)
-  else
-    UART1_Write_Text('Brownout Detected'+LF);
-    
-  if TRAPR_bit = 0 then
-    UART1_Write_Text('No Trap Reset Detected'+LF)
-  else
-    UART1_Write_Text('Trap Reset Detected'+LF);
-    
-  if IOPUWR_bit = 0 then
-    UART1_Write_Text('No Illegal Op Trap Detected'+LF)
-  else
-    UART1_Write_Text('Illegal Op Trap Detected'+LF);
-    
-  if POR_bit = 0 then
-    UART1_Write_Text('No Power On Reset Detected'+LF)
-  else
-    UART1_Write_Text('Power On Reset Detected'+LF);
-
+  NMRAnetDatagrams_SetCallback(DatagramTrainControlCallbackFunc, @TrainControlCallback);
+  NMRAnetDatagrams_SetCallback(DatagramMemConfigurationCallbackFunc, @MemConfigurationCallback);
+  
   for i := 0 to 50 do
     NMRAnetNode_Allocate;
-
-  
   x := 0;
   y := 0;
   j := 0;
   i := 0;
+  PrintCount := 0;
+  Print2Count := 0;
   MaxTime_RX := 0;
   MaxTime_StateMachine := 0;
   
+  UART1_Write_Text('Startup');
+
   while (TRUE) do
   begin
-    delay_us(1000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
-    //  PrintBufferPools(j);
-    
-    if C1IE_bit = 0 then
-      UART1_Write_Text('CAN Interrupt Disabled!');
+  
+  //LATD0_bit := not LATD0_bit;
+  
+  //  delay_us(1000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
       
-    ActiveNode := NMRAnetNode_NextNode;
+    PrintBufferPools(PrintCount);
+    PrintMaxLoopTimes(Print2Count, x, y);
+
+
+    
+    LATD0_bit := 1;
+     ActiveNode := NMRAnetNode_NextNode;
     if ActiveNode <> PNMRAnetNode( nil) then
     begin
     
@@ -219,6 +219,8 @@ begin
 
       end;
     end;
+    
+    LATD0_bit := 0;
   //  PrintMaxLoopTimes(x, y);
   end;
 end.

@@ -47,7 +47,7 @@ const
 // **************************************************************************************************************************************************************
 
 const
-  MAX_BASE_BUFFER_POOL             = MAX_NODE_COUNT+2;                          // Number of Base Buffers to allocate for Messages , JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
+  MAX_BASE_BUFFER_POOL             = MAX_NODE_COUNT*2;                            // Number of Base Buffers to allocate for Messages , JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
   MAX_DATA_BUFFER_POOL             = 1;                                         // Number of CAN DataByte Buffers to allocate for Messages
   MAX_DATAGRAM_BUFFER_POOL         = 1;                                         // Number of Datagram Buffers to allocate for Messages
 
@@ -138,22 +138,22 @@ const
     $3C, $2F, $73, $65, $67, $6D, $65, $6E, $74, $3E,    // </segment>
     $3C, $2F, $63, $64, $69, $3E, $00   // </cdi>
   );
-  
+
 const
-  MAX_CDI_ARRAY_VNODE = 1634;
+  MAX_CDI_ARRAY_VNODE = 1643;
   CDI_ARRAY_VNODE: array[0..MAX_CDI_ARRAY_VNODE-1] of byte = (
     $3C, $3F, $78, $6D, $6C, $20, $76, $65, $72, $73, $69, $6F, $6E, $3D, $22, $31, $2E, $30, $22, $20, $65, $6E, $63, $6F, $64, $69, $6E, $67, $3D, $22, $75, $74, $66, $2D, $38, $22, $3F, $3E,    // <?xml version="1.0" encoding="utf-8"?>
     $3C, $3F, $78, $6D, $6C, $2D, $73, $74, $79, $6C, $65, $73, $68, $65, $65, $74, $20, $74, $79, $70, $65, $3D, $27, $74, $65, $78, $74, $2F, $78, $73, $6C, $27, $20, $68, $72, $65, $66, $3D, $27, $68, $74, $74, $70, $3A, $2F, $2F, $6F, $70, $65, $6E, $6C, $63, $62, $2E, $6F, $72, $67, $2F, $74, $72, $75, $6E, $6B, $2F, $70, $72, $6F, $74, $6F, $74, $79, $70, $65, $73, $2F, $78, $6D, $6C, $2F, $78, $73, $6C, $74, $2F, $63, $64, $69, $2E, $78, $73, $6C, $27, $3F, $3E,    // <?xml-stylesheet type='text/xsl' href='http://openlcb.org/trunk/prototypes/xml/xslt/cdi.xsl'?>
     $3C, $63, $64, $69, $20, $78, $6D, $6C, $6E, $73, $3A, $78, $73, $69, $3D, $22, $68, $74, $74, $70, $3A, $2F, $2F, $77, $77, $77, $2E, $77, $33, $2E, $6F, $72, $67, $2F, $32, $30, $30, $31, $2F, $58, $4D, $4C, $53, $63, $68, $65, $6D, $61, $2D, $69, $6E, $73, $74, $61, $6E, $63, $65, $22, $20, $78, $73, $69, $3A, $6E, $6F, $4E, $61, $6D, $65, $73, $70, $61, $63, $65, $53, $63, $68, $65, $6D, $61, $4C, $6F, $63, $61, $74, $69, $6F, $6E, $3D, $22, $68, $74, $74, $70, $3A, $2F, $2F, $6F, $70, $65, $6E, $6C, $63, $62, $2E, $6F, $72, $67, $2F, $74, $72, $75, $6E, $6B, $2F, $70, $72, $6F, $74, $6F, $74, $79, $70, $65, $73, $2F, $78, $6D, $6C, $2F, $73, $63, $68, $65, $6D, $61, $2F, $63, $64, $69, $2E, $78, $73, $64, $22, $3E,    // <cdi xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://openlcb.org/trunk/prototypes/xml/schema/cdi.xsd">
     $3C, $69, $64, $65, $6E, $74, $69, $66, $69, $63, $61, $74, $69, $6F, $6E, $3E,    // <identification>
     $3C, $6D, $61, $6E, $75, $66, $61, $63, $74, $75, $72, $65, $72, $3E, $4D, $75, $73, $74, $61, $6E, $67, $70, $65, $61, $6B, $3C, $2F, $6D, $61, $6E, $75, $66, $61, $63, $74, $75, $72, $65, $72, $3E,    // <manufacturer>Mustangpeak</manufacturer>
-    $3C, $6D, $6F, $64, $65, $6C, $3E, $52, $4E, $31, $30, $30, $3C, $2F, $6D, $6F, $64, $65, $6C, $3E,    // <model>RN100</model>
+    $3C, $6D, $6F, $64, $65, $6C, $3E, $4D, $4E, $31, $30, $30, $3C, $2F, $6D, $6F, $64, $65, $6C, $3E,    // <model>MN100</model>
     $3C, $68, $61, $72, $64, $77, $61, $72, $65, $56, $65, $72, $73, $69, $6F, $6E, $3E, $31, $2E, $30, $3C, $2F, $68, $61, $72, $64, $77, $61, $72, $65, $56, $65, $72, $73, $69, $6F, $6E, $3E,    // <hardwareVersion>1.0</hardwareVersion>
     $3C, $73, $6F, $66, $74, $77, $61, $72, $65, $56, $65, $72, $73, $69, $6F, $6E, $3E, $30, $2E, $32, $3C, $2F, $73, $6F, $66, $74, $77, $61, $72, $65, $56, $65, $72, $73, $69, $6F, $6E, $3E,    // <softwareVersion>0.2</softwareVersion>
     $3C, $6D, $61, $70, $3E,    // <map>
     $3C, $72, $65, $6C, $61, $74, $69, $6F, $6E, $3E,    // <relation>
     $3C, $70, $72, $6F, $70, $65, $72, $74, $79, $3E, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $3C, $2F, $70, $72, $6F, $70, $65, $72, $74, $79, $3E,    // <property>Description</property>
-    $3C, $76, $61, $6C, $75, $65, $3E, $4D, $75, $73, $74, $61, $6E, $67, $70, $65, $61, $6B, $20, $52, $6F, $73, $74, $65, $72, $20, $4E, $6F, $64, $65, $3C, $2F, $76, $61, $6C, $75, $65, $3E,    // <value>Mustangpeak Roster Node</value>
+    $3C, $76, $61, $6C, $75, $65, $3E, $4D, $75, $73, $74, $61, $6E, $67, $70, $65, $61, $6B, $20, $56, $69, $72, $74, $75, $61, $6C, $20, $4D, $6F, $62, $69, $6C, $65, $20, $4E, $6F, $64, $65, $3C, $2F, $76, $61, $6C, $75, $65, $3E,    // <value>Mustangpeak Virtual Mobile Node</value>
     $3C, $2F, $72, $65, $6C, $61, $74, $69, $6F, $6E, $3E,    // </relation>
     $3C, $72, $65, $6C, $61, $74, $69, $6F, $6E, $3E,    // <relation>
     $3C, $70, $72, $6F, $70, $65, $72, $74, $79, $3E, $53, $74, $61, $74, $75, $73, $3C, $2F, $70, $72, $6F, $70, $65, $72, $74, $79, $3E,    // <property>Status</property>
@@ -170,7 +170,7 @@ const
     $3C, $6E, $61, $6D, $65, $3E, $55, $73, $65, $72, $20, $4E, $61, $6D, $65, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>User Name</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
     $3C, $73, $74, $72, $69, $6E, $67, $20, $73, $69, $7A, $65, $3D, $22, $34, $30, $22, $3E,    // <string size="40">
-    $3C, $6E, $61, $6D, $65, $3E, $55, $73, $65, $72, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>User Description</name>
+    $3C, $6E, $61, $6D, $65, $3E, $55, $73, $65, $72, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $60, $3C, $2F, $6E, $61, $6D, $65, $3E,    // <name>User Description`</name>
     $3C, $2F, $73, $74, $72, $69, $6E, $67, $3E,    // </string>
     $3C, $2F, $67, $72, $6F, $75, $70, $3E,    // </group>
     $3C, $2F, $73, $65, $67, $6D, $65, $6E, $74, $3E,    // </segment>
@@ -249,6 +249,9 @@ const
 const
   MAX_USER_NAME = 20;
   MAX_USER_DESC = 40;
+  MAX_CONFIG_DATA = MAX_USER_NAME + MAX_USER_DESC;
+  
+ (*
   
 const
   MAX_CONFIG_DATA = MAX_USER_NAME + MAX_USER_DESC;
@@ -263,7 +266,7 @@ const
     $43, $75, $73, $74, $6F, $6D, $20, $4E, $61, $6D, $65, $00, $00, $00, $00, $00, $00, $00, $00, $00, // 'Custom Name          ',
     $43, $75, $73, $74, $6F, $6D, $20, $44, $65, $73, $63, $72, $69, $70, $74, $69, $6F, $6E, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  //'Custom Description                       '
   );
-  
+      *)
 // **************************************************************************************************************************************************************
 // ACDI Mfg Memory ($FC) Implementation
 // **************************************************************************************************************************************************************
@@ -393,21 +396,7 @@ var
   VolatileData: array[0..MAX_NODE_COUNT - 1] of TDCCVolatileData;
   
 procedure ConfigurationWrite(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte);
-var
-    s1: string[50];
 begin
-
-ByteToStr(MaxCount, s1);
-UART1_Write_Text('MaxCount'+s1+LF);
-LongWordToHex(StartAddress, s1);
-UART1_Write_Text('StartAddress= '+s1+LF);
-WordToHex(DataTarget, s1);
-UART1_Write_Text('DataTarget= '+s1+LF);
-WordToHex(Node, s1);
-UART1_Write_Text('Node= '+s1+LF);
-LongWordToHex(Node^.ConfigurationAddress, s1);
-UART1_Write_Text('EEPROM Address= '+s1+LF);
-
   while _25AAxxxx_Busy(EEPROM_BANK_0) do
      Delay_us(10);
   _25AAxxxx_Write(EEPROM_BANK_0, Node^.ConfigurationAddress + StartAddress, MaxCount, DataTarget);
@@ -423,53 +412,12 @@ end;
 //  Result      : Number of Bytes actually moved in to the DataTarget
 // *****************************************************************************
 function ConfigurationRead(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte): Byte;
-var
-  i: Integer;
-
-    s1: string[50];
 begin
-
-ByteToStr(MaxCount, s1);
-UART1_Write_Text('MaxCount'+s1+LF);
-LongWordToHex(StartAddress, s1);
-UART1_Write_Text('StartAddress= '+s1+LF);
-WordToHex(DataTarget, s1);
-UART1_Write_Text('DataTarget= '+s1+LF);
-WordToHex(Node, s1);
-UART1_Write_Text('Node= '+s1+LF);
-LongWordToHex(Node^.ConfigurationAddress, s1);
-UART1_Write_Text('EEPROM Address= '+s1+LF);
-
-
-
-   Result := 0;
    while _25AAxxxx_Busy(EEPROM_BANK_0) do
      Delay_us(10);
 
    Result := MaxCount;
    _25AAxxxx_Read(EEPROM_BANK_0, Node^.ConfigurationAddress + StartAddress, MaxCount, DataTarget);
-
-     
- // Node^.UserDataAddress
-                             (*
-  {$IFDEF SUPPORT_VIRTUAL_NODES}
-  if Node^.State and NS_VIRTUAL <> 0 then
-  begin
-    for i := 0 to MaxCount - 1 do
-    begin
-      DataTarget^ := CONFIG_DATA_VNODE[i+StartAddress];
-      Inc(DataTarget);
-      Inc(Result);
-    end
-  end else {$ENDIF}
-  begin
-    for i := 0 to MaxCount - 1 do
-    begin
-      DataTarget^ := CONFIG_DATA[i+StartAddress];
-      Inc(DataTarget);
-      Inc(Result);
-    end
-  end;       *)
 end;
 
 //******************************************************************************
@@ -477,14 +425,7 @@ end;
 //******************************************************************************
 function ConfigurationSize(Node: PNMRAnetNode): Word;
 begin
-  {$IFDEF SUPPORT_VIRTUAL_NODES}
-  if Node^.State and NS_VIRTUAL <> 0 then
-  begin
-    Result := MAX_CONFIG_DATA_VNODE;
-  end else {$ENDIF}
-  begin
-    Result := MAX_CONFIG_DATA_VNODE;
-  end;
+  Result := MAX_CONFIG_DATA;
 end;
 
 //******************************************************************************

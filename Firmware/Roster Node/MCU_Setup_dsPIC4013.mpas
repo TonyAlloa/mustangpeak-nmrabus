@@ -118,8 +118,8 @@ begin
   PinChangeState := PORTF;
   {$ENDIF}
   
-  TON_T3CON_bit := 1;             // Enable Time
-  TON_T4CON_bit := 1;            // Enable Timer
+  TON_T3CON_bit := 1;             // Enable Timer for timing loops
+  TON_T4CON_bit := 1;            // Enable Timer for timing loops
   
 end;
 

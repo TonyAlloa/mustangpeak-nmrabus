@@ -259,14 +259,16 @@ procedure LockCANInterrupt;
 begin
   if CAN_Engine.InterruptLockCount = 0 then
   begin
-    {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+    asm DISI #6; end; // make sure no interrupt occurs while doing this
     C1IE_bit := 0;                                                            // Disable the CAN 1 interrupt
+    T2IE_bit := 0;
+    
   end;
   Inc(CAN_Engine.InterruptLockCount);
 end;
 
 // *****************************************************************************
-//  function LockCANInterrupt
+//  function UnLockCANInterrupt
 //     Parameters: Enable:  Enables/Disables the Interrupt for the CAN
 //
 //     Returns:
@@ -279,8 +281,9 @@ begin
   Dec(CAN_Engine.InterruptLockCount);
   if CAN_Engine.InterruptLockCount <= 0 then
   begin
-    {$IFDEF FIX_NESTED_INTERRUPT_SILICON_BUG} asm DISI #2; end; {$ENDIF}
+    asm DISI #6; end;
     C1IE_bit := 1;
+    T2IE_bit := 1;
     CAN_Engine.InterruptLockCount := 0;                                       // Enabled the CAN 1 interrupt
   end;
 end;
