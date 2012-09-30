@@ -1172,8 +1172,8 @@ var
   VariableField: DWord;
 begin
   TMR3 := 0;
-  WordToSTr(Node, s1);
-  UART1_Write_Text(s1 +' '+LF);
+ // WordToSTr(Node, s1);
+ // UART1_Write_Text(s1 +' '+LF);
   
   case Node^.iStateMachine of
     STATE_NMRABUS_START :
