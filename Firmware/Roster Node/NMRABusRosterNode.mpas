@@ -95,7 +95,7 @@ begin
     TxDatagramBuffer := nil;
     if NMRAnetBufferPools_AllocateDatagramBuffer(TxDatagramBuffer, True) then
     begin
-      TxDatagramBuffer^.Alias := Datagram^.Alias;
+      TxDatagramBuffer^.DestAlias := Datagram^.DestAlias;
       TxDatagramBuffer^.SourceNodePtr := Generic16BitPointer( Node);
       TxDatagramBuffer^.DataBytes[0] := $C0;
       for i := 1 to Datagram^.DataBytes[1] do

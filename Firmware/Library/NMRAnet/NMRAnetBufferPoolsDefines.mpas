@@ -48,7 +48,7 @@ type
 type
   TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDataBuffer, TDatagramBuffer,  etc
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
-    TargetAlias: Word;                                                          // Alias of the Node receiving the message
+    vNodeAlias: Word;                                                          // Alias of the Node receiving the message
     DestAlias: Word;                                                            // Destination Alias to send the reply to
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message is

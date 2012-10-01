@@ -37,6 +37,7 @@ uses
   procedure NMRAnetNode_SetStateFlag(Node: PNMRAnetNode; Flag: Byte);
   procedure NMRAnetNode_ClearStateFlag(Node: PNMRAnetNode; Flag: Byte);
   function NMRAnetNode_TestStateFlag(Node: PNMRAnetNode; Flag: Byte): Boolean;
+  
   procedure NMRAnetNode_SetMsgFlag(Node: PNMRAnetNode; Flag: Byte);
   procedure NMRAnetNode_ClearMsgFlag(Node: PNMRAnetNode; Flag: Byte);
   procedure NMRAnetNode_ClearMsgFlags(Node: PNMRAnetNode);

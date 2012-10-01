@@ -225,7 +225,7 @@ begin
     begin
       for i := 0 to Datagram^.iByteCount - 1 do
         DataBytes[i] := Datagram^.DataBytes[i];
-      TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME, Datagram^.Alias, Datagram^.iByteCount, @DataBytes, True);
+      TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME, Datagram^.DestAlias, Datagram^.iByteCount, @DataBytes, True);
       Result := True;
     end else
     begin                                                                       // Multi Frame Datagram
@@ -253,7 +253,7 @@ begin
         Inc(i);
         Inc(Datagram^.Tag);
       end;
-      TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI, Datagram^.Alias, i, @DataBytes, True);
+      TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI, Datagram^.DestAlias, i, @DataBytes, True);
     end;
   end
 end;
@@ -271,24 +271,37 @@ var
   BaseTemp: PBaseBuffer;
   DataTemp: PDataBuffer;
   DatagramTemp: PDatagramBuffer;
+  i: Integer;
 begin
   LockCANInterrupt;
+  if BaseBufferPool.Count > 0 then
+  begin
+    for i := 0 to MAX_BASE_BUFFER_POOL - 1 do
+    begin
+      if BaseBufferPool.Pool[i].vNodeAlias = Node^.Node.AliasID then
+        NMRAnetBufferPools_ReleaseBaseBuffer(@BaseBufferPool.Pool[i]);
+    end
+  end;
+  if DataBufferPool.Count > 0 then
+  begin
+  end;
+  if DatagramPool.Count > 0 then
+  begin
+  end;
+  
   while Node^.BaseBuffers <> nil do
   begin
     BaseTemp := Node^.BaseBuffers;
-    NMRAnetUtilities_BaseBufferUnLink(Node, BaseTemp);
     NMRAnetBufferPools_ReleaseBaseBuffer(BaseTemp);
   end;
   while Node^.DataBuffers <> nil do
   begin
     DataTemp := Node^.DataBuffers;
-    NMRAnetUtilities_DataBufferUnLink(Node, DataTemp);
     NMRAnetBufferPools_ReleaseDataBuffer(DataTemp);
   end;
   while Node^.DatagramBuffers <> nil do
   begin
     DatagramTemp := Node^.DatagramBuffers;
-    NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramTemp);
     NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramTemp);
   end;
   UnLockCANInterrupt;
@@ -347,8 +360,8 @@ var
 begin
   Buffer^.State := 0;
   Buffer^.mCode := 0;
-  Buffer^.Alias := 0;
-  Buffer^.Next := 0;
+  Buffer^.vNodeAlias := 0;
+  Buffer^.DestAlias := 0;
   Buffer^.Count := 0;
   Buffer^.RefCount := 0;
   Buffer^.StateMachine := 0;
@@ -569,8 +582,7 @@ begin
   begin
     DataBytes^[0] := ErrorCode[0];
     DataBytes^[1] := ErrorCode[1];
-    TransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REJECTED_REPLY, BaseBuffer^.Alias, ErrorCodeBytes, DataBytes, False);
-    NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
+    TransmitNMRABusLayerMsg(Node, Buffer, MTI_DATAGRAM_REJECTED_REPLY, BaseBuffer^.DestAlias, ErrorCodeBytes, DataBytes, False);
     NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
   end
 end;
@@ -665,7 +677,10 @@ begin
   end else
   begin
     LockCANInterrupt;                                                           // Don't let the interrupt change things while we are working on them.....
-    BaseBuffer := NMRAnetUtilities_NextBaseBuffer(Node);
+ 
+ //   BaseBuffer := NMRAnetUtilities_NextBaseBuffer(Node);
+ 
+ 
     if BaseBuffer <> nil then
     begin
       {$IFDEF TRACE_BUFFER_ADDRESSES}
@@ -698,7 +713,6 @@ begin
                                                   for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
                                                     DataBytes[i] := DataBytes[i] or PIV_SUPPORTED_PROTOCOLS[j][i];
                                                 TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PROTOCOL_SUPPORT_REPLY, BaseBuffer^.DestAlias, 6, @DataBytes, False);
-                                                NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                 NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                               end;
                                             end;
@@ -709,8 +723,7 @@ begin
                                                 DataBytes[1] := $00;
                                                 DataBytes[2] := (BaseBuffer^.Tag shr 8) and $00FF;
                                                 DataBytes[3] := BaseBuffer^.Tag and $00FF;
-                                                TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, BaseBuffer^.Alias, 4, @DataBytes, False);
-                                                NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
+                                                TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, BaseBuffer^.DestAlias, 4, @DataBytes, False);
                                                 NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                               end;
                                             end;
@@ -798,11 +811,10 @@ begin
                                                 UART1_Write_Text('tag= '+s1+LF+LF);
                                                 {$ENDIF}
                                                 
-                                                TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_SIMPLE_NODE_INFO_REPLY, BaseBuffer^.Alias, i, @DataBytes, False);
+                                                TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_SIMPLE_NODE_INFO_REPLY, BaseBuffer^.DestAlias, i, @DataBytes, False);
 
                                                 if BaseBuffer^.StateMachine >= STATE_ACDI_DONE then
                                                 begin
-                                                  NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                                 end;
                                               end
@@ -814,7 +826,8 @@ begin
     Delay_us(1);
     
     LockCANInterrupt;                                                           // Don't let the interrupt change things while we are working on them.....
-    DataBuffer := NMRAnetUtilities_NextDataBuffer(Node);
+  //  DataBuffer := NMRAnetUtilities_NextDataBuffer(Node);
+  
     if DataBuffer <> nil then
     begin   
       {$IFDEF TRACE_BUFFER_ADDRESSES}
@@ -828,7 +841,6 @@ begin
                                               if NMRABusBufferAvailable then
                                               begin
                                                 TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, 0, DataBuffer^.Count, @DataBuffer^.DataBytes, False);
-                                                NMRAnetUtilities_DataBufferUnLink(Node, DataBuffer);
                                                 NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
                                               end;
                                             end;
@@ -836,7 +848,6 @@ begin
                                               if NMRABusBufferAvailable then
                                               begin
                                                 TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, 0, DataBuffer^.Count, @DataBuffer^.DataBytes, False);
-                                                NMRAnetUtilities_DataBufferUnLink(Node, DataBuffer);
                                                 NMRAnetBufferPools_ReleaseDataBuffer(DataBuffer);
                                               end;
                                             end;
@@ -847,8 +858,10 @@ begin
     UnLockCANInterrupt;
     Delay_us(1);
     
-    LockCANInterrupt;                                                           // Don't let the interrupt change things while we are working on them.....
-    DatagramBuffer := NMRAnetUtilities_NextDatagramBuffer(Node);                // Grab the next completed Datagram to work on
+    LockCANInterrupt; 
+                                                              // Don't let the interrupt change things while we are working on them.....
+  //  DatagramBuffer := NMRAnetUtilities_NextDatagramBuffer(Node);                // Grab the next completed Datagram to work on
+  
     if DatagramBuffer <> nil then
     begin
       {$IFDEF TRACE_BUFFER_ADDRESSES}
@@ -866,7 +879,7 @@ begin
                                                                                                                begin
                                                                                                                  if NMRABusBufferAvailable then
                                                                                                                  begin
-                                                                                                                   TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_DATAGRAM_OK_REPLY, DatagramBuffer^.Alias, 0, @DataBytes, False);
+                                                                                                                   TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_DATAGRAM_OK_REPLY, DatagramBuffer^.DestAlias, 0, @DataBytes, False);
                                                                                                                    DatagramBuffer^.Statemachine := STATE_MEM_CONFIG_OPERATION_DATAGRAM
                                                                                                                  end
                                                                                                                end else
@@ -874,7 +887,7 @@ begin
                                                                                                                begin
                                                                                                                  if NMRABusBufferAvailable then
                                                                                                                  begin
-                                                                                                                   TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_DATAGRAM_OK_REPLY, DatagramBuffer^.Alias, 0, @DataBytes, False);
+                                                                                                                   TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_DATAGRAM_OK_REPLY, DatagramBuffer^.DestAlias, 0, @DataBytes, False);
                                                                                                                    DatagramBuffer^.Statemachine := STATE_MEM_CONFIG_READ_DATAGRAM
                                                                                                                  end
                                                                                                                end else
@@ -1032,8 +1045,7 @@ begin
                                                                    STATE_MEM_CONFIG_REPLY_TO_WRITE_DATAGRAM : begin  {$IFDEF TRACE_MEM_CONFIG_STATEMACHINE} UART1_Write_Text('STATE_MEM_CONFIG_REPLY_TO_WRITE_DATAGRAM'+LF);    {$ENDIF}
                                                                                                                 if NMRABusBufferAvailable then
                                                                                                                 begin
-                                                                                                                  TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_DATAGRAM_OK_REPLY, DatagramBuffer^.Alias, 0, @DataBytes, False);
-                                                                                                                  NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
+                                                                                                                  TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_DATAGRAM_OK_REPLY, DatagramBuffer^.DestAlias, 0, @DataBytes, False);
                                                                                                                   NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer)
                                                                                                                 end
                                                                                                               end;
@@ -1059,17 +1071,15 @@ begin
                             DATAGRAM_TYPE_TRAIN_CONTROL        : begin
                                                                    if DatagramTrainControlCallbackFunc <> PDatagramTaskCallbackFunc( nil) then
                                                                      DatagramTrainControlCallbackFunc(Node, DatagramBuffer);
-                                                                   NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
                                                                    NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer)
                                                                  end
                           else begin  // Unknown Datagram Type
                               AllocatedBuffer := nil;
                               if NMRAnetBufferPools_AllocateBaseBuffer(AllocatedBuffer) then      // Assume we always can allocate a BaseBuffer
                               begin
-                        //       NMRAnetUtilities_BaseBufferLink(Node, AllocatedBuffer);
                                 AllocatedBuffer^.mCode := BMC_DATAGRAM_NOT_ACCEPTED;
-                                AllocatedBuffer^.Alias := DatagramBuffer^.Alias;
-                                NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
+                                AllocatedBuffer^.DestAlias := DatagramBuffer^.DestAlias;
+                                AllocatedBuffer^.vNodeAlias := DatagramBuffer^.vNodeAlias;
                                 NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
                               end
                             end;
@@ -1154,7 +1164,7 @@ begin
   // Look for outgoing Datagrams
   LockCANInterrupt;
   DatagramBuffer := nil;
-  if NMRAnetUtilities_FindOutgoingDatagram(Node, DatagramBuffer, True) then
+  if NMRAnetBufferPools_FindOutgoingDatagram(DatagramBuffer, True) then
   begin
     if NMRAnetStateMachine_TrySendDatagram(PNMRAnetNode( DatagramBuffer^.SourceNodePtr), DatagramBuffer) then
       DatagramBuffer^.State := (DatagramBuffer^.State and not CBS_PROCESSING) or CBS_TRANSFER_COMPLETE;    // Flag as complete so the caller and unlink and free
