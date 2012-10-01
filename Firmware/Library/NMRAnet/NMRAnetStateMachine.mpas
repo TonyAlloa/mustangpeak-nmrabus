@@ -697,7 +697,7 @@ begin
                                                 for i := 0 to LEN_PIV_PROTOCOL-1 do
                                                   for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
                                                     DataBytes[i] := DataBytes[i] or PIV_SUPPORTED_PROTOCOLS[j][i];
-                                                TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PROTOCOL_SUPPORT_REPLY, BaseBuffer^.Alias, 6, @DataBytes, False);
+                                                TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PROTOCOL_SUPPORT_REPLY, BaseBuffer^.DestAlias, 6, @DataBytes, False);
                                                 NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                 NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                               end;
@@ -713,6 +713,10 @@ begin
                                                 NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                 NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
                                               end;
+                                            end;
+        BMC_VERIFY_NODE_ID :                begin
+                                                   // TODO
+                                                   // BaseBuffer^.Tag = Destination Alias ID
                                             end;
         BMC_SIMPLE_NODE_INFO_REQEUST :      begin
                                               if NMRABusBufferAvailable then
@@ -1062,7 +1066,7 @@ begin
                               AllocatedBuffer := nil;
                               if NMRAnetBufferPools_AllocateBaseBuffer(AllocatedBuffer) then      // Assume we always can allocate a BaseBuffer
                               begin
-                                NMRAnetUtilities_BaseBufferLink(Node, AllocatedBuffer);
+                        //       NMRAnetUtilities_BaseBufferLink(Node, AllocatedBuffer);
                                 AllocatedBuffer^.mCode := BMC_DATAGRAM_NOT_ACCEPTED;
                                 AllocatedBuffer^.Alias := DatagramBuffer^.Alias;
                                 NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);

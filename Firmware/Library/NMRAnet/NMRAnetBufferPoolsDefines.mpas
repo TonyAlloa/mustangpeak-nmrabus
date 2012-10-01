@@ -27,26 +27,29 @@ const
   CBS_TRANSFER_COMPLETE                    = $08;                               // Multi Frame Message transfer is complete
   
   // These must be in Priority Order for transmit, higher = higher priority
-  BMC_PROTOCOL_SUPPORT_QUERY               = $01;                               // [IN] Buffer Message Code is a Protocol Support Query    [BaseBuffer]
-  BMC_PRODUCER_IDENTIFY                    = $02;                               // [IN] Buffer Message Code is Producer Identify           [DataBuffer]
-  BMC_CONSUMER_IDENTIFY                    = $03;                               // [IN] Buffer Message Code is Consumer Identify           [DataBuffer]
-  BMC_EVENT_LEARN                          = $04;                               // [IN] Buffer Message Code is Event Learn                 [BaseBuffer]
-  BMC_SIMPLE_NODE_INFO_REQEUST             = $05;                               // [IN] Buffer Message Code is ACDI Request                [BaseBuffer]
-  BMC_UNKNOWN_ADDRESSED_MTI                = $06;                               // [OUT] Buffer Message Code is of an unknown MTI type
-  BMC_DATAGRAM_OUT_OF_ORDER                = $07;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
-  BMC_DATAGRAM_BUFFER_FULL                 = $08;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
-  BMC_DATAGRAM_NOT_ACCEPTED                = $09;                               // [OUT] Buffer Message Code is to send a Datagram Not Accepted Response [BaseBuffer]
-  BMC_DATAGRAM_OKAY                        = $0A;                               // [OUT] Buffer Message Code is to send a Datagram Ok Response [BaseBuffer]
-  BMC_DATAGRAM                             = $0B;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
+  BMC_VERIFY_NODE_ID_DEST                  = $01;                               // [IN] Buffer Message Code is a Verify Node ID with Destination  [BaseBuffer]
+  BMC_VERIFY_NODE_ID                       = $02;                               // [IN] Buffer Message Code is a Verify Node ID            [BaseBuffer]
+  BMC_PROTOCOL_SUPPORT_QUERY               = $03;                               // [IN] Buffer Message Code is a Protocol Support Query    [BaseBuffer]
+  BMC_PRODUCER_IDENTIFY                    = $04;                               // [IN] Buffer Message Code is Producer Identify           [DataBuffer]
+  BMC_CONSUMER_IDENTIFY                    = $05;                               // [IN] Buffer Message Code is Consumer Identify           [DataBuffer]
+  BMC_EVENT_LEARN                          = $06;                               // [IN] Buffer Message Code is Event Learn                 [BaseBuffer]
+  BMC_SIMPLE_NODE_INFO_REQEUST             = $07;                               // [IN] Buffer Message Code is ACDI Request                [BaseBuffer]
+  BMC_UNKNOWN_ADDRESSED_MTI                = $08;                               // [OUT] Buffer Message Code is of an unknown MTI type
+  BMC_DATAGRAM_OUT_OF_ORDER                = $09;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
+  BMC_DATAGRAM_BUFFER_FULL                 = $0A;                               // [OUT] Buffer Message Code is to send a Datagram Out of Order Response [BaseBuffer]
+  BMC_DATAGRAM_NOT_ACCEPTED                = $0B;                               // [OUT] Buffer Message Code is to send a Datagram Not Accepted Response [BaseBuffer]
+  BMC_DATAGRAM_OKAY                        = $0C;                               // [OUT] Buffer Message Code is to send a Datagram Ok Response [BaseBuffer]
+  BMC_DATAGRAM                             = $0D;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
   
 type 
   TRefCount = Word;
   TBufferTag = Word;
+  
 type
   TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDataBuffer, TDatagramBuffer,  etc
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
-    Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
-    Next: ^TBaseBuffer;                                                         // Pointer to the next Message Buffer
+    TargetAlias: Word;                                                          // Alias of the Node receiving the message
+    DestAlias: Word;                                                            // Destination Alias to send the reply to
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message is
     StateMachine: Byte;                                                         // Local StateMachine Index for use

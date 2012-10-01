@@ -199,12 +199,12 @@ end;
 procedure ReceivedOnFilter1(CANBuffer: PCANBuffer);                             // NMRAnet Layer Message
 var
   DoDefault: Boolean;
-  Node: PNMRAnetNode;
+//  Node: PNMRAnetNode;
   NodeID: TNodeID;
   DataBuffer: PDataBuffer;
   BaseBuffer: PBaseBuffer;
   DatagramBuffer: PDatagramBuffer;
-  SourceAlias, ErrorCode: Word;
+  DestAlias, SourceAlias, ErrorCode: Word;
   VNodeSupports, PhysicalNodeSupports: Boolean;
   i: Integer;
   Offset: Byte;
@@ -221,36 +221,42 @@ begin
   if DoDefault then
   begin
     SourceAlias := NMRAnetUtilities_ExtractSourceAlias(CANBuffer);
-    Node := NMRAnetNode_FindByAlias(SourceAlias);                               // The Source Alias that we receive should NEVER contain our alias
-    if Node <> nil then
-      Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS                    // A "bad" duplicate Alias
-    else begin
+ //   Node := NMRAnetNode_FindByAlias(SourceAlias);                               // The Source Alias that we receive should NEVER contain our alias
+ //   if Node <> nil then
+ //     Node^.MsgFlags := Node^.MsgFlags or MF_DUPLICATE_ALIAS                    // A "bad" duplicate Alias
+ //   else begin
       case CANBuffer^.ID and MTI_FRAME_TYPE_MASK of
               MTI_FRAME_TYPE_GENERAL               : begin
                                                        if NMRAnetUtilities_IsAddressedMessage(CANBuffer) then                      // Is this an Addressed Message?
                                                        begin
-                                                         Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractDestinationAlias(CANBuffer));   // Extract the Node that the message is addressed to
-                                                         if Node <> nil then
+                                                         DestAlias := NMRAnetUtilities_ExtractDestinationAlias(CANBuffer);  // Extract the Node that the message is addressed to
+                                          //               Node := NMRAnetNode_FindByAlias(NMRAnetUtilities_ExtractDestinationAlias(CANBuffer));   // Extract the Node that the message is addressed to
+                                          //               if Node <> nil then
                                                          begin
-                                                           if NMRAnetNode_TestStateFlag(Node, NS_PERMITTED) then
+                                          //                 if NMRAnetNode_TestStateFlag(Node, NS_PERMITTED) then
                                                            begin
                                                              case CANBuffer^.ID and MTI_MASK of                                      // If we get here then the message is for our Node or VNode
                                                                MTI_VERIFY_NODE_ID_NUMBER_DEST  :   begin
                                                                                                      // All messages addressed to node get replies even if the payload is wrong!
-                                                                                                     NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID);
+                                                                                                     if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
+                                                                                                       begin
+                                                                                                         BaseBuffer^.mCode := BMC_VERIFY_NODE_ID_DEST;
+                                                                                                         BaseBuffer^.Alias := SourceAlias;
+                                                                                                         BaseBuffer^.DestAlias := DestAlias;
+                                                                                                       end
                                                                                                    end;
                                                                MTI_OPTIONAL_INTERACTION_REJECTED : begin
                                                                                                    end;
                                                                MTI_PROTOCOL_SUPPORT_INQUIRY      : begin
                                                                                                      // BITS ARE NEGATIVE LOGIC    
                                                                                                      // Since we don't implement extended protocols yet just reply when we see the start bit set (active 0)
-                                                                                                     if NMRAnetUtilities_ExtractDestinationAliasFlags(CANBuffer) and PIP_EXTENSION_START_BIT_MASK = 0 then
+                                                                                                     if DestAlias and PIP_EXTENSION_START_BIT_MASK = 0 then
                                                                                                      begin
                                                                                                        if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                                                        begin
-                                                                                                         NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
                                                                                                          BaseBuffer^.mCode := BMC_PROTOCOL_SUPPORT_QUERY;
-                                                                                                         BaseBuffer^.Alias := SourceAlias
+                                                                                                         BaseBuffer^.Alias := SourceAlias;
+                                                                                                         BaseBuffer^.DestAlias := DestAlias;
                                                                                                        end
                                                                                                      end
                                                                                                    end;
@@ -285,7 +291,7 @@ begin
                                                                MTI_SIMPLE_NODE_INFO_REQUEST      : begin
                                                                                                      if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                                                      begin
-                                                                                                       NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                                                                  //     NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
                                                                                                        BaseBuffer^.mCode := BMC_SIMPLE_NODE_INFO_REQEUST;
                                                                                                        BaseBuffer^.Alias := SourceAlias
                                                                                                      end;
@@ -293,7 +299,7 @@ begin
                                                              else begin
                                                                   if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                   begin
-                                                                    NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                              //      NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
                                                                     BaseBuffer^.mCode := BMC_UNKNOWN_ADDRESSED_MTI;
                                                                     BaseBuffer^.Alias := SourceAlias;
                                                                     BaseBuffer^.Tag := DWORD( (CANBuffer^.ID and $00FFF000) shr 12) and $0FFF;
@@ -420,7 +426,7 @@ begin
                                                         begin
                                                           if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then    // We assume we will always allocate a BaseBuffer
                                                           begin
-                                                            NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                       //     NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
                                                             BaseBuffer^.mCode := BMC_DATAGRAM_BUFFER_FULL;
                                                             BaseBuffer^.Alias := SourceAlias;
                                                           end;
@@ -444,7 +450,7 @@ begin
                                                         begin
                                                           if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then    // We assume we will always allocate a BaseBuffer
                                                           begin
-                                                            NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                        //    NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
                                                             BaseBuffer^.mCode := BMC_DATAGRAM_BUFFER_FULL;
                                                             BaseBuffer^.Alias := SourceAlias;
                                                             BaseBuffer^.State := BaseBuffer^.State or CBS_PROCESSING;                   // Hold off until the End Frame is found
@@ -469,7 +475,7 @@ begin
                                                         begin   // We received this without a Start Frame
                                                           if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                           begin
-                                                            NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                    //        NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
                                                             BaseBuffer^.mCode := BMC_DATAGRAM_OUT_OF_ORDER;
                                                             BaseBuffer^.Alias := SourceAlias;
                                                             BaseBuffer^.State := BaseBuffer^.State or CBS_PROCESSING;               // Hold off until the End Frame is found
@@ -501,7 +507,7 @@ begin
                                                           if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                           begin
                                                             {$IFDEF TRACE_DATAGRAM_TX}  UART1_Write_Text('DG_END No Start End Frame'+LF); {$ENDIF}
-                                                            NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
+                                                  //          NMRAnetUtilities_BaseBufferLink(Node, BaseBuffer);
                                                             BaseBuffer^.mCode := BMC_DATAGRAM_OUT_OF_ORDER;
                                                             BaseBuffer^.Alias := SourceAlias;
                                                           end

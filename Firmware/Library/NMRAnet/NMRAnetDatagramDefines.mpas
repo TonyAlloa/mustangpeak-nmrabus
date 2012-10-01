@@ -89,8 +89,8 @@ type
   
   TDatagramBuffer = record                                                      // Overlays TBaseBuffer..........
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
-    Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
-    Next: ^TDatagramBuffer;                                                     // Pointer to the next Message Buffer
+    TargetAlias: Word;                                                          // Alias of the Node receiving the message
+    DestAlias: Word;                                                            // Destination Alias to send the reply to
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message is
     StateMachine: Byte;                                                         // Local StateMachine Index for use
