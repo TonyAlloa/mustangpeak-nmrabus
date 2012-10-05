@@ -20,14 +20,23 @@ unit dsPIC30_Traps;
 {$I Options.inc}
 
 {$IFDEF ENABLE_TRAPS}
-  {.$DEFINE PRINT_TRAPS}
   {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP}
   var
     TrapFlagPin: sbit; sfr; external;
+    Trap_PC_Hi,
+    Trap_PC_Lo,
+    Trap_PSVPAG: Word;
   {$ENDIF}
 {$ENDIF}
 
 implementation
+
+{$IFDEF ENABLE_TRAPS}
+  {$IFDEF PRINT_TRAP}
+  var
+    s1: string[32];
+  {$ENDIF}
+{$ENDIF}
 
 {$IFDEF ENABLE_TRAPS}
 
@@ -43,24 +52,42 @@ begin
  //   MOV w13, _Addr_Minus32
   end;
   OSCFAIL_bit := 0;
-  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(100); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
-  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do;{$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
+  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do
+  begin
+    {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(100); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
+  end
+  {$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
 end;
 
 procedure Trap_AddressError; iv IVT_ADDR_ADDRESSERROR;
 begin
-  {$IFDEF PRINT_TRAP}UART1_Write_Text('Address Error');{$ENDIF}
+//  {$IFDEF PRINT_TRAP}UART1_Write_Text('Address Error');{$ENDIF}
   asm
- //   MOV [w15-36], w13
- //   MOV w13, _Addr_Minus36
- //   MOV [w15-34], w13
-  //  MOV w13, _Addr_Minus34
- //   MOV [w15-32], w13
- //   MOV w13, _Addr_Minus32
+    MOV [w15-86], w13
+    MOV w13, _Trap_PC_Hi
+    MOV [w15-84], w13
+    MOV w13, _Trap_PC_Lo
+    MOV [w15-82], w13
+    MOV w13, _Trap_PSVPAG
   end;
-  ADDRERR_bit := 0;
-  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(200); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
-  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do;{$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
+ ADDRERR_bit := 0;
+  
+  
+  {$IFDEF PRINT_TRAP}
+  IntToStr(Trap_PC_Hi, s1);
+  UART1_Write_Text('Stack - 36: '+s1 + #13+#10);
+  IntToStr(Trap_PC_Lo, s1);
+  UART1_Write_Text('Stack - 34: '+s1 + #13+#10);
+  IntToStr(Trap_PSVPAG, s1);
+  UART1_Write_Text('Stack - 32: '+s1 + #13+#10);
+  {$ENDIF}
+  
+  
+  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do
+  begin
+    {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(200); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
+  end
+  {$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
 end;
 
 procedure Trap_StackError; iv IVT_ADDR_STACKERROR;
@@ -75,8 +102,11 @@ begin
 //    MOV w13, _Addr_Minus32
   end;
   STKERR_bit := 0;
-  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(300); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
-  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do;{$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
+{$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do
+  begin
+    {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(300); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
+  end
+  {$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
 end;
 
 procedure Trap_MathError; iv IVT_ADDR_MATHERROR;
@@ -91,9 +121,11 @@ begin
 //    MOV w13, _Addr_Minus32
   end;
   MATHERR_bit := 0;
-  {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(400); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
-  {$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do;{$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}
-end;
+{$IFDEF ENABLE_LOOP_FOREVER_ON_TRAP} while True do
+  begin
+    {$IFDEF ENABLE_TOGGLE_PIN_ON_TRAP} TrapFlagPin := 1; Delay_us(400); TrapFlagPin := 0; {$ENDIF ENABLE_TOGGLE_PIN_ON_TRAP}
+  end
+  {$ENDIF ENABLE_LOOP_FOREVER_ON_TRAP}end;
 {$ENDIF}
 
 end.

@@ -14,11 +14,6 @@ program NMRABusRosterNode;
 // * Description:
 //    Implements a NMRABus based Command Station
 //
-// BUGS, BUGS, BUGS,
-//
-//  July 14, 2012
-//  Response to the Memory Configuration Protocol can respond with Datagrams MUCH larger than 72 bytes.......Ok per Bob
-//  Memory Config not working with VNodes
 //
 // ******************************************************************************
  
@@ -95,7 +90,7 @@ begin
     TxDatagramBuffer := nil;
     if NMRAnetBufferPools_AllocateDatagramBuffer(TxDatagramBuffer, True) then
     begin
-      TxDatagramBuffer^.DestAlias := Datagram^.DestAlias;
+      TxDatagramBuffer^.Alias := Datagram^.Alias;
       TxDatagramBuffer^.SourceNodePtr := Generic16BitPointer( Node);
       TxDatagramBuffer^.DataBytes[0] := $C0;
       for i := 1 to Datagram^.DataBytes[1] do
@@ -153,7 +148,11 @@ begin
       y := MaxTime_StateMachine
     end;
     PrintCount := 0;
+    IntToStr(CAN_Engine.InterruptLockCount, s1);
+    UART1_Write_Text(s1+LF);
   end;
+  
+
 end;
 {$ENDIF}
 
@@ -171,6 +170,8 @@ begin
 
   LATD0_bit := 0;         // Debugging output     // THIS IS FOR TRAPS RIGHT NOW
   TRISD0_bit := 0;        // Debugging output
+  LATD2_bit := 0;         // Debugging output     // THIS IS FOR TRAPS RIGHT NOW
+  TRISD2_bit := 0;        // Debugging output
 
   _25AAxxxx_Initialize;
   CANStorage_Initialize;
@@ -198,14 +199,14 @@ begin
   
   //LATD0_bit := not LATD0_bit;
   
-  //  delay_us(1000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
+   // delay_us(5000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
       
-    PrintBufferPools(PrintCount);
-    PrintMaxLoopTimes(Print2Count, x, y);
+  //  PrintBufferPools(PrintCount);
+  //  PrintMaxLoopTimes(Print2Count, x, y);
 
 
     
-    LATD0_bit := 1;
+ //   LATD0_bit := 1;
      ActiveNode := NMRAnetNode_NextNode;
     if ActiveNode <> PNMRAnetNode( nil) then
     begin
@@ -220,7 +221,7 @@ begin
       end;
     end;
     
-    LATD0_bit := 0;
+ //   LATD0_bit := 0;
   //  PrintMaxLoopTimes(x, y);
   end;
 end.

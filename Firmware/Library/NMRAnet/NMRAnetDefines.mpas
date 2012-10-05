@@ -165,8 +165,8 @@ type
 type
   TDataBuffer = record                                                          // Overlays TBaseBuffer..........
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
-    vNodeAlias: Word;                                                           // Alias of the Node receiving the message
-    DestAlias: Word;                                                            // Destination Alias to send the reply to
+    Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
+    Next: ^TDataBuffer;                                                         // Pointer to the next Message Buffer
     RefCount: TRefCount;                                                        // Reference count for auto garbage collection
     mCode: Byte;                                                                // Buffer Message Code for what the message is
     Tag: TBufferTag;                                                            // General Purpose useage depending on the message type
@@ -218,6 +218,7 @@ type
     State: Byte;                                                                // See the NS_xxxx flags; State of the Node
     Node: TNodeInfo;                                                            // Information about a Node
     Login: TNMRAnetNodeLoginInfo;                                               // Login Information
+    MsgFlags: Byte;                                                             // Message Flags for messages that do not require information to be passed to the Node
     iStateMachine: Byte;                                                        // Statemachine index for the main bus login
     EventCounter: Word;                                                         // Counts the Events when enumerating them
     BaseBuffers: PBaseBuffer;

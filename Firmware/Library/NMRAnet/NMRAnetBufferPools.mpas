@@ -26,7 +26,7 @@ uses
 {$I Options.inc}
 
 {.$DEFINE TRACK_BUFFER_ALLOCATIONS}
-{$DEFINE TRACK_BUFFER_OVERFLOWS}
+{.$DEFINE TRACK_BUFFER_OVERFLOWS}
 {.$DEFINE TRACK_BUFFER_MAX_COUNT}
 
 type
@@ -59,11 +59,6 @@ procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
 
 function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer; ForTransmit: Boolean): Boolean;
 procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
-
-function NMRAnetBufferPools_FindInProcessDatagram(Alias: Word; var Buffer: PDatagramBuffer): Boolean;
-function NMRAnetBufferPools_FindCompletedDatagram(Alias: Word; var Buffer: PDatagramBuffer): Boolean;
-function NMRAnetBufferPools_FindOutgoingDatagram(var Buffer: PDatagramBuffer; ProcessingOnly: Boolean): Boolean;
-function NMRAnetBufferPools_FindDatagramErrorReply(Alias: Word; var Buffer: PBaseBuffer): Boolean;
 
 {$IFDEF UART_ENABLE}
 procedure NMRAnetBufferPools_Print;
@@ -114,8 +109,8 @@ end;
 procedure NMRAnetBufferPools_InitializeBaseBuffer(Buffer: PBaseBuffer);
 begin
   Buffer^.State := 0;
-  Buffer^.vNodeAlias := 0;
-  Buffer^.DestAlias := 0;
+  Buffer^.Alias := 0;
+  Buffer^.Next := nil;
   Buffer^.mCode := 0;
   Buffer^.Tag := 0;
   Buffer^.RefCount := 0;
@@ -378,148 +373,6 @@ begin
       Dec(DatagramPool.Count);
     end
   end;
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindInDatagramByState
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function NMRAnetBufferPools_FindInDatagramByState(Alias: Word; var Buffer: PDatagramBuffer; AState: Byte; IgnoreAlias: Boolean): Boolean;
-var
-  Temp: PDatagramBuffer;
-  i: Integer;
-begin
-  Result := False;
-  Buffer := nil;
-  if DatagramPool.Count > 0 then
-  begin
-    for i := 0 to MAX_DATAGRAM_BUFFER_POOL - 1 do
-    begin
-      if (DatagramPool.Pool[i].DestAlias = Alias) or IgnoreAlias then
-      begin
-        if DatagramPool.Pool[i].State and AState = AState then
-        begin
-          Buffer := @DatagramPool.Pool[i];
-          Result := True;
-          Break
-        end
-      end
-    end
-  end
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindInDatagramByState
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function NMRAnetBufferPools_FindInDatagramByStateMask(Alias: Word; var Buffer: PDatagramBuffer; AState: Byte): Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  Buffer := nil;
-  if DatagramPool.Count > 0 then
-  begin
-    for i := 0 to MAX_DATAGRAM_BUFFER_POOL - 1 do
-    begin
-      if (DatagramPool.Pool[i].DestAlias = Alias) then
-      begin
-        if DatagramPool.Pool[i].State and AState <> 0 then
-        begin
-          Buffer := @DatagramPool.Pool[i];
-          Result := True;
-          Break
-        end
-      end
-    end
-  end
-end;
-
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindInProcessDatagram
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function NMRAnetBufferPools_FindInProcessDatagram(Alias: Word; var Buffer: PDatagramBuffer): Boolean;
-begin
-  Result := NMRAnetBufferPools_FindInDatagramByState(Alias, Buffer, CBS_PROCESSING, False);
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindCompletedDatagram
-//     Parameters:
-//     Returns:
-//
-//     Description:
-//
-// *****************************************************************************
-function NMRAnetBufferPools_FindCompletedDatagram(Alias: Word; var Buffer: PDatagramBuffer): Boolean;
-begin
-  Result := NMRAnetBufferPools_FindInDatagramByState(Alias, Buffer, CBS_TRANSFER_COMPLETE, False);
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindOutgoingDatagram;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function NMRAnetBufferPools_FindOutgoingDatagram(var Buffer: PDatagramBuffer; ProcessingOnly: Boolean): Boolean;
-var
-  AState: Byte;
-begin
-  if ProcessingOnly then
-    AState := CBS_OUTGOING or CBS_PROCESSING
-  else
-    AState := CBS_OUTGOING;
-  Result := NMRAnetBufferPools_FindInDatagramByState(0, Buffer, AState, True)
-end;
-
-// *****************************************************************************
-//  procedure NMRAnetBufferPools_FindOutgoingDatagram;
-//
-//  Parameters:
-//
-//  Result:
-//
-//  Description:
-// *****************************************************************************
-function NMRAnetBufferPools_FindDatagramErrorReply(Alias: Word; var Buffer: PBaseBuffer): Boolean;
-var
-  i: Integer;
-begin
-  Result := False;
-  Buffer := nil;
-  if BaseBufferPool.Count > 0 then
-  begin
-    for i := 0 to MAX_BASE_BUFFER_POOL - 1 do
-    begin
-      if (BaseBufferPool.Pool[i].DestAlias = Alias) then
-      begin
-        if (BaseBufferPool.Pool[i].mCode = BMC_DATAGRAM_BUFFER_FULL) or (BaseBufferPool.Pool[i].mCode = BMC_DATAGRAM_OUT_OF_ORDER) or (BaseBufferPool.Pool[i].mCode = BMC_DATAGRAM_NOT_ACCEPTED) then
-        begin
-          Buffer := @BaseBufferPool.Pool[i];
-          Result := True;
-          Break
-        end
-      end
-    end
-  end
 end;
 
 end.

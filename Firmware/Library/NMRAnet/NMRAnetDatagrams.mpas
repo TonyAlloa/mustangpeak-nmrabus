@@ -38,8 +38,8 @@ begin
   if Buffer <> nil then
   begin
     Buffer^.State := 0;
-    Buffer^.vNodeAlias := 0;
-    Buffer^.DestAlias := 0;
+    Buffer^.Alias := 0;
+    Buffer^.Next := 0;
     Buffer^.RefCount := 0;
     Buffer^.mCode := 0;
     Buffer^.StateMachine := 0;
