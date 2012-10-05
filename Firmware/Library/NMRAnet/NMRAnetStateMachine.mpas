@@ -767,7 +767,7 @@ begin
                                                                               //    IntToHex(Integer( BaseBuffer), s1);
                                                                               //    UART1_Write_Text('.$'+s1+LF);
                                                                                   
-                                                                                  DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
+                                                                                  ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
                                                                                   if DataBytes[i] = #0 then
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_START_DESC
                                                                                   else
@@ -789,7 +789,7 @@ begin
                                                                                 //  IntToHex(Integer( BaseBuffer), s1);
                                                                                  // UART1_Write_Text('..$'+s1+LF);
                                                                                   
-                                                                                  DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
+                                                                                  ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
                                                                                   if DataBytes[i] = #0 then
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_DONE
                                                                                   else
