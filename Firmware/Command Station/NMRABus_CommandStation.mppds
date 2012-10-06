@@ -6,7 +6,7 @@ Value=-1
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRABusCommandStation.mpas
+Value=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\NMRAnetDCC.mpas
 [USE_EEPROM]
 Value=0
 [USE_HEAP]
@@ -44,20 +44,14 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=13
+Count=7
 File0=NMRABusCommandStation.mpas
-File1=..\Library\NMRAnet\NMRAnetBufferPools.mpas
-File2=..\Library\NMRAnet\NMRAnetCANReceive.mpas
-File3=..\Library\NMRAnet\NMRAnetStateMachine.mpas
-File4=..\Library\NMRAnet\NMRAnetDefines.mpas
-File5=..\Library\NMRAnet\NMRAnetUtilities.mpas
-File6=..\Library\dsPIC30F\dsPIC30_Traps.mpas
-File7=..\Library\NMRAnet\NMRAnetMemoryConfigurationDefines.mpas
-File8=..\Library\NMRAnet\NMRAnetDatagramDefines.mpas
-File9=NMRAnetAppDefines.mpas
-File10=..\Library\CANBus\CANStorage.mpas
-File11=..\Library\CANBus\CANDefines.mpas
-File12=..\Library\NMRAnet\NMRAnetBufferPoolsDefines.mpas
+File1=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetNode.mpas
+File2=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetStateMachine.mpas
+File3=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDatagrams.mpas
+File4=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\NMRAnetDefines.mpas
+File5=..\Library\NMRAnet\NMRAnetMemoryConfigurationDefines.mpas
+File6=..\..\..\..\..\..\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\NMRAnetDCC.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -67,12 +61,12 @@ Count=1
 File0=Options.inc
 [SEARCH_PATH]
 Count=20
-Path0=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path1=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path2=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
-Path3=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
-Path4=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
-Path5=C:\Users\Jim\Desktop\NMRABus\Firmware\Command Station\
+Path0=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path1=C:\Users\Public\Documents\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path2=C:\Users\Jim\Desktop\NMRABus\Firmware\Command Station\
+Path3=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\defs\
+Path4=C:\Program Files\Mikroelektronika\mikroPascal PRO for dsPIC\uses\
+Path5=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Command Station\
 Path6=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnet\
 Path7=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\NMRAnetDCCSystem\
 Path8=C:\Documents and Settings\Jim\Desktop\NMRABus\Firmware\Library\CANBus\

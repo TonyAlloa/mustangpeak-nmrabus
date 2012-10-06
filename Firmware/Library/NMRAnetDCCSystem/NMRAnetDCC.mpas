@@ -128,17 +128,10 @@ type
                                                // Bit 7 = A Packet between the addresses of 100 and 127 was sent and 5ms has not expired between the stop bit of the last packet and the start of the next packet to that address
   end;
   PDCCBufferInfo = ^TDCCBufferInfo;
-  
-  TAddressSlot_LoadRefreshPacketFunc = function (AMessage: PDCCPacket): Boolean;
-  PAddressSlot_LoadRefreshPacketFunc = ^TAddressSlot_LoadRefreshPacketFunc;
-
 
 var
   Track: TDCCBufferInfo;
 
-
-  AddressSlot_LoadRefreshPacketFunc: PAddressSlot_LoadRefreshPacketFunc;
-  
 // Call once on start up
 procedure NMRA_DCC_Initialize; forward;
 // Places a message in the queue to be transmitted
@@ -553,29 +546,6 @@ begin
       end;
     end;
   Result := ABuffer^.TX_TimerCount = 0
-end;
-
-
-// ****************************************************************************
-// procedure DeviceRefreshPacket
-//
-//  Parameters:
-//     ABuffer:       Pointer to the Buffer Info record to operate on:
-//
-//  Results:
-//     False:         No Refresh Packets available
-//     True :         Refresh Packet was loaded into the transmitter
-//
-//  Description:
-//          Scans the Device List looking for a message that is flagged to be refreshed
-//   periodically.  If it exists then it is loaded into the Transmitter
-//
-// ****************************************************************************
-function DeviceRefreshPacket(ABuffer: PDCCBufferInfo): Boolean;
-begin
-  if AddressSlot_LoadRefreshPacketFunc(@ABuffer^.TX_TransmittingPacket) then
-    if CanTransmitMessage(ABuffer, @ABuffer^.TX_TransmittingPacket) then
-  Result := False
 end;
 
 

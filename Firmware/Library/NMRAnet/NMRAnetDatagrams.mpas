@@ -68,9 +68,7 @@ end;
 // *****************************************************************************
 procedure NMRAnetDatagrams_Initialize;
 begin
-  DatagramCallbackFunc := PDatagramTaskCallbackFunc(nil);
   DatagramTrainControlCallbackFunc := PDatagramTaskCallbackFunc(nil);
-  DatagramMemConfigurationCallbackFunc := PDatagramTaskCallbackFunc(nil);
 end;
 
 

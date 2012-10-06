@@ -238,10 +238,8 @@ type
   PDatagramTaskCallbackFunc = ^TDatagramTaskCallbackFunc;
   
 var
-  DatagramCallbackFunc: PDatagramTaskCallbackFunc;                                  // Callback to the user app from the NMRADatagrams.mpas when a datagram is received that is not a special datagram defined in the following...
   DatagramTrainControlCallbackFunc: PDatagramTaskCallbackFunc;                      // Callback to the user app from the NMRADatagrams.mpas when a Train Control datagram is received
-  DatagramMemConfigurationCallbackFunc: PDatagramTaskCallbackFunc;                  // Callback to the user app from the NMRADatagrams.mpas when a Memory Configuration datagram is received
-  
+
 
   MaxTime_StateMachine: Word;
   MaxTime_RX: Word;
