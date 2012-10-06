@@ -763,10 +763,6 @@ begin
                                                                                 if BaseBuffer^.Tag < MAX_USER_NAME then
                                                                                 begin
                                                                                   // Very wasteful and slow 1 at a time but it is easy
-                                                                                  
-                                                                              //    IntToHex(Integer( BaseBuffer), s1);
-                                                                              //    UART1_Write_Text('.$'+s1+LF);
-                                                                                  
                                                                                   ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
                                                                                   if DataBytes[i] = #0 then
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_START_DESC
@@ -786,9 +782,6 @@ begin
                                                                                 if BaseBuffer^.Tag < MAX_CONFIG_DATA then
                                                                                 begin
                                                                                   // Very wasteful and slow 1 at a time but it is easy
-                                                                                //  IntToHex(Integer( BaseBuffer), s1);
-                                                                                 // UART1_Write_Text('..$'+s1+LF);
-                                                                                  
                                                                                   ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
                                                                                   if DataBytes[i] = #0 then
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_DONE
@@ -808,13 +801,6 @@ begin
                                                   end;
                                                 end;
 
-                                                {$IFDEF TRACE_ACDI}
-                                                IntToStr(i, s1);
-                                                UART1_Write_Text('i  = '+s1+LF);
-                                                IntToStr(BaseBuffer^.Tag, s1);
-                                                UART1_Write_Text('tag= '+s1+LF+LF);
-                                                {$ENDIF}
-                                                
                                                 if i > 0 then
                                                   TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_SIMPLE_NODE_INFO_REPLY, BaseBuffer^.Alias, i, @DataBytes, False);
 

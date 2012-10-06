@@ -72,7 +72,7 @@ begin
   NMRA_DCC_LoadPacketIntoTransmitterStateMachine(@Track, PREAMBLE_BIT_COUNT_NORMAL);      // < 11us    Max
 end;
 
-procedure INTERRUPT_1ms_Timer(); iv IVT_ADDR_T2INTERRUPT;
+procedure INTERRUPT_100ms_Timer(); iv IVT_ADDR_T2INTERRUPT;
 // Called once every 100m
 var
   i: Integer;
@@ -203,7 +203,6 @@ begin
   
   while (TRUE) do
   begin
-    delay_us(2000);   // Slows the Statemachine down enough to work withon the CAN/USB adapter
     //  PrintBufferPools(j);
     
     if C1IE_bit = 0 then

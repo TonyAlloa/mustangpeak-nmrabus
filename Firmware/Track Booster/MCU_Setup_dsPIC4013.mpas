@@ -48,6 +48,12 @@ var
   PWM_B_LO_Direction: sbit at TRISD2_bit;
 
   DCC_CMD_In: sbit at RB0_bit;
+  
+  // EEPROM SPI PINS
+  CS_Bank_0                         : sbit at LATB12_bit;
+  CS_Bank_1                         : sbit at LATB11_bit;
+  CS_Bank_0_Direction               : sbit at TRISB12_bit;
+  CS_Bank_1_Direction               : sbit at TRISB12_bit;
 
 
 implementation

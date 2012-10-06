@@ -63,12 +63,12 @@ procedure Trap_AddressError; iv IVT_ADDR_ADDRESSERROR;
 begin
 //  {$IFDEF PRINT_TRAP}UART1_Write_Text('Address Error');{$ENDIF}
   asm
-    MOV [w15-86], w13
-    MOV w13, _Trap_PC_Hi
-    MOV [w15-84], w13
-    MOV w13, _Trap_PC_Lo
-    MOV [w15-82], w13
-    MOV w13, _Trap_PSVPAG
+//    MOV [w15-86], w13
+ //   MOV w13, _Trap_PC_Hi
+ //   MOV [w15-84], w13
+ //   MOV w13, _Trap_PC_Lo
+ //   MOV [w15-82], w13
+  //  MOV w13, _Trap_PSVPAG
   end;
  ADDRERR_bit := 0;
   

@@ -23,7 +23,7 @@ uses
   
 {$I Options.inc}
 
-{$DEFINE TRACK_CAN_BUFFER_OVERFLOWS}
+{.$DEFINE TRACK_CAN_BUFFER_OVERFLOWS}
 
 procedure CANStorage_Initialize;
 function CANStorage_Head(List: PCANBufferList): PCANBuffer;

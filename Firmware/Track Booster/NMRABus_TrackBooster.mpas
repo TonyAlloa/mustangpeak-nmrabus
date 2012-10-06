@@ -32,18 +32,6 @@ uses
 
 {$I Options.inc}
 
-// ****************************************************************************
-// procedure GetUniqueIDFunc
-//
-//  Description:   Callback from NMRABus to load the 48 Bit Unique ID
-//
-// ****************************************************************************
-procedure GetUniqueIDFunc(var HiID, LoID: DWord);
-begin
-  LoID := MUSTANGPEAK_TRACKBOOSTER_ID_0_LO;
-  HiID := MUSTANGPEAK_ID_0_HI;
-end;
-
 
 // *****************************************************************************
 //  INTERRUPTS
@@ -99,14 +87,13 @@ end;
 var
   ActiveNode: PNMRAnetNode;
 begin
+  _25AAxxxx_Initialize;
   CANStorage_Initialize;
   NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_TRACKBOOSTER_ID_0_LO);
   MCU_Setup_Initialize;
 
   while (TRUE) do
   begin
-    Delay_us(2000);
-
     ActiveNode := NMRAnetNode_NextNode;
     if ActiveNode <> PNMRAnetNode( nil) then
     begin
