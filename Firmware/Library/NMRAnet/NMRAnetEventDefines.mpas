@@ -10,6 +10,7 @@ unit NMRAnetEventDefines;
 //
 // * Revision History:
 //     2012-02-01:   Created
+//     2012-10-07:   Version 1.0
 //
 // * Description:
 //    Implements commond defines for the Events protocol

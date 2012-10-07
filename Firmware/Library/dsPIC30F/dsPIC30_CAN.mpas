@@ -11,6 +11,7 @@ unit dsPIC30_CAN;
 //
 // * Revision History:
 //     2012-04-01:   1.0.0.0 Created
+//     2012-10-07:   Version 1.0
 //
 // * Description:
 //                Implements an easy to use interface into the dsPIC33 ECAN Module Registers

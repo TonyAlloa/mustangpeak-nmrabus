@@ -11,6 +11,7 @@ unit NMRAnetCANReceive;
 //
 // * Revision History:
 //     2012-02-01:   Created
+//     2012-10-07:   Version 1.0
 //
 // * Description:
 //    Implements NMRAnet CAN Receive StateMachine.  The user program does not need

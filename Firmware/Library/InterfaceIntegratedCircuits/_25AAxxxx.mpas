@@ -10,6 +10,7 @@
 // * Revision History:
 //     2012-02-01:   1.0.0.0 Created
 //     2012-03-24:   1.0.0.1 Generalized so would work with any PIC micro and the ME SPI Libraries
+//     2012-10-07:   Version 1.0
 //
 // * Description:
 //    Implements an interface for 25AA1024, 512, 256, etc SPI EEPROM Chips
