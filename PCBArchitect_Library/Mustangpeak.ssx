@@ -1,5 +1,7 @@
+1x6 Header||6
 1x8 Header||8
 1x10 Header||10
+1x10 Header Socket||10
 1x16 Header||16
 1x20 Header||20
 2x5 Header||10
@@ -29,6 +31,7 @@ MAX232||16
 MCP23S17||28
 MCP1541||3
 MCP3208||16
+OC_Opto||6
 PESD1CAN||3
 Power Barrel Connector||4
 PowerBlock||2

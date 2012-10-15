@@ -1,3 +1,4 @@
+1x6 Header||6
 1x8 Header||8
 1x10 Header||10
 1x16 Header||16
@@ -8,6 +9,7 @@
 2x8 Header||16
 2x14 Header||14
 2x14 Header Socket||28
+8SOP||8
 Amphenol RJ45 - RJHSE-5080||10
 C&K K5G Series Switch||6
 C&K S Series Switch||6
@@ -15,10 +17,11 @@ CR2450 Battery Holder||3
 Crystal||2
 DO-201||2
 EVUFA2 Panasonic Pot||5
+FODM80x1||6
 Molex 8-8-RJ45-SMT||10
 Molex RJ12 - 95501-6669||8
 Power Barrel 2.1mmX5.5mm||6
-RJ45 Amphinol Dual SMT||18
+RJ45 Amphinol Dual SMT||20
 Series 27L Encoder||7
 SMC||2
 Termnial Block 2 Wire||2

@@ -21,6 +21,7 @@ dsPIC33EP64GP502||#SM=28||@Manufacturer=Microchip||@Manufacturer Part Number=DSP
 dsPIC33EP512GP806||#SM=64||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
 dsPIC33EPxxxGP502||#SM=28||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=||#DIL=28||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
 EVUF2A Panasonic Pot||#DIL=5||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
+FODM8061||#SM=6||@Manufacturer=Fairchild||@Manufacturer Part Number=FODM8061||@Distributor=Digikey||@Distributor Part Number=FODM8061-ND
 FT232RL||#SM=28||@Manufacturer=FTDI||@Manufacturer Part Number=FT232RL-REEL||@Distributor=Digikey||@Distributor Part Number=768-1007-1-ND
 HIP4082||#SM=16||@Manufacturer=Intersil||@Manufacturer Part Number=HIP4082IBZ||@Distributor=Digikey||@Distributor Part Number=HIP4082IBZ-ND||#DIL=16||@Manufacturer=Intersil||@Manufacturer Part Number=HIP4082IPZ||@Distributor=Digikey||@Distributor Part Number=HIP4082IPZ-ND
 IR2110-13||#DIL=14||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
