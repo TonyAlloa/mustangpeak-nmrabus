@@ -1,7 +1,7 @@
 1x6 Header||#DIL=6||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
 1x8 Header||#DIL=8||@Manufacturer=3M||@Manufacturer Part Number=951108-8622-AR||@Distributor=Digikey||@Distributor Part Number=3M9327-ND
 1x10 Header||#DIL=10||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
-1x10 Header Socket||#DIL=10||@Manufacturer=Harwin||@Manufacturer Part Number=M22-7131042||@Distributor=Digikey||@Distributor Part Number=952-1354-5-ND
+1x10 Header Socket||#DIL=10||@Manufacturer=Harwin||@Manufacturer Part Number=75915-310LF||@Distributor=Digikey||@Distributor Part Number=75915-310LF
 1x16 Header||#DIL=16||@Manufacturer=||@Manufacturer Part Number=||@Distributor=Digikey||@Distributor Part Number=
 1x20 Header||#DIL=20||@Manufacturer=||@Manufacturer Part Number=||@Distributor=Digikey||@Distributor Part Number=
 2x5 Header||#SM=10||@Manufacturer=Molex Inc||@Manufacturer Part Number=0015912100||@Distributor=Digikey||@Distributor Part Number=WM17451-ND
@@ -15,8 +15,8 @@ RJ12 Molex Plastic||#SM=8||@Manufacturer=Molex||@Manufacturer Part Number=95501-
 RJ12 Molex Plastic Xpressnet||#SM=8||@Manufacturer=Molex||@Manufacturer Part Number=95501-6669||@Distributor=Digikey||@Distributor Part Number=WM5575-ND
 RJ45 Amphenol Plastic||#DIL=10||@Manufacturer=Amphenol||@Manufacturer Part Number=RJHSE-5080||@Distributor=Digikey||@Distributor Part Number=RJHSE-5080-ND
 RJ45 Amphenol Plastic OpenLCB||#DIL=10||@Manufacturer=Amphenol||@Manufacturer Part Number=RJHSE-5080||@Distributor=Digikey||@Distributor Part Number=RJHSE-5080-ND
-RJ45 Amphinol Dual SMT||#SM=18||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
-RJ45 Amphinol Dual SMT OpenLCB||#SM=18||@Manufacturer=Amphenol||@Manufacturer Part Number=RJSSE-5080-02||@Distributor=Digikey||@Distributor Part Number=RJSSE-5080-02-ND
+RJ45 Amphinol Dual SMT||#SM=20||@Manufacturer=||@Manufacturer Part Number=||@Distributor=||@Distributor Part Number=
+RJ45 Amphinol Dual SMT OpenLCB||#SM=20||@Manufacturer=Amphenol||@Manufacturer Part Number=RJSSE-5080-02||@Distributor=Digikey||@Distributor Part Number=RJSSE-5080-02-ND
 RJ45 Molex Plastic SMT OpenLCB||#SM=10||@Manufacturer=Molex||@Manufacturer Part Number=43743-8101||@Distributor=Digikey||@Distributor Part Number=WM6469CT-ND
 Terminal Block 2 Wire - 100mil||#DIL=2||@Manufacturer=TE Connectivity||@Manufacturer Part Number=282834-2||@Distributor=Digikey||@Distributor Part Number=A98333-ND
 Terminal Block 2 Wire - 200mil||#MISC=2||@Manufacturer=TE Connectivity||@Manufacturer Part Number=282841-2||@Distributor=Digikey||@Distributor Part Number=A98342-ND
