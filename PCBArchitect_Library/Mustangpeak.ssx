@@ -1,4 +1,5 @@
 1x6 Header||6
+1x6 Header Socket||6
 1x8 Header||8
 1x10 Header||10
 1x10 Header Socket||10
@@ -11,6 +12,7 @@
 23K256||8
 ADM2483||16
 Amplifier||3
+DIN5 Female||7
 DPST Switch||6
 dsPIC30F1010-202X||28
 dsPIC33EP512GP806||64
