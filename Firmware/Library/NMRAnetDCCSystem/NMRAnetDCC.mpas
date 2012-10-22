@@ -20,9 +20,9 @@ unit NMRAnetDCC;
 // ******************************************************************************
 
 const
-  _56us_PERIOD = 1120;       // prescaler = 1, 80Mhz clock = 1/(80Mhz/4) * _56us_PERIOD = 56us
-  _5ms_PERIOD   = 90;        // 5ms/56us = 89.3
-  _20ms_PERIOD = 360;        // 20ms/56us = 357.1
+  _56us_PERIOD = 1792;       // prescaler = 1, 64Mhz clock = 1/(64Mhz/2) * _56us_PERIOD = 56us
+  _5ms_PERIOD   = 90;        // 5ms/56us = 89.3 (number of 56us turns)
+  _20ms_PERIOD = 360;        // 20ms/56us = 357.1 (number of 56us turns)
 
   MAX_NMRA_DCC_DATA = 5;     // Number of Bytes in a valid NMRA DCC Message
   MAX_NMRA_DCC_STARTUP_IDLE = 20;
@@ -608,7 +608,7 @@ begin
         Inc(i)
       end;
       ABuffer^.TX_PreambleBitCount := PreambleCount;                              // Update the Preamble Count
-      ABuffer^.TX_LastAddress := ABuffer^.TX_TransmittingPacket.PacketBytes[0]; // Update the Last Address
+      ABuffer^.TX_LastAddress := ABuffer^.TX_TransmittingPacket.PacketBytes[0];   // Update the Last Address
 
       Inc(AQueue^.Tail);
       if AQueue^.Tail >= AQueue^.MaxCount then                                    // Remove the message from the Queue

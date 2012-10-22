@@ -725,8 +725,6 @@ begin
                                                 begin
                                                   case BaseBuffer^.StateMachine of
                                                     STATE_ACDI_MFG_VERSION  : begin      {$IFDEF TRACE_SNIP}UART1_Write_Text('STATE_ACDI_MFG_VERSION'+LF); {$ENDIF}
-                                                    
-                                                    LATD0_bit := 1;
                                                                                 DataBytes[i] := ACDI_MFG_VERSION;
                                                                                 Inc(i);
                                                                                 BaseBuffer^.Tag := 0;
@@ -809,9 +807,6 @@ begin
                                                 begin
                                                   NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                   NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);
-                                    
-                                                  LATD0_bit := 0;
-                                                  
                                                 end;
                                               end
                                             end;

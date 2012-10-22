@@ -11,7 +11,7 @@ uses
 {$I Options.inc}
 
 const
-  CAN_SWJ        = 0;               // Set up for 125Khz Baud Rate with a 16Mhz Crystal
+  CAN_SWJ        = 0;               // Set up for 125Khz Baud Rate with a 8Mhz Crystal
   CAN_BRP        = 8;               // Baud Rate Prescaler
   CAN_PHASESEG_1 = 3;               //
   CAN_PHASESEG_2 = 4;               //
