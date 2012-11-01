@@ -135,11 +135,11 @@ begin
     begin
       // The message does not contain a duplicate Source Alias so handle it
       case CANBuffer^.ID and MTI_MASK of
-        MTI_AME  : begin
+        MTI_AME  : begin                                                        // Alias Map Enquiry.....
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
                     begin                                                       // The message is for a specific Node
                       NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
-                      Node := NMRAnetNode_FindByNodeID(NodeID);                 // *************** Need to characterize how much time this may take with a large number of nodes
+                      Node := NMRAnetNode_FindByNodeID(NodeID);
                       if Node <> nil then
                       begin
                         if NMRAnetNode_TestStateFlag(Node, NS_PERMITTED) then                // Only reply if node is in Permitted state
@@ -148,10 +148,10 @@ begin
                     end else
                     begin
                       if CANBuffer^.DataCount = 0 then                            // Is the message for all Nodes?
-                        NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_ALIAS_MAP_ENQUIRY);    // Need to characterize how much time this may take with a large number of nodes
+                        NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_ALIAS_MAP_ENQUIRY);
                     end
                   end;
-        MTI_AMD  : begin
+        MTI_AMD  : begin                                                        // Alias Map Definition....
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
                     begin
                       NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
@@ -161,6 +161,7 @@ begin
                     end;
                     for i := 0 to Nodes.Count - 1 do  // *************** Need to characterize how much time this may take with a large number of nodes
                      begin
+                       DatagramBuffer := nil;
                        if NMRAnetUtilities_FindInDatagramByState(Nodes.AllocatedList[i], SourceAlias, DatagramBuffer, CBS_PROCESSING or CBS_TRANSFER_COMPLETE, True) then
                        begin
                          NMRAnetUtilities_DatagramBufferUnLink(Nodes.AllocatedList[i], DatagramBuffer); // Alias is no longer valid for this Datagram (it was reset) so we need to throw it away
@@ -169,7 +170,7 @@ begin
                        end
                      end
                   end;
-        MTI_AMR  : begin
+        MTI_AMR  : begin                                                        // Alias Map Reset.....
                      // If we see a reset then we need to check if there is a partial datagram assigned to that node ID
                      for i := 0 to Nodes.Count - 1 do  // *************** Need to characterize how much time this may take with a large number of nodes
                      begin
@@ -255,9 +256,11 @@ begin
                                                                                                        end
                                                                                                      end
                                                                                                    end;
+                                                             {$IFNDEF BOOTLOADER}
                                                                MTI_EVENTS_IDENTIFY_DEST          : begin
                                                                                                      NMRAnetNode_SetMsgFlag(Node, MF_IDENTIFY_ALL_EVENTS);
                                                                                                    end;
+                                                             {$ENDIF}
                                                                MTI_DATAGRAM_OK_REPLY             : begin
                                                                                                      if NMRAnetUtilities_FindInDatagramByState(Node, SourceAlias, DatagramBuffer, CBS_OUTGOING or CBS_TRANSFER_COMPLETE, False) then
                                                                                                      begin
@@ -282,7 +285,8 @@ begin
                                                                                                          {$IFDEF TRACE_DATAGRAM_RESPOSES} UART1_Write_Text('DG_RESPONSE_REJECT_NORESED'+LF);  {$ENDIF}
                                                                                                        end
                                                                                                      end
-                                                                                                   end;
+                                                                                                   end
+                                                             {$IFNDEF BOOTLOADER};
                                                                MTI_SIMPLE_NODE_INFO_REQUEST      : begin
                                                                                                      if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                                                      begin
@@ -291,6 +295,7 @@ begin
                                                                                                        BaseBuffer^.Alias := SourceAlias
                                                                                                      end;
                                                                                                    end
+                                                             {$ENDIF}
                                                              else begin
                                                                   if NMRAnetBufferPools_AllocateBaseBuffer(BaseBuffer) then
                                                                   begin
@@ -316,6 +321,7 @@ begin
                                                                                                 NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID)
                                                                                             end
                                                                                           end;
+                                                         {$IFNDEF BOOTLOADER}
                                                             MTI_CONSUMER_IDENTIFY       : begin
                                                                                             if Nodes.Count > 1 then    // First node is the Physical Node, do we have any vNodes Allocated?
                                                                                               VNodeSupports := NMRAnetUtilities_SupportsVNodeEventAsConsumer(@CANBuffer^.DataBytes)
@@ -401,6 +407,7 @@ begin
                                                             MTI_EVENTS_IDENTIFY         : begin
                                                                                             NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes(MF_IDENTIFY_ALL_EVENTS);
                                                                                           end;
+                                                         {$ENDIF}
                                                          end
                                                        end;
                                                      end;

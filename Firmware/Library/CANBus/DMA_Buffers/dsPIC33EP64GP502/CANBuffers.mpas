@@ -19,6 +19,8 @@ unit CANBuffers;
 //
 // ******************************************************************************
 
+{$I Options.inc}
+
 uses
   CANDefines;
   
@@ -35,5 +37,5 @@ type
                                                                                 // can keep track of the memory and we can address the buffers as a normal array
                                                                                 // to initialize them
 var
-  Dummy: TDummy; absolute $1000;
+  Dummy: TDummy; absolute $1000;                                                // Dummy variable so the compiler accounts for this memory location
 end.

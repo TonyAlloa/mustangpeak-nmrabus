@@ -902,7 +902,7 @@ begin
     begin
       if AnyBit then
       begin
-        if Temp^.State and AState <> 0 then
+        if Temp^.State and AState <> 0 then                                     // Test if any bit is set
         begin
           Buffer := Temp;
           Result := True;
@@ -910,7 +910,7 @@ begin
         end;
       end else
       begin
-        if Temp^.State and AState = AState then
+        if Temp^.State and AState = AState then                                 // Test for and exact match for the State bits
         begin
           Buffer := Temp;
           Result := True;

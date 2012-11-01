@@ -19,6 +19,8 @@ unit dsPIC33_CAN;
 //                understand how this module works, YES
 //
 // ******************************************************************************
+{$I Options.inc}
+
 
 uses
   NMRAnetCANReceive,
@@ -26,8 +28,6 @@ uses
   CANBuffers,
   CANStorage,
   dsPIC33_DMA;
-  
-{$I Options.inc}
 
 const
   ICODE_NO_INTERRUPT       = $0040;

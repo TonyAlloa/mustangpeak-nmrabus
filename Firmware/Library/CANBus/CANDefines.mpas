@@ -59,6 +59,7 @@ type
 
   TCANRawBufferArray = array[0..0] of TCANRawBuffer;                            // Allows any length array within the TCANRawBufferList
   PCANRawBufferArray = ^TCANRawBufferArray;
+  
 const
   CBS_EXTENDED     = $01;                                                       // CAN Buffer State constants, Buffer is extended
 

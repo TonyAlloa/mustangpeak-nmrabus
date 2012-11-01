@@ -18,18 +18,18 @@ unit CANStorage;
 //
 // ******************************************************************************
 
+{$I Options.inc}
+
 uses
   NMRAnetUtilities,
   CANDefines;
   
-{$I Options.inc}
-
 {.$DEFINE TRACK_CAN_BUFFER_OVERFLOWS}
 
 procedure CANStorage_Initialize;
-function CANStorage_Head(List: PCANBufferList): PCANBuffer;
+//function CANStorage_Head(List: PCANBufferList): PCANBuffer;
 function CANStorage_Tail(List: PCANBufferList): PCANBuffer;
-function CANStorage_IncHead(List: PCANBufferList): Boolean;
+//function CANStorage_IncHead(List: PCANBufferList): Boolean;
 function CANStorage_IncTail(List: PCANBufferList): Boolean;
 procedure CANStorage_FlushList(List: PCANBufferList);
 //function CANStorage_Transmitting: Boolean;
