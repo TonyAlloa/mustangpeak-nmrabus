@@ -1,0 +1,41 @@
+unit CANBuffers;
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-04-01:   1.0.0.0 Created
+//     2012-10-07:   Version 1.0
+//
+// * Description:
+//                Implements an easy to use interface into the dsPIC33 ECAN Module Registers
+//                It is fast, no.  Is it efficient, no.  Is it easy to experiment with to try to
+//                understand how this module works, YES
+//
+// ******************************************************************************
+
+uses
+  CANDefines;
+  
+
+var
+  RX_Main_RawBufferArray: TCanRawBufferArray; absolute $7800;                   // Recieve buffer for all filters.  The software moves the data to the right list
+  TX_Main_RawBufferArray: TCanRawBufferArray; absolute $7810;                   // Transmit buffer for all filters.  The software pulls the data to the right list
+
+const
+  RAW_CAN_BUFFER_SIZE = 2;                                                     // There are 42 TCANRawBuffers defined in the above structures
+
+type
+  TDummy = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;                    // Define a "dummy" array that overlays the above structures so the compiler
+                                                                                // can keep track of the memory and we can address the buffers as a normal array
+                                                                                // to initialize them
+                                                                                
+var
+  Dummy: TDummy; absolute $7800;
+
+end.

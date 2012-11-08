@@ -44,7 +44,7 @@ type
   TRefCount = Word;
   TBufferTag = Word;
 type
-  TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDataBuffer, TDatagramBuffer,  etc
+  TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDatagramBuffer,  etc
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
     Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
     Next: ^TBaseBuffer;                                                         // Pointer to the next Message Buffer

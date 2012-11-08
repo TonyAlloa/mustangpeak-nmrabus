@@ -1,0 +1,132 @@
+unit NMRAnetDatagrams;
+
+// ******************************************************************************
+//
+// * Copyright:
+//     (c) Mustangpeak Software 2012.
+//
+//     The contents of this file are subject to the GNU GPL v3 licence/ you maynot use
+//     this file except in compliance with the License. You may obtain a copy of the
+//     License at http://www.gnu.org/licenses/gpl.html
+//
+// * Revision History:
+//     2012-02-01:   Created
+//     2012-10-07:   Version 1.0
+//
+// * Description:
+//
+// ******************************************************************************
+
+uses
+  NMRAnetUtilities,
+  CANStorage,
+  NMRAnetDefines;
+
+procedure NMRAnetDatagrams_Initialize;
+procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
+procedure NMRAnetDatagrams_100ms_TimeTick(Node: PNMRAnetNode);
+procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
+
+implementation
+
+procedure NMRAnetDatagrams_InitializeDatagramBuffer(Buffer: PDatagramBuffer);
+var
+  j: Integer;
+begin
+  if Buffer <> nil then
+  begin
+    Buffer^.State := 0;
+    Buffer^.Alias := 0;
+    Buffer^.Next := 0;
+    Buffer^.mCode := 0;
+    Buffer^.StateMachine := 0;
+    Buffer^.Tag := 0;
+    Buffer^.SourceNodePtr := Generic16BitPointer( nil);
+
+    Buffer^.iByteCount := 0;
+    Buffer^.iWatchdog := 0;
+    Buffer^.ErrorCode.Count := 1;                                               // Assume only the MTI
+    Buffer^.ErrorCode.SubType[0] := 0;
+    Buffer^.ErrorCode.SubType[1] := 0;
+    Buffer^.iRetransmit := 0;
+    for j := 0 to LEN_DATAGRAM-1 do
+      Buffer^.DataBytes[j] := 0;
+  end
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetDatagrams_Initialize;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure NMRAnetDatagrams_Initialize;
+begin
+  DatagramTrainControlCallbackFunc := PDatagramTaskCallbackFunc(nil);
+end;
+
+
+// *****************************************************************************
+//
+// procedure NMRAnetDatagrams_SetCallback;
+//
+//  Parameters:
+//                None
+//  Returns:
+//                None
+//  Description:
+//              Not really a necessary function just helps future use in reminding
+//              how these Callbacks work.
+//
+//              Callback is the variable int NMRAnetDatagramDefines
+//                           DatagramUnknownCallback: PDatagramTaskCallbackFunc;
+//                           DatagramTrainControlCallback: PDatagramTaskCallbackFunc;
+//                           DatagramMemConfigurationCallback: PDatagramTaskCallbackFunc;
+//                           etc
+//
+// *****************************************************************************
+procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);
+begin
+  Hook := Func
+end;
+
+// *****************************************************************************
+//
+// procedure NMRAnetDatagrams_100ms_TimeTick;
+//
+//  Parameters:
+//                None
+//  Returns:
+//                None
+//  Description:
+//              Updates internal flags to track for various timeout conditions mainly for the bus.
+//
+//              WARNING: Application must make sure that the Datagram Array is not
+//              modified in an interrupt when calling this function...... Disable the CAN for
+//              the time this takes to run.
+//
+// *****************************************************************************
+procedure NMRAnetDatagrams_100ms_TimeTick(Node: PNMRAnetNode);
+//var
+ // DatagramBuffer: PDatagramBuffer;
+begin
+
+//   NEED TO DEAL WITH ABANDON DATAGRAMS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
+
+
+{  if Node^.Msg <> nil then
+  begin
+    if Node^.Msg^.State and RMB_BUFFER_DATAGRAM <> 0 then                                           // See if the buffer is a Datagram Pointer
+    begin
+      DatagramBuffer :=  PDatagramBuffer(Node^.Msg^.BufferPtr);
+      if DatagramBuffer^.iWatchdog < DATAGRAM_WATCHDOG_MAX then                 // Latch it at DATAGRAM_WATCHDOG_MAX
+        Inc( DatagramBuffer^.iWatchdog)                                          // Increase the Watchdog counter
+    end
+  end; }
+end;
+
+end.
