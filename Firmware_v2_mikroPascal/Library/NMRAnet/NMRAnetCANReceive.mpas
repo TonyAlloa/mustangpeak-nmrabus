@@ -307,7 +307,7 @@ begin
                                                                MTI_Code := (CANBuffer^.ID shr 12) and $0FFF;
                                                                DataBytes[2] := (MTI_Code shr 8) and $00FF;
                                                                DataBytes[3] := MTI_Code and $00FF;
-                                                               NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_AddressedErrorBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, SourceAlias, 6, @DataBytes);
+                                                               NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_AddressedErrorBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, SourceAlias, 4, @DataBytes);
                                                                CAN_Engine.TX_AddressedErrorBuffer.State := CAN_Engine.TX_AddressedErrorBuffer.State or CBS_VALID;
                                                                StartCANHighPriorityMessageEngine;
                                                                end;

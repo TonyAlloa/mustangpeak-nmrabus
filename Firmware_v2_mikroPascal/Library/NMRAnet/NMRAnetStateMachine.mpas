@@ -940,6 +940,7 @@ procedure ProcessAbandonBuffers(Node: PNMRAnetNode);
 var
   DatagramBuffer: PDatagramBuffer;
 begin
+  LockCANInterrupt;
   DatagramBuffer := Node^.DatagramBuffers;
   if DatagramBuffer <> nil then
   begin
@@ -949,6 +950,7 @@ begin
       NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
     end
   end;
+  UnLockCANInterrupt;
 end;
 
 // *****************************************************************************
