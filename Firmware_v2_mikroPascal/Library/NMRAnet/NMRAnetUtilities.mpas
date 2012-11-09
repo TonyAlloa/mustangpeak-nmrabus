@@ -72,11 +72,6 @@ function NMRAnetUtilities_FindInDatagramByState(Node: PNMRAnetNode; Alias: Word;
 function NMRAnetUtilities_NextBaseBuffer(Node: PNMRAnetNode): PBaseBuffer;
 function NMRAnetUtilities_NextDatagramBuffer(Node: PNMRAnetNode): PDatagramBuffer;
 
-
-var
-  s1: array[32] of char;
-  sInterrupt: array[32] of char;
-  
 implementation
 
   

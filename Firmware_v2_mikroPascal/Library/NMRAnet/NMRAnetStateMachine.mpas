@@ -307,7 +307,6 @@ end;
 procedure NMRAnetStateMachine_100ms_Timer(Node: PNMRAnetNode);
 begin
   Inc(Node^.Login.TimeCounter);
-  NMRAnetDatagrams_100ms_TimeTick(Node);
 end;
 
 // *****************************************************************************
@@ -937,6 +936,21 @@ begin
   UnLockCANInterrupt;
 end;
 
+procedure ProcessAbandonBuffers(Node: PNMRAnetNode);
+var
+  DatagramBuffer: PDatagramBuffer;
+begin
+  DatagramBuffer := Node^.DatagramBuffers;
+  if DatagramBuffer <> nil then
+  begin
+    if DatagramBuffer^.iWatchdog >= DATAGRAM_WATCHDOG_MAX then
+    begin
+      NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
+      NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
+    end
+  end;
+end;
+
 // *****************************************************************************
 //  procedure NMRAnetStateMachine_Process
 //     Parameters:
@@ -1061,6 +1075,7 @@ begin
      //   UART1_Write_Text('inA'+LF);
         ProcessNode(Node, @CANBuffer);                                             // Handle auto Actions to CAN/NMRAnet messages coming in
         ProcessOutgoingNode(Node, @CANBuffer);
+        ProcessAbandonBuffers(Node);
     //    UART1_Write_Text('outA'+LF);
       end;
     STATE_NMRABUS_INHIBITED :

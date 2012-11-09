@@ -52,6 +52,8 @@ procedure NMRAnetBufferPools_ReleaseBaseBuffer(Buffer: PBaseBuffer);
 function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer; ForTransmit: Boolean): Boolean;
 procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
 
+procedure NMRAnetBufferPools_100ms_TimeTick;
+
 {$IFDEF TRACK_BUFFER_POOLS}
 procedure NMRAnetBufferPools_Print;
 {$ENDIF}
@@ -82,6 +84,36 @@ begin
 end;
 {$ENDIF}
 
+// *****************************************************************************
+//
+// procedure NMRAnetBufferPools_100ms_TimeTick;
+//
+//  Parameters:
+//                None
+//  Returns:
+//                None
+//  Description:
+//              Updates internal flags to track for various timeout conditions mainly for the bus.
+//
+//              WARNING: Application must make sure that the Datagram Array is not
+//              modified in an interrupt when calling this function...... Disable the CAN for
+//              the time this takes to run.
+//
+// *****************************************************************************
+procedure NMRAnetBufferPools_100ms_TimeTick;
+var
+ DatagramBuffer: PDatagramBuffer;
+ i: Integer;
+begin
+  for i := 0 to DatagramPool.Count - 1 do
+  begin
+    if DatagramPool.Pool[i].State and CBS_ALLOCATED <> 0 then
+    begin
+      if DatagramPool.Pool[i].iWatchdog < DATAGRAM_WATCHDOG_MAX then
+        Inc(DatagramPool.Pool[i].iWatchdog);
+    end;
+  end;
+end;
 
 // *****************************************************************************
 //  procedure NMRAnetBufferPools_InitializeBaseBuffer;

@@ -110,7 +110,7 @@ const
   STATE_DATAGRAM_TRANSMIT_WAIT_FOR_RESPONSE_MULTI_FRAME  = 4;
 
 
-  DATAGRAM_WATCHDOG_MAX = 100;                                                  // 100ms counts before the datagram is declared abandon
+  DATAGRAM_WATCHDOG_MAX = 30;                                                   // 100ms counts before the buffer (base/datagram) is declared abandon, spec is must be greater than 3 seconds
   DATAGRAM_MAX_RETRY_COUNT = 3;                                                 // Number of try a datagram will try to be resent
 
 

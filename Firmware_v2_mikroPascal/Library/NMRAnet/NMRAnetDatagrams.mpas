@@ -24,7 +24,6 @@ uses
 
 procedure NMRAnetDatagrams_Initialize;
 procedure NMRAnetDatagrams_InitializeDatagramBuffer(DatagramBuffer: PDatagramBuffer);
-procedure NMRAnetDatagrams_100ms_TimeTick(Node: PNMRAnetNode);
 procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);   // Hook is any variable in NMRAnetDatagramDefines: DatagramTrainControlHook, DatagramMemConfigurationHook, etc
 
 implementation
@@ -91,42 +90,6 @@ end;
 procedure NMRAnetDatagrams_SetCallback(var Hook: PDatagramTaskCallbackFunc; Func: PDatagramTaskCallbackFunc);
 begin
   Hook := Func
-end;
-
-// *****************************************************************************
-//
-// procedure NMRAnetDatagrams_100ms_TimeTick;
-//
-//  Parameters:
-//                None
-//  Returns:
-//                None
-//  Description:
-//              Updates internal flags to track for various timeout conditions mainly for the bus.
-//
-//              WARNING: Application must make sure that the Datagram Array is not
-//              modified in an interrupt when calling this function...... Disable the CAN for
-//              the time this takes to run.
-//
-// *****************************************************************************
-procedure NMRAnetDatagrams_100ms_TimeTick(Node: PNMRAnetNode);
-//var
- // DatagramBuffer: PDatagramBuffer;
-begin
-
-//   NEED TO DEAL WITH ABANDON DATAGRAMS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-
-
-
-{  if Node^.Msg <> nil then
-  begin
-    if Node^.Msg^.State and RMB_BUFFER_DATAGRAM <> 0 then                                           // See if the buffer is a Datagram Pointer
-    begin
-      DatagramBuffer :=  PDatagramBuffer(Node^.Msg^.BufferPtr);
-      if DatagramBuffer^.iWatchdog < DATAGRAM_WATCHDOG_MAX then                 // Latch it at DATAGRAM_WATCHDOG_MAX
-        Inc( DatagramBuffer^.iWatchdog)                                          // Increase the Watchdog counter
-    end
-  end; }
 end;
 
 end.

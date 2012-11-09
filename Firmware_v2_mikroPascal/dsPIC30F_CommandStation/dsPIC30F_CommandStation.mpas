@@ -74,6 +74,7 @@ begin
   T2IF_bit := 0;                                                                // Clear the Flag
   for i := 0 to Nodes.AllocatedCount - 1 do
     NMRAnetStateMachine_100ms_Timer(Nodes.AllocatedList[i]);
+  NMRAnetBufferPools_100ms_TimeTick;
 end;
 
 {$IFDEF PINCHANGE_INTERRUPT_ENABLE}
