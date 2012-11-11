@@ -27,7 +27,9 @@ var
   i: Integer;
   WordPtr: ^Word;
 begin
-  ADPCFG := 0xFFFF;                                     // configure AN pins as digital I/O
+  AD1PCFGH := 0xFFFF;                                                           // configure AN pins as digital I/O
+  AD1PCFGL := 0xFFFF;
+  AD2PCFGL := 0xFFFF;
   
   LATG3_bit := 0;
   TRISG3_bit := 0;
@@ -95,7 +97,7 @@ begin
   
   {$IFDEF UART_ENABLE}
   // Initialize UART
-  UART1_Init(115200);                       // Initialize UART module a
+  UART2_Init(115200);                       // Initialize UART module a
   Delay_ms(100);                            // Wait for UART module to stabilize
 
  // U1MODE.ALTIO := 1;     // Un-comment this line to have Rx and Tx pins on their alternate locations. This is used to free the pins for other module, namely the SPI.
@@ -110,7 +112,9 @@ begin
   T2IP_0_bit := 0;          // Timer 2 Interrupt Priority = 2   (1 means off)
   T2IP_1_bit := 1;
   T2IP_2_bit := 0;
-  PR2 := 32000;             // Clock ticks every 31.25ns * 32000 = 1ms interrupts
+  TCKPS_0_T2CON_bit := 1;   // 256 Prescaler
+  TCKPS_1_T2CON_bit := 1;
+  PR2 := 12500;             // Clock ticks every 31.25ns * 256 * 12500 = 100ms interrupts
   T2IF_bit := 0;            // Clear T2IF
   T2IE_bit := 1;            // Enable the Interrupt
   TON_T2CON_bit := 1;       // Turn on

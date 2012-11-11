@@ -44,6 +44,7 @@ uses
 {.$DEFINE TRACE_NODE_STATEMACHINE}
 {.DEFINE TRACE_ACDI}
 {.$DEFINE TRACE_SNIP}
+{.$DEFINE DISABLE_DATAGRAM_ABANDON_TIMEOUT}
 
 
   procedure NMRAnetStateMachine_Process(Node: PNMRAnetNode);
@@ -1091,7 +1092,9 @@ begin
      //   UART1_Write_Text('inA'+LF);
         ProcessNode(Node, @CANBuffer);                                             // Handle auto Actions to CAN/NMRAnet messages coming in
         ProcessOutgoingNode(Node, @CANBuffer);
+        {$IFNDEF DISABLE_DATAGRAM_ABANDON_TIMEOUT}
         ProcessAbandonBuffers(Node);
+        {$ENDIF}
     //    UART1_Write_Text('outA'+LF);
       end;
     STATE_NMRABUS_INHIBITED :

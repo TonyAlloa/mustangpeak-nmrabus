@@ -211,10 +211,11 @@ begin
   //  dsPIC33_DMA_Enable(0, False);
   //  dsPIC33_DMA_AddressOffsetA(0, Word( @TX_Main_RawBufferArray[0]));              // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
   //  dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[0])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
-  //  dsPIC33_DMA_Enable(0, True);
+  //  dsPIC33_DMA_Enable(0, True);        
     dsPIC33_CAN_RequestTransmit(0);                                             // Set the Flag to start the transmission
     Buffer^.State := Buffer^.State and not CBS_VALID;                           // Release the Buffer from the List
     CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
+
     Result := True;
   end
 end;
@@ -240,7 +241,7 @@ begin
    // dsPIC33_DMA_AddressOffsetA(1, Word( @TX_Main_RawBufferArray[1]));              // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
  //   dsPIC33_DMA_TransferCount(1, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[1])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
  //   dsPIC33_DMA_Enable(1, True);
-    dsPIC33_CAN_RequestTransmit(1);                                             // Set the Flag to start the transmission
+    dsPIC33_CAN_RequestTransmit(1);                                             // Set the Flag to start the transmission      
     Buffer^.State := Buffer^.State and not CBS_VALID;                           // Release the Buffer from the List
   end
 end;

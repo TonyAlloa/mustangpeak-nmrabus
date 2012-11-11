@@ -107,7 +107,7 @@ var
 begin
   for i := 0 to DatagramPool.Count - 1 do
   begin
-    if DatagramPool.Pool[i].State and CBS_ALLOCATED <> 0 then
+    if DatagramPool.Pool[i].State and CBS_ALLOCATED = CBS_ALLOCATED then
     begin
       if DatagramPool.Pool[i].iWatchdog < DATAGRAM_WATCHDOG_MAX then
         Inc(DatagramPool.Pool[i].iWatchdog);

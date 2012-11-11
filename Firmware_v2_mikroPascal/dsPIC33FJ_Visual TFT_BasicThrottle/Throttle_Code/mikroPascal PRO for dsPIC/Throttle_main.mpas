@@ -54,16 +54,19 @@ begin
   MCU_Setup_Initialize;
 
   MainState := STATE_START;
-  
-  UART1_Write_Text('Starting'+LF);
 
   Start_TP();
-
+  
+  UART2_Init(115200);                       // Initialize UART module a
+  Delay_ms(100);                            // Wait for UART module to stabilize
+  
+  UART2_Write_Text('Starting'+LF);
+  
   while (TRUE) do
   begin
     Check_TP;
     
-    Delay_us(2000);  // USB-CAN Board can't keep up
+   // Delay_us(2000);  // USB-CAN Board can't keep up
     
     ActiveNode := NMRAnetNode_NextNode;
     if ActiveNode <> PNMRAnetNode( nil) then

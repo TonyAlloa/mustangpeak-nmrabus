@@ -84,8 +84,8 @@ type
   TCAN_Engine = record
     State: Byte;                                                                // See the CES_xxx constants (CAN Engine State)
     InterruptLockCount: Byte;
-    TX_CANBuffer: TCANBuffer;
-    TX_NMRAnetBuffer: TCANBuffer;
+    TX_CANBuffer,
+    TX_NMRAnetBuffer,
     TX_AddressedErrorBuffer,
     TX_DatagramRejected: TCANBuffer;
   end;
@@ -113,16 +113,17 @@ begin
   CAN_Engine.TX_CANBuffer.ID := 0;
   CAN_Engine.TX_CANBuffer.DataCount := 0;
   CAN_Engine.TX_CANBuffer.State := 0;
-  CAN_Engine.TX_DatagramRejected.State := 0;
 
   CAN_Engine.TX_NMRAnetBuffer.ID := 0;
   CAN_Engine.TX_NMRAnetBuffer.DataCount := 0;
   CAN_Engine.TX_NMRAnetBuffer.State := 0;
-  CAN_Engine.TX_DatagramRejected.State := 0;
 
   CAN_Engine.TX_AddressedErrorBuffer.ID := 0;
   CAN_Engine.TX_AddressedErrorBuffer.DataCount := 0;
   CAN_Engine.TX_AddressedErrorBuffer.State := 0;
+
+  CAN_Engine.TX_DatagramRejected.ID := 0;
+  CAN_Engine.TX_DatagramRejected.DataCount := 0;
   CAN_Engine.TX_DatagramRejected.State := 0;
 end;
 
@@ -166,6 +167,8 @@ begin
   else
   if CAN_Engine.TX_DatagramRejected.State and CBS_VALID = CBS_VALID then
     Result := @CAN_Engine.TX_DatagramRejected
+  else
+    Result := PCANBuffer( nil);
 end;
 
 end.
