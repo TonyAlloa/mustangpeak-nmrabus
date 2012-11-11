@@ -56,16 +56,19 @@ begin
   MainState := STATE_START;
 
   Start_TP();
-  
-  UART2_Init(115200);                       // Initialize UART module a
-  Delay_ms(100);                            // Wait for UART module to stabilize
-  
-  UART2_Write_Text('Starting'+LF);
-  
+
   while (TRUE) do
   begin
     Check_TP;
     
+      LATB1_bit := not LATB1_bit;  // Test Output;
+      LATB2_bit := not LATB1_bit;  // Test Output;
+      
+      LATB3_bit := not LATB3_bit;  // Test Output;
+      LATB4_bit := not LATB4_bit;  // Test Output;
+      LATD10_bit := not LATD10_bit;  // Test Output;
+      LATD9_bit := not LATD9_bit;  // Test Output;
+      
    // Delay_us(2000);  // USB-CAN Board can't keep up
     
     ActiveNode := NMRAnetNode_NextNode;

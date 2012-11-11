@@ -290,9 +290,19 @@ begin
     case dsPIC33_CAN_InterruptCode of
       ICODE_TRB0 :                                                              // Tx Rx Buffer 0
       begin
+      
+        LATB1_bit := not LATB1_bit;
+        
         dsPIC33_CAN_InterruptFlagTXBuffer(True);                                // TX Interrupt Flag Reset
         if not StartTransmission then
           CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
+      end;
+      ICODE_TRB1 :
+      begin
+        dsPIC33_CAN_InterruptFlagTXBuffer(True);                                // TX Interrupt Flag Reset
+        
+        LATB2_bit := not LATB2_bit;
+        
       end;
       ICODE_TRB2 :                                                              // Tx Rx Buffer 3
       begin
