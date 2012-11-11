@@ -163,6 +163,21 @@ const
 type
   TNodeID = array[0..1] of DWORD;                                               // WARNING READ THIS:::::   The Bottom 3 Bytes = [0] and the Top 3 Bytes = [1] The ID is not continious across the both DWords the upper nibble of the bottom DWord is not used
 
+type
+  TDataBuffer = record                                                          // Overlays TBaseBuffer..........
+    State: Byte;                                                                // State of Buffer, see CBS_xxx constants
+    Alias: Word;                                                                // Alias associated with the buffer (Destination or Source depending on if the buffer is a Rx or Tx buffer)
+    Next: ^TDataBuffer;                                                         // Pointer to the next Message Buffer
+    RefCount: TRefCount;                                                        // Reference count for auto garbage collection
+    mCode: Byte;                                                                // Buffer Message Code for what the message is
+    Tag: TBufferTag;                                                            // General Purpose useage depending on the message type
+    StateMachine: Byte;                                                         // Local StateMachine Index for use
+    Count: Byte;                                                                // Number of Databytes that are valid
+    DataBytes: TCAN_DataBytes;                                                  // Depends on mCode, could be EventID, ACDI Chunk, etc
+  end;
+  PDataBuffer = ^TDataBuffer;
+
+type
   TNodeIDs = record
     ID: TNodeID;
     AliasID: Word;
@@ -205,13 +220,10 @@ type
     Node: TNodeInfo;                                                            // Information about a Node
     Login: TNMRAnetNodeLoginInfo;                                               // Login Information
     MsgFlags: Byte;                                                             // Message Flags for messages that do not require information to be passed to the Node
-    EventsProducedFlags: array[0..EVENTS_CONSUMED_BIT_BYTES] of Byte;            // Events Produced that need to be broadcast
-    EventsConsumedFlags: array[0..EVENTS_CONSUMED_BIT_BYTES] of Byte;            // Events Produced that need to be broadcast
-    EventsVnodeProducedFlags: array[0..EVENTS_VNODE_CONSUMED_BIT_BYTES] of Byte;            // Events Produced that need to be broadcast
-    EventsVnodeConsumedFlags: array[0..EVENTS_VNODE_CONSUMED_BIT_BYTES] of Byte;            // Events Produced that need to be broadcast
     iStateMachine: Byte;                                                        // Statemachine index for the main bus login
     EventCounter: Word;                                                         // Counts the Events when enumerating them
     BaseBuffers: PBaseBuffer;
+    DataBuffers: PDataBuffer;
     DatagramBuffers: PDatagramBuffer;
     ConfigurationAddress: Generic32BitPointer;                                  // Pointer into the EEProm Memory
     ParentAlias,                                                                // Definition depends on what kind of node.  If a Throttle then Parent should never be set, If a Train then the will be the Owner Throttle

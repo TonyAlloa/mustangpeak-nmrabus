@@ -106,7 +106,7 @@ begin
 end;
 
 // ****************************************************************************
-// procedure StartCANMessageEngine;
+// procedure StartCANHighPriorityMessageEngine;
 //
 // Starts the transmitter engine if there are no current transmits in procress
 //

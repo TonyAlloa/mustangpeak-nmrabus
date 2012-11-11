@@ -5,9 +5,7 @@ uses Throttle_objects, Throttle_resources;
 procedure ButtonRoundSpeedDecOnClick();
 procedure ButtonRoundSpeedIncOnClick();
 procedure ButtonRoundTrainSelction0OnClick();
-procedure ImageRGS40OnClick();
 procedure ImageRGS455OnClick();
-procedure ImageTrainOnClick();
 //--------------------- Externals ---------------------//
 const Bkgnd : TCBox; code; far; external;
 const LabelStartMustangpeak : TCLabel; code; far; external;

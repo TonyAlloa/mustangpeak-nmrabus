@@ -282,9 +282,9 @@ const
   // **************************************************************************************************************************************************************
   // Events Flags for Physical AND Virtual Nodes (consumed and produced)
   // **************************************************************************************************************************************************************
-  MAX_EVENTS_CONSUMED_BIT_BYTES = 1;                                            // Set to the number of BYTES required to hold the max number of Events Consumed between Physical and Virtual
-  MAX_EVENTS_PRODUCED_BIT_BYTES = 1;                                            // Set to the number of BYTES required to hold the max number of Events Produced between Physical and Virtual
-    
+MAX_EVENTS_CONSUMED_BIT_BYTES = 1;   // Set to the number of BYTES required to hold the max number of Events Consumed between Physical and Virtual
+  MAX_EVENTS_PRODUCED_BIT_BYTES = 1;   // Set to the number of BYTES required to hold the max number of Events Produced between Physical and Virtual
+
   // **************************************************************************************************************************************************************
   // Events for Physical Node (consumed and produced)
   // **************************************************************************************************************************************************************

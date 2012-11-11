@@ -62,9 +62,11 @@ type
     Word6    : Word;   // if Standard Message then, not used, else Data 6 and Data 7
     Word7    : Word;   // dsPIC33 only, For TX not used for RX the Filter that passed the message
   end;
+  PCANRawBuffer = ^TCANRawBuffer;
 
-
-
+  TCAN_RxRawBufferArray = array[0..0] of TCANRawBuffer;
+  TCAN_TxRawBufferArray = array[0..1] of TCANRawBuffer;
+  
 type
  // ***************************************************************************
   // CAN Message Buffers in user friendly form that can be easily maniuplated then

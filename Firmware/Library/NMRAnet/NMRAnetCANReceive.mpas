@@ -203,6 +203,7 @@ var
   DoDefault: Boolean;
   Node: PNMRAnetNode;
   NodeID: TNodeID;
+  DataBuffer: PDataBuffer;
   BaseBuffer: PBaseBuffer;
   DatagramBuffer: PDatagramBuffer;
   SourceAlias, ErrorCode: Word;

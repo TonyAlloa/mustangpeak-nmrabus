@@ -17,10 +17,10 @@ unit NMRAnetDefines;
 //
 // *****************************************************************************
 
+{$I Options.inc}
+
 uses
   NMRAnetAppDefines;
-  
-{$I Options.inc}
 
 type
   Generic16BitPointer = Word;

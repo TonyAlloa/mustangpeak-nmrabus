@@ -16,8 +16,14 @@ unit NMRAnetStateMachine;
 //    Implements NMRAnet StateMachine for the main loop in a program.
 //
 // ******************************************************************************
+{$I Options.inc}
 
 uses
+  {$IFDEF dsPIC33}
+  dsPIC33_CAN,
+  {$ELSE}
+  dsPIC30_CAN,
+  {$ENDIF}
   NMRAnetAppDefines,
   NMRAnetAppCallbacks,
   NMRAnetDefines,
@@ -29,7 +35,6 @@ uses
   NMRAnetDatagrams,
   NMRAnetBufferPools;
 
-{$I Options.inc}
 
 {.$DEFINE TRACE_DATAGRAM_SEND}
 {.$DEFINE TRACE_BUFFER_ADDRESSES}
@@ -57,9 +62,9 @@ uses
   function NMRAnetStateMachine_TrySendDatagram(Node: PNMRAnetNode; Datagram: PDatagramBuffer): Boolean;
 
   // defined in the dsPICxx_CAN_Interrupt.mpas file
-  procedure StartCANMessageEngine; external;
-  procedure LockCANInterrupt; external;
-  procedure UnLockCANInterrupt; external;
+//  procedure StartCANMessageEngine; external;
+ // procedure LockCANInterrupt; external;
+ // procedure UnLockCANInterrupt; external;
   
 implementation
 
@@ -289,10 +294,14 @@ end;
 // *****************************************************************************
 procedure NMRAnetStateMachine_Initialize(PhysicalNodeID_HI, PhysicalNodeID_Lo: DWord);
 begin
+  {$IFDEF dsPIC33}
+  dsPIC33_CAN_Initialize;
+  {$ENDIF}
   CANStorage_Initialize;
   NMRAnetDatagrams_Initialize;
   NMRAnetCANReceive_Initialize;
   NMRAnetBufferPools_Initialize;
+  NMRAnetAppCallbacks_Initialize;
   NMRAnetNode_Initialize(PhysicalNodeID_HI, PhysicalNodeID_Lo);
 end;
 
@@ -657,36 +666,41 @@ begin
     if BaseBuffer <> nil then
       Exit;              // Don't interleave Buffer Replies...
       
-      
-    LockCANInterrupt;
-    if NMRABusBufferAvailable then
-    begin
-      if NMRAnetNode_IsAnyConsumerEventSet(Node) then
+    {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
+      LockCANInterrupt;
+      if NMRABusBufferAvailable then
       begin
-        EventIndex := NMRAnetNode_NextConsumerEventFlag(Node);
-        if EventIndex > -1 then
+        if NMRAnetNode_IsAnyConsumerEventSet(Node) then
         begin
-          if NMRAnetNode_TestStateFlag(Node, NS_VIRTUAL) then
-            DataBytesPtr := PCAN_DataBytes( @SUPPORTED_VNODE_EVENTS_CONSUMED[EventIndex])
-          else
-            DataBytesPtr := PCAN_DataBytes( @SUPPORTED_EVENTS_CONSUMED[EventIndex]);
-          TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, DataBytesPtr, False);
-        end
-      end else
-      if NMRAnetNode_IsAnyProducerEventSet(Node) then
-      begin
-        EventIndex := NMRAnetNode_NextProducerEventFlag(Node);
-        if EventIndex > -1 then
+          EventIndex := NMRAnetNode_NextConsumerEventFlag(Node);
+          if EventIndex > -1 then
+          begin
+            {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT}
+              if NMRAnetNode_TestStateFlag(Node, NS_VIRTUAL) then
+                DataBytesPtr := PCAN_DataBytes( @SUPPORTED_VNODE_EVENTS_CONSUMED[EventIndex])
+              else
+            {$ENDIF}
+              DataBytesPtr := PCAN_DataBytes( @SUPPORTED_EVENTS_CONSUMED[EventIndex]);
+            TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, DataBytesPtr, False);
+          end
+        end else
+        if NMRAnetNode_IsAnyProducerEventSet(Node) then
         begin
-          if NMRAnetNode_TestStateFlag(Node, NS_VIRTUAL) then
-            DataBytesPtr := PCAN_DataBytes( @SUPPORTED_VNODE_EVENTS_PRODUCED[EventIndex])
-          else
-            DataBytesPtr := PCAN_DataBytes( @SUPPORTED_EVENTS_PRODUCED[EventIndex]);
-          TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, DataBytesPtr, False);
-        end
+          EventIndex := NMRAnetNode_NextProducerEventFlag(Node);
+          if EventIndex > -1 then
+          begin
+            {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT}
+              if NMRAnetNode_TestStateFlag(Node, NS_VIRTUAL) then
+                DataBytesPtr := PCAN_DataBytes( @SUPPORTED_VNODE_EVENTS_PRODUCED[EventIndex])
+              else
+            {$ENDIF}
+              DataBytesPtr := PCAN_DataBytes( @SUPPORTED_EVENTS_PRODUCED[EventIndex]);
+            TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, DataBytesPtr, False);
+          end
+        end;
       end;
-    end;
-    UnLockCANInterrupt;
+      UnLockCANInterrupt;
+    {$ENDIF}
 
     LockCANInterrupt;                                                           // Don't let the interrupt change things while we are working on them.....
     DatagramBuffer := NMRAnetUtilities_NextDatagramBuffer(Node);                // Grab the next completed Datagram to work on

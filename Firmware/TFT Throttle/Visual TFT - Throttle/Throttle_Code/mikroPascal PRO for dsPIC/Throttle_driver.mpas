@@ -7,9 +7,7 @@ uses Throttle_objects, Throttle_resources;
 procedure ButtonRoundSpeedDecOnClick(); external;
 procedure ButtonRoundSpeedIncOnClick(); external;
 procedure ButtonRoundTrainSelction0OnClick(); external;
-procedure ImageRGS40OnClick(); external;
 procedure ImageRGS455OnClick(); external;
-procedure ImageTrainOnClick(); external;
 /////////////////////////
 
 procedure DrawScreen(aScreenID : word);

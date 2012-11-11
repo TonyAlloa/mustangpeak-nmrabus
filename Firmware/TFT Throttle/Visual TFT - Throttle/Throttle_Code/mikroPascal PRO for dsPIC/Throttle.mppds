@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=..\..\..\..\Library\NMRAnet\NMRAnetNode.mpas
+Value=NMRAnetAppDefines.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -42,7 +42,7 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=7
+Count=10
 File0=Throttle_main.mpas
 File1=..\..\..\..\Library\NMRAnet\NMRAnetStateMachine.mpas
 File2=..\..\..\..\Library\NMRAnet\NMRAnetUtilities.mpas
@@ -50,6 +50,9 @@ File3=NMRAnetAppDefines.mpas
 File4=..\..\..\..\Library\NMRAnet\NMRAnetCANReceive.mpas
 File5=..\..\..\..\Library\dsPIC33F\dsPIC33_DMA.mpas
 File6=Throttle_events_code.mpas
+File7=..\..\..\..\Library\NMRAnet\NMRAnetDefines.mpas
+File8=..\..\..\..\Library\NMRAnet\NMRAnetNode.mpas
+File9=..\..\..\..\Library\NMRAnet\NMRAnetBufferPoolsDefines.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
@@ -97,6 +100,5 @@ File8=ECAN
 File9=Button
 [EXPANDED NODES]
 Node1=Sources
-Node2=Output Files
-Node3=Other Files
-Count=3
+Node2=Other Files
+Count=2

@@ -37,6 +37,12 @@ type
     Count: Byte;
   end;
   
+  TDataBufferPool = record                                                      // CAN Buffers that are dynamically assigned to TMessageBuffer structures
+    Pool: array[0..MAX_DATA_BUFFER_POOL-1] of TDataBuffer;                      // Max Count of Pool Buffers used
+    MaxCount: Byte;                                                             // Number of Buffers currently used
+    Count: Byte;
+  end;
+
   TDatagramBufferPool = record
     Pool: array[0..MAX_DATAGRAM_BUFFER_POOL-1] of TDatagramBuffer;              // Max Count of Pool Buffers used
     MaxCount: Byte;                                                             // Number of Buffers currently used
@@ -48,6 +54,9 @@ procedure NMRAnetBufferPools_InitializeBaseBuffer(Buffer: PBaseBuffer);
 
 function NMRAnetBufferPools_AllocateBaseBuffer(var Buffer: PBaseBuffer): Boolean;
 procedure NMRAnetBufferPools_ReleaseBaseBuffer(Buffer: PBaseBuffer);
+
+function NMRAnetBufferPools_AllocateDataBuffer(var Buffer: PDataBuffer): Boolean;
+procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
 
 function NMRAnetBufferPools_AllocateDatagramBuffer(var Buffer: PDatagramBuffer; ForTransmit: Boolean): Boolean;
 procedure NMRAnetBufferPools_ReleaseDatagramBuffer(Buffer: PDatagramBuffer);
@@ -64,6 +73,7 @@ procedure NMRAnetBufferPools_Print;
 
 var
   BaseBufferPool: TBaseBufferPool;
+  DataBufferPool: TDataBufferPool;
   DatagramPool: TDatagramBufferPool;
 
 implementation
@@ -76,6 +86,10 @@ begin
    UART1_Write_Text('BaseBufferPool Max Count: '+s1+LF);
    IntToStr(BaseBufferPool.Count, s1);
    UART1_Write_Text('BaseBufferPool Count: '+s1+LF);
+   IntToStr(DataBufferPool.MaxCount, s1);
+   UART1_Write_Text('DataBufferPool Max Count: '+s1+LF);
+   IntToStr(DataBufferPool.Count, s1);
+   UART1_Write_Text('DataBufferPool Count: '+s1+LF);
    IntToStr(DatagramPool.MaxCount, s1);
    UART1_Write_Text('DatagramPool Max Count: '+s1+LF);
    IntToStr(DatagramPool.Count, s1);
@@ -121,6 +135,11 @@ begin
     NMRAnetBufferPools_InitializeBaseBuffer(@BaseBufferPool.Pool[i]);
   BaseBufferPool.Count := 0;
   BaseBufferPool.MaxCount := 0;
+  
+  for i := 0 to MAX_DATA_BUFFER_POOL - 1 do
+    NMRAnetStateMachine_InitializeDataBuffer(@DataBufferPool.Pool[i]);
+  DataBufferPool.Count := 0;
+  DataBufferPool.MaxCount := 0;
   
   for i := 0 to MAX_DATAGRAM_BUFFER_POOL - 1 do
     NMRAnetDatagrams_InitializeDatagramBuffer(@DatagramPool.Pool[i]);
@@ -203,6 +222,82 @@ begin
     end
   end;
 end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_AllocateDataBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+function NMRAnetBufferPools_AllocateDataBuffer(var Buffer: PDataBuffer): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 0 to MAX_DATA_BUFFER_POOL - 1 do
+  begin
+    if DataBufferPool.Pool[i].State = 0 then
+    begin
+      Buffer := @DataBufferPool.Pool[i];
+      {$IFDEF TRACK_BUFFER_ALLOCATIONS}
+      UART1_Write_Text('DB_Alloc: ');
+      WordToHex(Buffer, s1);
+      UART1_Write_Text('$'+s1+LF);
+      {$ENDIF}
+      NMRAnetStateMachine_InitializeDataBuffer(Buffer);
+      Buffer^.State := CBS_ALLOCATED;
+      Inc(Buffer^.RefCount);
+      Inc(DataBufferPool.Count);
+      if DataBufferPool.Count >= DataBufferPool.MaxCount then
+        DataBufferPool.MaxCount := DataBufferPool.Count;
+      {$IFDEF TRACK_BUFFER_MAX_COUNT}
+      UART1_Write_Text('DB MaxCount: ');
+      ByteToStr(DataBufferPool.MaxCount, s1);
+      UART1_Write_Text(s1+LF);
+      {$ENDIF}
+      Result := True;
+      Break
+    end
+  end;
+  {$IFDEF TRACK_BUFFER_OVERFLOWS}
+  if not Result then
+  begin
+    UART1_Write_Text('DataAllocateFail: ' + LF);
+  //  NMRAnetBufferPools_Print;
+  end
+  {$ENDIF}
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetBufferPools_ReleaseDataBuffer;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+// *****************************************************************************
+procedure NMRAnetBufferPools_ReleaseDataBuffer(Buffer: PDataBuffer);
+begin
+  if Buffer <> nil then
+  begin
+    Dec(Buffer^.RefCount);
+    if Buffer^.RefCount = 0 then
+    begin
+      {$IFDEF TRACK_BUFFER_ALLOCATIONS}
+      UART1_Write_Text('DB_Free: ');
+      WordToHex(Buffer, s1);
+      UART1_Write_Text('$'+s1+LF);
+      {$ENDIF}
+      Buffer^.State := 0;
+      Dec(DataBufferPool.Count);
+    end
+  end;
+end;
+
 
 // *****************************************************************************
 //  procedure NMRAnetBufferPools_AllocateDatagramBuffer;

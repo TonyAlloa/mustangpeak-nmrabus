@@ -23,9 +23,9 @@ unit dsPIC33_CAN;
 
 
 uses
-  NMRAnetCANReceive,
   CANBuffers,
   CANStorage,
+  NMRAnetCANReceive,
   dsPIC33_DMA;
 
 const
@@ -184,9 +184,10 @@ function dsPIC33_CAN_RX_Overflow(BufferNumber: Word; Clear: Boolean): Boolean;
 // *****************************************************************************
 procedure LockCANInterrupt;
 procedure UnLockCANInterrupt;
+procedure StartCANMessageEngine;                                                // Used to start a transmission cycle after a message is placed in a TX Buffer
+procedure StartCANHighPriorityMessageEngine;
 // *****************************************************************************
 
-procedure StartCANMessageEngine;                                                // Used to start a transmission cycle after a message is placed in a TX Buffer
 
 implementation
 
@@ -207,12 +208,40 @@ begin
   if Buffer <> nil then                                                         // If there is something to send then send it
   begin
     dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_WRITE, @TX_Main_RawBufferArray[0].Word0, Buffer^);      // Convert it into a version that matches the registers
-    dsPIC33_DMA_AddressOffsetA(0, Word( @TX_Main_RawBufferArray));              // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
-    dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[0])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
+  //  dsPIC33_DMA_Enable(0, False);
+  //  dsPIC33_DMA_AddressOffsetA(0, Word( @TX_Main_RawBufferArray[0]));              // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
+  //  dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[0])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
+  //  dsPIC33_DMA_Enable(0, True);
     dsPIC33_CAN_RequestTransmit(0);                                             // Set the Flag to start the transmission
     Buffer^.State := Buffer^.State and not CBS_VALID;                           // Release the Buffer from the List
     CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
     Result := True;
+  end
+end;
+
+// ****************************************************************************
+// procedure StartCANHighPriorityMessageEngine;
+//
+// Starts the transmitter engine if there are no current transmits in procress
+//
+// THIS MUST ONLY BE CALLED IN THE CAN RECEIVE INTERRUPT >>>>>>>>>>>>>
+//
+// ****************************************************************************
+procedure StartCANHighPriorityMessageEngine;
+var
+  Buffer: PCANBuffer;
+begin
+  Buffer := CANStorage_NextHighPriorityToSend;                                  // Pull the next item to send out of the list
+  // Just do it as there should not be an overlap here since this is ONLY called AFTER a message we can't handle is received so any transmission here should be long finished
+  if Buffer <> nil then
+  begin
+    dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_WRITE, @TX_Main_RawBufferArray[1].Word0, Buffer^);      // Convert it into a version that matches the registers
+ //   dsPIC33_DMA_Enable(1, False);
+   // dsPIC33_DMA_AddressOffsetA(1, Word( @TX_Main_RawBufferArray[1]));              // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
+ //   dsPIC33_DMA_TransferCount(1, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[1])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
+ //   dsPIC33_DMA_Enable(1, True);
+    dsPIC33_CAN_RequestTransmit(1);                                             // Set the Flag to start the transmission
+    Buffer^.State := Buffer^.State and not CBS_VALID;                           // Release the Buffer from the List
   end
 end;
 
@@ -264,7 +293,7 @@ begin
         if not StartTransmission then
           CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
       end;
-      ICODE_TRB1 :                                                              // Tx Rx Buffer 1
+      ICODE_TRB2 :                                                              // Tx Rx Buffer 3
       begin
         // CAN Layer Reception
         dsPIC33_CAN_InterruptFlagRXBuffer(True);                                // RX Interrupt Flag Reset
@@ -278,8 +307,8 @@ begin
           5: ReceivedOnFilter5(@Buffer);
           6: ReceivedOnFilter6(@Buffer);
         end;
-        dsPIC33_DMA_AddressOffsetA(1, @RX_Main_RawBufferArray[0]);              // Point the Receive Buffer Offset
-        dsPIC33_CAN_RX_Full(1, True);                                           // Reset the Full Flag
+        dsPIC33_DMA_AddressOffsetA(2, @RX_Main_RawBufferArray[0]);              // Point the Receive Buffer Offset
+        dsPIC33_CAN_RX_Full(2, True);                                           // Reset the Full Flag
       end;
     end
   end;
@@ -287,7 +316,30 @@ end;
 
 procedure dsPIC33_CAN_Initialize;
 begin
-
+  DummyTx[0].Word0 := 0;                                                        // Allow the compiler to account for this ram
+  DummyTx[0].Word1 := 0;
+  DummyTx[0].Word2 := 0;
+  DummyTx[0].Word3 := 0;
+  DummyTx[0].Word4 := 0;
+  DummyTx[0].Word5 := 0;
+  DummyTx[0].Word6 := 0;
+  DummyTx[0].Word7 := 0;
+  DummyTx[1].Word0 := 0;
+  DummyTx[1].Word1 := 0;
+  DummyTx[1].Word2 := 0;
+  DummyTx[1].Word3 := 0;
+  DummyTx[1].Word4 := 0;
+  DummyTx[1].Word5 := 0;
+  DummyTx[1].Word6 := 0;
+  DummyTx[1].Word7 := 0;
+  DummyRx[0].Word0 := 0;
+  DummyRx[0].Word1 := 0;
+  DummyRx[0].Word2 := 0;
+  DummyRx[0].Word3 := 0;
+  DummyRx[0].Word4 := 0;
+  DummyRx[0].Word5 := 0;
+  DummyRx[0].Word6 := 0;
+  DummyRx[0].Word7 := 0;
 end;
 
 
@@ -668,8 +720,9 @@ procedure dsPIC33_CAN_RequestTransmit(BufferNumber: Word);
 const
    TX_REQUEST_BIT = 3;
 begin
-   ManipulateTXBit(BufferNumber, TX_REQUEST_BIT, True);
-   CAN_Engine.State := CAN_ENGINE.State or CES_TRANSMITTING;
+  ClearWindowSelectBit;
+  ManipulateTXBit(BufferNumber, TX_REQUEST_BIT, True);
+  CAN_Engine.State := CAN_ENGINE.State or CES_TRANSMITTING;
 end;
 
 // *****************************************************************************
