@@ -286,7 +286,7 @@ var
 begin
   if Node <> nil then
   begin
-    if Node^.State and NS_VIRTUAL <> 0 then                                     // Only release Virtual Nodes
+    if Node^.State and NS_VIRTUAL = NS_VIRTUAL then                                     // Only release Virtual Nodes
     begin
       i := 0;
       while i < Nodes.AllocatedCount do
@@ -326,7 +326,7 @@ var
   i: Integer;
 begin
   for i := 0 to Nodes.AllocatedCount - 1 do
-    if Nodes.AllocatedList[i]^.State and NS_PERMITTED then
+    if Nodes.AllocatedList[i]^.State and NS_PERMITTED = NS_PERMITTED then
       Nodes.AllocatedList[i]^.MsgFlags := Nodes.AllocatedList[i]^.MsgFlags or MsgFlags;
 end;
 

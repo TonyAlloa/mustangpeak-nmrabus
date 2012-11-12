@@ -48,8 +48,9 @@ const
   BMC_DATAGRAM                             = $06;
   BMC_DATAGRAM_MEMORY_CONFIG               = $07;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
   BMC_DATAGRAM_TRACTION_CONTROL            = $08;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
+  {$IFDEF BOOTLOADER}
   BMC_DATAGRAM_BOOTLOADER                  = $09;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
-  
+  {$ENDIF}
 type
   TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDatagramBuffer,  etc
     State: Byte;                                                                // State of Buffer, see CBS_xxx constants
@@ -118,7 +119,9 @@ const
   // The first byte is always reserved for this special purpose
   DATAGRAM_TYPE_MEMORY_CONFIGURATION        = $20;                              // Memory Configuration Protocol
   DATAGRAM_TYPE_TRAIN_CONTROL               = $30;                              // Train Control Protocol
+  {$IFDEF BOOTLOADER}
   DATAGRAM_TYPE_BOOTLOADER                  = $40;                              // MAKING A GUESS ON A NUMBER>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  {$ENDIF}
   DATAGRAM_TYPE_TWO_BYTE_CMD_MASK           = $E0;                              // Next two bytes are command bytes and not data
   DATAGRAM_TYPE_SIX_BYTE_CMD_MASK           = $F0;                              // Next six bytes are command bytes and not data
 

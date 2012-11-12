@@ -49,28 +49,61 @@ end;
 
 var
   ActiveNode: PNMRAnetNode;
+  xx: Word;
 begin
+
+  xx := 0;
+  
+  TRISB1_bit := 0;
+  TRISB2_bit := 0;
+  LATB1_bit := 0;
+  LATB2_bit := 0;
+  
   NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_TFT_THROTTLE_ID_0_LO);
   MCU_Setup_Initialize;
 
   MainState := STATE_START;
 
   Start_TP();
-
+  
+  {$IFDEF UART_ENABLE}
+  // Initialize UART
+  UART2_Init(128000);                       // Initialize UART module a
+  Delay_ms(100);                            // Wait for UART module to stabilize
+  {$ENDIF}
+ {
+  IntToHex(DMA0STA, s1);
+  UART2_Write_Text(' DMA0STA: $'+s1);
+  IntToHex(DMA0STB, s1);
+  UART2_Write_Text(' DMA0STB: $'+s1);
+  IntToHex(DMA1STA, s1);
+  UART2_Write_Text(' DMA1STA: $'+s1);
+  IntToHex(DMA1STB, s1);  
+  UART2_Write_Text(' DMA1STB: $'+s1);
+  IntToHex(DMA2STA, s1);
+  UART2_Write_Text(' DMA2STA: $'+s1);
+  IntToHex(DMA2STB, s1);
+  UART2_Write_Text(' DMA2STB: $'+s1);
+  
+  IntToHex(DMA0CNT, s1);
+  UART2_Write_Text(' DMA0CNT: $'+s1);
+  IntToHex(DMA1CNT, s1);
+  UART2_Write_Text(' DMA1CNT: $'+s1);
+  IntToHex(DMA2CNT, s1);
+  UART2_Write_Text(' DMA2CNT: $'+s1);
+    }
+  
   while (TRUE) do
   begin
     Check_TP;
     
-      LATB1_bit := not LATB1_bit;  // Test Output;
-      LATB2_bit := not LATB1_bit;  // Test Output;
-      
-      LATB3_bit := not LATB3_bit;  // Test Output;
-      LATB4_bit := not LATB4_bit;  // Test Output;
-      LATD10_bit := not LATD10_bit;  // Test Output;
-      LATD9_bit := not LATD9_bit;  // Test Output;
-      
-   // Delay_us(2000);  // USB-CAN Board can't keep up
-    
+    if xx = 10000 then
+    begin
+  //    UART2_Write_Text('#');
+      xx := 0;
+    end;
+    Inc(xx);
+
     ActiveNode := NMRAnetNode_NextNode;
     if ActiveNode <> PNMRAnetNode( nil) then
     begin

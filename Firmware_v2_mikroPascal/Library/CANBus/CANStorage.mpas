@@ -31,13 +31,16 @@ const
 
   CAN_DIRECTION_READ = 1;
   CAN_DIRECTION_WRITE = 0;
+  
+  MAX_ECAN_TX_BUFFER = 2;
+  MAX_ECAN_RX_BUFFER = 2;
 
 const
   CES_TRANSMITTING = $0001;                                                     // CAN Engine State constants
   
 const
-  CBS_EXTENDED     = $01;                                                       // CAN Buffer State constants, Buffer is extended
-  CBS_VALID        = $02;                                                       // Buffer Slot contains valid data to send
+  BS_EXTENDED     = $01;                                                       // CAN Buffer State constants, Buffer is extended
+  BS_ALLOCATED    = $02;                                                       // Buffer Slot contains valid data to send
   
 const
   CAN_DATA_LEN = 8;
@@ -64,8 +67,8 @@ type
   end;
   PCANRawBuffer = ^TCANRawBuffer;
 
-  TCAN_RxRawBufferArray = array[0..0] of TCANRawBuffer;
-  TCAN_TxRawBufferArray = array[0..1] of TCANRawBuffer;
+  TCAN_RxRawBufferArray = array[0..MAX_ECAN_RX_BUFFER-1] of TCANRawBuffer;
+  TCAN_TxRawBufferArray = array[0..MAX_ECAN_TX_BUFFER-1] of TCANRawBuffer;
   
 type
  // ***************************************************************************
@@ -151,21 +154,21 @@ end;
 function CANStorage_NextToSend: PCANBuffer;
 begin
   // High Priority to Low
-  if CAN_Engine.TX_CANBuffer.State and CBS_VALID = CBS_VALID then
+  if CAN_Engine.TX_CANBuffer.State and BS_ALLOCATED = BS_ALLOCATED then
     Result := @CAN_Engine.TX_CANBuffer
   else
-  if CAN_Engine.TX_NMRAnetBuffer.State and CBS_VALID = CBS_VALID then
+  if CAN_Engine.TX_NMRAnetBuffer.State and BS_ALLOCATED = BS_ALLOCATED then
     Result := @CAN_Engine.TX_NMRAnetBuffer
   else
-  Result := PCANBuffer( nil);
+    Result := PCANBuffer( nil);
 end;
 
 function CANStorage_NextHighPriorityToSend: PCANBuffer;
 begin
-  if CAN_Engine.TX_AddressedErrorBuffer.State and CBS_VALID = CBS_VALID then
+  if CAN_Engine.TX_AddressedErrorBuffer.State and BS_ALLOCATED = BS_ALLOCATED then
     Result := @CAN_Engine.TX_AddressedErrorBuffer
   else
-  if CAN_Engine.TX_DatagramRejected.State and CBS_VALID = CBS_VALID then
+  if CAN_Engine.TX_DatagramRejected.State and BS_ALLOCATED = BS_ALLOCATED then
     Result := @CAN_Engine.TX_DatagramRejected
   else
     Result := PCANBuffer( nil);

@@ -75,7 +75,7 @@ begin
     C1TX0B3 := RawBuffer.Word5;
     C1TX0B4 := RawBuffer.Word6;
     TXREQ_C1TX0CON_bit := 1;                                                    // Set the Flag to start the transmission
-    Buffer^.State := Buffer^.State and not CBS_VALID;                           // Release the Buffer from the List         
+    Buffer^.State := Buffer^.State and not BS_ALLOCATED;                           // Release the Buffer from the List
     CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
     Result := True;
   end
@@ -131,7 +131,7 @@ begin
     C1TX1B3 := RawBuffer.Word5;
     C1TX1B4 := RawBuffer.Word6;
     TXREQ_C1TX1CON_bit := 1;                                                    // Set the Flag to start the transmission
-    Buffer^.State := Buffer^.State and not CBS_VALID;                           // Release the Buffer from the List
+    Buffer^.State := Buffer^.State and not BS_ALLOCATED;                           // Release the Buffer from the List
   end
 end;
 
@@ -196,7 +196,7 @@ begin
     EID := Buffer.ID and $0003FFFF;
 
     CANPtr^ := ((SID shl 2) and $00FC) or ((SID shl 5) and $F800);
-    if Buffer.State and CBS_EXTENDED = CBS_EXTENDED then
+    if Buffer.State and BS_EXTENDED = BS_EXTENDED then
     begin
       CANPtr^ := CANPtr^ or $0001;
       Inc(CANPtr);                                                              // Move to C1TXnEID
@@ -225,13 +225,13 @@ begin
     Inc(CANPtr);                                                                // Move to the RXnEID Register
     if IsExtended then
     begin
-      Buffer.State := Buffer.State or CBS_EXTENDED;
+      Buffer.State := Buffer.State or BS_EXTENDED;
       EID := ((DWORD( CANPtr^) shl 6) and $0003FFC0);                           // Pull out the info from the RXnEID
       Inc(CANPtr);                                                              // Move to the RXnDLC Register
       EID := EID or (DWORD( CANPtr^) shr 10);                                   // Pull out the rest of the Extended ID
     end else
     begin
-      Buffer.State := Buffer.State and not CBS_EXTENDED;
+      Buffer.State := Buffer.State and not BS_EXTENDED;
       Inc(CANPtr);                                                              // Move to the RXnDLC Register
     end;
     Buffer.ID := (SID shl 18) or EID;                                              // Build the EID

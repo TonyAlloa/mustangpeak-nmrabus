@@ -22,20 +22,12 @@ unit CANBuffers;
 {$I Options.inc}
 
 uses
-  CANDefines;
-  
+  CANStorage;
 
 var
-  RX_Main_RawBufferArray: TCanRawBufferArray; absolute $1000;                   // Recieve buffer for all filters.  The software moves the data to the right list
-  TX_Main_RawBufferArray: TCanRawBufferArray; absolute $1010;                   // Transmit buffer for all filters.  The software pulls the data to the right list
+  TX_Main_RawBufferArray: TCAN_TxRawBufferArray; absolute $1000;                                                      // Transmit buffer for all filters.  The software pulls the data to the right list
+  RX_Main_RawBufferArray: TCAN_RxRawBufferArray; absolute ($1000 + (SizeOf(TCANRawBuffer)*MAX_ECAN_TX_BUFFER));  // Recieve buffer for all filters.  The software moves the data to the right list
 
-const
-  RAW_CAN_BUFFER_SIZE = 2;                                                     // There are 42 TCANRawBuffers defined in the above structures
-
-type
-  TDummy = array[0..RAW_CAN_BUFFER_SIZE-1] of TCANRawBuffer;                    // Define a "dummy" array that overlays the above structures so the compiler
-                                                                                // can keep track of the memory and we can address the buffers as a normal array
-                                                                                // to initialize them
 var
-  Dummy: TDummy; absolute $1000;                                                // Dummy variable so the compiler accounts for this memory location
-end.
+  DummyTx: TCAN_TxRawBufferArray; absolute $$1000;                                                         // Allow the compiler to account for this ram
+  DummyRx: TCAN_RxRawBufferArray; absolute ($1000 + (SizeOf(TCANRawBuffer)*MAX_ECAN_TX_BUFFER));   // Allow the compiler to account for this ram

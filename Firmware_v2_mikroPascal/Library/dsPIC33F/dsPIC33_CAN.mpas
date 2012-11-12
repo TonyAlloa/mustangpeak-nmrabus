@@ -23,10 +23,25 @@ unit dsPIC33_CAN;
 
 
 uses
+
+NMRAnetDefinesShared,
+
   CANBuffers,
   CANStorage,
   NMRAnetCANReceive,
   dsPIC33_DMA;
+
+const        
+  CAN_TX_0_BUFFER      = 0;
+  CAN_TX_0_DMA_CHANNEL = 1;
+  
+  CAN_TX_1_BUFFER      = 1;
+  CAN_TX_1_DMA_CHANNEL = 0;
+  
+  CAN_RX_BUFFER        = 2;
+  CAN_RX_DMA_CHANNEL   = 2;
+  
+  
 
 const
   ICODE_NO_INTERRUPT       = $0040;
@@ -167,7 +182,9 @@ procedure dsPIC33_CAN_GlobalInterruptCAN_TX_RequestPriority(Priority: Word);
 procedure dsPIC33_CAN_SetBufferAsTransmitter(BufferNumber: Word; DoSet: Boolean);
 procedure dsPIC33_CAN_SetTransmitterPriority(BufferNumber: Word; Priority: Word);
 procedure dsPIC33_CAN_RequestTransmit(BufferNumber: Word);
+procedure dsPIC33_CAN_ClearTransmit(BufferNumber: Word);
 function dsPIC33_CAN_TX_Aborted(BufferNumber: Word): Boolean;
+function dsPIC33_CAN_TX_Requested(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_TX_ArbitrationLost(BufferNumber: Word): Boolean;
 function dsPIC33_CAN_TX_ErrorDetected(BufferNumber: Word): Boolean;
 // *****************************************************************************
@@ -207,15 +224,85 @@ begin
   Buffer := CANStorage_NextToSend;                                              // Get a pointer to the Buffer to transmit
   if Buffer <> nil then                                                         // If there is something to send then send it
   begin
-    dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_WRITE, @TX_Main_RawBufferArray[0].Word0, Buffer^);      // Convert it into a version that matches the registers
-  //  dsPIC33_DMA_Enable(0, False);
-  //  dsPIC33_DMA_AddressOffsetA(0, Word( @TX_Main_RawBufferArray[0]));              // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
-  //  dsPIC33_DMA_TransferCount(0, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[0])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
-  //  dsPIC33_DMA_Enable(0, True);        
-    dsPIC33_CAN_RequestTransmit(0);                                             // Set the Flag to start the transmission
-    Buffer^.State := Buffer^.State and not CBS_VALID;                           // Release the Buffer from the List
-    CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
+ {
+  UART2_Write_Text(' StartTransmission - Before');
+   
+  IntToHex(TX_Main_RawBufferArray[0].Word0, s1);
+  UART2_Write_Text(' 0_Word0: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word1, s1);
+  UART2_Write_Text(' 0_Word1: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word2, s1);
+  UART2_Write_Text(' 0_Word2: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word3, s1);
+  UART2_Write_Text(' 0_Word3: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word4, s1);
+  UART2_Write_Text(' 0_Word4: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word5, s1);
+  UART2_Write_Text(' 0_Word5: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word6, s1);
+  UART2_Write_Text(' 0_Word6: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word7, s1);
+  UART2_Write_Text(' 0_Word7: $'+s1);
 
+  IntToHex(TX_Main_RawBufferArray[1].Word0, s1);
+  UART2_Write_Text(' 1_Word0: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word1, s1);
+  UART2_Write_Text(' 1_Word1: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word2, s1);
+  UART2_Write_Text(' 1_Word2: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word3, s1);
+  UART2_Write_Text(' 1_Word3: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word4, s1);
+  UART2_Write_Text(' 1_Word4: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word5, s1);
+  UART2_Write_Text(' 1_Word5: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word6, s1);
+  UART2_Write_Text(' 1_Word6: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word7, s1);
+  UART2_Write_Text(' 1_Word7: $'+s1);
+                                           }
+  
+    dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_WRITE, @TX_Main_RawBufferArray[CAN_TX_0_BUFFER].Word0, Buffer^);      // Convert it into a version that matches the registers
+ {
+  UART2_Write_Text(' StartTransmission - After');
+  
+  IntToHex(TX_Main_RawBufferArray[0].Word0, s1);
+  UART2_Write_Text(' 0_Word0: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word1, s1);
+  UART2_Write_Text(' 0_Word1: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word2, s1);
+  UART2_Write_Text(' 0_Word2: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word3, s1);
+  UART2_Write_Text(' 0_Word3: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word4, s1);
+  UART2_Write_Text(' 0_Word4: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word5, s1);
+  UART2_Write_Text(' 0_Word5: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word6, s1);
+  UART2_Write_Text(' 0_Word6: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word7, s1);
+  UART2_Write_Text(' 0_Word7: $'+s1);
+
+  IntToHex(TX_Main_RawBufferArray[1].Word0, s1);
+  UART2_Write_Text(' 1_Word0: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word1, s1);
+  UART2_Write_Text(' 1_Word1: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word2, s1);
+  UART2_Write_Text(' 1_Word2: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word3, s1);
+  UART2_Write_Text(' 1_Word3: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word4, s1);
+  UART2_Write_Text(' 1_Word4: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word5, s1);
+  UART2_Write_Text(' 1_Word5: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word6, s1);
+  UART2_Write_Text(' 1_Word6: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word7, s1);
+  UART2_Write_Text(' 1_Word7: $'+s1);      }
+  
+    dsPIC33_CAN_RequestTransmit(CAN_TX_0_BUFFER);                               // Set the Flag to start the transmission
+    Buffer^.State := Buffer^.State and not BS_ALLOCATED;                        // Release the Buffer from the List
+    CAN_Engine.State := CAN_Engine.State or CES_TRANSMITTING;
     Result := True;
   end
 end;
@@ -236,13 +323,83 @@ begin
   // Just do it as there should not be an overlap here since this is ONLY called AFTER a message we can't handle is received so any transmission here should be long finished
   if Buffer <> nil then
   begin
-    dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_WRITE, @TX_Main_RawBufferArray[1].Word0, Buffer^);      // Convert it into a version that matches the registers
- //   dsPIC33_DMA_Enable(1, False);
-   // dsPIC33_DMA_AddressOffsetA(1, Word( @TX_Main_RawBufferArray[1]));              // In Register Indirect Mode we have to set the offset from the start of the Buffer Manually
- //   dsPIC33_DMA_TransferCount(1, dsPIC33_CAN_CalculateTransmitCountForRegAddressWithAutoIncrement(@TX_Main_RawBufferArray[1])); // In Register Indirect Mode we also have to change the number of words the transmit module will send manually
- //   dsPIC33_DMA_Enable(1, True);
-    dsPIC33_CAN_RequestTransmit(1);                                             // Set the Flag to start the transmission      
-    Buffer^.State := Buffer^.State and not CBS_VALID;                           // Release the Buffer from the List
+  
+ { UART2_Write_Text(' StartCANHighPriorityMessageEngine - Before');
+
+  IntToHex(TX_Main_RawBufferArray[0].Word0, s1);
+  UART2_Write_Text(' 0_Word0: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word1, s1);
+  UART2_Write_Text(' 0_Word1: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word2, s1);
+  UART2_Write_Text(' 0_Word2: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word3, s1);
+  UART2_Write_Text(' 0_Word3: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word4, s1);
+  UART2_Write_Text(' 0_Word4: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word5, s1);
+  UART2_Write_Text(' 0_Word5: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word6, s1);
+  UART2_Write_Text(' 0_Word6: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word7, s1);
+  UART2_Write_Text(' 0_Word7: $'+s1);
+
+  IntToHex(TX_Main_RawBufferArray[1].Word0, s1);
+  UART2_Write_Text(' 1_Word0: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word1, s1);
+  UART2_Write_Text(' 1_Word1: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word2, s1);
+  UART2_Write_Text(' 1_Word2: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word3, s1);
+  UART2_Write_Text(' 1_Word3: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word4, s1);
+  UART2_Write_Text(' 1_Word4: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word5, s1);
+  UART2_Write_Text(' 1_Word5: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word6, s1);
+  UART2_Write_Text(' 1_Word6: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word7, s1);
+  UART2_Write_Text(' 1_Word7: $'+s1);                               }
+  
+    dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_WRITE, @TX_Main_RawBufferArray[CAN_TX_1_BUFFER].Word0, Buffer^);      // Convert it into a version that matches the registers
+    
+  {  UART2_Write_Text(' StartCANHighPriorityMessageEngine - After');
+
+  IntToHex(TX_Main_RawBufferArray[0].Word0, s1);
+  UART2_Write_Text(' 0_Word0: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word1, s1);
+  UART2_Write_Text(' 0_Word1: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word2, s1);
+  UART2_Write_Text(' 0_Word2: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word3, s1);
+  UART2_Write_Text(' 0_Word3: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word4, s1);
+  UART2_Write_Text(' 0_Word4: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word5, s1);
+  UART2_Write_Text(' 0_Word5: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word6, s1);
+  UART2_Write_Text(' 0_Word6: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[0].Word7, s1);
+  UART2_Write_Text(' 0_Word7: $'+s1);
+
+  IntToHex(TX_Main_RawBufferArray[1].Word0, s1);
+  UART2_Write_Text(' 1_Word0: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word1, s1);
+  UART2_Write_Text(' 1_Word1: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word2, s1);
+  UART2_Write_Text(' 1_Word2: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word3, s1);
+  UART2_Write_Text(' 1_Word3: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word4, s1);
+  UART2_Write_Text(' 1_Word4: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word5, s1);
+  UART2_Write_Text(' 1_Word5: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word6, s1);
+  UART2_Write_Text(' 1_Word6: $'+s1);
+  IntToHex(TX_Main_RawBufferArray[1].Word7, s1);
+  UART2_Write_Text(' 1_Word7: $'+s1);     }
+
+    dsPIC33_CAN_RequestTransmit(CAN_TX_1_BUFFER);                             // Set the Flag to start the transmission
+    Buffer^.State := Buffer^.State and not BS_ALLOCATED;                           // Release the Buffer from the List
   end
 end;
 
@@ -264,7 +421,9 @@ begin
   // messages in the buffer list.  If it is already running then the interrupt that
   // is called after the current message is finished will auto load any new messages
   if CAN_Engine.State and CES_TRANSMITTING = 0 then
+  begin
     StartTransmission;
+  end;
 
   // Re-enable the Transmit interrupt
   UnLockCANInterrupt
@@ -282,31 +441,33 @@ end;
 procedure Interrupt_CAN_Event(); iv IVT_ADDR_C1INTERRUPT; ics ICS_AUTO;
 var
   Buffer: TCANBuffer;
+  IntCode: Word;
 begin
   dsPIC33_CAN_GlobalInterruptFlagCAN_Event(True);                               // Reset the Global CAN Event Interrupt Flag
-
-  while dsPIC33_CAN_InterruptCode <> ICODE_NO_INTERRUPT do                      // Use the Interrupt Code to decode the Events that are both Enabled and Flags are set
+  IntCode := dsPIC33_CAN_InterruptCode;
+  while IntCode <> ICODE_NO_INTERRUPT do                                        // Use the Interrupt Code to decode the Events that are both Enabled and Flags are set
   begin
     case dsPIC33_CAN_InterruptCode of
       ICODE_TRB0 :                                                              // Tx Rx Buffer 0
       begin
-      
-        LATB1_bit := not LATB1_bit;
-        
+      //  LATB1_bit := 1;
+      //  Delay_us(200);
+      //  LATB1_bit := 0;
         dsPIC33_CAN_InterruptFlagTXBuffer(True);                                // TX Interrupt Flag Reset
         if not StartTransmission then
           CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
       end;
-      ICODE_TRB1 :
+      ICODE_TRB1 :                                                              // Tx Rx Buffer 0
       begin
+    //    LATB2_bit := 1;
+     //   Delay_us(200);
+     //   LATB2_bit := 0;
         dsPIC33_CAN_InterruptFlagTXBuffer(True);                                // TX Interrupt Flag Reset
-        
-        LATB2_bit := not LATB2_bit;
-        
+      //  if not StartTransmission then
+      //    CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
       end;
-      ICODE_TRB2 :                                                              // Tx Rx Buffer 3
+      ICODE_TRB2 :                                                              // Tx Rx Buffer 0
       begin
-        // CAN Layer Reception
         dsPIC33_CAN_InterruptFlagRXBuffer(True);                                // RX Interrupt Flag Reset
         dsPIC33_DMA_Style_Buffer(CAN_DIRECTION_READ, @RX_Main_RawBufferArray[0].Word0, Buffer);      // Convert it into a version that matches the registers
         case Hi(RX_Main_RawBufferArray[0].Word7) of
@@ -318,39 +479,39 @@ begin
           5: ReceivedOnFilter5(@Buffer);
           6: ReceivedOnFilter6(@Buffer);
         end;
-        dsPIC33_DMA_AddressOffsetA(2, @RX_Main_RawBufferArray[0]);              // Point the Receive Buffer Offset
-        dsPIC33_CAN_RX_Full(2, True);                                           // Reset the Full Flag
+        dsPIC33_CAN_RX_Full(CAN_RX_BUFFER, True);                                           // Reset the Full Flag
       end;
-    end
+    end;
+    IntCode := dsPIC33_CAN_InterruptCode;                                       // Get the next code (or no code) flag
   end;
 end;
 
 procedure dsPIC33_CAN_Initialize;
+var
+  i: Integer;
 begin
-  DummyTx[0].Word0 := 0;                                                        // Allow the compiler to account for this ram
-  DummyTx[0].Word1 := 0;
-  DummyTx[0].Word2 := 0;
-  DummyTx[0].Word3 := 0;
-  DummyTx[0].Word4 := 0;
-  DummyTx[0].Word5 := 0;
-  DummyTx[0].Word6 := 0;
-  DummyTx[0].Word7 := 0;
-  DummyTx[1].Word0 := 0;
-  DummyTx[1].Word1 := 0;
-  DummyTx[1].Word2 := 0;
-  DummyTx[1].Word3 := 0;
-  DummyTx[1].Word4 := 0;
-  DummyTx[1].Word5 := 0;
-  DummyTx[1].Word6 := 0;
-  DummyTx[1].Word7 := 0;
-  DummyRx[0].Word0 := 0;
-  DummyRx[0].Word1 := 0;
-  DummyRx[0].Word2 := 0;
-  DummyRx[0].Word3 := 0;
-  DummyRx[0].Word4 := 0;
-  DummyRx[0].Word5 := 0;
-  DummyRx[0].Word6 := 0;
-  DummyRx[0].Word7 := 0;
+  for i := 0 to MAX_ECAN_TX_BUFFER - 1 do
+  begin
+    DummyTx[i].Word0 := 0;                                                        // Allow the compiler to account for this ram
+    DummyTx[i].Word1 := 0;
+    DummyTx[i].Word2 := 0;
+    DummyTx[i].Word3 := 0;
+    DummyTx[i].Word4 := 0;
+    DummyTx[i].Word5 := 0;
+    DummyTx[i].Word6 := 0;
+    DummyTx[i].Word7 := 0;
+  end;
+  for i := 0 to MAX_ECAN_RX_BUFFER - 1 do
+  begin
+    DummyRx[i].Word0 := 0;                                                        // Allow the compiler to account for this ram
+    DummyRx[i].Word1 := 0;
+    DummyRx[i].Word2 := 0;
+    DummyRx[i].Word3 := 0;
+    DummyRx[i].Word4 := 0;
+    DummyRx[i].Word5 := 0;
+    DummyRx[i].Word6 := 0;
+    DummyRx[i].Word7 := 0;
+  end;
 end;
 
 
@@ -380,7 +541,7 @@ begin
   if Direction = CAN_DIRECTION_WRITE then
   begin
     // Direction = 0 means Parameters to Buffer (Load TX Buffer)
-    if Buffer.State and CBS_EXTENDED <> 0 then
+    if Buffer.State and BS_EXTENDED <> 0 then
     begin
       CANPtr^ := DWORD(Buffer.ID shr 16) and $1FFC;                             // Setup the Extended iD 7..17
       CANPtr^ := CANPtr^ or $0001;                                              // Setup if it is an extended ID
@@ -409,10 +570,10 @@ begin
     // Direction <> 0 then Buffer to Parameters (Read RX Buffer)
 
     if CANPtr^ and $0001 <> 0 then                                              // Word 0
-      Buffer.State := Buffer.State or CBS_EXTENDED
+      Buffer.State := Buffer.State or BS_EXTENDED
     else
-      Buffer.State := Buffer.State and not CBS_EXTENDED;
-    if Buffer.State and CBS_EXTENDED <> 0 then
+      Buffer.State := Buffer.State and not BS_EXTENDED;
+    if Buffer.State and BS_EXTENDED <> 0 then
     begin
       Buffer.ID := CANPtr^ and $1FFC;
       Buffer.ID := Buffer.ID shl 16;
@@ -632,6 +793,26 @@ begin
 end;
 
 // *****************************************************************************
+//  procedure dsPIC33_CAN_TX_Requested;
+//
+//  Parameters:   BufferNumber: The Buffer Index to check for aborted transmit (0..7)
+//
+//  Result:
+//
+//  Description:  WARNING: Up until recently the silicon had a bug that made only
+//                Buffer 0 work correctly as a transmitter.  What would happen is
+//                The SID/EID of Buffer 0 would be used as the CAN ID for Buffers 1-7
+//                Look at the parts errata sheet to see if this bug still exists
+//                in the device being used
+// *****************************************************************************
+function dsPIC33_CAN_TX_Requested(BufferNumber: Word): Boolean;
+const
+   TX_REQUEST_BIT = 3;
+begin
+  Result := ReadTXBit(BufferNumber, TX_REQUEST_BIT)
+end;
+
+// *****************************************************************************
 //  procedure dsPIC33_CAN_TX_ArbitrationLost;
 //
 //  Parameters:   BufferNumber: The Buffer Index to check for lost arbitration on the bus (0..7)
@@ -733,7 +914,30 @@ const
 begin
   ClearWindowSelectBit;
   ManipulateTXBit(BufferNumber, TX_REQUEST_BIT, True);
-  CAN_Engine.State := CAN_ENGINE.State or CES_TRANSMITTING;
+  //CAN_Engine.State := CAN_ENGINE.State or CES_TRANSMITTING;
+end;
+
+// *****************************************************************************
+//  procedure dsPIC33_CAN_ClearTransmit;
+//
+//  Parameters:   BufferNumber: The Buffer Index that is to be used as a Transmitter (0..7)
+//
+//  Result:
+//
+//  Description:  WARNING: Up until recently the silicon had a bug that made only
+//                Buffer 0 work correctly as a transmitter.  What would happen is
+//                The SID/EID of Buffer 0 would be used as the CAN ID for Buffers 1-7
+//                Look at the parts errata sheet to see if this bug still exists
+//                in the device being used. This appeared to be only a problem
+//                if using the Peripheral Addressing Mode.  It was claimed to not
+//                be a problem in Register Indirect modes...
+// *****************************************************************************
+procedure dsPIC33_CAN_ClearTransmit(BufferNumber: Word);
+const
+   TX_REQUEST_BIT = 3;
+begin
+  ClearWindowSelectBit;
+  ManipulateTXBit(BufferNumber, TX_REQUEST_BIT, False);
 end;
 
 // *****************************************************************************

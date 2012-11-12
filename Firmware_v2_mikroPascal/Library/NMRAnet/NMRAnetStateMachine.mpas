@@ -44,8 +44,6 @@ uses
 {.$DEFINE TRACE_NODE_STATEMACHINE}
 {.DEFINE TRACE_ACDI}
 {.$DEFINE TRACE_SNIP}
-{.$DEFINE DISABLE_DATAGRAM_ABANDON_TIMEOUT}
-
 
   procedure NMRAnetStateMachine_Process(Node: PNMRAnetNode);
   procedure NMRAnetStateMachine_Disconnect(Node: PNMRAnetNode);
@@ -60,7 +58,7 @@ uses
   function NMRAnetStateMachine_TrySendAliasMapEnquiry(Node: PNMRAnetNode): Boolean;
   function NMRAnetStateMachine_TrySendVerifyNodeID(Node: PNMRAnetNode; DestinationAliasID: Word): Boolean;
   function NMRAnetStateMachine_TrySendAbbreviatedCDI(Node: PNMRAnetNode; DestinationAliasID: Word): Boolean;
-  function NMRAnetStateMachine_TrySendDatagram(Node: PNMRAnetNode; Datagram: PDatagramBuffer): Boolean;
+  function NMRAnetStateMachine_TrySendDatagram(Node: PNMRAnetNode; CANBuffer: PCANBuffer; Datagram: PDatagramBuffer): Boolean;
 
   // defined in the dsPICxx_CAN_Interrupt.mpas file
 //  procedure StartCANMessageEngine; external;
@@ -178,21 +176,25 @@ end;
 //                   initaialized to 0
 //
 // *****************************************************************************
-function NMRAnetStateMachine_TrySendDatagram(Node: PNMRAnetNode; Datagram: PDatagramBuffer): Boolean;
+function NMRAnetStateMachine_TrySendDatagram(Node: PNMRAnetNode; CANBuffer: PCANBuffer; Datagram: PDatagramBuffer): Boolean;
 var
   i: Integer;
   DataBytes: TCAN_DataBytes;
   MTI: DWord;
-  CANBuffer: TCANBuffer;
 begin
   Result := False;
   if NMRABusBufferAvailable then
   begin
+
+    {$IFDEF TRACE_DATAGRAM_SEND}IntToStr(Datagram^.iByteCount, s1); UART1_Write_Text('ByteCount = '+s1+LF);{$ENDIF}
+    {$IFDEF TRACE_DATAGRAM_SEND}IntToStr(Datagram^.Tag, s1); UART1_Write_Text('Tag = '+s1+LF);{$ENDIF}
+  
     if Datagram^.iByteCount <= 8 then                                           // Single Frame Datagram
     begin
+      {$IFDEF TRACE_DATAGRAM_SEND}UART1_Write_Text('MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME'+LF);{$ENDIF}
       for i := 0 to Datagram^.iByteCount - 1 do
         DataBytes[i] := Datagram^.DataBytes[i];
-      TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME, Datagram^.Alias, Datagram^.iByteCount, @DataBytes, True);
+      TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME, Datagram^.Alias, Datagram^.iByteCount, @DataBytes, True);
       Result := True;
     end else
     begin 
@@ -207,7 +209,7 @@ begin
         MTI := MTI_FRAME_TYPE_DATAGRAM_FRAME  {$IFDEF TRACE_DATAGRAM_SEND};UART1_Write_Text('MTI_DATAGRAM_FRAME_SEND'+LF);{$ENDIF}
       end
       else begin
-        MTI := MTI_FRAME_TYPE_DATAGRAM_FRAME_END; {$IFDEF TRACE_DATAGRAM_SEND};UART1_Write_Text('MTI_DATAGRAM_FRAME_END_SEND'+LF);{$ENDIF}
+        MTI := MTI_FRAME_TYPE_DATAGRAM_FRAME_END; {$IFDEF TRACE_DATAGRAM_SEND}UART1_Write_Text('MTI_DATAGRAM_FRAME_END_SEND'+LF);{$ENDIF}
         Result := True
       end;
 
@@ -218,7 +220,9 @@ begin
         Inc(i);
         Inc(Datagram^.Tag);
       end;
-      TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI, Datagram^.Alias, i, @DataBytes, True);
+      {$IFDEF TRACE_DATAGRAM_SEND}UART1_Write_Text('TransmitNMRABusLayerMsg = Transmitting'+LF);{$ENDIF}
+      TransmitNMRABusLayerMsg(Node, CANBuffer, MTI, Datagram^.Alias, i, @DataBytes, True);
+      {$IFDEF TRACE_DATAGRAM_SEND}UART1_Write_Text('TransmitNMRABusLayerMsg = Transmitted'+LF);{$ENDIF}
     end;
   end
 end;
@@ -330,11 +334,11 @@ end;
 function TransmitCANLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord): Boolean;
 begin
   Result := False;
-  if CAN_Engine.TX_CANBuffer.State and CBS_VALID = 0 then
+  if CAN_Engine.TX_CANBuffer.State and BS_ALLOCATED = 0 then
   begin
     NMRAnetUtilities_CreateCANControlFramePacket(Node, Buffer, VariableField);
     CAN_Engine.TX_CANBuffer := Buffer^;
-    CAN_Engine.TX_CANBuffer.State := CAN_Engine.TX_CANBuffer.State or CBS_VALID;
+    CAN_Engine.TX_CANBuffer.State := CAN_Engine.TX_CANBuffer.State or BS_ALLOCATED;
     StartCANMessageEngine();
     Result := True
   end;
@@ -350,7 +354,7 @@ end;
 // *****************************************************************************
 function CANBusBufferAvailable: Boolean;
 begin
-  Result := CAN_Engine.TX_CANBuffer.State and CBS_VALID = 0
+  Result := CAN_Engine.TX_CANBuffer.State and BS_ALLOCATED = 0
 end;
 
 // *****************************************************************************
@@ -367,14 +371,16 @@ begin
  // TODO:  IF THE DESTINATION IS A VNNODE THEN WE NEED TO NOT PUT IT IN THE CAN BUFFER BUT JUST SHORT CUT IT TO THE RECEIVE BUFFER
  
   Result := False;
-  if CAN_Engine.TX_NMRAnetBuffer.State and CBS_VALID = 0 then
+  
+  if CAN_Engine.TX_NMRAnetBuffer.State and BS_ALLOCATED = 0 then
   begin
     if AliasInHeader then
       NMRAnetUtilities_CreateNMRABusMessagePacketWithDestInMTI(Node, Buffer, MTI, DestinationAlias, DataCount, DataBytes)
     else
       NMRAnetUtilities_CreateNMRABusMessagePacket(Node, Buffer, MTI, DestinationAlias, DataCount, DataBytes);
+
     CAN_Engine.TX_NMRAnetBuffer := Buffer^;
-    CAN_Engine.TX_NMRAnetBuffer.State := CAN_Engine.TX_NMRAnetBuffer.State or CBS_VALID;
+    CAN_Engine.TX_NMRAnetBuffer.State := CAN_Engine.TX_NMRAnetBuffer.State or BS_ALLOCATED;
     StartCANMessageEngine();
     Result := True
   end;
@@ -390,7 +396,7 @@ end;
 // *****************************************************************************
 function NMRABusBufferAvailable: Boolean;
 begin
-  Result := CAN_Engine.TX_NMRAnetBuffer.State and CBS_VALID = 0
+  Result := CAN_Engine.TX_NMRAnetBuffer.State and BS_ALLOCATED = 0
 end;
 
 // *****************************************************************************
@@ -712,10 +718,13 @@ begin
       WordToHex(DatagramBuffer, s1);
       UART1_Write_Text('$'+s1+LF);
       {$ENDIF}
+      
       case DatagramBuffer^.mCode of
+        {$IFDEF BOOTLOADER}
         BMC_DATAGRAM_BOOTLOADER            : begin
                                                TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_DATAGRAM_OK_REPLY, DatagramBuffer^.Alias, 0, @DataBytes, False);
                                              end;
+        {$ENDIF}
         BMC_DATAGRAM_MEMORY_CONFIG         : begin
                                                case DatagramBuffer^.StateMachine of
                                                  STATE_MEM_CONFIG_SEND_REPLY           : begin  {$IFDEF TRACE_MEM_CONFIG_STATEMACHINE}  UART1_Write_Text('STATE_MEM_CONFIG_SEND_REPLY'+LF); {$ENDIF}
@@ -898,7 +907,11 @@ begin
                                                                                             // This is safe because this will not be called until CBS_PROCESSSING is cleared simulating a "WaitForSendComplete"
                                                                                             DatagramBuffer^.State := (DatagramBuffer^.State or CBS_OUTGOING or CBS_PROCESSING) and not CBS_TRANSFER_COMPLETE;  // Turn it into an outgoing Datagram
                                                                                             DatagramBuffer^.Tag := 0;                                                          // Reset for the Transmit side
+                                                                                            DatagramBuffer^.iWatchdog := 0;
                                                                                             DatagramBuffer^.SourceNodePtr := Generic16BitPointer( Node);                       // So the Transmit Engine knows what source Node and Alias to associate the Datagram to
+                                                                                            
+                                                                                            {$IFDEF TRACE_MEM_CONFIG_STATEMACHINE}WordToHex(DatagramBuffer^.SourceNodePtr, s1); UART1_Write_Text('SourceNodePtr = '+s1+LF);{$ENDIF}
+                                                                                            
                                                                                             DatagramBuffer^.Statemachine := STATE_MEM_CONFIG_WAITFOR_REPLY;
                                                                                           end;
                                                  STATE_MEM_CONFIG_WAITFOR_REPLY :         begin   {$IFDEF TRACE_MEM_CONFIG_STATEMACHINE} UART1_Write_Text('STATE_MEM_CONFIG_WAITFOR_REPLY'+LF);   {$ENDIF}
@@ -945,8 +958,14 @@ begin
   DatagramBuffer := nil;
   if NMRAnetUtilities_FindOutgoingDatagram(Node, DatagramBuffer, True) then
   begin
-    if NMRAnetStateMachine_TrySendDatagram(PNMRAnetNode( DatagramBuffer^.SourceNodePtr), DatagramBuffer) then
+    {$IFDEF TRACE_DATAGRAM_SEND}UART1_Write_Text('NMRAnetUtilities_FindOutgoingDatagram = Found'+LF);{$ENDIF}
+    {$IFDEF TRACE_DATAGRAM_SEND}WordToHex(DatagramBuffer^.SourceNodePtr, s1); UART1_Write_Text('SourceNodePtr = '+s1+LF);{$ENDIF}
+    
+    if NMRAnetStateMachine_TrySendDatagram(PNMRAnetNode( DatagramBuffer^.SourceNodePtr), CANBuffer, DatagramBuffer) then
+    begin
+      {$IFDEF TRACE_DATAGRAM_SEND}UART1_Write_Text('NMRAnetStateMachine_TrySendDatagram = Sent'+LF);{$ENDIF}
       DatagramBuffer^.State := (DatagramBuffer^.State and not CBS_PROCESSING) or CBS_TRANSFER_COMPLETE;    // Flag as complete so the caller and unlink and free
+    end;
   end;
   UnLockCANInterrupt;
 end;

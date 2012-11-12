@@ -215,7 +215,7 @@ begin
 
  // UART1_Write_Text('NMRAnet'+LF);
   TMR4 := 0;
- 
+  
   DoDefault := True;
   if NMRAnetLayerReceiveHook <> nil then
     NMRAnetLayerReceiveHook(CANBuffer, DoDefault);                              // Allow the program to have a crack at the message handler
@@ -308,7 +308,7 @@ begin
                                                                DataBytes[2] := (MTI_Code shr 8) and $00FF;
                                                                DataBytes[3] := MTI_Code and $00FF;
                                                                NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_AddressedErrorBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, SourceAlias, 4, @DataBytes);
-                                                               CAN_Engine.TX_AddressedErrorBuffer.State := CAN_Engine.TX_AddressedErrorBuffer.State or CBS_VALID;
+                                                               CAN_Engine.TX_AddressedErrorBuffer.State := CAN_Engine.TX_AddressedErrorBuffer.State or BS_ALLOCATED;
                                                                StartCANHighPriorityMessageEngine;
                                                                end;
                                                              end; {case}
@@ -322,7 +322,7 @@ begin
                                                                DataBytes[2] := (MTI_Code shr 8) and $00FF;
                                                                DataBytes[3] := MTI_Code and $00FF;
                                                                NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_AddressedErrorBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, SourceAlias, 4, @DataBytes);
-                                                               CAN_Engine.TX_AddressedErrorBuffer.State := CAN_Engine.TX_AddressedErrorBuffer.State or CBS_VALID;
+                                                               CAN_Engine.TX_AddressedErrorBuffer.State := CAN_Engine.TX_AddressedErrorBuffer.State or BS_ALLOCATED;
                                                                StartCANHighPriorityMessageEngine;
                                                              end
                                                            end
@@ -407,13 +407,14 @@ begin
                                                            NMRAnetUtilities_DatagramBufferLink(Node, DatagramBuffer);
                                                            DatagramBuffer^.mCode := BMC_DATAGRAM;
                                                            DatagramBuffer^.Alias := SourceAlias;
-                                                           DatagramBuffer^.State := DatagramBuffer^.State or CBS_TRANSFER_COMPLETE;
                                                            DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
                                                            for i := 0 to DatagramBuffer^.iByteCount - 1 do
                                                              DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
-                                                             
+                                                           DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING or CBS_TRANSFER_COMPLETE;
                                                            case DatagramBuffer^.DataBytes[0] of
+                                                              {$IFDEF BOOTLOADER}
                                                               DATAGRAM_TYPE_BOOTLOADER           : DatagramBuffer^.mCode := BMC_DATAGRAM_BOOTLOADER;
+                                                              {$ENDIF}
                                                               DATAGRAM_TYPE_MEMORY_CONFIGURATION : DatagramBuffer^.mCode := BMC_DATAGRAM_MEMORY_CONFIG;
                                                               DATAGRAM_TYPE_TRAIN_CONTROL        : DatagramBuffer^.mCode := BMC_DATAGRAM_TRACTION_CONTROL
                                                             else begin
@@ -421,7 +422,7 @@ begin
                                                                 NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
                                                                 DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED);
                                                                 NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
-                                                                CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or CBS_VALID;
+                                                                CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or BS_ALLOCATED;
                                                                 StartCANHighPriorityMessageEngine
                                                               end;
                                                             end;
@@ -429,7 +430,7 @@ begin
                                                         begin
                                                           DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
                                                           NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
-                                                          CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or CBS_VALID;
+                                                          CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or BS_ALLOCATED;
                                                           StartCANHighPriorityMessageEngine;
                                                         end
                                                       end
@@ -452,12 +453,6 @@ begin
                                                             DatagramBuffer^.iByteCount := CANBuffer^.DataCount;
                                                             for i := 0 to DatagramBuffer^.iByteCount - 1 do
                                                               DatagramBuffer^.DataBytes[i] := CANBuffer^.DataBytes[i];
-                                                          end else
-                                                          begin
-                                                            DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
-                                                            NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
-                                                            CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or CBS_VALID;
-                                                            StartCANHighPriorityMessageEngine;
                                                           end
                                                         end
                                                       end
@@ -487,8 +482,11 @@ begin
                                                           for i := 0 to CANBuffer^.DataCount - 1 do
                                                             DatagramBuffer^.DataBytes[Offset + i] := CANBuffer^.DataBytes[i];
                                                           DatagramBuffer^.iByteCount := CANBuffer^.DataCount + Offset;
+                                                          DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING or CBS_TRANSFER_COMPLETE;  // Signed Sealed so Deliver.
                                                           case DatagramBuffer^.DataBytes[0] of
+                                                            {$IFDEF BOOTLOADER}
                                                             DATAGRAM_TYPE_BOOTLOADER           : DatagramBuffer^.mCode := BMC_DATAGRAM_BOOTLOADER;
+                                                            {$ENDIF}
                                                             DATAGRAM_TYPE_MEMORY_CONFIGURATION : DatagramBuffer^.mCode := BMC_DATAGRAM_MEMORY_CONFIG;
                                                             DATAGRAM_TYPE_TRAIN_CONTROL        : DatagramBuffer^.mCode := BMC_DATAGRAM_TRACTION_CONTROL
                                                           else begin
@@ -496,16 +494,15 @@ begin
                                                               NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
                                                               DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED);
                                                               NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
-                                                              CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or CBS_VALID;
+                                                              CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or BS_ALLOCATED;
                                                               StartCANHighPriorityMessageEngine;
                                                             end;
                                                           end;
-                                                          DatagramBuffer^.State := DatagramBuffer^.State and not CBS_PROCESSING or CBS_TRANSFER_COMPLETE;  // Signed Sealed so Deliver.
                                                         end else
                                                         begin
-                                                          DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_OUT_OF_ORDER);
+                                                          DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
                                                           NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
-                                                          CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or CBS_VALID;
+                                                          CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or BS_ALLOCATED;
                                                           StartCANHighPriorityMessageEngine;
                                                         end
                                                       end
