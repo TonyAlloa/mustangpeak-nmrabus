@@ -6,7 +6,7 @@ Value=0
 [BUILD_TYPE]
 Value=0
 [ACTIVE_TAB]
-Value=NMRAnetAppDefines.mpas
+Value=Throttle_driver.mpas
 [USE_EEPROM]
 Value=0
 [EEPROM_DEFINITION]
@@ -44,7 +44,7 @@ Count=0
 Count=0
 ActiveImageIndex=-1
 [OPENED_FILES]
-Count=11
+Count=12
 File0=Throttle_main.mpas
 File1=..\..\..\Library\NMRAnet\NMRAnetStateMachine.mpas
 File2=..\..\..\Library\NMRAnet\NMRAnetCANReceive.mpas
@@ -56,6 +56,7 @@ File7=NMRAnetAppDefines.mpas
 File8=..\..\..\Library\CANBus\DMA_Buffers\dsPIC33FJ256GP710A\CANBuffers.mpas
 File9=..\..\..\Library\NMRAnet\NMRAnetNode.mpas
 File10=..\..\..\Library\NMRAnet\NMRAnetDefines.mpas
+File11=Throttle_driver.mpas
 [EEPROM]
 Count=0
 [ACTIVE_COMMENTS_FILES]
