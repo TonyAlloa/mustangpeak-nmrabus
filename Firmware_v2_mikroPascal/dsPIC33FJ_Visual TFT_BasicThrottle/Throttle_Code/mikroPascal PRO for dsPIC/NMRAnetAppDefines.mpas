@@ -37,7 +37,7 @@ const
 // **************************************************************************************************************************************************************
 
 const
-  MAX_BASE_BUFFER_POOL             = MAX_NODE_COUNT;                            // Number of Base Buffers to allocate for Messages , JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
+  MAX_BASE_BUFFER_POOL             = 10;                                        // Number of Base Buffers to allocate for Messages , JMRI Interleaves all the nodes so we need a Buffer for every Node <;^(
   MAX_DATAGRAM_BUFFER_POOL         = 1;                                         // Number of Datagram Buffers to allocate for Messages
 
 // **************************************************************************************************************************************************************
