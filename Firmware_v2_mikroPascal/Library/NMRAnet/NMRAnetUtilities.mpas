@@ -25,32 +25,32 @@ uses
   NMRAnetDefines,
   NMRAnetAppDefines;
   
-procedure NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer);
-procedure NMRAnetUtilities_CreateCANControlFramePacket(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; MTI: DWord);
-procedure NMRAnetUtilities_CreateNMRABusMessagePacket(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
-procedure NMRAnetUtilities_CreateNMRABusMessagePacketWithDestInMTI(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
-function NMRAnetUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
-function NMRAnetUtilities_ExtractDestinationAliasFlags(Packet: PCANBuffer): Word;
-function NMRAnetUtilities_ExtractDestinationCodedInMTIAlias(Packet: PCANBuffer): Word;
-function NMRAnetUtilities_ExtractSourceAlias(Packet: PCANBuffer): Word;
-procedure NMRAnetUtilities_PacketBytesToNodeID(DataBytes: PCAN_DataBytes; var NodeID: TNodeID; iStartByte: Byte);
+procedure NMRAnetUtilities_LoadFrameCANBufferDataWith48BitNodeID(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
+procedure NMRAnetUtilities_CreateCANControlFrameCANBuffer(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer; MTI: DWord);
+procedure NMRAnetUtilities_CreateNMRABusMessageCANBuffer(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
+procedure NMRAnetUtilities_CreateNMRABusMessageCANBufferWithDestInMTI(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
+function NMRAnetUtilities_ExtractDestinationAlias(CANBuffer: PCANBuffer): Word;
+function NMRAnetUtilities_ExtractDestinationAliasFlags(CANBuffer: PCANBuffer): Word;
+function NMRAnetUtilities_ExtractDestinationCodedInMTIAlias(CANBuffer: PCANBuffer): Word;
+function NMRAnetUtilities_ExtractSourceAlias(CANBuffer: PCANBuffer): Word;
+procedure NMRAnetUtilities_CANBufferBytesToNodeID(DataBytes: PCAN_DataBytes; var NodeID: TNodeID; iStartByte: Byte);
 function NMRAnetUtilities_EqualNodeID(NodeBuffer: PNMRAnetNode; var NodeID: TNodeID): boolean;
 function NMRAnetUtilities_CompareNodeIDs(var NodeID1, NodeID2: TNodeID): boolean;
 function NMRAnetUtilities_EqualAliasID(NodeBuffer: PNMRAnetNode; AliasID: Word): Boolean;
 function NMRAnetUtilities_CompareAliasIDs(AliasID1, AliasID2: Word): Boolean;
-function NMRAnetUtilities_EqualDestinationAlias(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer): Boolean;
+function NMRAnetUtilities_EqualDestinationAlias(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer): Boolean;
 procedure NMRAnetUtilities_LoadNodeID(var NodeID: TNodeID; Upper, Lower: DWORD);
 procedure NMRAnetUtilities_PsudoRandomNumberGeneratorOnSeed(var Seed: TNodeID);
 function NMRAnetUtilities_CreateAliasID(var Seed: TNodeID; Regenerate: Boolean): Word;
 function NMRAnetUtilities_RecreateAliasID(var Seed: TNodeID): Word;
-function NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer): Boolean;
-function NMRAnetUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
-function NMRAnetUtilities_IsDatagramMsg(Packet: PCANBuffer): Boolean;
+function NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer): Boolean;
+function NMRAnetUtilities_IsAddressedMessage(CANBuffer: PCANBuffer): Boolean;
+function NMRAnetUtilities_IsDatagramMsg(CANBuffer: PCANBuffer): Boolean;
 procedure NMRAnetUtilities_LoadCANData(var DataBytes: TCAN_DataBytes; Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7: Byte);
 procedure NMRAnetUtilities_LoadDestinationAlias(DestinationAlias: Word; DataBytes: PCAN_DataBytes);
 procedure NMRAnetUtilities_ZeroCANData(var DataBytes: TCAN_DataBytes);
-function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): DWord;
-function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
+function NMRAnetUtilities_PackBytesLo(CANBuffer: PCANBuffer): DWord;
+function NMRAnetUtilities_PackBytesHi(CANBuffer: PCANBuffer): DWord;
 
 function NMRAnetUtilities_SupportsEventAsProducer(DataBytes: PEventID; var EventIndex: Integer): Boolean;
 function NMRAnetUtilities_SupportsEventAsConsumer(DataBytes: PEventID; var EventIndex: Integer): Boolean;
@@ -76,54 +76,54 @@ implementation
 
   
 // *****************************************************************************
-//  procedure NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID
+//  procedure NMRAnetUtilities_LoadFrameCANBufferDataWith48BitNodeID
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer);
+procedure NMRAnetUtilities_LoadFrameCANBufferDataWith48BitNodeID(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer);
 begin
-  Packet^.DataCount := 6;
-  Packet^.DataBytes[0] := NodeBuffer^.Info.ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
-  Packet^.DataBytes[1] := NodeBuffer^.Info.ID[1] shr 8;
-  Packet^.DataBytes[2] := NodeBuffer^.Info.ID[1];
-  Packet^.DataBytes[3] := NodeBuffer^.Info.ID[0] shr 16;
-  Packet^.DataBytes[4] := NodeBuffer^.Info.ID[0] shr 8;
-  Packet^.DataBytes[5] := NodeBuffer^.Info.ID[0];
+  CANBuffer^.DataCount := 6;
+  CANBuffer^.DataBytes[0] := NodeBuffer^.Info.ID[1] shr 16;  // But these all need the 48 Bit Full ID in the Byte Fields
+  CANBuffer^.DataBytes[1] := NodeBuffer^.Info.ID[1] shr 8;
+  CANBuffer^.DataBytes[2] := NodeBuffer^.Info.ID[1];
+  CANBuffer^.DataBytes[3] := NodeBuffer^.Info.ID[0] shr 16;
+  CANBuffer^.DataBytes[4] := NodeBuffer^.Info.ID[0] shr 8;
+  CANBuffer^.DataBytes[5] := NodeBuffer^.Info.ID[0];
 end;
 
 // *****************************************************************************
-//  procedure NMRAnetUtilities_CreateCANControlFramePacket
+//  procedure NMRAnetUtilities_CreateCANControlFrameCANBuffer
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_CreateCANControlFramePacket(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; MTI: DWord);
+procedure NMRAnetUtilities_CreateCANControlFrameCANBuffer(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer; MTI: DWord);
 begin
-  Packet^.DataCount := 0;
-  Packet^.State := Packet^.State or BS_EXTENDED;
-  Packet^.ID := $10000000 or MTI or NodeBuffer^.Info.AliasID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
-  if MTI = MTI_CID0 then Packet^.ID := Packet^.ID or (NodeBuffer^.Info.ID[1] and $00FFF000) else
-  if MTI = MTI_CID1 then Packet^.ID := Packet^.ID or ((NodeBuffer^.Info.ID[1] shl 12) and $00FFF000) else
-  if MTI = MTI_CID2 then Packet^.ID := Packet^.ID or (NodeBuffer^.Info.ID[0] and $00FFF000) else
-  if MTI = MTI_CID3 then Packet^.ID := Packet^.ID or ((NodeBuffer^.Info.ID[0] shl 12) and $00FFF000);
+  CANBuffer^.DataCount := 0;
+  CANBuffer^.State := CANBuffer^.State or BS_EXTENDED;
+  CANBuffer^.ID := $10000000 or MTI or NodeBuffer^.Info.AliasID;  // RID, AMD, AME, AMR are all covered with the Reserved bit, Variable Field value and Source Node Alias
+  if MTI = MTI_CID0 then CANBuffer^.ID := CANBuffer^.ID or (NodeBuffer^.Info.ID[1] and $00FFF000) else
+  if MTI = MTI_CID1 then CANBuffer^.ID := CANBuffer^.ID or ((NodeBuffer^.Info.ID[1] shl 12) and $00FFF000) else
+  if MTI = MTI_CID2 then CANBuffer^.ID := CANBuffer^.ID or (NodeBuffer^.Info.ID[0] and $00FFF000) else
+  if MTI = MTI_CID3 then CANBuffer^.ID := CANBuffer^.ID or ((NodeBuffer^.Info.ID[0] shl 12) and $00FFF000);
   if (MTI = MTI_AMD) or (MTI = MTI_AME) or (MTI = MTI_AMR) then
-    NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(NodeBuffer, Packet);
+    NMRAnetUtilities_LoadFrameCANBufferDataWith48BitNodeID(NodeBuffer, CANBuffer);
 end;
 
 // *****************************************************************************
-//  procedure NMRAnetUtilities_CreateNMRABusMessagePacket
+//  procedure NMRAnetUtilities_CreateNMRABusMessageCANBuffer
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_CreateNMRABusMessagePacket(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
+procedure NMRAnetUtilities_CreateNMRABusMessageCANBuffer(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
 var
   Offset: Word;
   i: Integer;
@@ -133,40 +133,40 @@ begin
   begin
     if DestinationAlias <> 0 then
     begin
-      NMRAnetUtilities_LoadDestinationAlias(DestinationAlias, @Packet^.DataBytes);
+      NMRAnetUtilities_LoadDestinationAlias(DestinationAlias, @Buffer^.DataBytes);
       ByteCount := ByteCount + 2;
       Offset := 2;
     end; 
-    Packet^.DataCount := ByteCount;
+    Buffer^.DataCount := ByteCount;
     for i := 0 to ByteCount do
-      Packet^.DataBytes[i+Offset] := DataBytes^[i];
+      Buffer^.DataBytes[i+Offset] := DataBytes^[i];
   end else
-    Packet^.DataCount := 0;
+    Buffer^.DataCount := 0;
 
-  Packet^.State := Packet^.State or BS_EXTENDED;
-  Packet^.ID := $10000000 or MTI or NodeBuffer^.Info.AliasID;
+  Buffer^.State := Buffer^.State or BS_EXTENDED;
+  Buffer^.ID := $10000000 or MTI or NodeBuffer^.Info.AliasID;
 end;
 
 // *****************************************************************************
-//  procedure NMRAnetUtilities_CreateNMRABusMessagePacketWithDestInMTI
+//  procedure NMRAnetUtilities_CreateNMRABusMessageCANBufferWithDestInMTI
 //     Parameters:
 //     Returns:
 //
 //     Description:
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_CreateNMRABusMessagePacketWithDestInMTI(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
+procedure NMRAnetUtilities_CreateNMRABusMessageCANBufferWithDestInMTI(NodeBuffer: PNMRAnetNode; Buffer: PCANBuffer; MTI: DWord; DestinationAlias: Word; ByteCount: Byte; DataBytes: PCAN_DataBytes);
 begin
-  Packet^.DataCount := ByteCount;
+  Buffer^.DataCount := ByteCount;
   if DataBytes <> nil then
   begin
-    Packet^.DataCount := ByteCount;
-    Packet^.DataBytes := DataBytes^;
+    Buffer^.DataCount := ByteCount;
+    Buffer^.DataBytes := DataBytes^;
   end;
-  Packet^.State := Packet^.State or BS_EXTENDED;
-  Packet^.ID := $10000000 or MTI or NodeBuffer^.Info.AliasID;
+  Buffer^.State := Buffer^.State or BS_EXTENDED;
+  Buffer^.ID := $10000000 or MTI or NodeBuffer^.Info.AliasID;
   if DestinationAlias <> 0 then
-    Packet^.ID := Packet^.ID or DWORD(DestinationAlias shl 12);
+    Buffer^.ID := Buffer^.ID or DWORD(DestinationAlias shl 12);
 end;
 
 
@@ -178,13 +178,13 @@ end;
 //     Description: Extracts the Destination ID packed in DataBytes
 //
 // *****************************************************************************
-function NMRAnetUtilities_ExtractDestinationAlias(Packet: PCANBuffer): Word;
+function NMRAnetUtilities_ExtractDestinationAlias(CANBuffer: PCANBuffer): Word;
 begin
   Result := 0;
-  if NMRAnetUtilities_IsAddressedMessage(Packet) then
+  if NMRAnetUtilities_IsAddressedMessage(CANBuffer) then
   begin
-    Result := Packet^.DataBytes[0] shl 8;
-    Result := Result or Packet^.DataBytes[1];
+    Result := CANBuffer^.DataBytes[0] shl 8;
+    Result := Result or CANBuffer^.DataBytes[1];
     Result := Result and $0FFF;
   end
 end;
@@ -197,13 +197,13 @@ end;
 //     Description: Extracts the Destination ID packed in DataBytes
 //
 // *****************************************************************************
-function NMRAnetUtilities_ExtractDestinationAliasFlags(Packet: PCANBuffer): Word;
+function NMRAnetUtilities_ExtractDestinationAliasFlags(Buffer: PCANBuffer): Word;
 begin
   Result := 0;
-  if NMRAnetUtilities_IsAddressedMessage(Packet) then
+  if NMRAnetUtilities_IsAddressedMessage(Buffer) then
   begin
-    Result := Packet^.DataBytes[0] shl 8;
-    Result := Result or Packet^.DataBytes[1];
+    Result := Buffer^.DataBytes[0] shl 8;
+    Result := Result or Buffer^.DataBytes[1];
     Result := Result and $F000;
   end
 end;
@@ -218,11 +218,11 @@ end;
 //     Description: Extracts the Destination ID packed in the ID if it is available
 //
 // *****************************************************************************
-function NMRAnetUtilities_ExtractDestinationCodedInMTIAlias(Packet: PCANBuffer): Word;
+function NMRAnetUtilities_ExtractDestinationCodedInMTIAlias(CANBuffer: PCANBuffer): Word;
 begin
   Result := 0;
-  if NMRAnetUtilities_IsDatagramMsg(Packet) then
-    Result := (Packet^.ID and $00FFF000) shr 12
+  if NMRAnetUtilities_IsDatagramMsg(CANBuffer) then
+    Result := (CANBuffer^.ID and $00FFF000) shr 12
 end;
 
 // *****************************************************************************
@@ -233,21 +233,21 @@ end;
 //     Description: Extracts the Source ID packed in the ID if it is available
 //
 // *****************************************************************************
-function NMRAnetUtilities_ExtractSourceAlias(Packet: PCANBuffer): Word;
+function NMRAnetUtilities_ExtractSourceAlias(CANBuffer: PCANBuffer): Word;
 begin
-  Result := Packet^.ID and MASK_SOURCE_ALIAS
+  Result := CANBuffer^.ID and MASK_SOURCE_ALIAS
 end;
 
 // *****************************************************************************
-//  function NMRAnetUtilities_PacketBytesToNodeID
+//  function NMRAnetUtilities_CANBufferBytesToNodeID
 //     Parameters:
 //     Returns:
 //
-//     Description: Extracts the NodeID from the 8 CAN bytes in the passed Packet
-//  Requires that the packet contains a valid NodeID in the bytes.
+//     Description: Extracts the NodeID from the 8 CAN bytes in the passed CANBuffer
+//  Requires that the CANBuffer contains a valid NodeID in the bytes.
 //
 // *****************************************************************************
-procedure NMRAnetUtilities_PacketBytesToNodeID(DataBytes: PCAN_DataBytes; var NodeID: TNodeID; iStartByte: Byte);
+procedure NMRAnetUtilities_CANBufferBytesToNodeID(DataBytes: PCAN_DataBytes; var NodeID: TNodeID; iStartByte: Byte);
 begin
   NodeID[1] := DataBytes^[iStartByte+2];
   NodeID[1] := NodeID[1] or DataBytes^[iStartByte+1] shl 8;
@@ -291,9 +291,9 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_EqualDestinationAlias(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer): Boolean;
+function NMRAnetUtilities_EqualDestinationAlias(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer): Boolean;
 begin
-  Result := NMRAnetUtilities_EqualAliasID(NodeBuffer, NMRAnetUtilities_ExtractDestinationAlias(Packet))
+  Result := NMRAnetUtilities_EqualAliasID(NodeBuffer, NMRAnetUtilities_ExtractDestinationAlias(CANBuffer))
 end;
 
 // *****************************************************************************
@@ -413,9 +413,9 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_IsAddressedMessage(Packet: PCANBuffer): Boolean;
+function NMRAnetUtilities_IsAddressedMessage(CANBuffer: PCANBuffer): Boolean;
 begin
-  Result := Packet^.ID and MTI_ADDRESSED_MASK <> 0
+  Result := CANBuffer^.ID and MTI_ADDRESSED_MASK <> 0
 end;
 
 // *****************************************************************************
@@ -426,10 +426,10 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer; ): Boolean;
+function NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer; ): Boolean;
 begin
-  if NMRAnetUtilities_IsAddressedMessage(Packet) then
-    Result := NMRAnetUtilities_EqualAliasID(NodeBuffer, NMRAnetUtilities_ExtractDestinationAlias(Packet))
+  if NMRAnetUtilities_IsAddressedMessage(CANBuffer) then
+    Result := NMRAnetUtilities_EqualAliasID(NodeBuffer, NMRAnetUtilities_ExtractDestinationAlias(CANBuffer))
   else
     Result := False
 end;
@@ -442,9 +442,9 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_IsDatagramMsg(Packet: PCANBuffer): Boolean;
+function NMRAnetUtilities_IsDatagramMsg(CANBuffer: PCANBuffer): Boolean;
 begin
-  Result := ((Packet^.ID and MTI_FRAME_TYPE_MASK) >= MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME) and ((Packet^.ID and MTI_FRAME_TYPE_MASK) <= MTI_FRAME_TYPE_DATAGRAM_FRAME_END)
+  Result := ((CANBuffer^.ID and MTI_FRAME_TYPE_MASK) >= MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME) and ((CANBuffer^.ID and MTI_FRAME_TYPE_MASK) <= MTI_FRAME_TYPE_DATAGRAM_FRAME_END)
 end;
 
 // *****************************************************************************
@@ -455,9 +455,9 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_IsAddressedDatagramToNode(NodeBuffer: PNMRAnetNode; Packet: PCANBuffer): Boolean;
+function NMRAnetUtilities_IsAddressedDatagramToNode(NodeBuffer: PNMRAnetNode; CANBuffer: PCANBuffer): Boolean;
 begin
-  Result := NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer, Packet) and NMRAnetUtilities_IsDatagramMsg(Packet)
+  Result := NMRAnetUtilities_IsAddressedMessageToNode(NodeBuffer, CANBuffer) and NMRAnetUtilities_IsDatagramMsg(CANBuffer)
 end;
 
 // *****************************************************************************
@@ -518,15 +518,15 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_PackBytesLo(Packet: PCANBuffer): DWord;
+function NMRAnetUtilities_PackBytesLo(CANBuffer: PCANBuffer): DWord;
 begin
-  Result := Packet^.DataBytes[3];
+  Result := CANBuffer^.DataBytes[3];
   Result := Result shr 8;
-  Result := Packet^.DataBytes[2];
+  Result := CANBuffer^.DataBytes[2];
   Result := Result shr 8;
-  Result := Packet^.DataBytes[1];
+  Result := CANBuffer^.DataBytes[1];
   Result := Result shr 8;
-  Result := Packet^.DataBytes[0];
+  Result := CANBuffer^.DataBytes[0];
   Result := Result shr 8;
 end;
 
@@ -538,15 +538,15 @@ end;
 //     Description:
 //
 // *****************************************************************************
-function NMRAnetUtilities_PackBytesHi(Packet: PCANBuffer): DWord;
+function NMRAnetUtilities_PackBytesHi(CANBuffer: PCANBuffer): DWord;
 begin
-  Result := Packet^.DataBytes[7];
+  Result := CANBuffer^.DataBytes[7];
   Result := Result shr 8;
-  Result := Packet^.DataBytes[6];
+  Result := CANBuffer^.DataBytes[6];
   Result := Result shr 8;
-  Result := Packet^.DataBytes[5];
+  Result := CANBuffer^.DataBytes[5];
   Result := Result shr 8;
-  Result := Packet^.DataBytes[4];
+  Result := CANBuffer^.DataBytes[4];
   Result := Result shr 8;
 end;
 

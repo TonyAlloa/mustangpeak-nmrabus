@@ -336,7 +336,7 @@ begin
   Result := False;
   if CAN_Engine.TX_CANBuffer.State and BS_ALLOCATED = 0 then
   begin
-    NMRAnetUtilities_CreateCANControlFramePacket(Node, Buffer, VariableField);
+    NMRAnetUtilities_CreateCANControlFrameCANBuffer(Node, Buffer, VariableField);
     CAN_Engine.TX_CANBuffer := Buffer^;
     CAN_Engine.TX_CANBuffer.State := CAN_Engine.TX_CANBuffer.State or BS_ALLOCATED;
     StartCANMessageEngine();
@@ -375,9 +375,9 @@ begin
   if CAN_Engine.TX_NMRAnetBuffer.State and BS_ALLOCATED = 0 then
   begin
     if AliasInHeader then
-      NMRAnetUtilities_CreateNMRABusMessagePacketWithDestInMTI(Node, Buffer, MTI, DestinationAlias, DataCount, DataBytes)
+      NMRAnetUtilities_CreateNMRABusMessageCANBufferWithDestInMTI(Node, Buffer, MTI, DestinationAlias, DataCount, DataBytes)
     else
-      NMRAnetUtilities_CreateNMRABusMessagePacket(Node, Buffer, MTI, DestinationAlias, DataCount, DataBytes);
+      NMRAnetUtilities_CreateNMRABusMessageCANBuffer(Node, Buffer, MTI, DestinationAlias, DataCount, DataBytes);
 
     CAN_Engine.TX_NMRAnetBuffer := Buffer^;
     CAN_Engine.TX_NMRAnetBuffer.State := CAN_Engine.TX_NMRAnetBuffer.State or BS_ALLOCATED;
@@ -542,7 +542,7 @@ begin
     begin
       if NMRABusBufferAvailable then
       begin
-        NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, CANBuffer);
+        NMRAnetUtilities_LoadFrameCANBufferDataWith48BitNodeID(Node, CANBuffer);
         TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_VERIFIED_NODE_ID_NUMBER, 0, 6, @CANBuffer^.DataBytes, False);
         NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
       end;
@@ -1008,7 +1008,7 @@ begin
     STATE_NMRABUS_START :
       begin  {$IFDEF TRACE_NODE_STATEMACHINE} UART1_Write_Text('STATE_NMRABUS_START'+LF); {$ENDIF}
         CANStorage_FlushBuffers(Node^.Info.AliasID);
-        while CAN_Engine.State and CES_TRANSMITTING <> 0 do;                             // Wait for the last transmited packet
+        while CAN_Engine.State and CES_TRANSMITTING <> 0 do;                             // Wait for the last transmited CANBuffer
         Node^.iStateMachine := STATE_NMRABUS_GENERATE_NODE_ALIAS;
       end;
     STATE_NMRABUS_GENERATE_NODE_ALIAS :
@@ -1091,7 +1091,7 @@ begin
         else begin
           if NMRABusBufferAvailable then
           begin
-            NMRAnetUtilities_LoadFramePacketDataWith48BitNodeID(Node, @CANBuffer);
+            NMRAnetUtilities_LoadFrameCANBufferDataWith48BitNodeID(Node, @CANBuffer);
             TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_INITIALIZATION_COMPLETE, 0, 6, @CANBuffer.DataBytes, False);
             Node^.iStateMachine := STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS;
             NMRAnetNode_SetStateFlag(Node, NS_INITIALIZED);

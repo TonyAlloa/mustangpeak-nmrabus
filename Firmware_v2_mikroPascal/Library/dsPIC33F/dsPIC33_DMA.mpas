@@ -23,11 +23,11 @@ unit dsPIC33_DMA;
 {$I Options.inc}
 
 // WARNING:  For the dsPIC33EP this library only supports memory access in the DMAxSTAL and DMAxSBL space (16 bit memory address only)  The upper 8 bits MUST be 0 in the allocated RAM
-{$IFDEF P33EP64GP502} {$DEFINE dsPIC33EP} {$ENDIF}
-{$IFDEF P33EP128GP502} {$DEFINE dsPIC33EP}{$ENDIF}
-{$IFDEF P33EP256GP502} {$DEFINE dsPIC33EP}{$ENDIF}
+{$IFDEF P33EP64GP502} {$DEFINE dsPIC33EP_DMA} {$ENDIF}
+{$IFDEF P33EP128GP502} {$DEFINE dsPIC33EP_DMA}{$ENDIF}
+{$IFDEF P33EP256GP502} {$DEFINE dsPIC33EP_DMA}{$ENDIF}
 
-{$IFDEF P33FJ256GP710A} {$DEFINE dsPIC33} {$ENDIF}
+{$IFDEF P33FJ256GP710A} {$DEFINE dsPIC33_DMA} {$ENDIF}
 
 
 const
@@ -85,10 +85,10 @@ const
   
   NO_DMA_TRANSFER                      = $000F;
   
-  {$IFDEF dsPIC33EP}
+  {$IFDEF dsPIC33EP_DMA}
     DMA_CHANNEL_STRUCTURE_SIZE = 8;   // dsPIC33EP DMA structure size for each channel is 8 words
   {$ENDIF}
-  {$IFDEF dsPIC33}
+  {$IFDEF dsPIC33_DMA}
     DMA_CHANNEL_STRUCTURE_SIZE = 6;  // dsPIC33 DMA structure size for each channel is 6 words
   {$ENDIF}
 
@@ -339,11 +339,11 @@ procedure dsPIC33_DMA_AddressOffsetA(ChannelNumber: Word; Address: Word);
 var
   RegPtr: ^Word;
 begin
-  {$IFDEF dsPIC33EP}
+  {$IFDEF dsPIC33EP_DMA}
     RegPtr := MapToChannelReg(ChannelNumber, @DMA0STAL);
     RegPtr^ := Address
   {$ENDIF}
-  {$IFDEF dsPIC33}
+  {$IFDEF dsPIC33_DMA}
     RegPtr := MapToChannelReg(ChannelNumber, @DMA0STA);
     RegPtr^ := Address
   {$ENDIF}
@@ -363,11 +363,11 @@ procedure dsPIC33_DMA_AddressOffsetB(ChannelNumber: Word; Address: Word);
 var
   RegPtr: ^Word;
 begin
-  {$IFDEF dsPIC33EP}
+  {$IFDEF dsPIC33EP_DMA}
     RegPtr := MapToChannelReg(ChannelNumber, @DMA0STBL);
     RegPtr^ := Address
   {$ENDIF}
-  {$IFDEF dsPIC33}
+  {$IFDEF dsPIC33_DMA}
     RegPtr := MapToChannelReg(ChannelNumber, @DMA0STB);
     RegPtr^ := Address
   {$ENDIF}
@@ -453,10 +453,10 @@ end;
 // *****************************************************************************
 function dsPIC33_DMA_MostRecentRAM_Address: Word;
 begin
-  {$IFDEF dsPIC33EP}
+  {$IFDEF dsPIC33EP_DMA}
      Result := 0;
   {$ENDIF}                                              // TODO: NOT IMPLEMENTED CORRECTLY
-  {$IFDEF dsPIC33}
+  {$IFDEF dsPIC33_DMA}
     Result := DSADR
   {$ENDIF}
 end;
@@ -473,10 +473,10 @@ end;
 // *****************************************************************************
 function dsPIC33_DMA_PeripheralWriteCollisionDetected(ChannelNumber: Word): Boolean;
 begin
-  {$IFDEF dsPIC33EP}
+  {$IFDEF dsPIC33EP_DMA}
     Result := DMAPWC.ChannelNumber = 1
   {$ENDIF}
-  {$IFDEF dsPIC33}
+  {$IFDEF dsPIC33_DMA}
     Result := DMACS0.ChannelNumber = 1
   {$ENDIF}
 end;
@@ -492,15 +492,15 @@ end;
 //  Description:
 // *****************************************************************************
 function dsPIC33_DMA_DSPRAMWriteCollisionDetected(ChannelNumber: Word): Boolean;
-{$IFDEF dsPIC33}
+{$IFDEF dsPIC33_DMA}
 var
   Offset: Word;
 {$ENDIF}
 begin
-  {$IFDEF dsPIC33EP}
+  {$IFDEF dsPIC33EP_DMA}
      Result := DMARQC.ChannelNumber = 1
   {$ENDIF}
-  {$IFDEF dsPIC33}
+  {$IFDEF dsPIC33_DMA}
     Offset := ChannelNumber + 8;
     Result := DMACS0.Offset = 1
   {$ENDIF}
@@ -518,13 +518,13 @@ end;
 // *****************************************************************************
 function dsPIC33_DMA_CurrentPingPongRegister(ChannelNumber: Word): Word;
 begin
-  {$IFDEF dsPIC33EP}
+  {$IFDEF dsPIC33EP_DMA}
     if DMAPPS.ChannelNumber = 1 then
       Result := PING_PONG_REG_B
     else
       Result := PING_PONG_REG_A
   {$ENDIF}
-  {$IFDEF dsPIC33}
+  {$IFDEF dsPIC33_DMA}
     if DMACS1.ChannelNumber = 1 then
       Result := PING_PONG_REG_B
     else
@@ -543,10 +543,10 @@ end;
 // *****************************************************************************
 function dsPIC33_DMA_LastActiveChannel: Word;
 begin
-  {$IFDEF dsPIC33EP}
+  {$IFDEF dsPIC33EP_DMA}
     Result := DMALCA
   {$ENDIF}
-  {$IFDEF dsPIC33}                           // TODO: NOT IMPLEMENTED CORRECTLY
+  {$IFDEF dsPIC33_DMA}                           // TODO: NOT IMPLEMENTED CORRECTLY
     Result := (DMACS1 and $0F00) shr 8;
   {$ENDIF}
 end;

@@ -138,7 +138,7 @@ begin
         MTI_AME  : begin                                                        // Alias Map Enquiry.....
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
                     begin                                                       // The message is for a specific Node
-                      NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
+                      NMRAnetUtilities_CANBufferBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
                       Node := NMRAnetNode_FindByNodeID(NodeID);
                       if Node <> nil then
                       begin
@@ -154,7 +154,7 @@ begin
         MTI_AMD  : begin                                                        // Alias Map Definition....
                     if CANBuffer^.DataCount = 6 then                            // Does the data contain the correct number of bytes for a Node ID?
                     begin
-                      NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
+                      NMRAnetUtilities_CANBufferBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
                       Node := NMRAnetNode_FindByNodeID(NodeID);                 // *************** Need to characterize how much time this may take with a large number of nodes
                       if Node <> nil then
                         NMRAnetNode_SetMsgFlags(MF_DUPLICATE_NODE_ID);
@@ -307,7 +307,7 @@ begin
                                                                MTI_Code := (CANBuffer^.ID shr 12) and $0FFF;
                                                                DataBytes[2] := (MTI_Code shr 8) and $00FF;
                                                                DataBytes[3] := MTI_Code and $00FF;
-                                                               NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_AddressedErrorBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, SourceAlias, 4, @DataBytes);
+                                                               NMRAnetUtilities_CreateNMRABusMessageCANBuffer(Node, @CAN_Engine.TX_AddressedErrorBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, SourceAlias, 4, @DataBytes);
                                                                CAN_Engine.TX_AddressedErrorBuffer.State := CAN_Engine.TX_AddressedErrorBuffer.State or BS_ALLOCATED;
                                                                StartCANHighPriorityMessageEngine;
                                                                end;
@@ -321,7 +321,7 @@ begin
                                                                MTI_Code := (CANBuffer^.ID shr 12) and $0FFF;
                                                                DataBytes[2] := (MTI_Code shr 8) and $00FF;
                                                                DataBytes[3] := MTI_Code and $00FF;
-                                                               NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_AddressedErrorBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, SourceAlias, 4, @DataBytes);
+                                                               NMRAnetUtilities_CreateNMRABusMessageCANBuffer(Node, @CAN_Engine.TX_AddressedErrorBuffer, MTI_OPTIONAL_INTERACTION_REJECTED, SourceAlias, 4, @DataBytes);
                                                                CAN_Engine.TX_AddressedErrorBuffer.State := CAN_Engine.TX_AddressedErrorBuffer.State or BS_ALLOCATED;
                                                                StartCANHighPriorityMessageEngine;
                                                              end
@@ -334,7 +334,7 @@ begin
                                                                                             if (CANBuffer^.DataCount = 0) then                                      // THIS IS NOT CLEAR IN THE SPEC
                                                                                               NMRAnetNode_SetMsgFlags(MF_VERIFY_NODE_ID)
                                                                                             else begin
-                                                                                              NMRAnetUtilities_PacketBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
+                                                                                              NMRAnetUtilities_CANBufferBytesToNodeID(@CANBuffer^.DataBytes, NodeID, 0);
                                                                                               Node := NMRAnetNode_FindByNodeID(NodeID);
                                                                                               if Node <> nil then
                                                                                                 NMRAnetNode_SetMsgFlag(Node, MF_VERIFY_NODE_ID)
@@ -421,7 +421,7 @@ begin
                                                                 NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
                                                                 NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
                                                                 DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED);
-                                                                NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
+                                                                NMRAnetUtilities_CreateNMRABusMessageCANBuffer(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
                                                                 CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or BS_ALLOCATED;
                                                                 StartCANHighPriorityMessageEngine
                                                               end;
@@ -429,7 +429,7 @@ begin
                                                         end else
                                                         begin
                                                           DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
-                                                          NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
+                                                          NMRAnetUtilities_CreateNMRABusMessageCANBuffer(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
                                                           CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or BS_ALLOCATED;
                                                           StartCANHighPriorityMessageEngine;
                                                         end
@@ -493,7 +493,7 @@ begin
                                                               NMRAnetUtilities_DatagramBufferUnLink(Node, DatagramBuffer);
                                                               NMRAnetBufferPools_ReleaseDatagramBuffer(DatagramBuffer);
                                                               DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_SOURCE_DATAGRAMS_NOT_ACCEPTED);
-                                                              NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
+                                                              NMRAnetUtilities_CreateNMRABusMessageCANBuffer(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
                                                               CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or BS_ALLOCATED;
                                                               StartCANHighPriorityMessageEngine;
                                                             end;
@@ -501,7 +501,7 @@ begin
                                                         end else
                                                         begin
                                                           DataBytesPtr := PCAN_DataBytes( @DATAGRAM_RESULT_REJECTED_BUFFER_FULL);
-                                                          NMRAnetUtilities_CreateNMRABusMessagePacket(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
+                                                          NMRAnetUtilities_CreateNMRABusMessageCANBuffer(Node, @CAN_Engine.TX_DatagramRejected, MTI_DATAGRAM_REJECTED_REPLY, SourceAlias, 2, DataBytesPtr);
                                                           CAN_Engine.TX_DatagramRejected.State := CAN_Engine.TX_DatagramRejected.State or BS_ALLOCATED;
                                                           StartCANHighPriorityMessageEngine;
                                                         end

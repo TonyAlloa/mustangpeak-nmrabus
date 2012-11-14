@@ -29,5 +29,8 @@ var
   RX_Main_RawBufferArray: TCAN_RxRawBufferArray; absolute ($1000 + (SizeOf(TCANRawBuffer)*MAX_ECAN_TX_BUFFER));  // Recieve buffer for all filters.  The software moves the data to the right list
 
 var
-  DummyTx: TCAN_TxRawBufferArray; absolute $$1000;                                                         // Allow the compiler to account for this ram
+  DummyTx: TCAN_TxRawBufferArray; absolute $1000;                                                         // Allow the compiler to account for this ram
   DummyRx: TCAN_RxRawBufferArray; absolute ($1000 + (SizeOf(TCANRawBuffer)*MAX_ECAN_TX_BUFFER));   // Allow the compiler to account for this ram
+  
+  
+end.
