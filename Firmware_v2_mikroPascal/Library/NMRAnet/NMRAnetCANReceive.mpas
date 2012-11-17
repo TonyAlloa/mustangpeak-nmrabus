@@ -31,6 +31,7 @@ uses
   NMRAnetDefinesShared,
   NMRAnetNode,
   CANStorage,
+  NMRAnetAppCallbacks,
   NMRAnetAppDefines;
   
 type
@@ -114,7 +115,7 @@ var
   i: Integer;
 begin
 
-// UART1_Write_Text('CAN'+LF);
+ //UART1_Write_Text('CAN'+LF);
  
   DoDefault := True;
   if CANLayerReceiveHook <> nil then
@@ -214,6 +215,8 @@ var
 begin
 
  // UART1_Write_Text('NMRAnet'+LF);
+  
+  
   TMR4 := 0;
   
   DoDefault := True;
@@ -299,6 +302,30 @@ begin
                                                                                                        BaseBuffer^.Alias := SourceAlias
                                                                                                      end else
                                                                                                        BaseBufferAllocFailed := True
+                                                                                                   end;
+                                                               MTI_TRACTION_PROTOCOL             : begin
+
+                                                                                                    // Does this just update the memory location and the main loop just spins constantly updating or do
+                                                                                                    // I set a flag for it to update???
+                                                                                                    if (CANBuffer^.DataBytes[1] and $F0 = $00) then     // Is it the Train Protocol?
+                                                                                                    begin
+                                                                                                      if (CANBuffer^.DataBytes[1] and $0F = $00) then   // Is it a Speed Operation?
+                                                                                                      begin
+                                                                                                        PDCCVolatileData( Node^.RAMAddress)^.Speed := ((CANBuffer^.DataBytes[2] shl 8) or CANBuffer^.DataBytes[3]);
+                                                                                                      end else
+                                                                                                      if (CANBuffer^.DataBytes[1] and $0F = $01) then   // Is it a Function Operation?
+                                                                                                      begin
+                                                                                                      end
+                                                                                                    end else
+                                                                                                    if (CANBuffer^.DataBytes[1] and $F0 = $80) then     // Is it the DCC Protocol?
+                                                                                                    begin
+                                                                                                      if (CANBuffer^.DataBytes[1] and $0F = $00) then   // Is it a Speed Operation?
+                                                                                                      begin
+                                                                                                      end else
+                                                                                                      if (CANBuffer^.DataBytes[1] and $0F = $01) then   // Is it a Function Operation?
+                                                                                                      begin
+                                                                                                      end
+                                                                                                    end;
                                                                                                    end
                                                              {$ENDIF}
                                                              else begin

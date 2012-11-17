@@ -450,21 +450,13 @@ begin
     case dsPIC33_CAN_InterruptCode of
       ICODE_TRB0 :                                                              // Tx Rx Buffer 0
       begin
-      //  LATB1_bit := 1;
-      //  Delay_us(200);
-      //  LATB1_bit := 0;
         dsPIC33_CAN_InterruptFlagTXBuffer(True);                                // TX Interrupt Flag Reset
         if not StartTransmission then
           CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
       end;
       ICODE_TRB1 :                                                              // Tx Rx Buffer 0
       begin
-    //    LATB2_bit := 1;
-     //   Delay_us(200);
-     //   LATB2_bit := 0;
         dsPIC33_CAN_InterruptFlagTXBuffer(True);                                // TX Interrupt Flag Reset
-      //  if not StartTransmission then
-      //    CAN_Engine.State := CAN_Engine.State and not CES_TRANSMITTING;
       end;
       ICODE_TRB2 :                                                              // Tx Rx Buffer 0
       begin
@@ -492,25 +484,25 @@ var
 begin
   for i := 0 to MAX_ECAN_TX_BUFFER - 1 do
   begin
-    DummyTx[i].Word0 := 0;                                                        // Allow the compiler to account for this ram
-    DummyTx[i].Word1 := 0;
-    DummyTx[i].Word2 := 0;
-    DummyTx[i].Word3 := 0;
-    DummyTx[i].Word4 := 0;
-    DummyTx[i].Word5 := 0;
-    DummyTx[i].Word6 := 0;
-    DummyTx[i].Word7 := 0;
+    TX_Main_RawBufferArray[i].Word0 := 0;                                                        // Allow the compiler to account for this ram
+    TX_Main_RawBufferArray[i].Word1 := 0;
+    TX_Main_RawBufferArray[i].Word2 := 0;
+    TX_Main_RawBufferArray[i].Word3 := 0;
+    TX_Main_RawBufferArray[i].Word4 := 0;
+    TX_Main_RawBufferArray[i].Word5 := 0;
+    TX_Main_RawBufferArray[i].Word6 := 0;
+    TX_Main_RawBufferArray[i].Word7 := 0;
   end;
   for i := 0 to MAX_ECAN_RX_BUFFER - 1 do
   begin
-    DummyRx[i].Word0 := 0;                                                        // Allow the compiler to account for this ram
-    DummyRx[i].Word1 := 0;
-    DummyRx[i].Word2 := 0;
-    DummyRx[i].Word3 := 0;
-    DummyRx[i].Word4 := 0;
-    DummyRx[i].Word5 := 0;
-    DummyRx[i].Word6 := 0;
-    DummyRx[i].Word7 := 0;
+    RX_Main_RawBufferArray[i].Word0 := 0;                                                        // Allow the compiler to account for this ram
+    RX_Main_RawBufferArray[i].Word1 := 0;
+    RX_Main_RawBufferArray[i].Word2 := 0;
+    RX_Main_RawBufferArray[i].Word3 := 0;
+    RX_Main_RawBufferArray[i].Word4 := 0;
+    RX_Main_RawBufferArray[i].Word5 := 0;
+    RX_Main_RawBufferArray[i].Word6 := 0;
+    RX_Main_RawBufferArray[i].Word7 := 0;
   end;
 end;
 

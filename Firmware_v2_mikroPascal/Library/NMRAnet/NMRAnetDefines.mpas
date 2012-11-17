@@ -45,11 +45,11 @@ const
   BMC_CONSUMER_IDENTIFY                    = $03;                               // [IN] Buffer Message Code is Consumer Identify           [DataBuffer]
   BMC_EVENT_LEARN                          = $04;                               // [IN] Buffer Message Code is Event Learn                 [BaseBuffer]
   BMC_SIMPLE_NODE_INFO_REQEUST             = $05;                               // [IN] Buffer Message Code is ACDI Request                [BaseBuffer]
-  BMC_DATAGRAM                             = $06;
-  BMC_DATAGRAM_MEMORY_CONFIG               = $07;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
-  BMC_DATAGRAM_TRACTION_CONTROL            = $08;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
+  BMC_DATAGRAM                             = $07;
+  BMC_DATAGRAM_MEMORY_CONFIG               = $08;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
+  BMC_DATAGRAM_TRACTION_CONTROL            = $09;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
   {$IFDEF BOOTLOADER}
-  BMC_DATAGRAM_BOOTLOADER                  = $09;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
+  BMC_DATAGRAM_BOOTLOADER                  = $10;                               // [IN/OUT] Buffer Message Code is a Datagram              [DatagramBuffer]
   {$ENDIF}
 type
   TBaseBuffer = record                                                          // Common Buffer layout that allow overlaying of bytes with TDatagramBuffer,  etc
@@ -209,6 +209,7 @@ const
   MTI_SIMPLE_PROTOCOL_MASK           = $00010000;
   MTI_EVENT_PRESENT_MASK             = $00002000;
   
+  MTI_TRACTION_PROTOCOL              = $095E8000;                                // Databytes = Protocol (Train Protocol, DCC, etc), Operation, control
   MTI_INITIALIZATION_COMPLETE        = $09100000;                                // Databytes = Full Node ID
   MTI_VERIFY_NODE_ID_NUMBER_DEST     = $09488000;                                // Databytes = Destination Alias
   MTI_VERIFY_NODE_ID_NUMBER          = $09490000;                                //

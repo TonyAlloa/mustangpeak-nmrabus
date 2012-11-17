@@ -159,8 +159,7 @@ begin
   MCU_Setup_Initialize;                                                         // Start the timers and perpherials last
   NMRA_DCC_Initialize;    
   _25AAxxxx_Initialize;
- // NMRAnetDatagrams_SetCallback(DatagramTrainControlCallbackFunc, @TrainControlCallback);
- 
+
   for i := 0 to 40 do
     NMRAnetNode_Allocate;
 

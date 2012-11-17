@@ -90,6 +90,9 @@ var
   {$IFDEF EEPROM_THREE_BANK}CS_Bank_2: sbit; sfr; external; {$ENDIF}
   {$IFDEF EEPROM_FOUR_BANK}CS_Bank_3: sbit; sfr; external; {$ENDIF}
   
+  EE_PROM_Hold                      : sbit; sfr; external;
+  EEPROM_Hold_Direction             : sbit; sfr; external;
+  
   // Assign the Chip Select pin direction
   // i.e.
   // var CS_Bank_0_Direction: sbit at TRISD0;
@@ -292,6 +295,9 @@ begin
   {$IFDEF EEPROM_TWO_BANK}CS_Bank_1_Direction := 0; {$ENDIF}  // Output
   {$IFDEF EEPROM_THREE_BANK}CS_Bank_2_Direction := 0; {$ENDIF} // Output
   {$IFDEF EEPROM_FOUR_BANK}CS_Bank_3_Direction := 0; {$ENDIF}  // Output
+  EE_PROM_Hold := 1; // No Hold
+  EEPROM_Hold_Direction := 0 // Output
+  
 end;
 
 end.
