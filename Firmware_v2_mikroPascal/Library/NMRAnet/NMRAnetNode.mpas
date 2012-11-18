@@ -32,6 +32,8 @@ uses
   procedure NMRAnetNode_Release(Node: PNMRAnetNode);
   function NMRAnetNode_FindByAlias(AliasID: Word): PNMRAnetNode;
   function NMRAnetNode_FindByNodeID(var NodeID: TNodeID): PNMRAnetNode;
+  function NMRAnetNode_FindFirstVirtualNode: PNMRAnetNode;
+  function NMRAnetNode_FindLastVirtualNode: PNMRAnetNode;
 
   function NMRAnetNode_NextNode: PNMRAnetNode;
   procedure NMRAnetNode_SortNodeList(var LocalNodes: TNodes);
@@ -221,6 +223,69 @@ begin
 end;
 
 // *****************************************************************************
+//  procedure NMRAnetNode_FindByNodeID;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+//                READ ME:
+//                   Currently this uses a dog slow search.  If we declare that
+//                   the vNodes must be continous and have the same upper 3 bytes
+//                   then this can collapse to a check the upper 3 bytes then check
+//                   the lower 3 bytes to be between two values (NodeID and NodeID+vNodeCount)
+// *****************************************************************************
+function NMRAnetNode_FindFirstVirtualNode: PNMRAnetNode;
+var
+  i: Integer;
+begin
+  Result := nil;
+  i := 0;
+  while (i < Nodes.AllocatedCount) do
+  begin
+    if Nodes.AllocatedList[i]^.State and NS_VIRTUAL = NS_VIRTUAL then
+    begin
+      Result := Nodes.AllocatedList[i];
+      Break;
+    end;
+    Inc(i);
+  end;
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetNode_FindLastVirtualNode;
+//
+//  Parameters:
+//
+//  Result:
+//
+//  Description:
+//                READ ME:
+//                   Currently this uses a dog slow search.  If we declare that
+//                   the vNodes must be continous and have the same upper 3 bytes
+//                   then this can collapse to a check the upper 3 bytes then check
+//                   the lower 3 bytes to be between two values (NodeID and NodeID+vNodeCount)
+// *****************************************************************************
+function NMRAnetNode_FindLastVirtualNode: PNMRAnetNode;
+var
+  i: Integer;
+begin
+  Result := nil;
+  i := Nodes.AllocatedCount - 1;
+  while (i > -1) do
+  begin
+    if Nodes.AllocatedList[i]^.State and NS_VIRTUAL = NS_VIRTUAL then
+    begin
+      Result := Nodes.AllocatedList[i];
+      Break;
+    end;
+    Dec(i);
+  end;
+end;
+  
+
+// *****************************************************************************
 //  procedure NMRAnetNode_Initialize;
 //
 //  Parameters:
@@ -390,7 +455,7 @@ end;
 // *****************************************************************************
 function NMRAnetNode_TestStateFlag(Node: PNMRAnetNode; Flag: Byte): Boolean;
 begin
-  Result := Node^.State and Flag <> 0;
+  Result := Node^.State and Flag = Flag;
 end;
 
 // *****************************************************************************
@@ -445,7 +510,7 @@ end;
 // *****************************************************************************
 function NMRAnetNode_TestMsgFlags(Node: PNMRAnetNode; Flag: Word; DoClear: Boolean): Boolean;
 begin
-  Result := Node^.MsgFlags and Flag <> 0;
+  Result := Node^.MsgFlags and Flag = Flag;
   if DoClear then
     NMRAnetNode_ClearMsgFlag(Node, Flag);
 end;

@@ -56,6 +56,7 @@ uses
   function NMRAnetStateMachine_TrySendIdentifyConsumer(Node: PNMRAnetNode; EventID: PEventID): Boolean;
   function NMRAnetStateMachine_TrySendIdentifyEvents(Node: PNMRAnetNode): Boolean;
   function NMRAnetStateMachine_TrySendAliasMapEnquiry(Node: PNMRAnetNode): Boolean;
+  function NMRAnetStateMachine_TrySendAliasMapReset(Node: PNMRAnetNode): Boolean;
   function NMRAnetStateMachine_TrySendVerifyNodeID(Node: PNMRAnetNode; DestinationAliasID: Word): Boolean;
   function NMRAnetStateMachine_TrySendAbbreviatedCDI(Node: PNMRAnetNode; DestinationAliasID: Word): Boolean;
   function NMRAnetStateMachine_TrySendDatagram(Node: PNMRAnetNode; CANBuffer: PCANBuffer; Datagram: PDatagramBuffer): Boolean;
@@ -69,6 +70,7 @@ implementation
 
 // Forward declarations
 function TransmitNMRABusLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; DestinationAliasID: Word; DataCount: Byte; DataBytes: PCAN_DataBytes; AliasInHeader: Boolean): Boolean; forward;
+function TransmitCANLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord): Boolean; forward;
 function NMRABusBufferAvailable: Boolean; forward;
 
 // *****************************************************************************
@@ -144,7 +146,22 @@ function NMRAnetStateMachine_TrySendAliasMapEnquiry(Node: PNMRAnetNode): Boolean
 var
   CANBuffer: TCANBUffer;
 begin
-  Result := TransmitNMRABusLayerMsg(Node, @CANBuffer, MTI_AME, 0, 6, @CANBuffer.DataBytes, False);
+  Result := TransmitCANLayerMsg(Node, @CANBuffer, MTI_AME);
+end;
+
+// *****************************************************************************
+//  procedure NMRAnetStateMachine_TrySendAliasMapReset
+//     Parameters:
+//     Returns:
+//
+//     Description:
+//
+// *****************************************************************************
+function NMRAnetStateMachine_TrySendAliasMapReset(Node: PNMRAnetNode): Boolean;
+var
+  CANBuffer: TCANBUffer;
+begin
+  Result := TransmitCANLayerMsg(Node, @CANBuffer, MTI_AMR);
 end;
 
 // *****************************************************************************
@@ -562,9 +579,19 @@ begin
                                               if NMRABusBufferAvailable then
                                               begin
                                                 NMRAnetUtilities_ZeroCANData(DataBytes);
-                                                for i := 0 to LEN_PIV_PROTOCOL-1 do
-                                                  for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
-                                                    DataBytes[i] := DataBytes[i] or PIV_SUPPORTED_PROTOCOLS[j][i];
+                                                {$IFDEF SUPPORT_VIRTUAL_NODES}
+                                                if NMRAnetNode_TestStateFlag(NOde, NS_VIRTUAL) then
+                                                begin
+                                                  for i := 0 to LEN_PIV_PROTOCOL-1 do
+                                                    for j := 0 to PIV_VNODE_SUPPORTED_PROTOCOL_COUNT - 1 do
+                                                      DataBytes[i] := DataBytes[i] or PIV_VNODE_SUPPORTED_PROTOCOLS[j][i];
+                                                end else
+                                                {$ENDIF}
+                                                begin
+                                                  for i := 0 to LEN_PIV_PROTOCOL-1 do
+                                                    for j := 0 to PIV_SUPPORTED_PROTOCOL_COUNT - 1 do
+                                                      DataBytes[i] := DataBytes[i] or PIV_SUPPORTED_PROTOCOLS[j][i];
+                                                end;
                                                 TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PROTOCOL_SUPPORT_REPLY, BaseBuffer^.Alias, 6, @DataBytes, False);
                                                 NMRAnetUtilities_BaseBufferUnLink(Node, BaseBuffer);
                                                 NMRAnetBufferPools_ReleaseBaseBuffer(BaseBuffer);

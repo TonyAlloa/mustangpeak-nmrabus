@@ -59,14 +59,13 @@ procedure INTERRUPT_DCC_Timer(); iv IVT_ADDR_T1INTERRUPT;
 begin
   T1IF_bit := 0;                                                                // Clear the Flag
 
-      LATA4_bit := not LATA4_bit;
-
-
   // Toggle the Bridge
   H_Bridge_A_Lo := 0;                                                           // Bridge Off
   H_Bridge_A_Hi := 0;                                                           // Bridge Off
   H_Bridge_B_Lo := 0;                                                           // Bridge Off
   H_Bridge_B_Hi := 0;                                                           // Bridge Off
+  
+  
   if Track.TX_Flags.TRANSMITTING_FLAG_DCC_PIN_BIT = 1 then
   begin
     H_Bridge_A_Lo := 1;
@@ -270,19 +269,13 @@ end;
 // MAIN LOOP
 // *******************
 var
-  ActiveNode: PNMRAnetNode;
+  ActiveNode, TempNode: PNMRAnetNode;
   i, j: Integer;
   x, y: Word;
   
 
 
 begin
-  ANSELA := 0x0000;                                  // configure AN pins on Port A as digital I/O
-  ANSELB := 0x0000;                                  // configure AN pins on Port B digital I/O
-
-  TRISA4_bit := 0;
-  LATA4_bit := 0;                                                   // Output
-
   _25AAxxxx_Initialize;
   NMRAnetStateMachine_Initialize(MUSTANGPEAK_ID_0_HI, MUSTANGPEAK_COMMANDSTATION_ID_0_LO);
   MCU_Setup_Initialize;                                                         // Start the timers and perpherials last
@@ -297,11 +290,11 @@ begin
   H_Bridge_B_Lo_Direction := 0;                                                 // Output
   H_Bridge_B_Hi_Direction := 0;                                                 // Output
 
-
+  {$IFNDEF DCCTIMER_DISABLE}
   TON_T1CON_bit := 1;                                                           // Start the DCC Timer
   NMRA_DCC_Packet_Init;                                                         // Send our 20 Idle Packets per the spec, note we are not on the OLCB bus yet so this will block until done.
-
-
+  {$ENDIF}
+  
   UART1_Write_Text('Starting'+LF);
 
   x := 0;
@@ -311,6 +304,10 @@ begin
   MaxTime_RX := 0;
   MaxTime_StateMachine := 0;
 
+      TRISA4_bit := 0;
+    LATA4_bit := 0;                                                   // Output
+
+    LATA4_bit := not LATA4_bit;
 
 
   j := 0;
@@ -334,17 +331,23 @@ begin
           'X' : begin
                 NMRAnetStateMachine_TrySendVerifyNodeID(ActiveNode, 0);
              end;
+          'A', 'a' :
+            begin
+              NMRAnetNode_Allocate;
+            end;
+          'F', 'f' :
+            begin
+              TempNode := NMRAnetNode_FindFirstVirtualNode;
+              if TempNode <> nil then
+              begin
+                // BETTER TO SET A STATE OF THE NODE TO SPIN UNTIL IT CAN SEND THE MESSAGE
+                while not NMRAnetStateMachine_TrySendAliasMapReset(TempNode) do;
+                  NMRAnetNode_Release(TempNode);
+              end;
+            end;
         end;
       end;
 
-
-      if j = 10000 then
-      begin
-   //
-        j := 0
-      end;
-
-      Inc(j);
 
     end;
   end;

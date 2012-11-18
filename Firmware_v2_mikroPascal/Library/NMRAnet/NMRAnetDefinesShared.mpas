@@ -22,7 +22,7 @@ var
   s1: array[32] of char;
   
 const
-  LF = #10+#13;
+  LF = #13+#10;
 
 // *****************************************************************************
 // Shared Protocol Identification Protocol Defines
