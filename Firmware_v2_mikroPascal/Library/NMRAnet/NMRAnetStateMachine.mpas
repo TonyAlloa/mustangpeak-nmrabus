@@ -25,7 +25,6 @@ uses
   dsPIC30_CAN,
   {$ENDIF}
   NMRAnetAppDefines,
-  NMRAnetAppCallbacks,
   NMRAnetDefines,
   NMRAnetDefinesShared,
   NMRAnetUtilities,
@@ -61,10 +60,10 @@ uses
   function NMRAnetStateMachine_TrySendAbbreviatedCDI(Node: PNMRAnetNode; DestinationAliasID: Word): Boolean;
   function NMRAnetStateMachine_TrySendDatagram(Node: PNMRAnetNode; CANBuffer: PCANBuffer; Datagram: PDatagramBuffer): Boolean;
 
-  // defined in the dsPICxx_CAN_Interrupt.mpas file
-//  procedure StartCANMessageEngine; external;
- // procedure LockCANInterrupt; external;
- // procedure UnLockCANInterrupt; external;
+  procedure NMRAnetAppCallbacks_Initialize; external;
+  function AppCallback_ConfigurationRead(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte): Byte;  external;
+  procedure AppCallback_ConfigurationWrite(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte);  external;
+  function AppCallback_ConfigurationSize(Node: PNMRAnetNode): Word;  external;
   
 implementation
 
@@ -282,7 +281,9 @@ end;
 //
 // *****************************************************************************
 procedure NMRAnetStateMachine_InitializeNode(Node: PNMRAnetNode; NodeID_HI, NodeID_LO: DWord);
-begin         
+var
+  i: Integer;
+begin     
   // Don't Reset the Addresses here, they are initialized on bootup and are fixed thoughout the life of the program
   Node^.BaseBuffers := nil;
   Node^.DatagramBuffers := nil;
@@ -299,11 +300,20 @@ begin
     Node^.Login.TimeCounter := 0;
     Node^.Login.iCID := 0;
   end;
+  for i := 0 to MAX_EVENTS_CONSUMED_BIT_BYTES - 1 do
+    Node^.EventsConsumedFlags[i] := 0;
+  for i := 0 to MAX_EVENTS_PRODUCED_BIT_BYTES - 1 do
+    Node^.EventsProducedFlags[i] := 0;
   Node^.iStateMachine := STATE_NMRABUS_START;
   Node^.ParentAlias := nil;
   Node^.ChildAlias := nil;
   Node^.LeftSibling := nil;
   Node^.RightSibling := nil;
+  Node^.Login.TimeCounter := 0;
+  Node^.Login.iCID := 0;
+ // I don't think I want to reset these as they are set at startup
+ // ConfigurationAddress: Generic32BitPointer;                                  // Pointer into the EEProm Memory
+ // RAMAddress: Generic32BitPointer;                                            // Pointer to a DataStructure that is in RAM
 end;
 
 // *****************************************************************************
@@ -436,7 +446,7 @@ function MaxAddressByAddressSpace(Node: PNMRAnetNode; AddressSpace: Byte): DWord
                           Result := MAX_CDI_ARRAY;
                       end;
       MSI_ALL       : Result := ALL_MAP.HighMem;
-      MSI_CONFIG    : Result := ConfigurationSize(Node);
+      MSI_CONFIG    : Result := AppCallback_ConfigurationSize(Node);
       MSI_ACDI_MFG  : begin
                         {$IFDEF SUPPORT_VIRTUAL_NODES}
                         if Node^.State and NS_VIRTUAL <> 0 then
@@ -444,7 +454,7 @@ function MaxAddressByAddressSpace(Node: PNMRAnetNode; AddressSpace: Byte): DWord
                         else {$ENDIF}
                           Result := MAX_ACDI_MFG_ARRAY + 1 // for the Version ID Byte
                       end;
-      MSI_ACDI_USER : Result := ConfigurationSize(Node) + 1  // for the Version ID Byte
+      MSI_ACDI_USER : Result := AppCallback_ConfigurationSize(Node) + 1  // for the Version ID Byte
     else
       Result := 0;
     end;
@@ -514,7 +524,7 @@ var
   DatagramBuffer: PDatagramBuffer;
   MemorySpace: Byte;
   MemorySpaceCount: Short;
-  DatagramAddress: Byte;
+  DatagramAddress, State: Byte;
   MemorySpaceAddress, MemorySpaceMaxAddress: DWord;
   ByteArray: PByteArray;
 begin
@@ -643,7 +653,7 @@ begin
                                                                                 if BaseBuffer^.Tag < MAX_USER_NAME then
                                                                                 begin
                                                                                   // Very wasteful and slow 1 at a time but it is easy
-                                                                                  ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
+                                                                                  AppCallback_ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
                                                                                   if DataBytes[i] = #0 then
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_START_DESC
                                                                                   else
@@ -662,7 +672,7 @@ begin
                                                                                 if BaseBuffer^.Tag < MAX_CONFIG_DATA then
                                                                                 begin
                                                                                   // Very wasteful and slow 1 at a time but it is easy
-                                                                                  ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
+                                                                                  AppCallback_ConfigurationRead(Node, @DataBytes[i], BaseBuffer^.Tag, 1);
                                                                                   if DataBytes[i] = #0 then
                                                                                     BaseBuffer^.StateMachine := STATE_ACDI_DONE
                                                                                   else
@@ -706,7 +716,7 @@ begin
       begin
         if NMRAnetNode_IsAnyConsumerEventSet(Node) then
         begin
-          EventIndex := NMRAnetNode_NextConsumerEventFlag(Node);
+          EventIndex := NMRAnetNode_NextConsumerEventFlag(Node, State);
           if EventIndex > -1 then
           begin
             {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT}
@@ -715,12 +725,16 @@ begin
               else
             {$ENDIF}
               DataBytesPtr := PCAN_DataBytes( @SUPPORTED_EVENTS_CONSUMED[EventIndex]);
-            TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, DataBytesPtr, False);
+            case State of
+              EVENT_STATE_UNKOWN : TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_CONSUMER_IDENTIFIED_UNKNOWN, 0, 8, DataBytesPtr, False);
+              EVENT_STATE_VALID : TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_CONSUMER_IDENTIFIED_SET, 0, 8, DataBytesPtr, False);
+              EVENT_STATE_INVALID : TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_CONSUMER_IDENTIFIED_CLEAR, 0, 8, DataBytesPtr, False);
+            end;
           end
         end else
         if NMRAnetNode_IsAnyProducerEventSet(Node) then
         begin
-          EventIndex := NMRAnetNode_NextProducerEventFlag(Node);
+          EventIndex := NMRAnetNode_NextProducerEventFlag(Node, State);
           if EventIndex > -1 then
           begin
             {$IFDEF SUPPORT_AT_LEAST_ONE_VNODE_CONSUMED_EVENT}
@@ -729,7 +743,11 @@ begin
               else
             {$ENDIF}
               DataBytesPtr := PCAN_DataBytes( @SUPPORTED_EVENTS_PRODUCED[EventIndex]);
-            TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, DataBytesPtr, False);
+            case State of
+              EVENT_STATE_UNKOWN : TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PRODUCER_IDENTIFIED_UNKNOWN, 0, 8, DataBytesPtr, False);
+              EVENT_STATE_VALID : TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PRODUCER_IDENTIFIED_SET, 0, 8, DataBytesPtr, False);
+              EVENT_STATE_INVALID : TransmitNMRABusLayerMsg(Node, CANBuffer, MTI_PRODUCER_IDENTIFIED_CLEAR, 0, 8, DataBytesPtr, False);
+            end;
           end
         end;
       end;
@@ -858,7 +876,7 @@ begin
                                                                                                                 DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + MemorySpaceCount;
                                                                                                               end;
                                                                                               MSI_CONFIG    : begin
-                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + ConfigurationRead(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount);
+                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + AppCallback_ConfigurationRead(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount);
                                                                                                               end;
                                                                                               MSI_ACDI_MFG  : begin
                                                                                                                 if MemorySpaceAddress = 0 then
@@ -892,7 +910,7 @@ begin
                                                                                                                 end else
                                                                                                                   Dec(MemorySpaceAddress);        // Need to adjust the Address Pointer in subsequent calls to account for the virtual Version Byte
 
-                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + ConfigurationRead(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount);
+                                                                                                                DatagramBuffer^.iByteCount := DatagramBuffer^.iByteCount + AppCallback_ConfigurationRead(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount);
                                                                                                               end;
                                                                                             end;
                                                                                             DatagramBuffer^.Statemachine := STATE_MEM_CONFIG_SEND_RESUSED_DATAGRAM;
@@ -914,7 +932,7 @@ begin
 
                                                                                             case MemorySpace of
                                                                                               MSI_CONFIG    : begin
-                                                                                                                ConfigurationWrite(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount);
+                                                                                                                AppCallback_ConfigurationWrite(Node, @DatagramBuffer^.DataBytes[DatagramAddress], MemorySpaceAddress, MemorySpaceCount);
                                                                                                               end;
                                                                                               MSI_ACDI_USER : begin
 
@@ -1128,8 +1146,13 @@ begin
     STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS :
       begin   {$IFDEF TRACE_NODE_STATEMACHINE} UART1_Write_Text('STATE_NMRABUS_LOGIN_IDENTIFY_EVENTS'+LF); {$ENDIF}
         LockCANInterrupt;
-        NMRAnetNode_SetProducerEventFlags(Node);
-        NMRAnetNode_SetConsumerEventFlags(Node);
+        // Fake an Identify Events to allow the AppCallbacks to be called
+        CANBuffer.State := CANBuffer.State or BS_EXTENDED;
+        CANBuffer.ID := $10000000 or MTI_EVENTS_IDENTIFY_DEST;                  // Make Alias ID $000 so we don't trigger a duplicate Alias ID loop!
+        CANBuffer.DataCount := 2;
+        CANBuffer.DataBytes[0] := Hi( Node^.Info.AliasID);                      // Addressed to this node
+        CANBuffer.DataBytes[1] := Lo( Node^.Info.AliasID);
+        ReceivedOnFilter1(@CANBuffer);
         UnLockCANInterrupt;
         Node^.iStateMachine := STATE_NMRABUS_PERMITTED;
       end;

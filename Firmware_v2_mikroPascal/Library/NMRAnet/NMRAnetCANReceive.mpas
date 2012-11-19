@@ -31,7 +31,6 @@ uses
   NMRAnetDefinesShared,
   NMRAnetNode,
   CANStorage,
-  NMRAnetAppCallbacks,
   NMRAnetAppDefines;
   
 type
@@ -53,6 +52,10 @@ type
   
   procedure StartCANMessageEngine; external;
   procedure StartCANHighPriorityMessageEngine; external;
+  function AppCallback_ProducerIdentify(Node: PNMRAnetNode; Event: PEventID): Boolean; external;
+  function AppCallback_ConsumerIdentify(Node: PNMRAnetNode; Event: PEventID): Boolean; external;
+  function AppCallback_EventsIdentify: Boolean; external;
+  function AppCallback_EventsIdentifyByDest(Node: PNMRAnetNode): Boolean; external;
 
    
 implementation
@@ -264,8 +267,11 @@ begin
                                                                                                    end;
                                                              {$IFNDEF BOOTLOADER}
                                                                MTI_EVENTS_IDENTIFY_DEST          : begin
-                                                                                                     NMRAnetNode_SetProducerEventFlags(Node);
-                                                                                                     NMRAnetNode_SetConsumerEventFlags(Node);
+                                                                                                     if not AppCallback_EventsIdentifyByDest(Node) then
+                                                                                                     begin
+                                                                                                       NMRAnetNode_SetProducerEventFlags(Node, EVENT_STATE_UNKOWN);
+                                                                                                       NMRAnetNode_SetConsumerEventFlags(Node, EVENT_STATE_UNKOWN);
+                                                                                                     end
                                                                                                    end;
                                                              {$ENDIF}
                                                                MTI_DATAGRAM_OK_REPLY             : begin
@@ -307,11 +313,11 @@ begin
 
                                                                                                     // Does this just update the memory location and the main loop just spins constantly updating or do
                                                                                                     // I set a flag for it to update???
-                                                                                                    if (CANBuffer^.DataBytes[1] and $F0 = $00) then     // Is it the Train Protocol?
+                                                                                                 {   if (CANBuffer^.DataBytes[1] and $F0 = $00) then     // Is it the Train Protocol?
                                                                                                     begin
                                                                                                       if (CANBuffer^.DataBytes[1] and $0F = $00) then   // Is it a Speed Operation?
                                                                                                       begin
-                                                                                                        PDCCVolatileData( Node^.RAMAddress)^.Speed := ((CANBuffer^.DataBytes[2] shl 8) or CANBuffer^.DataBytes[3]);
+                                                                                                        PDccProxyData( Node^.RAMAddress)^.Speed := ((CANBuffer^.DataBytes[2] shl 8) or CANBuffer^.DataBytes[3]);
                                                                                                       end else
                                                                                                       if (CANBuffer^.DataBytes[1] and $0F = $01) then   // Is it a Function Operation?
                                                                                                       begin
@@ -325,7 +331,7 @@ begin
                                                                                                       if (CANBuffer^.DataBytes[1] and $0F = $01) then   // Is it a Function Operation?
                                                                                                       begin
                                                                                                       end
-                                                                                                    end;
+                                                                                                    end;     }
                                                                                                    end
                                                              {$ENDIF}
                                                              else begin
@@ -369,42 +375,48 @@ begin
                                                                                           end;
                                                          {$IFNDEF BOOTLOADER}
                                                             MTI_CONSUMER_IDENTIFY       : begin
-                                                                                            VNodeEventIndex := -1;
-                                                                                            NodeEventIndex := -1;
-                                                                                            VNodeEvent := NMRAnetUtilities_SupportsVNodeEventAsConsumer(@CANBuffer^.DataBytes, VNodeEventIndex);
-                                                                                            NodeEvent := NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes, NodeEventIndex);
-                                                                                            for i := 0 to Nodes.AllocatedCount - 1 do
+                                                                                            if not AppCallback_ConsumerIdentify(Node, @CANBuffer^.DataBytes) then
                                                                                             begin
-                                                                                              if NMRAnetNode_TestStateFlag(Nodes.AllocatedList[i], NS_VIRTUAL) then
+                                                                                              VNodeEventIndex := -1;
+                                                                                              NodeEventIndex := -1;
+                                                                                              VNodeEvent := NMRAnetUtilities_SupportsVNodeEventAsConsumer(@CANBuffer^.DataBytes, VNodeEventIndex);
+                                                                                              NodeEvent := NMRAnetUtilities_SupportsEventAsConsumer(@CANBuffer^.DataBytes, NodeEventIndex);
+                                                                                              for i := 0 to Nodes.AllocatedCount - 1 do
                                                                                               begin
-                                                                                                if VNodeEvent then
-                                                                                                  NMRAnetNode_SetConsumerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex);
-                                                                                              end else
-                                                                                              begin
-                                                                                                if NodeEvent then
-                                                                                                  NMRAnetNode_SetConsumerEventFlag(Nodes.AllocatedList[0], NodeEventIndex);
-                                                                                              end
+                                                                                                if NMRAnetNode_TestStateFlag(Nodes.AllocatedList[i], NS_VIRTUAL) then
+                                                                                                begin
+                                                                                                  if VNodeEvent then
+                                                                                                    NMRAnetNode_SetConsumerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex, EVENT_STATE_UNKOWN);
+                                                                                                end else
+                                                                                                begin
+                                                                                                  if NodeEvent then
+                                                                                                    NMRAnetNode_SetConsumerEventFlag(Nodes.AllocatedList[0], NodeEventIndex, EVENT_STATE_UNKOWN);
+                                                                                                end
+                                                                                              end;
                                                                                             end
                                                                                           end;
                                                             MTI_CONSUMER_IDENTIFY_RANGE : begin
                                                                                             // TODO
                                                                                           end;
                                                             MTI_PRODUCER_IDENDIFY       : begin
-                                                                                            VNodeEventIndex := -1;
-                                                                                            NodeEventIndex := -1;
-                                                                                            VNodeEvent := NMRAnetUtilities_SupportsVNodeEventAsProducer(@CANBuffer^.DataBytes, VNodeEventIndex);
-                                                                                            NodeEvent := NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes, NodeEventIndex);
-                                                                                            for i := 0 to Nodes.AllocatedCount - 1 do
+                                                                                            if not AppCallback_ProducerIdentify(Node, @CANBuffer^.DataBytes) then
                                                                                             begin
-                                                                                              if NMRAnetNode_TestStateFlag(Nodes.AllocatedList[i], NS_VIRTUAL) then
+                                                                                              VNodeEventIndex := -1;
+                                                                                              NodeEventIndex := -1;
+                                                                                              VNodeEvent := NMRAnetUtilities_SupportsVNodeEventAsProducer(@CANBuffer^.DataBytes, VNodeEventIndex);
+                                                                                              NodeEvent := NMRAnetUtilities_SupportsEventAsProducer(@CANBuffer^.DataBytes, NodeEventIndex);
+                                                                                              for i := 0 to Nodes.AllocatedCount - 1 do
                                                                                               begin
-                                                                                                if VNodeEvent then
-                                                                                                  NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex);
-                                                                                              end else
-                                                                                              begin
-                                                                                                if NodeEvent then
-                                                                                                  NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[0], NodeEventIndex);
-                                                                                              end
+                                                                                                if NMRAnetNode_TestStateFlag(Nodes.AllocatedList[i], NS_VIRTUAL) then
+                                                                                                begin
+                                                                                                  if VNodeEvent then
+                                                                                                    NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex, EVENT_STATE_UNKOWN);
+                                                                                                end else
+                                                                                                begin
+                                                                                                  if NodeEvent then
+                                                                                                    NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[0], NodeEventIndex, EVENT_STATE_UNKOWN);
+                                                                                                end
+                                                                                              end;
                                                                                             end
                                                                                           end;
                                                             MTI_PRODUCER_IDENTIFY_RANGE : begin
@@ -414,11 +426,13 @@ begin
 
                                                                                           end;
                                                             MTI_EVENTS_IDENTIFY         : begin
-                                                                                            for j := 0 to Nodes.AllocatedCount - 1 do
+                                                                                            if not AppCallback_EventsIdentify then
                                                                                             begin
-                                                                                              Node := Nodes.AllocatedList[j];
-                                                                                              NMRAnetNode_SetProducerEventFlags(Node);
-                                                                                              NMRAnetNode_SetConsumerEventFlags(Node);
+                                                                                              for j := 0 to Nodes.AllocatedCount - 1 do
+                                                                                              begin
+                                                                                                NMRAnetNode_SetProducerEventFlags(Nodes.AllocatedList[j], EVENT_STATE_UNKOWN);
+                                                                                                NMRAnetNode_SetConsumerEventFlags(Nodes.AllocatedList[j], EVENT_STATE_UNKOWN);
+                                                                                              end;
                                                                                             end
                                                                                           end;
                                                          {$ENDIF}

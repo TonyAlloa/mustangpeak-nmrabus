@@ -24,14 +24,21 @@ unit NMRAnetAppCallbacks;
 uses
   _25AAxxxx,
   NMRAnetAppDefines,
-  NMRAnetDefines;
+  NMRAnetDefines,
+  NMRAnetNode,
+  NMRAnetUtilities,
+  NMRAnetDefinesShared;
 
+const
+  PS_ALLOCATED = $01;                                                           // The Proxy is Allocated
+  
 type
-  TDCCVolatileData = record
-    Speed: Word;                                                                // Float 16 so negative is reverse
+  TDccProxyData = record
+    State: Byte;                                                                // State of the Proxy Node
+    Speed: Word;                                                                // Float 16 so negative is reverse (including -0)
     Functions: DWord;                                                           // Function State (F0..F31)
   end;
-  PDCCVolatileData = ^TDCCVolatileData;
+  PDccProxyData = ^TDccProxyData;
 
 const
   MAX_DCC_CFG_DATA = 1024;                                                      // This allows the EEPROM to never get out of sync and need to be erased and rebuilt, just grow TDCCConfigurationData up to 1024
@@ -46,18 +53,32 @@ type
   PDCCConfigurationData = ^TDCCConfigurationData;
 
 procedure NMRAnetAppCallbacks_Initialize;
-function ConfigurationRead(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte): Byte;
-procedure ConfigurationWrite(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte);
-function ConfigurationSize(Node: PNMRAnetNode): Word;
-procedure AssignConfigurationAddress(Node: PNMRANetNode; iNode: Word);
-procedure AssignRAMAddress(Node: PNMRANetNode; iNode: Word);
+function AppCallback_ConfigurationRead(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte): Byte;
+procedure AppCallback_ConfigurationWrite(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte);
+function AppCallback_ConfigurationSize(Node: PNMRAnetNode): Word;
+procedure AppCallback_AssignConfigurationAddress(Node: PNMRANetNode; iNode: Word);
+procedure AppCallback_AssignRAMAddress(Node: PNMRANetNode; iNode: Word);
+function AppCallback_ProducerIdentify(Node: PNMRAnetNode; Event: PEventID): Boolean;
+function AppCallback_ConsumerIdentify(Node: PNMRAnetNode; Event: PEventID): Boolean;
+function AppCallback_EventsIdentify: Boolean;
+function AppCallback_EventsIdentifyByDest(Node: PNMRAnetNode): Boolean;
+
+function GetProxyData(Node: PNMRAnetNode): PDccProxyData;
 
 implementation
 
 // Array of records that contain Volatile Data (RAM only) for each Node.  The address of the record is assigned to the
 // node in the AssignRAMAddress function below
 var
-  VolatileData: array[0..MAX_NODE_COUNT - 1] of TDCCVolatileData;
+  VolatileData: array[0..MAX_NODE_COUNT - 1] of TDccProxyData;
+  
+  
+function GetProxyData(Node: PNMRAnetNode): PDccProxyData;
+begin
+  Result := nil;
+  if Node <> nil then
+    Result := PDccProxyData( Node^.RAMAddress);
+end;
 
 // *****************************************************************************
 // Writes the Configuration Memory from the App defined storage device
@@ -68,7 +89,7 @@ var
 //
 //  Result      : Number of Bytes actually moved in to the DataTarget
 // *****************************************************************************
-procedure ConfigurationWrite(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte);
+procedure AppCallback_ConfigurationWrite(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte);
 begin
   while _25AAxxxx_Busy(EEPROM_BANK_0) do
      Delay_us(10);
@@ -84,7 +105,7 @@ end;
 //
 //  Result      : Number of Bytes actually moved in to the DataTarget
 // *****************************************************************************
-function ConfigurationRead(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte): Byte;
+function AppCallback_ConfigurationRead(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte): Byte;
 begin
    while _25AAxxxx_Busy(EEPROM_BANK_0) do
      Delay_us(10);
@@ -96,7 +117,7 @@ end;
 //******************************************************************************
 //  Returns the overall size of the Configuration Data
 //******************************************************************************
-function ConfigurationSize(Node: PNMRAnetNode): Word;
+function AppCallback_ConfigurationSize(Node: PNMRAnetNode): Word;
 begin
   Result := MAX_CONFIG_DATA;
 end;
@@ -104,7 +125,7 @@ end;
 //******************************************************************************
 //  Associates the offset of the EEPROM for the Configuration Data for the Node
 //******************************************************************************
-procedure AssignConfigurationAddress(Node: PNMRANetNode; iNode: Word);
+procedure AppCallback_AssignConfigurationAddress(Node: PNMRANetNode; iNode: Word);
 begin
   Node^.ConfigurationAddress := Generic32BitPointer( iNode * MAX_DCC_CFG_DATA);
 end;
@@ -112,7 +133,7 @@ end;
 //******************************************************************************
 //  Associates the Address of the RAM for Volatile Node Data
 //******************************************************************************
-procedure AssignRAMAddress(Node: PNMRANetNode; iNode: Word);
+procedure AppCallback_AssignRAMAddress(Node: PNMRANetNode; iNode: Word);
 begin
   Node^.RAMAddress := Generic32BitPointer( @VolatileData[iNode]);
 end;
@@ -126,9 +147,141 @@ var
 begin
   for i := 0 to MAX_NODE_COUNT - 1 do
   begin
+    VolatileData[i].State := 0;
     VolatileData[i].Speed := 0;
     VolatileData[i].Functions := 0;
   end
+end;
+
+function AppCallback_ProducerIdentify(Node: PNMRAnetNode; Event: PEventID): Boolean;
+var
+  i, VNodeEventIndex, NodeEventIndex: Integer;
+  VNodeEvent, NodeEvent: Boolean;
+begin
+  Result := True;                                                               // We handle the message
+  VNodeEventIndex := -1;
+  NodeEventIndex := -1;
+  VNodeEvent := NMRAnetUtilities_SupportsVNodeEventAsProducer(Event, VNodeEventIndex);
+  NodeEvent := NMRAnetUtilities_SupportsEventAsProducer(Event, NodeEventIndex);
+  for i := 0 to Nodes.AllocatedCount - 1 do
+  begin
+    if NMRAnetNode_TestStateFlag(Nodes.AllocatedList[i], NS_VIRTUAL) then
+    begin
+      if VNodeEvent then
+      begin
+        case VNodeEventIndex of
+          EVENT_TRAIN_INDEX           : NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex, EVENT_STATE_VALID);
+          EVENT_TRAIN_DCC_IDLE_INDEX  : begin
+                                          if GetProxyData(Node)^.State and PS_ALLOCATED = PS_ALLOCATED then
+                                            NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex, EVENT_STATE_INVALID)
+                                          else
+                                            NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex, EVENT_STATE_VALID);
+                                        end;
+          EVENT_TRAIN_DCC_INUSE_INDEX : begin
+                                          if GetProxyData(Node)^.State and PS_ALLOCATED = PS_ALLOCATED then
+                                            NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex, EVENT_STATE_VALID)
+                                          else
+                                            NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex, EVENT_STATE_INVALID);
+                                        end
+        else
+          NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[i], VNodeEventIndex, EVENT_STATE_UNKOWN);
+        end
+      end
+    end else
+    begin
+      if NodeEvent then
+        NMRAnetNode_SetProducerEventFlag(Nodes.AllocatedList[0], NodeEventIndex, EVENT_STATE_UNKOWN);
+    end
+  end;
+end;
+
+function AppCallback_ConsumerIdentify(Node: PNMRAnetNode; Event: PEventID): Boolean;
+var
+  i, VNodeEventIndex, NodeEventIndex: Integer;
+  VNodeEvent, NodeEvent: Boolean;
+begin
+  Result := False;                                                              // Do the default
+end;
+
+function AppCallback_EventsIdentify: Boolean;
+var
+  j, ProducerIndex: Integer;
+  Node: PNMRAnetNode;
+begin
+  Result := True;                                                               // We handled it
+  for j := 0 to Nodes.AllocatedCount - 1 do
+  begin
+    Node := Nodes.AllocatedList[j];
+    if NMRAnetNode_TestStateFlag(Node, NS_VIRTUAL) then
+    begin
+      NMRAnetNode_SetConsumerEventFlags(Node, EVENT_STATE_UNKOWN);              // Consumers are eaay.
+      
+      for ProducerIndex := 0 to MAX_VNODE_SUPPORTED_EVENTS_PRODUCED - 1 do      // Producers take some work
+      begin
+        case ProducerIndex of
+          EVENT_TRAIN_INDEX           : NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_VALID);
+          EVENT_TRAIN_DCC_IDLE_INDEX  : begin
+                                          if GetProxyData(Node)^.State and PS_ALLOCATED = PS_ALLOCATED then
+                                            NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_INVALID)
+                                          else
+                                            NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_VALID);
+                                        end;
+          EVENT_TRAIN_DCC_INUSE_INDEX : begin
+                                          if GetProxyData(Node)^.State and PS_ALLOCATED = PS_ALLOCATED then
+                                            NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_VALID)
+                                          else
+                                            NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_INVALID);
+                                        end
+        else
+          NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_UNKOWN);
+        end
+      end;
+    end else
+    begin
+      NMRAnetNode_SetProducerEventFlags(Node, EVENT_STATE_UNKOWN);
+      NMRAnetNode_SetConsumerEventFlags(Node, EVENT_STATE_UNKOWN);
+    end
+  end;
+end;
+
+function AppCallback_EventsIdentifyByDest(Node: PNMRAnetNode): Boolean;
+var
+  ProducerIndex: Integer;
+begin
+  Result := True;                                                               // We handled it
+  NMRAnetNode_SetConsumerEventFlags(Node, EVENT_STATE_UNKOWN);                  // Consumers are eaay.
+
+  if NMRAnetNode_TestStateFlag(Node, NS_VIRTUAL) then
+  begin
+  
+    IntToStr(GetProxyData(Node)^.State, s1);
+    UART1_Write_Text('Proxy State '+s1+LF);
+  
+    for ProducerIndex := 0 to MAX_VNODE_SUPPORTED_EVENTS_PRODUCED - 1 do          // Producers take some work
+    begin
+      case ProducerIndex of
+        EVENT_TRAIN_INDEX           : NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_VALID);
+        EVENT_TRAIN_DCC_IDLE_INDEX  : begin
+                                        if GetProxyData(Node)^.State and PS_ALLOCATED = PS_ALLOCATED then
+                                          NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_INVALID)
+                                        else
+                                          NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_VALID);
+                                      end;
+        EVENT_TRAIN_DCC_INUSE_INDEX : begin
+                                        if GetProxyData(Node)^.State and PS_ALLOCATED = PS_ALLOCATED then
+                                          NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_VALID)
+                                        else
+                                          NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_INVALID);
+                                      end
+      else
+        NMRAnetNode_SetProducerEventFlag(Node, ProducerIndex, EVENT_STATE_UNKOWN);
+      end
+    end
+  end else
+  begin
+    NMRAnetNode_SetProducerEventFlags(Node, EVENT_STATE_UNKOWN);
+    NMRAnetNode_SetConsumerEventFlags(Node, EVENT_STATE_UNKOWN);
+  end;
 end;
 
 end.
