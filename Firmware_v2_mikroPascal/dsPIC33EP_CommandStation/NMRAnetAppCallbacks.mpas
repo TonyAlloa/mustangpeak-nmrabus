@@ -253,10 +253,6 @@ begin
 
   if NMRAnetNode_TestStateFlag(Node, NS_VIRTUAL) then
   begin
-  
-    IntToStr(GetProxyData(Node)^.State, s1);
-    UART1_Write_Text('Proxy State '+s1+LF);
-  
     for ProducerIndex := 0 to MAX_VNODE_SUPPORTED_EVENTS_PRODUCED - 1 do          // Producers take some work
     begin
       case ProducerIndex of
