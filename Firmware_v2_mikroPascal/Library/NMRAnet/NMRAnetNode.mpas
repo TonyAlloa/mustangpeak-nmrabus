@@ -65,6 +65,7 @@ uses
   procedure NMRAnetStateMachine_InitializeNode(NodeBuffer: PNMRAnetNode; NodeID_HI, NodeID_Lo: DWord); external;
   procedure AppCallback_AssignConfigurationAddress(Node: PNMRANetNode; iNode: Word);  external;
   procedure AppCallback_AssignRAMAddress(Node: PNMRANetNode; iNode: Word);  external;
+  procedure AppCallback_NodeAllocate(Node: PNMRAnetNode); external;
 
 var
   Nodes: TNodes;
@@ -332,6 +333,7 @@ begin
     Result^.Info.AliasID := NMRAnetUtilities_CreateAliasID(Result^.Info.Seed, False); // Pregenerate it so it can be sorted
     Inc(Nodes.AllocatedCount);
     NMRAnetNode_SortNodeList(Nodes);
+    AppCallback_NodeAllocate(Result);
   end;
 end;
 

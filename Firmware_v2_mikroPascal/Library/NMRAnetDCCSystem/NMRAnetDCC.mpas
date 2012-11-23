@@ -19,6 +19,10 @@ unit NMRAnetDCC;
 //
 // ******************************************************************************
 
+uses
+  NMRAnetDefinesShared;
+  
+  
 const
   _56us_PERIOD = 1792;       // prescaler = 1, 64Mhz clock = 1/(64Mhz/2) * _56us_PERIOD = 56us
   _5ms_PERIOD   = 90;        // 5ms/56us = 89.3 (number of 56us turns)
@@ -585,10 +589,11 @@ begin
       if CanTransmitMessage(ABuffer, AMessage) then
         AQueue := @ABuffer^.Priority
     end;
+    
     if AQueue = nil then
     begin
       if ABuffer^.Main.Count > 0 then
-      begin
+      begin   
         AMessage := @ABuffer^.Main.Slots^[ABuffer^.Main.Tail];
         if CanTransmitMessage(ABuffer, AMessage) then
           AQueue := @ABuffer^.Main
@@ -598,6 +603,9 @@ begin
     // Test to see if any of the Queues had a message to send, if not then send an idle message
     if AQueue <> nil then
     begin
+    
+  //    UART1_Write_Text('Tx Loaded'+LF);
+    
       ABuffer^.TX_TransmittingPacket := AMessage^;                               // Copy the message to the Transmit Buffer
       ABuffer^.TX_XOR_Byte := 0;                                                  // Build the XOR Byte
       i := 0;

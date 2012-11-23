@@ -56,6 +56,7 @@ type
   function AppCallback_ConsumerIdentify(Node: PNMRAnetNode; Event: PEventID): Boolean; external;
   function AppCallback_EventsIdentify: Boolean; external;
   function AppCallback_EventsIdentifyByDest(Node: PNMRAnetNode): Boolean; external;
+  procedure AppCallback_TractionControl(Node: PNMRAnetNode; CANBuffer: PCANBuffer); external;
 
    
 implementation
@@ -310,28 +311,7 @@ begin
                                                                                                        BaseBufferAllocFailed := True
                                                                                                    end;
                                                                MTI_TRACTION_PROTOCOL             : begin
-
-                                                                                                    // Does this just update the memory location and the main loop just spins constantly updating or do
-                                                                                                    // I set a flag for it to update???
-                                                                                                 {   if (CANBuffer^.DataBytes[1] and $F0 = $00) then     // Is it the Train Protocol?
-                                                                                                    begin
-                                                                                                      if (CANBuffer^.DataBytes[1] and $0F = $00) then   // Is it a Speed Operation?
-                                                                                                      begin
-                                                                                                        PDccProxyData( Node^.RAMAddress)^.Speed := ((CANBuffer^.DataBytes[2] shl 8) or CANBuffer^.DataBytes[3]);
-                                                                                                      end else
-                                                                                                      if (CANBuffer^.DataBytes[1] and $0F = $01) then   // Is it a Function Operation?
-                                                                                                      begin
-                                                                                                      end
-                                                                                                    end else
-                                                                                                    if (CANBuffer^.DataBytes[1] and $F0 = $80) then     // Is it the DCC Protocol?
-                                                                                                    begin
-                                                                                                      if (CANBuffer^.DataBytes[1] and $0F = $00) then   // Is it a Speed Operation?
-                                                                                                      begin
-                                                                                                      end else
-                                                                                                      if (CANBuffer^.DataBytes[1] and $0F = $01) then   // Is it a Function Operation?
-                                                                                                      begin
-                                                                                                      end
-                                                                                                    end;     }
+                                                                                                      AppCallback_TractionControl(Node, CANBuffer);
                                                                                                    end
                                                              {$ENDIF}
                                                              else begin

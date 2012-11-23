@@ -64,14 +64,16 @@ uses
   function AppCallback_ConfigurationRead(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte): Byte;  external;
   procedure AppCallback_ConfigurationWrite(Node: PNMRAnetNode; DataTarget: ^Byte; StartAddress: DWord; MaxCount: Byte);  external;
   function AppCallback_ConfigurationSize(Node: PNMRAnetNode): Word;  external;
+  function AppCallback_StateMachine(Node: PNMRAnetNode; CANBuffer: PCANBuffer; DataBytesPtr: PCAN_DataBytes): Boolean; external;
   
-implementation
+
 
 // Forward declarations
 function TransmitNMRABusLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord; DestinationAliasID: Word; DataCount: Byte; DataBytes: PCAN_DataBytes; AliasInHeader: Boolean): Boolean; forward;
 function TransmitCANLayerMsg(Node: PNMRAnetNode; Buffer: PCANBuffer; VariableField: DWord): Boolean; forward;
 function NMRABusBufferAvailable: Boolean; forward;
 
+implementation
 // *****************************************************************************
 //  procedure NMRAnetStateMachine_TrySendAbbreviatedCDI
 //     Parameters:
@@ -574,11 +576,19 @@ begin
         NMRAnetNode_ClearMsgFlag(Node, MF_VERIFY_NODE_ID);
       end;
     end;
-
     UnLockCANInterrupt;
     Exit;              // Don't interleave Buffer Replies...
   end else
   begin
+    // Callback gets first crack... for now
+    LockCANInterrupt;
+    if AppCallback_StateMachine(Node, CANBuffer, @DataBytes) then
+    begin
+      LockCANInterrupt;
+      Exit
+    end;
+    LockCANInterrupt;
+    
     LockCANInterrupt;                                                           // Don't let the interrupt change things while we are working on them.....
     BaseBuffer := NMRAnetUtilities_NextBaseBuffer(Node);
     if BaseBuffer <> nil then
@@ -684,9 +694,9 @@ begin
                                                                                    BaseBuffer^.StateMachine := STATE_ACDI_DONE;
                                                                               end;
                                                     STATE_ACDI_DONE         : begin      {$IFDEF TRACE_SNIP}UART1_Write_Text('STATE_ACDI_DONE'+LF); {$ENDIF}
-                                                    
 
-                                                    
+
+
                                                                               end;
                                                   end;
                                                 end;

@@ -206,7 +206,7 @@ const
   // Defined the Values of the Events that are Consumed and Produced by this Node
   {$IFDEF SUPPORT_AT_LEAST_ONE_CONSUMED_EVENT}
   SUPPORTED_EVENTS_CONSUMED: array[0..MAX_SUPPORTED_EVENTS_CONSUMED-1] of TEventID = (
-    ($01, $10, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
+    ($01, $01, $00, $00, $00, $00, $FF, $FF)                                    // EVENT_EMERGENCY_STOP
   );
   SUPPORTED_EVENTS_CONSUMED_MASKS: array[0..MAX_EVENTS_CONSUMED_BIT_BYTES-1] of Byte = (
     %00000001                                                                   // One Event Supported
