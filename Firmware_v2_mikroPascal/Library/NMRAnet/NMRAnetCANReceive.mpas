@@ -118,9 +118,7 @@ var
   DatagramBuffer: PDatagramBuffer;
   i: Integer;
 begin
-
  //UART1_Write_Text('CAN'+LF);
- 
   DoDefault := True;
   if CANLayerReceiveHook <> nil then
     CANLayerReceiveHook(CANBuffer, DoDefault);
@@ -190,7 +188,7 @@ begin
                   end;
       end;
     end
-  end
+  end;
 end;
 
 // *****************************************************************************
@@ -218,11 +216,10 @@ var
   MTI_Code: Word;
 begin
 
- // UART1_Write_Text('NMRAnet'+LF);
-  
-  
+  // UART1_Write_Text('NMRAnet'+LF);
+
   TMR4 := 0;
-  
+
   DoDefault := True;
   if NMRAnetLayerReceiveHook <> nil then
     NMRAnetLayerReceiveHook(CANBuffer, DoDefault);                              // Allow the program to have a crack at the message handler
@@ -341,9 +338,10 @@ begin
                                                            end
                                                          end
                                                        end else
-                                                        begin                                                                       // It is an UnAddressed Message
+                                                        begin                                                                                                                            // It is an UnAddressed Message
                                                           case CANBuffer^.ID and MTI_MASK of
                                                             MTI_VERIFY_NODE_ID_NUMBER   : begin
+                                                                                            //  UART1_Write_Text('MTI_VERIFY_NODE_ID_NUMBER'+LF);
                                                                                             if (CANBuffer^.DataCount = 0) then                                      // THIS IS NOT CLEAR IN THE SPEC
                                                                                               NMRAnetNode_SetMsgFlags(MF_VERIFY_NODE_ID)
                                                                                             else begin
@@ -416,7 +414,7 @@ begin
                                                                                             end
                                                                                           end;
                                                          {$ENDIF}
-                                                         end
+                                                         end;
                                                        end;
                                                      end;
                 MTI_FRAME_TYPE_DATAGRAM_ONLY_FRAME : begin

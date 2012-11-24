@@ -66,6 +66,8 @@ uses
   procedure AppCallback_AssignConfigurationAddress(Node: PNMRANetNode; iNode: Word);  external;
   procedure AppCallback_AssignRAMAddress(Node: PNMRANetNode; iNode: Word);  external;
   procedure AppCallback_NodeAllocate(Node: PNMRAnetNode); external;
+  procedure LockCANInterrupt; external;
+  procedure UnLockCANInterrupt; external;
 
 var
   Nodes: TNodes;
@@ -187,6 +189,16 @@ var
   Index: Integer;
 begin
   Result := PNMRAnetNode( nil);
+ {
+  for Index := 0 to Nodes.AllocatedCount- 1 do
+  begin
+    if Nodes.AllocatedList[Index]^.Info.AliasID = AliasID then
+    begin
+      Result := Nodes.AllocatedList[Index];
+      Exit;
+    end;
+  end;
+    }
   Index := BinarySearchAliasID(Nodes, AliasID);
   if (Index > -1) and (Index < Nodes.AllocatedCount) then
     Result := Nodes.AllocatedList[Index];
@@ -379,7 +391,7 @@ end;
 
 
 // *****************************************************************************
-//  procedure NMRAnetNode_SetMsgFlagsOnAllNodesOnPermittedNodes;
+//  procedure NMRAnetNode_SetMsgFlags;
 //
 //  Parameters:
 //
@@ -390,10 +402,16 @@ end;
 procedure NMRAnetNode_SetMsgFlags(MsgFlags: Word);
 var
   i: Integer;
+  Node: PNMRAnetNode;
 begin
   for i := 0 to Nodes.AllocatedCount - 1 do
-    if Nodes.AllocatedList[i]^.State and NS_PERMITTED = NS_PERMITTED then
-      Nodes.AllocatedList[i]^.MsgFlags := Nodes.AllocatedList[i]^.MsgFlags or MsgFlags;
+  begin
+    Node := Nodes.AllocatedList[i];
+    if Node^.State and NS_PERMITTED = NS_PERMITTED then
+      Node^.MsgFlags := Node^.MsgFlags or MsgFlags
+    else
+      Node^.MsgFlags := 0;
+  end;
 end;
 
 // *****************************************************************************
@@ -407,6 +425,7 @@ end;
 // *****************************************************************************
 function NMRAnetNode_NextNode: PNMRAnetNode;
 begin
+  LockCANInterrupt;
   Result := PNMRAnetNode( nil);
   if Nodes.AllocatedCount > 0 then
   begin
@@ -415,6 +434,7 @@ begin
     Result := Nodes.AllocatedList[Nodes.iActiveNode];
     Inc(Nodes.iActiveNode);
   end;
+  UnLockCANInterrupt;
 end;
 
 // *****************************************************************************
