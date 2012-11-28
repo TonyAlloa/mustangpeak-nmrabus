@@ -198,6 +198,7 @@ type
     BitBtnEnumTargetNodes: TBitBtn;
     BitBtnComPortSettings: TBitBtn;
     BitBtnConnect: TBitBtn;
+    Button1: TButton;
     ButtonF0: TButton;
     ButtonF1: TButton;
     ButtonF10: TButton;
@@ -304,6 +305,7 @@ type
     procedure ActionThrottleEmergencyStopExecute(Sender: TObject);
     procedure ActionThrottleStopExecute(Sender: TObject);
     procedure ActionVerifyNodeIDExecute(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
     procedure ComboBoxNodeIDsChange(Sender: TObject);
     procedure ComboBoxNodeIDsDropDown(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
@@ -768,7 +770,7 @@ begin
            Speed := FloatToHalf( TrackBarThrottle.Position)
          else
            Speed := FloatToHalf( -TrackBarThrottle.Position);
-         Helper.Load(ol_OpenLCB, MTI_TRACTION_PROTOCOL, ThrottleAliasID, StrToInt(ListViewSearchList.Selected.Caption), 5, $00, $00, TRACTION_OLCB or TRACTION_OP_SPEED_DIR, Hi( Speed), Lo( Speed), $00, $00, $00);
+         Helper.Load(ol_OpenLCB, MTI_TRACTION_PROTOCOL, ThrottleAliasID, StrToInt(ListViewSearchList.Selected.Caption), 5, $00, $00, TRACTION_OLCB or TRACTION_OP_SPEED_DIR, (Speed shr 8) and $00FF,  Speed and $00FF, $00, $00, $00);
          ComPortThread.Add(Helper.Encode);
          TimerTickCount := 0;
          TimerTickTimeout := 5;
@@ -1227,6 +1229,20 @@ begin
     Helper.Load(ol_OpenLCB, MTI_VERIFY_NODE_ID_NUMBER, ThrottleAliasID, 0, 0, 0, 0, 0, 0, 0, 0,0 ,0);
     ComPortThread.Add(Helper.Encode);
   end;
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  Half: Word;
+begin
+  FloatToHalf(25.0);
+  FloatToHalf(0.0);
+  FloatToHalf(-0.0);
+  HalfToFloat($3C00);
+  HalfToFloat($3C01);
+  HalfToFloat($7BFF);
+  HalfToFloat($0000);
+  HalfToFloat($8000);
 end;
 
 procedure TForm1.ComboBoxNodeIDsChange(Sender: TObject);

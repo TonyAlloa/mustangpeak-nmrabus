@@ -95,10 +95,13 @@ begin
     // Simple case - round the significand and combine it with the sign and exponent
     Result := (Sign shl 15) or (Exp shl 10) or ((Mantissa + $00001000) shr 13);
   end
-  else if Src = 0 then
+  else if Mantissa = 0 then
   begin
     // Input float is zero - return zero
-    Result := 0;
+    if Sign = 1 then
+      Result := $8000
+    else
+      Result := $0000;
   end
   else
   begin
