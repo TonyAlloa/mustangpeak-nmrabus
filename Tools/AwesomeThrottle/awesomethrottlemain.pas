@@ -763,11 +763,11 @@ var
   Speed: Word;
   Step, SpeedByte: Byte;
 begin
-  LabelThrottleSpeed.Caption := IntToStr(TrackBarThrottle.Position);
+  LabelThrottleSpeed.Caption := IntToStr(Single( TrackBarThrottle.Position));
   case TabControlThottle.TabIndex of
     0: begin
          if RadioGroupDirection.ItemIndex = 0 then
-           Speed := FloatToHalf( TrackBarThrottle.Position)
+           Speed := FloatToHalf( Single( TrackBarThrottle.Position))
          else
            Speed := FloatToHalf( -TrackBarThrottle.Position);
          Helper.Load(ol_OpenLCB, MTI_TRACTION_PROTOCOL, ThrottleAliasID, StrToInt(ListViewSearchList.Selected.Caption), 5, $00, $00, TRACTION_OLCB or TRACTION_OP_SPEED_DIR, (Speed shr 8) and $00FF,  Speed and $00FF, $00, $00, $00);
