@@ -14,6 +14,44 @@ uses
 const
   BUNDLENAME = 'AwesomeThrottle';
 
+  FILENAME_SETTINGS_UNIX = '/Contents/Resources/Settings.txt';
+  FILENAME_SETTINGS_WIN  = 'tests\Settings.txt';
+
+(*
+  {$IFDEF DARWIN}
+var
+  pathRef: CFURLRef;
+  pathCFStr: CFStringRef;
+  pathStr: shortstring;
+{$ENDIF}
+begin
+  // Under OSX we get the path of the executable
+{$IFDEF DARWIN}
+  pathRef := CFBundleCopyBundleURL(CFBundleGetMainBundle());
+  pathCFStr := CFURLCopyFileSystemPath(pathRef, kCFURLPOSIXPathStyle);
+  CFStringGetPascalString(pathCFStr, @pathStr, 255, CFStringGetSystemEncoding());
+  CFRelease(pathRef);
+  CFRelease(pathCFStr);
+  FApplicationPath := pathStr;
+{$ENDIF}
+    // Under Windows we get the path of the executable
+{$IFDEF Windows}
+  FApplicationPath := ExtractFilePath(Application.ExeName);
+{$ENDIF}
+{$IFDEF Linux}
+  FApplicationPath := PATH_UNIX_APPLICATION_PATH;    // Linux is typically hardcoded to a path
+{$ENDIF}
+*)
+
+(*
+  {$IFDEF Windows}
+  MTIList.LoadFromFile(Settings.ApplicationPath + FILENAME_SETTINGS_WIN);
+  {$ENDIF}
+  {$IFDEF darwin}
+  MTIList.LoadFromFile(Settings.ApplicationPath + FILENAME_SETTINGS_UNIX);
+  {$ENDIF}
+*)
+
 type
    { TNode }
   TNode = class
@@ -242,7 +280,6 @@ type
     ListViewSearchList: TListView;
     MainMenu: TMainMenu;
     MenuItem1: TMenuItem;
-    MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
     MenuItem5: TMenuItem;
     MenuItemSeparator2: TMenuItem;
@@ -431,7 +468,7 @@ end;
 
 function TAddressSpaceReadWriteHelper.GetSize: DWord;
 begin
-  Result := (AddressHi - AddressLo) + 1
+  Result := (AddressHi - AddressLo) // + 1
 end;
 
 constructor TAddressSpaceReadWriteHelper.Create;
@@ -763,13 +800,13 @@ var
   Speed: Word;
   Step, SpeedByte: Byte;
 begin
-  LabelThrottleSpeed.Caption := IntToStr(Single( TrackBarThrottle.Position));
+  LabelThrottleSpeed.Caption := IntToStr(TrackBarThrottle.Position);
   case TabControlThottle.TabIndex of
     0: begin
          if RadioGroupDirection.ItemIndex = 0 then
            Speed := FloatToHalf( Single( TrackBarThrottle.Position))
          else
-           Speed := FloatToHalf( -TrackBarThrottle.Position);
+           Speed := FloatToHalf( -Single( TrackBarThrottle.Position));
          Helper.Load(ol_OpenLCB, MTI_TRACTION_PROTOCOL, ThrottleAliasID, StrToInt(ListViewSearchList.Selected.Caption), 5, $00, $00, TRACTION_OLCB or TRACTION_OP_SPEED_DIR, (Speed shr 8) and $00FF,  Speed and $00FF, $00, $00, $00);
          ComPortThread.Add(Helper.Encode);
          TimerTickCount := 0;
@@ -1690,7 +1727,7 @@ begin
               if Datagram.Size >= 12 then
                AddressSpaces[AddressEnumIndex].LoAddr :=  Datagram.ExtractDataBytesAsInt(8, 11);
               if Datagram.Size > 12 then
-                AddressSpaces[AddressEnumIndex].Description := PChar( Datagram.Data[12]);
+                AddressSpaces[AddressEnumIndex].Description := PAnsiChar( Datagram.Data[12]);       // Is a POINTER 8 bit/16 bit/32 bit/64 bit?    how to handled that?????
             end else
             begin
               AddressSpaces[AddressEnumIndex].FPresent := False;
@@ -2088,8 +2125,16 @@ begin
               TRACTION_OP_SPEED_DIR :
                 begin
                   Result := Result + 'OLCB Speed/Dir Operation; Speed = ';
+
                   f := HalfToFloat( (Helper.Data[3] shl 8) or Helper.Data[4]);
-                  Result := Result + IntToStr( round(f));
+                  if f= 0 then
+                  begin
+                    if DWord( f) and $80000000 = $80000000 then
+                      Result := Result + '-0.0'
+                    else
+                      Result := Result + '+0.0'
+                  end else
+                    Result := Result + IntToStr( round(f));
                 end;
               TRACTION_OP_FUNCTION :
                 begin
@@ -2161,7 +2206,7 @@ begin
     else
       FormMemConfig.EditAddressSpaceLoAddress.Text := '0x00000000' + ' [0 bytes] implied';
     if Datagram.Size > 12 then
-      FormMemConfig.EditAddressSpaceDescription.Text := PChar( Datagram.Data[12]);    //  UNTESTED >>>>>>>>>>>>>>>>>>>
+      FormMemConfig.EditAddressSpaceDescription.Text := PChar( Datagram.Data[12]);    //  // Is a POINTER 8 bit/16 bit/32 bit/64 bit?    how to handled that?????             >>>>>>>>>>>>>>>>>>>
 
     // Update the Address Space Read Data Tab
     FormMemConfig.EditAddressSpaceDataReadLoAddress.Text := '0x' + IntToHex(ActiveSpace.LoAddr, 8);
@@ -2187,18 +2232,19 @@ begin
 
   if Assigned(ComPortThread) then
   begin
+    ActionMemConfigOptions.Enabled := (ReceivedCallback = nil) and ComPortThread.Connected and (ComboBoxNodeIDs.ItemIndex > -1);
+    ActionMemConfigSendSNIP.Enabled := (ReceivedCallback = nil) and ComPortThread.Connected;
+    FormMemConfig.CheckBoxForceCommonAddressIntoSpace.Enabled := (ReceivedCallback = nil);
+    ActionMemConfigReadSpaces.Enabled := (ReceivedCallback = nil) and ComPortThread.Connected and (ComboBoxNodeIDs.ItemIndex > -1);
+
     ActionFindAllocateTrain.Enabled := not ActionMemConfigTerminate.Enabled and ComPortThread.Connected;
     ActionVerifyNodeID.Enabled := (ReceivedCallback = nil) and ComPortThread.Connected;
     ActionAliasTreeClear.Enabled := (ReceivedCallback = nil);
-    ActionMemConfigOptions.Enabled := (ReceivedCallback = nil) and ComPortThread.Connected;
-    ActionMemConfigSendSNIP.Enabled := (ReceivedCallback = nil) and ComPortThread.Connected;
     ComboBoxNodeIDs.Enabled := (ReceivedCallback = nil) and ComPortThread.Connected;
-    FormMemConfig.CheckBoxForceCommonAddressIntoSpace.Enabled := (ReceivedCallback = nil);
     EditThrottleAlias.Enabled := (ReceivedCallback = nil);
     EditThrottleNodeID.Enabled := (ReceivedCallback = nil);
     ActionToolsCOMPortSettings.Enabled := (ReceivedCallback = nil) and not ComPortThread.Connected;
     ActionToolsConnect.Enabled := (ReceivedCallback = nil);
-    ActionMemConfigReadSpaces.Enabled := (ReceivedCallback = nil) and (ComboBoxNodeIDs.ItemIndex > -1);
     if ActiveSpace <> nil then
     begin
       ActionMemConfigReadSpaceData.Enabled := (ReceivedCallback = nil) and ComPortThread.Connected and (ComboBoxNodeIDs.ItemIndex > -1) and (ActiveSpace.Present); // Check for Preset, it overrides all other flags.

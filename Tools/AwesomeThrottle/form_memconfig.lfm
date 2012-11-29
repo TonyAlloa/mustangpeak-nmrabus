@@ -1,7 +1,7 @@
 object FormMemConfig: TFormMemConfig
   Left = 163
   Height = 564
-  Top = 164
+  Top = 162
   Width = 1050
   Anchors = [akBottom]
   Caption = 'Memory Configuration'
@@ -13,18 +13,18 @@ object FormMemConfig: TFormMemConfig
     Height = 532
     Top = 8
     Width = 743
-    ActivePage = TabSheetMemData
+    ActivePage = TabSheetConfigOptions
     Anchors = [akTop, akLeft, akRight, akBottom]
-    TabIndex = 2
+    TabIndex = 0
     TabOrder = 0
     OnChange = PageControlChange
     object TabSheetConfigOptions: TTabSheet
       Caption = 'Config Options'
-      ClientHeight = 495
-      ClientWidth = 637
+      ClientHeight = 493
+      ClientWidth = 737
       object CheckGroupMask: TCheckGroup
         Left = 13
-        Height = 437
+        Height = 435
         Top = 4
         Width = 224
         Anchors = [akTop, akLeft, akBottom]
@@ -38,7 +38,7 @@ object FormMemConfig: TFormMemConfig
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 415
+        ClientHeight = 413
         ClientWidth = 216
         Items.Strings = (
           'Write Under Mask'
@@ -56,9 +56,9 @@ object FormMemConfig: TFormMemConfig
       end
       object CheckGroupLength: TCheckGroup
         Left = 245
-        Height = 437
+        Height = 435
         Top = 4
-        Width = 381
+        Width = 481
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoFill = True
         Caption = 'Write Length Supported'
@@ -70,8 +70,8 @@ object FormMemConfig: TFormMemConfig
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 415
-        ClientWidth = 373
+        ClientHeight = 413
+        ClientWidth = 473
         Items.Strings = (
           '1 Byte'
           '2 Bytes'
@@ -87,9 +87,9 @@ object FormMemConfig: TFormMemConfig
         }
       end
       object BitBtnReadOptions: TBitBtn
-        Left = 456
+        Left = 556
         Height = 22
-        Top = 458
+        Top = 456
         Width = 150
         Action = Form1.ActionMemConfigOptions
         Anchors = [akRight, akBottom]

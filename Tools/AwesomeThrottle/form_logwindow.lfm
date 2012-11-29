@@ -9,6 +9,7 @@ object FormLog: TFormLog
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnHide = FormHide
+  OnShow = FormShow
   LCLVersion = '1.0.2.0'
   object BitBtnClear: TBitBtn
     Left = 561
@@ -544,6 +545,22 @@ object FormLog: TFormLog
     Action = Form1.ActionAliasTreeShow
     Anchors = [akRight, akBottom]
     TabOrder = 2
+  end
+  object SpinEditFontSize: TSpinEdit
+    Left = 192
+    Height = 16
+    Top = 212
+    Width = 106
+    OnChange = SpinEditFontSizeChange
+    TabOrder = 3
+  end
+  object Label1: TLabel
+    Left = 112
+    Height = 17
+    Top = 211
+    Width = 58
+    Caption = 'Font Size'
+    ParentColor = False
   end
   object PopupMenuSynMemo: TPopupMenu
     left = 164

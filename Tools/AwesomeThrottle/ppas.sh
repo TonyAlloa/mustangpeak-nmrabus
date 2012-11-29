@@ -3,10 +3,14 @@ DoExitAsm ()
 { echo "An error occurred while assembling $1"; exit 1; }
 DoExitLink ()
 { echo "An error occurred while linking $1"; exit 1; }
+echo Assembling awesomethrottlemain
+/usr/bin/as -o /Users/jimkueneman/Documents/Lazarus/OpenLCB/AwesomeThrottle/lib/i386-darwin/awesomethrottlemain.o /Users/jimkueneman/Documents/Lazarus/OpenLCB/AwesomeThrottle/lib/i386-darwin/awesomethrottlemain.s -arch i386
+if [ $? != 0 ]; then DoExitAsm awesomethrottlemain; fi
+rm /Users/jimkueneman/Documents/Lazarus/OpenLCB/AwesomeThrottle/lib/i386-darwin/awesomethrottlemain.s
 echo Assembling awesomethrottle
-/usr/bin/as -o /Users/jimkueneman/Documents/Lazarus/OpenLCB/Throttle/lib/i386-darwin/AwesomeThrottle.o /Users/jimkueneman/Documents/Lazarus/OpenLCB/Throttle/lib/i386-darwin/AwesomeThrottle.s -arch i386
+/usr/bin/as -o /Users/jimkueneman/Documents/Lazarus/OpenLCB/AwesomeThrottle/lib/i386-darwin/AwesomeThrottle.o /Users/jimkueneman/Documents/Lazarus/OpenLCB/AwesomeThrottle/lib/i386-darwin/AwesomeThrottle.s -arch i386
 if [ $? != 0 ]; then DoExitAsm awesomethrottle; fi
-rm /Users/jimkueneman/Documents/Lazarus/OpenLCB/Throttle/lib/i386-darwin/AwesomeThrottle.s
+rm /Users/jimkueneman/Documents/Lazarus/OpenLCB/AwesomeThrottle/lib/i386-darwin/AwesomeThrottle.s
 echo Linking AwesomeThrottle
 OFS=$IFS
 IFS="
