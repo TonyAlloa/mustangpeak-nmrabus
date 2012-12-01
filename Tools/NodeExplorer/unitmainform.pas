@@ -216,13 +216,11 @@ type
     procedure FormShow(Sender: TObject);
     procedure ListViewNodeDiscoverySelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure ListViewTestMatrixDeletion(Sender: TObject; Item: TListItem);
-    procedure ListViewTestMatrixDragDrop(Sender, Source: TObject; X, Y: Integer
-      );
-    procedure ListViewTestMatrixDragOver(Sender, Source: TObject; X,
-      Y: Integer; State: TDragState; var Accept: Boolean);
-    procedure ListViewTestMatrixStartDrag(Sender: TObject;
-      var DragObject: TDragObject);
+    procedure ListViewTestMatrixDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure ListViewTestMatrixDragOver(Sender, Source: TObject; X, Y: Integer; State: TDragState; var Accept: Boolean);
+    procedure ListViewTestMatrixStartDrag(Sender: TObject; var DragObject: TDragObject);
     procedure MenuItemConnectionClick(Sender: TObject);
+    procedure MenuItemOptionsWinClick(Sender: TObject);
     procedure SynEditCDIKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { private declarations }
@@ -740,6 +738,11 @@ begin
   end;
 end;
 
+procedure TFormMain.MenuItemOptionsWinClick(Sender: TObject);
+begin
+
+end;
+
 procedure TFormMain.SynEditCDIKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   // Windows/Linux/OSX already handled by SynEdit using the Windows Shortcuts
@@ -1060,4 +1063,4 @@ end;
 
 
 end.
-
+
